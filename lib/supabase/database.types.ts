@@ -1,0 +1,292 @@
+// 스키마(supabase/migrations)에 맞춰 수동 작성.
+// Supabase 프로젝트를 연결한 뒤 `pnpm db:types` 로 재생성하세요.
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export type Database = {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      trips: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          destination: string | null;
+          start_date: string;
+          end_date: string;
+          home_currency: string;
+          exchange_rates: Json;
+          invite_token: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          destination?: string | null;
+          start_date: string;
+          end_date: string;
+          home_currency?: string;
+          exchange_rates?: Json;
+          invite_token?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          destination?: string | null;
+          start_date?: string;
+          end_date?: string;
+          home_currency?: string;
+          exchange_rates?: Json;
+          invite_token?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      trip_members: {
+        Row: {
+          trip_id: string;
+          user_id: string;
+          role: string;
+          joined_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          user_id: string;
+          role?: string;
+          joined_at?: string;
+        };
+        Update: {
+          trip_id?: string;
+          user_id?: string;
+          role?: string;
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "trip_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      schedule_items: {
+        Row: {
+          id: string;
+          trip_id: string;
+          day_index: number;
+          position: number;
+          name: string;
+          place_id: string | null;
+          lat: number | null;
+          lng: number | null;
+          address: string | null;
+          start_time: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          day_index: number;
+          position: number;
+          name: string;
+          place_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          address?: string | null;
+          start_time?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          day_index?: number;
+          position?: number;
+          name?: string;
+          place_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          address?: string | null;
+          start_time?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      day_routes: {
+        Row: {
+          trip_id: string;
+          day_index: number;
+          travel_mode: string;
+          items_hash: string;
+          polyline: string;
+          legs: Json;
+          computed_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          day_index: number;
+          travel_mode?: string;
+          items_hash: string;
+          polyline: string;
+          legs: Json;
+          computed_at?: string;
+        };
+        Update: {
+          trip_id?: string;
+          day_index?: number;
+          travel_mode?: string;
+          items_hash?: string;
+          polyline?: string;
+          legs?: Json;
+          computed_at?: string;
+        };
+        Relationships: [];
+      };
+      expenses: {
+        Row: {
+          id: string;
+          trip_id: string;
+          schedule_item_id: string | null;
+          payer_id: string;
+          amount: number;
+          currency: string;
+          category: string;
+          memo: string | null;
+          spent_on: string;
+          split_mode: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          schedule_item_id?: string | null;
+          payer_id: string;
+          amount: number;
+          currency: string;
+          category?: string;
+          memo?: string | null;
+          spent_on: string;
+          split_mode?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          schedule_item_id?: string | null;
+          payer_id?: string;
+          amount?: number;
+          currency?: string;
+          category?: string;
+          memo?: string | null;
+          spent_on?: string;
+          split_mode?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      expense_splits: {
+        Row: {
+          expense_id: string;
+          user_id: string;
+          share: number;
+        };
+        Insert: {
+          expense_id: string;
+          user_id: string;
+          share: number;
+        };
+        Update: {
+          expense_id?: string;
+          user_id?: string;
+          share?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_splits_expense_id_fkey";
+            columns: ["expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: {
+      join_trip_by_token: {
+        Args: { p_token: string };
+        Returns: string;
+      };
+      get_trip_preview: {
+        Args: { p_token: string };
+        Returns: {
+          id: string;
+          title: string;
+          destination: string | null;
+          start_date: string;
+          end_date: string;
+          member_count: number;
+        }[];
+      };
+      rotate_invite_token: {
+        Args: { p_trip_id: string };
+        Returns: string;
+      };
+      is_trip_member: {
+        Args: { p_trip_id: string };
+        Returns: boolean;
+      };
+    };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+type PublicSchema = Database["public"];
+export type Tables<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Row"];
+export type TablesInsert<T extends keyof PublicSchema["Tables"]> =
+  PublicSchema["Tables"][T]["Insert"];
+export type TablesUpdate<T extends keyof PublicSchema["Tables"]> =
+  PublicSchema["Tables"][T]["Update"];
