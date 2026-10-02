@@ -26,7 +26,7 @@
 
 - **APIs & Services → Credentials → Create OAuth client ID (Web application)**
   - Authorized JavaScript origins: `http://localhost:3000`, 배포 URL
-  - Authorized redirect URIs: `https://<project-ref>.supabase.co/auth/v1/callback`
+  - Authorized redirect URIs: `https://canoqfjexkpbalosdauw.supabase.co/auth/v1/callback`
 - 생성된 Client ID / Secret 을 Supabase Google Provider 에 입력.
 
 ### Maps
