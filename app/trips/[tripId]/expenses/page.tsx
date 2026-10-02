@@ -144,6 +144,7 @@ export default function ExpensesPage() {
         <Button
           size="lg"
           className="shadow-lg"
+          nativeButton={false}
           render={<Link href={`/trips/${tripId}/expenses/new`} />}
         >
           <Plus /> 지출 추가

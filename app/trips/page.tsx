@@ -69,7 +69,12 @@ export default function TripsPage() {
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <Button size="lg" className="shadow-lg" render={<Link href="/trips/new" />}>
+        <Button
+          size="lg"
+          className="shadow-lg"
+          nativeButton={false}
+          render={<Link href="/trips/new" />}
+        >
           <Plus /> 새 여행
         </Button>
       </div>

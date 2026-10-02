@@ -18,7 +18,7 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
         <p className="text-sm text-muted-foreground">
           링크가 만료되었거나 재발급되었을 수 있어요. 일행에게 새 링크를 요청해주세요.
         </p>
-        <Button variant="outline" render={<Link href="/trips" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/trips" />}>
           내 여행으로
         </Button>
       </main>
