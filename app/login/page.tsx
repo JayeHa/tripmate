@@ -61,7 +61,7 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
       variant="outline"
       onClick={onClick}
       disabled={loading}
-      className="h-[52px] w-full gap-2.5 rounded-button border-line-strong bg-white text-base font-bold text-ink hover:bg-surface-sunken disabled:opacity-100"
+      className="h-[52px] w-full gap-2.5 rounded-button border-line-strong bg-white text-base font-bold text-ink-900 hover:bg-surface-sunken disabled:opacity-100"
     >
       <GoogleLogo />
       {loading ? "로그인 중…" : "Google로 계속하기"}
@@ -71,13 +71,13 @@ function GoogleButton({ onClick, loading }: { onClick: () => void; loading: bool
 
 function Terms() {
   return (
-    <p className="text-center text-xs leading-[1.6] text-ink-3">
+    <p className="text-center text-xs leading-[1.6] text-ink-400">
       계속하면{" "}
-      <a href="#" className="text-ink-2 underline">
+      <a href="#" className="text-ink-500 underline">
         이용약관
       </a>
       과{" "}
-      <a href="#" className="text-ink-2 underline">
+      <a href="#" className="text-ink-500 underline">
         개인정보처리방침
       </a>
       에 동의하게 돼요.
@@ -94,12 +94,12 @@ function LoginForm() {
       <div className="flex flex-1 flex-col lg:hidden">
         <div className="flex flex-1 flex-col justify-center gap-3.5 px-8">
           <Wordmark className="text-[44px] leading-none tracking-[-0.04em]" />
-          <p className="text-[19px] leading-[1.45] font-bold tracking-[-0.01em] text-ink">
+          <p className="text-[19px] leading-[1.45] font-bold tracking-[-0.01em] text-ink-900">
             함께 가는 여행,
             <br />
             일정부터 가계부까지 한 곳에서.
           </p>
-          <p className="text-[15px] leading-[1.5] text-ink-3">
+          <p className="text-[15px] leading-[1.5] text-ink-400">
             일행과 지도·메모·지출을 같이 정리해요.
           </p>
         </div>
@@ -118,10 +118,10 @@ function LoginForm() {
         <div className="flex flex-1 items-center justify-center bg-surface-sunken">
           <div className="flex w-[420px] flex-col gap-3 rounded-sheet border border-line-card bg-white px-10 pt-11 pb-8 shadow-card">
             <Wordmark className="text-4xl leading-none tracking-[-0.04em]" />
-            <p className="text-lg leading-[1.45] font-bold text-ink">
+            <p className="text-lg leading-[1.45] font-bold text-ink-900">
               함께 가는 여행, 일정부터 가계부까지 한 곳에서.
             </p>
-            <p className="pb-5 text-sm text-ink-3">일행과 지도·메모·지출을 같이 정리해요.</p>
+            <p className="pb-5 text-sm text-ink-400">일행과 지도·메모·지출을 같이 정리해요.</p>
             <GoogleButton onClick={signIn} loading={loading} />
             {error && <p className="text-center text-sm text-destructive">{error}</p>}
             <div className="pt-1.5">

@@ -57,11 +57,17 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* ---- Tripmate design tokens (design_handoff_tripmate/design-system.md) ---- */
-  --color-ink: #222222;
-  --color-ink-2: #666666;
-  --color-ink-3: #999999;
-  --color-ink-4: #aaaaaa;
-  --color-body: #555555;
+  /* Ink: 디자인 시스템의 gray 스케일과 같은 이름을 쓴다 */
+  --color-ink-900: #222222;
+  --color-ink-800: #333333;
+  --color-ink-700: #444444;
+  --color-ink-600: #555555;
+  --color-ink-500: #666666;
+  --color-ink-450: #888888;
+  --color-ink-400: #999999;
+  --color-ink-350: #aaaaaa;
+
+  /* Surface / line */
   --color-surface-sunken: #f7f8fa;
   --color-surface-muted: #f2f3f5;
   --color-surface-memo: #f4f8ff;
@@ -69,15 +75,49 @@
   --color-line-strong: #d5d8dc;
   --color-line-card: #f0f1f3;
   --color-divider: #eef0f2;
+  --color-handle: #c9cdd2;
+
+  /* Primary */
   --color-primary-pressed: #1f6feb;
   --color-primary-disabled: #c7d9f5;
   --color-primary-tint: #e8f1ff;
+
+  /* 장소 카테고리 (타임라인 마커 + 지도 핀) */
   --color-cat-sight: #8b5cf6;
   --color-cat-stay: #14b8a6;
   --color-cat-food: #f04452;
   --color-cat-shop: #f59e0b;
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
+
+  /* 예약 상태 배지 */
+  --color-status-ok: #1f6feb;
+  --color-status-ok-bg: #e8f1ff;
+  --color-status-wait: #c2410c;
+  --color-status-wait-bg: #fff1e6;
+  --color-status-buy: #7c3aed;
+  --color-status-buy-bg: #f3eeff;
+  --color-status-opt: #6b7280;
+  --color-status-opt-bg: #f1f2f4;
+  --color-status-walk: #0f766e;
+  --color-status-walk-bg: #e6f6f3;
+
+  /* 메모 태그 */
+  --color-tag-tip: #1f6feb;
+  --color-tag-tip-bg: #e2edff;
+  --color-tag-book: #7c3aed;
+  --color-tag-book-bg: #efe8ff;
+  --color-tag-hours: #0f766e;
+  --color-tag-hours-bg: #dff3ef;
+  --color-tag-todo: #c2410c;
+  --color-tag-todo-bg: #ffebdd;
+  --color-tag-link: #4b5563;
+  --color-tag-link-bg: #e9ebee;
+
+  /* Avatar */
+  --color-avatar: #4b6584;
+  --color-avatar-bg: #dce6f2;
+
   --radius-tag: 4px;
   --radius-pill-sm: 6px;
   --radius-button: 8px;
