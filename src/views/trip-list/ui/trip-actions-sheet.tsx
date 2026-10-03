@@ -7,13 +7,15 @@ import type { Trip } from "@/entities/trip";
 
 type Props = {
   trip: Trip | null;
+  /** 방장만 삭제할 수 있다. 멤버가 지우면 RLS 가 0행을 지우고 에러 없이 끝난다. */
+  canDelete: boolean;
   onClose: () => void;
   onEdit: (trip: Trip) => void;
   onDelete: (trip: Trip) => void;
 };
 
 /** 여행 행의 `···` 메뉴 (시안 5a). */
-export function TripActionsSheet({ trip, onClose, onEdit, onDelete }: Props) {
+export function TripActionsSheet({ trip, canDelete, onClose, onEdit, onDelete }: Props) {
   return (
     <Sheet open={Boolean(trip)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
@@ -39,14 +41,16 @@ export function TripActionsSheet({ trip, onClose, onEdit, onDelete }: Props) {
               <CalendarDays className="size-[22px] text-ink-700" />
               여행일정 수정
             </button>
-            <button
-              type="button"
-              onClick={() => onDelete(trip)}
-              className="flex h-13 items-center gap-3 border-t border-surface-muted px-1 text-base font-semibold text-destructive"
-            >
-              <Trash2 className="size-[22px]" />
-              여행 삭제
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(trip)}
+                className="flex h-13 items-center gap-3 border-t border-surface-muted px-1 text-base font-semibold text-destructive"
+              >
+                <Trash2 className="size-[22px]" />
+                여행 삭제
+              </button>
+            )}
           </>
         )}
       </SheetContent>

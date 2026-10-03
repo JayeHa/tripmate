@@ -4,7 +4,7 @@ import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { initialOfName, useMyProfile } from "@/entities/session";
+import { initialOfName, useMyProfile, useUser } from "@/entities/session";
 import { type Trip, TripRow, groupTrips, useDeleteTrip, useTrips } from "@/entities/trip";
 import { todayISO } from "@/shared/lib/days";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
@@ -19,6 +19,7 @@ export function TripListView() {
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
   const { data: profile } = useMyProfile();
+  const { data: user } = useUser();
   const [accountOpen, setAccountOpen] = useState(false);
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
@@ -104,6 +105,8 @@ export function TripListView() {
 
       <TripActionsSheet
         trip={sheetFor}
+        // 사용자를 아직 모르면 숨긴다. 보여 줬다가 지우지 못하는 쪽보다 낫다.
+        canDelete={Boolean(user) && sheetFor?.owner_id === user?.id}
         onClose={() => setSheetFor(null)}
         onEdit={(trip) => {
           setSheetFor(null);
