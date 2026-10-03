@@ -53,7 +53,7 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
         setRegion(ALL);
       }}
       className={cn(
-        "-mb-px border-b-2 font-bold",
+        "-mb-px border-b-2 font-bold whitespace-nowrap",
         pc ? "pt-1 pb-2.5 text-[15px]" : "flex-1 pt-3.5 pb-3 text-center text-base",
         scope === s.key ? "border-ink-900 text-ink-900" : "border-transparent text-ink-350",
       )}
@@ -72,7 +72,7 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
         className={cn(
           "flex shrink-0 items-center rounded-full",
           pc
-            ? "h-[30px] px-3 text-[13px] font-bold"
+            ? "h-8 px-3.5 text-[13px] font-bold whitespace-nowrap"
             : "h-[34px] border px-3.5 text-sm font-semibold",
           on
             ? "border-ink-900 bg-ink-900 text-white"
@@ -90,10 +90,17 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
     <div className="flex min-h-0 flex-1 flex-col">
       {!searching &&
         (pc ? (
-          <div className="flex shrink-0 items-center gap-5 border-b border-surface-muted px-7 pt-3.5">
-            {tabs}
-            <div className="ml-auto flex gap-1.5 pb-2">{chipRow}</div>
-          </div>
+          // 탭 줄과 지역 칩 줄을 나눈다. 지역이 늘어도 잘리지 않게 칩은 줄바꿈한다 (시안 6b 갱신)
+          <>
+            <div className="flex shrink-0 items-center gap-5 border-b border-surface-muted px-7 pt-3.5">
+              {tabs}
+            </div>
+            {chips.length > 0 && (
+              <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-surface-muted bg-surface-sunken px-7 py-3">
+                {chipRow}
+              </div>
+            )}
+          </>
         ) : (
           <>
             <div className="flex shrink-0 border-b border-surface-muted">{tabs}</div>
