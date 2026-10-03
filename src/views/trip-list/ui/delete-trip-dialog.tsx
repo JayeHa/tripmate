@@ -12,14 +12,17 @@ import type { Trip } from "@/entities/trip";
 type Props = {
   trip: Trip | null;
   pending: boolean;
+  /** 요청이 서버에 가 있는 동안은 닫지 못하게 한다. 오프라인 대기 중이면 false. */
+  locked: boolean;
   error: string | null;
   onCancel: () => void;
   onConfirm: (trip: Trip) => void;
 };
 
-export function DeleteTripDialog({ trip, pending, error, onCancel, onConfirm }: Props) {
+export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onConfirm }: Props) {
   return (
-    <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && onCancel()}>
+    // 삭제 중에는 닫지 않는다. 닫히면 실패해도 알 수 없다.
+    <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && !locked && onCancel()}>
       <AlertDialogContent className="rounded-sheet px-[22px] pt-6 pb-5">
         {trip && (
           <>
@@ -31,7 +34,13 @@ export function DeleteTripDialog({ trip, pending, error, onCancel, onConfirm }: 
             </AlertDialogDescription>
             {error && <p className="text-sm text-destructive">삭제하지 못했어요: {error}</p>}
             <div className="mt-3.5 flex gap-2">
-              <Button variant="outline" size="form" className="flex-1" onClick={onCancel}>
+              <Button
+                variant="outline"
+                size="form"
+                className="flex-1"
+                disabled={locked}
+                onClick={onCancel}
+              >
                 취소
               </Button>
               <Button

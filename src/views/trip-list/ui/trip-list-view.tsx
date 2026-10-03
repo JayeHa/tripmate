@@ -122,6 +122,8 @@ export function TripListView() {
       <DeleteTripDialog
         trip={confirmFor}
         pending={deleteTrip.isPending}
+        // 오프라인이면 뮤테이션이 실패하지 않고 멈춘다. 그때까지 잠그면 창을 못 닫는다.
+        locked={deleteTrip.isPending && !deleteTrip.isPaused}
         error={deleteTrip.error?.message ?? null}
         onCancel={() => setConfirmFor(null)}
         // 실패하면 닫지 않는다. 닫히면 지워졌는지 알 수 없다.
