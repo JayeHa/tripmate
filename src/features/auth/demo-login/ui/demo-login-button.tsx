@@ -1,23 +1,34 @@
 "use client";
 
 import { useUser } from "@/entities/session";
+import { useTrips } from "@/entities/trip";
 import { Button } from "@/shared/ui/button";
 import { useDemoLogin } from "../model/use-demo-login";
 
 /**
  * 로그인 없이 둘러보기. 샘플 여행이 담긴 익명 계정으로 들어간다.
- * 이미 둘러보는 중이면 그 사실과 돌아갈 길을 알려 준다.
+ *
+ * 이미 샘플을 가진 익명 사용자에게는 버튼 대신 안내만 보여 준다.
+ * 다만 시딩이 중간에 끊겨 여행이 없는 익명 사용자는 다시 시작할 수 있어야 한다.
+ * 그 경우에도 버튼을 숨기면 빈 목록과 로그인 화면 사이에 갇힌다.
  */
 export function DemoLoginButton() {
   const { data: user } = useUser();
   const { enterDemo, loading, error } = useDemoLogin();
+  const isAnonymous = user?.is_anonymous ?? false;
+  // 익명일 때만 물어본다. 로그인 전에는 어차피 빈 배열이라 받아 올 필요가 없다.
+  const { data: trips, isPending: tripsPending } = useTrips({ enabled: isAnonymous });
 
-  if (user?.is_anonymous) {
-    return (
-      <p className="text-center text-[13px] leading-[1.6] text-ink-400">
-        지금은 둘러보는 중이에요. 위에서 로그인하면 기록이 계정에 남아요.
-      </p>
-    );
+  if (isAnonymous) {
+    // 아직 모르는 동안은 아무것도 보이지 않는 편이 낫다. 깜빡임을 피한다.
+    if (tripsPending) return null;
+    if (trips && trips.length > 0) {
+      return (
+        <p className="text-center text-[13px] leading-[1.6] text-ink-400">
+          지금은 둘러보는 중이에요. 위에서 로그인하면 기록이 계정에 남아요.
+        </p>
+      );
+    }
   }
 
   return (
@@ -29,7 +40,11 @@ export function DemoLoginButton() {
         disabled={loading}
         className="mx-auto text-sm"
       >
-        {loading ? "샘플 여행을 준비하고 있어요…" : "로그인 없이 둘러보기"}
+        {loading
+          ? "샘플 여행을 준비하고 있어요…"
+          : isAnonymous
+            ? "샘플 여행 다시 만들기"
+            : "로그인 없이 둘러보기"}
       </Button>
       {error && <p className="text-center text-sm text-destructive">{error}</p>}
     </>

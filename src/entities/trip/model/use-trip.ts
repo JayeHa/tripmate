@@ -12,8 +12,8 @@ import {
 } from "../api/trips";
 import type { TripFormValues } from "./schema";
 
-export function useTrips() {
-  return useQuery({ queryKey: queryKeys.trips.all, queryFn: fetchTrips });
+export function useTrips({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: queryKeys.trips.all, queryFn: fetchTrips, enabled });
 }
 
 export function useTrip(tripId: string) {
