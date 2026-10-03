@@ -4,10 +4,13 @@ import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { initialOfName, useMyProfile } from "@/entities/session";
 import { type Trip, TripRow, groupTrips, useDeleteTrip, useTrips } from "@/entities/trip";
 import { todayISO } from "@/shared/lib/days";
+import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
+import { AccountSheet } from "./account-sheet";
 import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
@@ -15,6 +18,8 @@ export function TripListView() {
   const router = useRouter();
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
+  const { data: profile } = useMyProfile();
+  const [accountOpen, setAccountOpen] = useState(false);
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
 
@@ -25,9 +30,12 @@ export function TripListView() {
     <main className="flex flex-1 flex-col">
       <header className="flex h-13 shrink-0 items-center justify-between px-5">
         <Wordmark className="text-[22px]" />
-        <Link href="/trips/new" aria-label="새 여행" className="flex p-1 text-ink-900">
-          <Plus className="size-6" strokeWidth={2.4} />
-        </Link>
+        {/* 시안 5a: 워드마크 + Avatar 32. 누르면 내 정보 · 로그아웃 */}
+        <button type="button" aria-label="내 계정" onClick={() => setAccountOpen(true)}>
+          <Avatar>
+            <AvatarFallback>{initialOfName(profile?.display_name)}</AvatarFallback>
+          </Avatar>
+        </button>
       </header>
 
       <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))]">
@@ -106,6 +114,7 @@ export function TripListView() {
           setConfirmFor(trip);
         }}
       />
+      <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
       <DeleteTripDialog
         trip={confirmFor}
         pending={deleteTrip.isPending}
