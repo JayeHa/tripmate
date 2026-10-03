@@ -64,6 +64,14 @@ import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 클라이언트 번들에 섞여 빌드가 깨진다. full path 로만 참조한다.
 `shared/api/supabase` 는 그래서 배럴이 없다.
 
+## 테스트 위치
+
+**테스트는 대상 파일 바로 옆에 둔다.** `tests/` 나 `__tests__/` 같은 별도 폴더를 만들지
+않는다. `days.ts` 옆에 `days.test.ts`, `fsd.config.mjs` 옆에 `fsd.config.test.ts`.
+
+대상과 같은 자리에 있으면 파일을 옮길 때 테스트가 따라가고, 테스트가 없는 모듈이
+눈에 띈다. vitest 는 `**/*.test.ts` 로 수집하므로 위치 제약이 없다.
+
 # 할 일 트래커
 
 작업 목록은 **GitHub 이슈**에 있다. 다른 곳에 따로 두지 않는다.

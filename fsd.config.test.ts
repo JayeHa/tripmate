@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { GROUPS, SEGMENTS, SLICED } from "../fsd.config.mjs";
+import { GROUPS, SEGMENTS, SLICED } from "./fsd.config.mjs";
 
-const SRC = path.resolve(__dirname, "../src");
+const SRC = path.resolve(__dirname, "src");
 
 const dirsIn = (dir: string) =>
   existsSync(dir) ? readdirSync(dir).filter((n) => statSync(path.join(dir, n)).isDirectory()) : [];

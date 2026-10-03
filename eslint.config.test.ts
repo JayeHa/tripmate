@@ -2,7 +2,7 @@ import path from "node:path";
 import { ESLint } from "eslint";
 import { describe, expect, it } from "vitest";
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = __dirname;
 const eslint = new ESLint({ cwd: ROOT });
 
 /** `from` 위치의 가상 파일에서 `spec` 을 import 했을 때 경계 위반 메시지 */
