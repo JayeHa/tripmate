@@ -28,3 +28,10 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
 
 /** TanStack Query 캐시를 IndexedDB 에 저장할 때 쓰는 키. */
 export const QUERY_PERSIST_KEY = "tripmate-query-cache";
+
+/**
+ * 저장된 캐시의 데이터 모양 버전. 영속화 대상(shouldPersistQuery)의 반환 타입을 바꾸면 올린다.
+ * 값이 다르면 복원하지 않고 버린다. 안 올리면 옛 모양 데이터가 새 코드에 먼저 그려져 깨진다.
+ * (예: 2 — 여행 목록에 cities 가 생김)
+ */
+export const QUERY_CACHE_VERSION = "2";
