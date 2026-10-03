@@ -42,7 +42,7 @@ export function useUpdateTrip(tripId: string) {
   });
 }
 
-/** 기간 변경은 여행과 그 일정·경로를 함께 바꾼다 */
+/** 기간 변경은 여행과 그 일정·경로·지출을 함께 바꾼다 */
 export function useUpdateTripDates() {
   const qc = useQueryClient();
   return useMutation({
@@ -52,6 +52,7 @@ export function useUpdateTripDates() {
       void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) });
       void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
       void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) });
     },
   });
 }

@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 
+import { countExpensesFrom } from "@/entities/expense";
 import { countScheduleItemsFrom } from "@/entities/schedule-item";
 import { type Trip, useUpdateTripDates } from "@/entities/trip";
 import { type DateSelection, pickDate } from "@/shared/lib/calendar";
 
 import { type Shrink, shrinkOf } from "../lib/shrink";
 
-/** 옮겨질 일정이 있어 확인을 기다리는 중 */
-export type PendingMove = Shrink & { count: number };
+/** 마지막 날로 옮겨질 일정·지출이 있어 확인을 기다리는 중 */
+export type PendingMove = Shrink & { items: number; expenses: number };
 
 /**
  * 여행 기간 수정 (시안 5c 수정 모드). 기존 기간을 미리 골라 두고, 줄여서 사라지는 날에
- * 일정이 있으면 마지막 날로 옮긴다고 확인받은 뒤 저장한다.
+ * 일정·지출이 있으면 마지막 날로 옮긴다고 확인받은 뒤 저장한다(update_trip_dates, 0009).
  */
 export function useEditDates(trip: Trip, onDone: () => void) {
   const update = useUpdateTripDates();
@@ -42,11 +43,14 @@ export function useEditDates(trip: Trip, onDone: () => void) {
     setChecking(true);
     setCheckError(null);
     try {
-      const count = await countScheduleItemsFrom(trip.id, shrink.lastDay);
-      if (count > 0) setPendingMove({ ...shrink, count });
+      const [items, expenses] = await Promise.all([
+        countScheduleItemsFrom(trip.id, shrink.lastDay),
+        countExpensesFrom(trip.id, shrink.fromDate),
+      ]);
+      if (items + expenses > 0) setPendingMove({ ...shrink, items, expenses });
       else save(range);
     } catch (e) {
-      setCheckError(e instanceof Error ? e.message : "일정을 확인하지 못했어요");
+      setCheckError(e instanceof Error ? e.message : "옮길 일정을 확인하지 못했어요");
     } finally {
       setChecking(false);
     }

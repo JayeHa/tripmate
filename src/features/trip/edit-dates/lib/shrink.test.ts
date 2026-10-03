@@ -10,6 +10,7 @@ describe("shrinkOf", () => {
       lastDay: 3,
       fromDay: 4,
       toDay: 5,
+      fromDate: "2026-11-04",
     });
   });
 

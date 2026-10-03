@@ -24,10 +24,10 @@ export function MoveItemsConfirm({ move, onCancel, onConfirm }: MoveItemsConfirm
         {move && (
           <>
             <AlertDialogTitle className="text-lg font-extrabold text-ink-900">
-              일정 {move.count}개를 옮길게요
+              {countLabel(move)}를 옮길게요
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm/normal text-ink-500">
-              {daysLabel(move)}에 있던 일정을 마지막 날(day {move.lastDay}) 끝으로 옮겨요.
+              {daysLabel(move)}에 있던 {kindsLabel(move)} 마지막 날(day {move.lastDay})로 옮겨요.
             </AlertDialogDescription>
             <div className="mt-3.5 flex gap-2">
               <Button variant="outline" size="form" className="flex-1" onClick={onCancel}>
@@ -42,6 +42,21 @@ export function MoveItemsConfirm({ move, onCancel, onConfirm }: MoveItemsConfirm
       </AlertDialogContent>
     </AlertDialog>
   );
+}
+
+/** 「일정 3개 · 지출 2개」 — 0개인 쪽은 뺀다 */
+function countLabel(move: PendingMove) {
+  const parts = [
+    move.items > 0 && `일정 ${move.items}개`,
+    move.expenses > 0 && `지출 ${move.expenses}개`,
+  ].filter(Boolean);
+  return parts.join(" · ");
+}
+
+/** 「일정과 지출을」 · 「일정을」 · 「지출을」 */
+function kindsLabel(move: PendingMove) {
+  if (move.items > 0 && move.expenses > 0) return "일정과 지출을";
+  return move.items > 0 ? "일정을" : "지출을";
 }
 
 function daysLabel(move: PendingMove) {

@@ -100,3 +100,15 @@ export async function deleteExpense(expenseId: string): Promise<void> {
   const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
   if (error) throw error;
 }
+
+/** date 이후(포함)의 지출 수. 기간을 줄일 때 마지막 날로 모일 지출을 미리 센다 */
+export async function countExpensesFrom(tripId: string, date: string): Promise<number> {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from("expenses")
+    .select("id", { count: "exact", head: true })
+    .eq("trip_id", tripId)
+    .gte("spent_on", date);
+  if (error) throw error;
+  return count ?? 0;
+}
