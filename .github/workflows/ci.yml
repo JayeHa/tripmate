@@ -7,9 +7,10 @@ on:
   push:
     branches: [main]
 
-# PR 은 새 푸시가 오면 이전 실행을 취소한다. main 은 머지된 커밋마다 결과가 남아야 해서 취소하지 않는다
+# PR 은 브랜치 단위 그룹이라 새 푸시가 오면 이전 실행을 취소한다.
+# main 은 머지된 커밋마다 결과가 남아야 한다. 한 그룹은 대기 실행을 하나만 두고 나머지를 취소하므로 커밋별 그룹으로 나눈다
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # 코드를 읽기만 한다. 의존성이나 action 이 오염돼도 레포에 쓰지 못하게
