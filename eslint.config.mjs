@@ -17,7 +17,7 @@ import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
 /** 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부 */
 function allowedFrom(layer) {
   const below = ORDER.slice(ORDER.indexOf(layer) + 1);
-  const self = SLICED.includes(layer) ? [[layer, { slice: "${from.slice}" }]] : [layer];
+  const self = SLICED.includes(layer) ? [[layer, { group: "${from.group}", slice: "${from.slice}" }]] : [layer];
   return [...self, ...below];
 }
 
