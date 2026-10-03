@@ -3,6 +3,8 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
 import boundaries from "eslint-plugin-boundaries";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+
 import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
 
 /**
@@ -68,6 +70,59 @@ const eslintConfig = defineConfig([
         {
           default: "disallow",
           rules: ORDER.map((layer) => ({ from: layer, allow: allowedFrom(layer) })),
+        },
+      ],
+    },
+  },
+  /**
+   * 코드 규칙 (AGENTS.md 「코드 규칙」). 판단이 필요 없는 건 error, 나눌지 판단해야 하는 건 warn.
+   */
+  {
+    rules: {
+      "no-nested-ternary": "error",
+      "max-depth": ["error", 3],
+      "max-lines": ["warn", { max: 200, skipBlankLines: true, skipComments: true }],
+      complexity: ["warn", 15],
+    },
+  },
+  {
+    // 생성 파일 · 데이터 · shadcn 원본 · 테스트는 길이가 책임과 무관하다
+    files: [
+      "src/shared/api/supabase/database.types.ts",
+      "src/features/auth/demo-login/lib/tokyo-seed.ts",
+      "src/shared/ui/**",
+      "**/*.test.ts",
+    ],
+    rules: { "max-lines": "off" },
+  },
+  /**
+   * import 규칙. 정렬과 type import 는 --fix 로 고쳐지므로 pre-commit 에서 자동 적용된다.
+   */
+  {
+    plugins: { "simple-import-sort": simpleImportSort },
+    rules: {
+      "simple-import-sort/imports": [
+        "error",
+        // 부수 효과 → node · 외부 패키지 → @/ 레이어 → 상대경로
+        { groups: [["^\\u0000"], ["^node:", "^@?\\w"], ["^@/"], ["^\\."]] },
+      ],
+      "simple-import-sort/exports": "error",
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
+      "import/no-duplicates": ["error", { "prefer-inline": true }],
+      // 배럴(index.ts)이 서로를 다시 내보내는 FSD 에서 생기기 쉽다
+      "import/no-cycle": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              // 다른 슬라이스는 공개 API(index.ts)로만. 같은 슬라이스 안은 상대경로를 쓴다.
+              // server-only 모듈은 배럴에 올리지 않으므로 그 import 한 줄에만 disable 주석을 단다.
+              group: ["@/views/*/*", "@/widgets/*/*", "@/entities/*/*", "@/features/*/*/*"],
+              message:
+                "다른 슬라이스는 index.ts 로만 import 합니다. 같은 슬라이스 안이면 상대경로를 쓰세요.",
+            },
+          ],
         },
       ],
     },
