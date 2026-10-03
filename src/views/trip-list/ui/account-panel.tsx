@@ -12,6 +12,7 @@ import {
 } from "@/entities/session";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
+import { IconButton } from "@/shared/ui/icon-button";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
 import { cn } from "@/shared/lib/utils";
 
@@ -121,9 +122,9 @@ function ProfileEditor({
   return (
     <>
       <div className="flex h-14 shrink-0 items-center gap-3 px-[18px]">
-        <button type="button" aria-label="뒤로" onClick={onBack} className="flex text-ink-900">
+        <IconButton label="뒤로" onClick={onBack} className="text-ink-900">
           <ArrowLeft className="size-[22px]" strokeWidth={2} />
-        </button>
+        </IconButton>
         <Title className="text-[17px] font-extrabold text-ink-900">내 정보</Title>
       </div>
       <div className="flex flex-col items-center gap-[18px] px-5 pt-2 pb-6">

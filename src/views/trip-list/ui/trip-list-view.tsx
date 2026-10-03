@@ -18,6 +18,7 @@ import { todayISO } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { buttonVariants } from "@/shared/ui/button";
+import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
 import { AccountMenu } from "./account-menu";
@@ -139,14 +140,13 @@ export function TripListView() {
                   today={today}
                   companionCount={trip.companionCount}
                   actions={
-                    <button
-                      type="button"
-                      aria-label={`${trip.title} 메뉴`}
+                    <IconButton
+                      label={`${trip.title} 메뉴`}
                       onClick={() => setSheetFor(trip)}
-                      className="-m-2 flex shrink-0 p-2 text-ink-700"
+                      className="-m-2 p-2 text-ink-700"
                     >
                       <Ellipsis className="size-[22px]" />
-                    </button>
+                    </IconButton>
                   }
                 />
               ))}

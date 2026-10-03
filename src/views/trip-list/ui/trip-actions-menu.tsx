@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { IconButton } from "@/shared/ui/icon-button";
 
 type Props = {
   trip: Trip;
@@ -22,8 +23,12 @@ export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={`${trip.title} 메뉴`}
-        className="flex rounded-button p-1 text-ink-400 data-popup-open:bg-surface-muted"
+        render={
+          <IconButton
+            label={`${trip.title} 메뉴`}
+            className="p-1 text-ink-400 data-popup-open:bg-surface-muted"
+          />
+        }
       >
         <Ellipsis className="size-5" />
       </DropdownMenuTrigger>
