@@ -83,7 +83,13 @@ function MainMenu({
         </div>
       </div>
       <div className="py-1.5">
-        <MenuItem icon={UserRound} label="내 정보 수정" onClick={onEditProfile} />
+        {/* 편집기는 마운트할 때 한 번만 이름을 읽는다. 불러오기 전에 열면 빈 칸으로 남는다. */}
+        <MenuItem
+          icon={UserRound}
+          label="내 정보 수정"
+          onClick={onEditProfile}
+          disabled={!profile}
+        />
         <MenuItem icon={LogOut} label="로그아웃" onClick={signOut} danger />
       </div>
       <div className="h-3.5" />
@@ -96,18 +102,21 @@ function MenuItem({
   label,
   onClick,
   danger,
+  disabled,
 }: {
   icon: typeof UserRound;
   label: string;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "flex h-13 w-full items-center gap-3 px-5 text-left text-base font-semibold hover:bg-surface-sunken",
+        "flex h-13 w-full items-center gap-3 px-5 text-left text-base font-semibold hover:bg-surface-sunken disabled:opacity-40",
         danger ? "text-destructive" : "text-ink-900",
       )}
     >
