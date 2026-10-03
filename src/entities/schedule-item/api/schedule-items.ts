@@ -91,3 +91,15 @@ export async function moveScheduleItemToDay(
     position: last ? last.position + 1 : 0,
   });
 }
+
+/** dayIndex 일째부터 끝까지의 일정 수. 기간을 줄일 때 옮겨질 일정을 미리 센다 */
+export async function countScheduleItemsFrom(tripId: string, dayIndex: number): Promise<number> {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from("schedule_items")
+    .select("id", { count: "exact", head: true })
+    .eq("trip_id", tripId)
+    .gte("day_index", dayIndex);
+  if (error) throw error;
+  return count ?? 0;
+}

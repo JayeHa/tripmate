@@ -70,6 +70,22 @@ export async function createTrip(trip: NewTrip): Promise<string> {
   return data;
 }
 
+export type TripDates = { tripId: string; startDate: string; endDate: string };
+
+/**
+ * 여행 기간을 바꾼다 (update_trip_dates, 0008). 일정은 출발일 기준이라 함께 옮겨지고,
+ * 줄어들어 사라지는 날의 일정은 새 마지막 날 끝으로 옮겨진다.
+ */
+export async function updateTripDates({ tripId, startDate, endDate }: TripDates) {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("update_trip_dates", {
+    p_trip_id: tripId,
+    p_start: startDate,
+    p_end: endDate,
+  });
+  if (error) throw error;
+}
+
 export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {
   const supabase = createClient();
   const { data, error } = await supabase

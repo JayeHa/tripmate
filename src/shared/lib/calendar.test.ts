@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { type CalendarDay, monthCells, monthsAround, monthsFrom, pickDate } from "./calendar";
+import {
+  type CalendarDay,
+  monthCells,
+  monthsFrom,
+  monthsSpanning,
+  pickDate,
+  rangeCtaLabel,
+} from "./calendar";
 
 const TODAY = "2026-10-03";
 const days = (cells: ReturnType<typeof monthCells>) =>
@@ -116,14 +123,20 @@ describe("pickDate", () => {
   });
 });
 
-describe("monthsAround", () => {
-  it("기준 달 앞뒤로 펼친다", () => {
-    expect(monthsAround("2026-01-31", 2, 1)).toEqual([
-      [2025, 11],
-      [2025, 12],
-      [2026, 1],
-      [2026, 2],
-    ]);
+describe("monthsSpanning", () => {
+  it("오늘과 기준 달을 모두 담고 기준 달에서 시작한다", () => {
+    // 2025-01 에 시작한 여행을 2026-10 에 고친다: 오늘 이후로도 옮길 수 있어야 한다
+    const { months, focusIndex } = monthsSpanning("2025-01-10", "2026-10-03", 2, 1);
+    expect(months[0]).toEqual([2024, 11]);
+    expect(months.at(-1)).toEqual([2026, 11]);
+    expect(months[focusIndex]).toEqual([2025, 1]);
+  });
+
+  it("기준이 오늘보다 뒤여도 같다", () => {
+    const { months, focusIndex } = monthsSpanning("2027-03-01", "2026-10-03", 1, 1);
+    expect(months[0]).toEqual([2026, 9]);
+    expect(months.at(-1)).toEqual([2027, 4]);
+    expect(months[focusIndex]).toEqual([2027, 3]);
   });
 });
 
@@ -134,5 +147,17 @@ describe("monthsFrom", () => {
       [2026, 12],
       [2027, 1],
     ]);
+  });
+});
+
+describe("rangeCtaLabel", () => {
+  it("단계마다 다음 할 일을 알려 주고, 다 고르면 기간과 완료 동작", () => {
+    expect(rangeCtaLabel(null, "수정 완료")).toBe("출발일을 선택해 주세요");
+    expect(rangeCtaLabel({ start: "2026-11-06", end: null }, "수정 완료")).toBe(
+      "도착일을 선택해 주세요",
+    );
+    expect(rangeCtaLabel({ start: "2026-11-06", end: "2026-11-08" }, "수정 완료")).toBe(
+      "2026.11.6 - 11.8 / 수정 완료",
+    );
   });
 });

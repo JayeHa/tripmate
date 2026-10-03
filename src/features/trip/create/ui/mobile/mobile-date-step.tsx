@@ -4,27 +4,23 @@ import { X } from "lucide-react";
 
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
-import { MonthGrid } from "@/shared/ui/month-grid";
+import { MobileRangeCalendar } from "@/shared/ui/range-calendar";
 
 import { dateCtaLabel } from "../../lib/cta";
-import { PAST_MONTHS } from "../../lib/range";
 import { useCreateCalendar } from "../../model/use-create-calendar";
 import type { TripCreateState } from "../../model/use-trip-create";
 import { CreateError } from "../parts/create-error";
 import type { TitleComponent } from "../parts/title";
-import { Weekdays } from "../parts/weekdays";
 import { MobileFooter } from "./mobile-footer";
-import { useScrollToThisMonth } from "./use-scroll-to-this-month";
 
 type MobileDateStepProps = {
   state: TripCreateState;
   Title: TitleComponent;
 };
 
-/** 모바일 날짜 단계 (시안 5c). 3년 전~1년 뒤를 세로로 잇고 이번 달로 스크롤해 둔다 */
+/** 모바일 날짜 단계 (시안 5c). 달력은 이번 달로 스크롤해 둔다 */
 export function MobileDateStep({ state, Title }: MobileDateStepProps) {
-  const { months, cellsOf } = useCreateCalendar(state.selection);
-  const thisMonthRef = useScrollToThisMonth();
+  const calendar = useCreateCalendar(state.selection);
   const names = state.picked.map((c) => c.name).join("·");
 
   return (
@@ -45,21 +41,7 @@ export function MobileDateStep({ state, Title }: MobileDateStepProps) {
           {names} · 날짜에 맞춰 날씨와 여행 정보를 알려드려요.
         </p>
       </div>
-      <Weekdays className="shrink-0 border-b border-surface-muted bg-[#FAFAFB] py-2.5 text-[13px]" />
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#FAFAFB]">
-        {months.map(([year, month], i) => (
-          <div
-            key={`${year}-${month}`}
-            ref={i === PAST_MONTHS ? thisMonthRef : undefined}
-            className="pt-5 pb-2"
-          >
-            <h3 className="px-5 pb-2.5 text-base font-bold text-ink-800">
-              {year}년 {month}월
-            </h3>
-            <MonthGrid size="lg" cells={cellsOf(year, month)} onPick={state.pick} />
-          </div>
-        ))}
-      </div>
+      <MobileRangeCalendar {...calendar} onPick={state.pick} />
       <MobileFooter>
         <CreateError state={state} />
         <Button

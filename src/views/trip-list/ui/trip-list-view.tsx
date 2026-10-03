@@ -2,7 +2,6 @@
 
 import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { initialOfName, useMyProfile, useUser } from "@/entities/session";
@@ -16,10 +15,12 @@ import {
   useTrips,
 } from "@/entities/trip";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
+import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { todayISO } from "@/shared/lib/days";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import { DialogTitle } from "@/shared/ui/dialog";
+import { FlowDialog } from "@/shared/ui/flow-dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
@@ -30,14 +31,11 @@ import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
-type TripListViewProps = { createdId: string | null };
-
 /**
  * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
  * 만들기는 모바일이면 /trips/new 전체 화면, PC 면 이 화면 위 모달(6b·6c)이다.
  */
-export function TripListView({ createdId }: TripListViewProps) {
-  const router = useRouter();
+export function TripListView() {
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
   const { data: profile } = useMyProfile();
@@ -46,10 +44,8 @@ export function TripListView({ createdId }: TripListViewProps) {
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const createFlow = useTripCreate((tripId) => {
-    setCreateOpen(false);
-    router.replace(`/trips?created=${tripId}`);
-  });
+  const [editFor, setEditFor] = useState<Trip | null>(null);
+  const createFlow = useTripCreate(() => setCreateOpen(false));
   const openCreate = () => {
     createFlow.reset();
     setCreateOpen(true);
@@ -60,7 +56,8 @@ export function TripListView({ createdId }: TripListViewProps) {
 
   // 사용자를 아직 모르면 숨긴다. 보여 줬다가 지우지 못하는 쪽보다 낫다.
   const canDelete = (trip: Trip | null) => Boolean(user) && trip?.owner_id === user?.id;
-  const editTrip = (trip: Trip) => router.push(`/trips/${trip.id}/settings`);
+  // 「여행일정 수정」은 기간 달력으로 (시안 5a · 6a)
+  const editTrip = (trip: Trip) => setEditFor(trip);
   const askDelete = (trip: Trip) => {
     deleteTrip.reset();
     setConfirmFor(trip);
@@ -153,7 +150,6 @@ export function TripListView({ createdId }: TripListViewProps) {
                   trip={trip}
                   today={today}
                   companionCount={trip.companionCount}
-                  highlighted={trip.id === createdId}
                   actions={
                     <IconButton
                       label={`${trip.title} 메뉴`}
@@ -175,7 +171,6 @@ export function TripListView({ createdId }: TripListViewProps) {
                     trip={trip}
                     today={today}
                     companionCount={trip.companionCount}
-                    highlighted={trip.id === createdId}
                     actions={pcActions(trip)}
                   />
                 ))}
@@ -224,36 +219,27 @@ export function TripListView({ createdId }: TripListViewProps) {
         }}
       />
       {/* 만드는 중에는 Esc · 바깥 클릭으로 닫히지 않는다 (useTripCreate 의 locked) */}
-      <Dialog
+      <FlowDialog
         open={createOpen}
         onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
-      >
-        {/* 1024px 아래로 창을 줄이면 전체 화면 모바일 레이아웃으로 바뀐다. 상태는 createFlow 하나를 함께 쓴다.
-            창 높이가 낮으면 모달도 줄고 본문이 안에서 스크롤된다(머리·바닥은 고정) */}
-        <DialogContent
-          showCloseButton={false}
-          className="inset-0 h-dvh w-full max-w-none translate-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-190 lg:max-w-190 lg:-translate-1/2 lg:rounded-sheet"
-        >
-          {/* DialogContent 가 grid 라 자식이 min-width:auto 로 내용 폭만큼 커진다.
-              줄바꿈 없는 권역 칩 줄이 모달을 화면 밖으로 밀지 않게 min-w-0 으로 묶는다 */}
-          <div className="flex h-full min-h-0 min-w-0 flex-col lg:hidden">
-            <TripCreateFlow
-              layout="mobile"
-              state={createFlow}
-              Title={DialogTitle}
-              onClose={() => setCreateOpen(false)}
-            />
-          </div>
-          <div className="hidden h-full min-h-0 min-w-0 lg:block">
-            <TripCreateFlow
-              layout="pc"
-              state={createFlow}
-              Title={DialogTitle}
-              onClose={() => setCreateOpen(false)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+        mobile={
+          <TripCreateFlow
+            layout="mobile"
+            state={createFlow}
+            Title={DialogTitle}
+            onClose={() => setCreateOpen(false)}
+          />
+        }
+        pc={
+          <TripCreateFlow
+            layout="pc"
+            state={createFlow}
+            Title={DialogTitle}
+            onClose={() => setCreateOpen(false)}
+          />
+        }
+      />
+      <EditDatesDialog trip={editFor} onClose={() => setEditFor(null)} />
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
       <DeleteTripDialog
         trip={confirmFor}

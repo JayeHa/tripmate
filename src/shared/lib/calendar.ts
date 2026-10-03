@@ -1,5 +1,6 @@
 import {
   addMonths,
+  differenceInCalendarMonths,
   format,
   getDay,
   getDaysInMonth,
@@ -7,6 +8,8 @@ import {
   startOfMonth,
   subMonths,
 } from "date-fns";
+
+import { dateRangeLabel } from "./days";
 
 /** 날짜는 모두 yyyy-MM-dd 문자열이다. 사전순 비교가 곧 날짜 비교다. */
 export type DateRange = { start: string; end: string };
@@ -109,10 +112,16 @@ export function pickDate(selection: DateSelection, date: string): NonNullable<Da
   return { start: selection.start, end: date };
 }
 
-/** center 가 속한 달을 기준으로 before 달 전부터 after 달 뒤까지. [year, month(1~12)] */
-export function monthsAround(center: string, before: number, after: number): [number, number][] {
-  const from = format(subMonths(parseISO(center), before), "yyyy-MM-dd");
-  return monthsFrom(from, before + 1 + after);
+/**
+ * 두 날짜가 속한 달을 모두 포함하고, 이른 쪽 before 달 전부터 늦은 쪽 after 달 뒤까지.
+ * focusIndex 는 첫 번째 날짜(a)가 속한 달의 위치 — 처음 보일 달이다.
+ */
+export function monthsSpanning(a: string, b: string, before: number, after: number) {
+  const [early, late] = a <= b ? [a, b] : [b, a];
+  const from = format(subMonths(parseISO(early), before), "yyyy-MM-dd");
+  const count = differenceInCalendarMonths(parseISO(late), parseISO(early)) + before + 1 + after;
+  const focusIndex = differenceInCalendarMonths(parseISO(a), parseISO(from));
+  return { months: monthsFrom(from, count), focusIndex };
 }
 
 /** from 이 속한 달부터 count 달. [year, month(1~12)] */
@@ -122,4 +131,14 @@ export function monthsFrom(from: string, count: number): [number, number][] {
     const d = addMonths(base, i);
     return [d.getFullYear(), d.getMonth() + 1];
   });
+}
+
+/**
+ * 기간 선택 CTA. 무엇을 눌러야 하는지 알려 주다가, 다 고르면 기간과 완료 동작을 보인다
+ * (시안 5c · 6c: 「2026.11.6 - 11.8 / 등록 완료」, 수정 모드는 「… / 수정 완료」).
+ */
+export function rangeCtaLabel(selection: DateSelection, done: string) {
+  if (!selection) return "출발일을 선택해 주세요";
+  if (!selection.end) return "도착일을 선택해 주세요";
+  return `${dateRangeLabel(selection.start, selection.end)} / ${done}`;
 }
