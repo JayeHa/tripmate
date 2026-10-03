@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createClient } from "@/shared/api/supabase/client";
 import { queryKeys } from "@/shared/api/query-keys";
-import { writeCacheOwner } from "../lib/cache-owner";
 
 export function useUser() {
   const queryClient = useQueryClient();
@@ -38,7 +37,6 @@ export function useSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     queryClient.clear();
-    writeCacheOwner(null);
     router.replace("/login");
   };
 }
