@@ -11,6 +11,7 @@ import {
   fetchTrips,
   rotateInviteToken,
   updateTrip,
+  updateTripDates,
 } from "../api/trips";
 import type { TripFormValues } from "./schema";
 
@@ -37,6 +38,20 @@ export function useUpdateTrip(tripId: string) {
     onSuccess: (trip) => {
       qc.setQueryData(queryKeys.trips.detail(tripId), trip);
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+    },
+  });
+}
+
+/** 기간 변경은 여행과 그 일정·경로를 함께 바꾼다 */
+export function useUpdateTripDates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateTripDates,
+    onSuccess: (_, { tripId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
     },
   });
 }

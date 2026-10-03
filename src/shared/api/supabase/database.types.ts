@@ -381,6 +381,10 @@ export type Database = {
         Args: { p_title: string; p_start: string; p_end: string; p_city_ids: string[] };
         Returns: string;
       };
+      update_trip_dates: {
+        Args: { p_trip_id: string; p_start: string; p_end: string };
+        Returns: undefined;
+      };
       rotate_invite_token: {
         Args: { p_trip_id: string };
         Returns: string;
