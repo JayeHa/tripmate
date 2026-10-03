@@ -25,6 +25,8 @@ import sharp from "sharp";
 const INBOX = path.resolve("city-images-inbox");
 // 처리한 원본은 지우지 않고 여기로 옮긴다. 다시 줄이거나 잘라야 할 때 쓴다.
 const DONE = path.join(INBOX, "done");
+// inbox 의 안내 파일과 숨김 파일은 사진으로 보지 않는다.
+const isNote = (f) => f.startsWith(".") || f === "README.md";
 const OUT = path.resolve("public/city-images");
 const MANIFEST = path.resolve("src/shared/config/city-images.ts");
 const SEED = path.resolve("supabase/migrations/0006_cities.sql");
@@ -56,7 +58,7 @@ const added = [];
 for (const file of readdirSync(INBOX).sort()) {
   if (statSync(path.join(INBOX, file)).isDirectory()) continue;
   const ext = path.extname(file).toLowerCase();
-  if (file.startsWith(".")) continue;
+  if (isNote(file)) continue;
   if (!INPUT.has(ext)) {
     console.warn(
       `건너뜀: ${file} — ${ext} 는 읽을 수 없어요 (jpg·png·webp·avif·tiff). HEIC 는 jpg 로 내보내 주세요`,
@@ -112,6 +114,6 @@ console.log(
 );
 console.log(`사진 있는 도시 ${entries.length} / ${cities.length}`);
 const stray = readdirSync(INBOX).filter(
-  (f) => !f.startsWith(".") && !statSync(path.join(INBOX, f)).isDirectory(),
+  (f) => !isNote(f) && !statSync(path.join(INBOX, f)).isDirectory(),
 );
 if (stray.length) console.log(`inbox 에 남은 파일: ${stray.join(", ")}`);
