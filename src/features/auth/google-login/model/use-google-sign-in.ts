@@ -30,7 +30,13 @@ export function useGoogleSignIn() {
     const { data } = await supabase.auth.getUser();
     if (data.user?.is_anonymous) {
       queryClient.clear();
-      await del(QUERY_PERSIST_KEY);
+      try {
+        await del(QUERY_PERSIST_KEY);
+      } catch {
+        // IndexedDB 를 못 쓰는 환경(일부 사생활 보호 모드)에서는 del 이 reject 한다.
+        // 저장소가 없으면 복원될 저장본도 없으니 무시하고 로그인을 이어 간다.
+        // 여기서 throw 하면 loading 이 풀리지 않아 버튼이 멈춘다.
+      }
     }
 
     const { error } = await supabase.auth.signInWithOAuth({
