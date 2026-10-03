@@ -6,11 +6,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { del, get, set } from "idb-keyval";
 import { useState, type ReactNode } from "react";
-import {
-  QUERY_CACHE_VERSION,
-  QUERY_PERSIST_KEY,
-  shouldPersistQuery,
-} from "@/shared/api/query-keys";
+import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -52,7 +48,7 @@ export function Providers({ children }: { children: ReactNode }) {
       persistOptions={{
         persister,
         maxAge: 7 * DAY,
-        buster: QUERY_CACHE_VERSION,
+        buster: QUERY_CACHE_BUSTER,
         dehydrateOptions: {
           // 사용자/경로 캐시는 영구 저장하지 않음. 일정·가계부·여행만 오프라인용으로 저장.
           shouldDehydrateQuery: (q) =>

@@ -21,7 +21,7 @@ export type TripCity = { id: string; name: string };
 
 /**
  * 목록에서 「N명과 함께」·「N개 도시」를 보여주려고 멤버 수와 도시를 함께 읽는다.
- * IndexedDB 에 저장되는 데이터라 모양을 바꾸면 QUERY_CACHE_VERSION 을 올린다.
+ * IndexedDB 에 저장되는 데이터다. 이 파일이 바뀌면 저장된 캐시는 버려진다(query-cache.config.mjs).
  */
 export type TripListItem = Trip & { companionCount: number; cities: TripCity[] };
 

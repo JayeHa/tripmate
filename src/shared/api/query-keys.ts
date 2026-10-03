@@ -30,8 +30,10 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
 export const QUERY_PERSIST_KEY = "tripmate-query-cache";
 
 /**
- * 저장된 캐시의 데이터 모양 버전. 영속화 대상(shouldPersistQuery)의 반환 타입을 바꾸면 올린다.
- * 값이 다르면 복원하지 않고 버린다. 안 올리면 옛 모양 데이터가 새 코드에 먼저 그려져 깨진다.
- * (예: 2 — 여행 목록에 cities 가 생김)
+ * 저장된 캐시의 데이터 모양 버전. 값이 다르면 복원하지 않고 버린다.
+ *
+ * 앞부분은 손으로 올리는 버전, 뒷부분은 빌드할 때 계산한 해시다(query-cache.config.mjs).
+ * 해시는 DB 타입과 엔티티 api·model 파일이 바뀌면 저절로 바뀌므로 보통은 손댈 일이 없다.
+ * 그 파일들 밖에서 저장 데이터의 모양을 바꿨을 때만 앞부분을 올린다.
  */
-export const QUERY_CACHE_VERSION = "2";
+export const QUERY_CACHE_BUSTER = `2-${process.env.QUERY_CACHE_HASH ?? "dev"}`;
