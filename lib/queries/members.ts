@@ -21,7 +21,3 @@ export async function removeMember(tripId: string, userId: string): Promise<void
     .eq("user_id", userId);
   if (error) throw error;
 }
-
-export function memberName(member: TripMember | undefined, fallback = "알 수 없음"): string {
-  return member?.profile.display_name ?? fallback;
-}

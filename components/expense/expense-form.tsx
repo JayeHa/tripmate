@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { dayIndexToDate, dayLabel } from "@/lib/itinerary/days";
+import { dayCount, dayIndexToDate, dayLabel } from "@/lib/itinerary/days";
 import { expenseFormSchema, type ExpenseFormValues } from "@/lib/schemas/expense";
 import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/lib/money";
 import {
@@ -274,11 +274,14 @@ export function ExpenseForm({
               setItemId("");
             }}
           >
-            {Array.from({ length: Math.max(1, dayIdx(trip.start_date, trip.end_date)) }, (_, i) => (
-              <option key={i} value={dayIndexToDate(trip.start_date, i)}>
-                Day {i + 1} · {dayLabel(trip.start_date, i)}
-              </option>
-            ))}
+            {Array.from(
+              { length: Math.max(1, dayCount(trip.start_date, trip.end_date)) },
+              (_, i) => (
+                <option key={i} value={dayIndexToDate(trip.start_date, i)}>
+                  Day {i + 1} · {dayLabel(trip.start_date, i)}
+                </option>
+              ),
+            )}
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -313,11 +316,6 @@ export function ExpenseForm({
       </Button>
     </form>
   );
-}
-
-function dayIdx(start: string, end: string) {
-  const ms = new Date(end).getTime() - new Date(start).getTime();
-  return Math.round(ms / 86_400_000) + 1;
 }
 
 function Chip({
