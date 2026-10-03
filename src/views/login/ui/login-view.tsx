@@ -2,9 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Wordmark } from "@/components/layout/wordmark";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { Wordmark } from "@/shared/ui/wordmark";
+import { Button } from "@/shared/ui/button";
+import { createClient } from "@/shared/api/supabase/client";
 
 function GoogleLogo() {
   return (

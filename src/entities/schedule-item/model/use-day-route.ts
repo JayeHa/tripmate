@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queries/keys";
-import type { DayRoute, TravelMode } from "@/lib/types";
+import { queryKeys } from "@/shared/api/query-keys";
+import type { DayRoute, TravelMode } from "./types";
 
 async function fetchDayRoute(
   tripId: string,

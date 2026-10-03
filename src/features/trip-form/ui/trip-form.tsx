@@ -2,11 +2,11 @@
 
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { tripFormSchema, type TripFormValues } from "@/lib/schemas/trip";
-import { CURRENCY_OPTIONS } from "@/lib/types";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { tripFormSchema, type TripFormValues } from "@/entities/trip";
+import { CURRENCY_OPTIONS } from "@/shared/lib/money";
 
 type Props = {
   initial?: TripFormValues;

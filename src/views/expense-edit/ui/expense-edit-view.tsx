@@ -12,17 +12,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { AppHeader } from "@/components/layout/app-header";
-import { ExpenseForm } from "@/components/expense/expense-form";
-import { Button } from "@/components/ui/button";
-import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/hooks/use-expenses";
-import { useScheduleItems } from "@/hooks/use-schedule-items";
-import { useTrip } from "@/hooks/use-trip";
-import { useTripMembers } from "@/hooks/use-trip-members";
-import { useUser } from "@/hooks/use-user";
-import type { ExpenseFormValues } from "@/lib/schemas/expense";
-import type { ExpenseCategory } from "@/lib/types";
+} from "@/shared/ui/alert-dialog";
+import { AppHeader } from "@/shared/ui/app-header";
+import { ExpenseForm } from "@/features/expense-form";
+import { Button } from "@/shared/ui/button";
+import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/entities/expense";
+import { useScheduleItems } from "@/entities/schedule-item";
+import { useTrip } from "@/entities/trip";
+import { useTripMembers } from "@/entities/trip-member";
+import { useUser } from "@/entities/session";
+import type { ExpenseFormValues } from "@/entities/expense";
+import type { ExpenseCategory } from "@/entities/expense";
 
 export function ExpenseEditView() {
   const { tripId, expenseId } = useParams<{ tripId: string; expenseId: string }>();

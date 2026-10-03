@@ -12,16 +12,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { AppHeader } from "@/components/layout/app-header";
-import { InviteLinkCard } from "@/components/trip/invite-link-card";
-import { MemberList } from "@/components/trip/member-list";
-import { TripForm } from "@/components/trip/trip-form";
-import { Button } from "@/components/ui/button";
-import { useDeleteTrip, useTrip, useUpdateTrip } from "@/hooks/use-trip";
-import { useRemoveMember, useTripMembers } from "@/hooks/use-trip-members";
-import { useUser } from "@/hooks/use-user";
-import { ratesToForm } from "@/lib/queries/trips";
+} from "@/shared/ui/alert-dialog";
+import { AppHeader } from "@/shared/ui/app-header";
+import { InviteLinkCard } from "@/features/invite-member";
+import { MemberList } from "@/entities/trip-member";
+import { TripForm } from "@/features/trip-form";
+import { Button } from "@/shared/ui/button";
+import { useDeleteTrip, useTrip, useUpdateTrip } from "@/entities/trip";
+import { useRemoveMember, useTripMembers } from "@/entities/trip-member";
+import { useUser } from "@/entities/session";
+import { ratesToForm } from "@/entities/trip";
 
 export function TripSettingsView() {
   const { tripId } = useParams<{ tripId: string }>();

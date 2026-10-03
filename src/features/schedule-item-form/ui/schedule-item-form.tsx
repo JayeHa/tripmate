@@ -12,21 +12,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
-import { dayLabel } from "@/lib/itinerary/days";
-import { scheduleItemFormSchema } from "@/lib/schemas/schedule-item";
-import type { ScheduleItem } from "@/lib/types";
+} from "@/shared/ui/alert-dialog";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
+import { Textarea } from "@/shared/ui/textarea";
+import { dayLabel } from "@/shared/lib/days";
+import { scheduleItemFormSchema } from "@/entities/schedule-item";
+import type { ScheduleItem } from "@/entities/schedule-item";
 
 type Patch = { name: string; start_time: string | null; memo: string | null };
 

@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 export const MEMO_TAGS = ["팁", "예약", "운영시간", "할 일", "링크"] as const;
 export type MemoTag = (typeof MEMO_TAGS)[number];

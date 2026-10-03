@@ -1,21 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { dayCount, dayIndexToDate, dayLabel } from "@/lib/itinerary/days";
-import { expenseFormSchema, type ExpenseFormValues } from "@/lib/schemas/expense";
-import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/lib/money";
-import {
-  EXPENSE_CATEGORIES,
-  EXPENSE_CATEGORY_LABEL,
-  type ScheduleItem,
-  type Trip,
-  type TripMember,
-} from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
+import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
+import { expenseFormSchema, type ExpenseFormValues } from "@/entities/expense";
+import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/shared/lib/money";
+import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABEL } from "@/entities/expense";
+import type { ScheduleItem } from "@/entities/schedule-item";
+import type { Trip } from "@/entities/trip";
+import type { TripMember } from "@/entities/trip-member";
+import { cn } from "@/shared/lib/utils";
 
 type Props = {
   trip: Trip;

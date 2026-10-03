@@ -3,9 +3,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { queryKeys } from "@/lib/queries/keys";
-import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/shared/ui/button";
+import { queryKeys } from "@/shared/api/query-keys";
+import { createClient } from "@/shared/api/supabase/client";
 
 export function JoinButton({ token }: { token: string }) {
   const router = useRouter();

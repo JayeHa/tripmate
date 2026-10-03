@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
-import { TripForm } from "@/components/trip/trip-form";
-import { useCreateTrip } from "@/hooks/use-trip";
-import { useUser } from "@/hooks/use-user";
+import { AppHeader } from "@/shared/ui/app-header";
+import { TripForm } from "@/features/trip-form";
+import { useCreateTrip } from "@/entities/trip";
+import { useUser } from "@/entities/session";
 
 export function TripCreateView() {
   const router = useRouter();

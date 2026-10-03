@@ -6,7 +6,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { del, get, set } from "idb-keyval";
 import { useState, type ReactNode } from "react";
-import { shouldPersistQuery } from "@/lib/queries/keys";
+import { shouldPersistQuery } from "@/shared/api/query-keys";
 
 const DAY = 24 * 60 * 60 * 1000;
 

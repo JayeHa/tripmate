@@ -2,7 +2,7 @@
 
 import { CalendarDays, Map, Receipt, Scale, Settings } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { BottomTabBar, type TabItem } from "@/components/layout/bottom-tab-bar";
+import { BottomTabBar, type TabItem } from "@/shared/ui/tab-bar";
 
 const TABS = [
   { key: "itinerary", label: "일정", icon: CalendarDays, keepDay: true },

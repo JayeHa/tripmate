@@ -1,4 +1,4 @@
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables } from "@/shared/api/supabase/database.types";
 
 export type Expense = Tables<"expenses">;
 export type ExpenseSplit = Tables<"expense_splits">;

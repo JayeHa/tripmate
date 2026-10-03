@@ -3,8 +3,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { queryKeys } from "@/lib/queries/keys";
+import { createClient } from "@/shared/api/supabase/client";
+import { queryKeys } from "@/shared/api/query-keys";
 
 export function useUser() {
   const queryClient = useQueryClient();

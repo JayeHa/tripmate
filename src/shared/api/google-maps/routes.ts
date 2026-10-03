@@ -1,6 +1,6 @@
 import "server-only";
 import { decode, encode } from "@googlemaps/polyline-codec";
-import type { RouteLeg, TravelMode } from "@/lib/types";
+import type { RouteLeg, TravelMode } from "@/entities/schedule-item";
 
 export type RoutePoint = { id: string; lat: number; lng: number };
 

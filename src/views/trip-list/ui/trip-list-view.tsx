@@ -2,12 +2,12 @@
 
 import { LogOut, Plus } from "lucide-react";
 import Link from "next/link";
-import { AppHeader } from "@/components/layout/app-header";
-import { TripCard } from "@/components/trip/trip-card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useTrips } from "@/hooks/use-trip";
-import { useSignOut } from "@/hooks/use-user";
+import { AppHeader } from "@/shared/ui/app-header";
+import { TripCard } from "@/entities/trip";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { useTrips } from "@/entities/trip";
+import { useSignOut } from "@/entities/session";
 
 function todayISO() {
   const d = new Date();

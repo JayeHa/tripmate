@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-import { AppHeader } from "@/components/layout/app-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useExpenses } from "@/hooks/use-expenses";
-import { useTrip } from "@/hooks/use-trip";
-import { useTripMembers } from "@/hooks/use-trip-members";
-import { MissingRateError, decimalsOf, formatMoney } from "@/lib/money";
-import { computeNetBalances, minimizeTransfers } from "@/lib/settlement";
-import { cn } from "@/lib/utils";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import { useExpenses } from "@/entities/expense";
+import { useTrip } from "@/entities/trip";
+import { useTripMembers } from "@/entities/trip-member";
+import { MissingRateError, decimalsOf, formatMoney } from "@/shared/lib/money";
+import { computeNetBalances, minimizeTransfers } from "@/entities/expense";
+import { cn } from "@/shared/lib/utils";
 
 export function SettlementView() {
   const { tripId } = useParams<{ tripId: string }>();

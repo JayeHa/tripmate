@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { computeDayRoute, type RoutePoint } from "@/lib/maps/routes-api";
-import { createClient } from "@/lib/supabase/server";
-import type { DayRoute, RouteLeg, TravelMode } from "@/lib/types";
+import { computeDayRoute, type RoutePoint } from "@/shared/api/google-maps/routes";
+import { createClient } from "@/shared/api/supabase/server";
+import type { DayRoute, RouteLeg, TravelMode } from "@/entities/schedule-item";
 
 type Body = { tripId?: string; dayIndex?: number; travelMode?: TravelMode };
 

@@ -1,18 +1,18 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queries/keys";
+import { queryKeys } from "@/shared/api/query-keys";
 import {
   createScheduleItem,
   deleteScheduleItem,
   fetchScheduleItems,
   moveScheduleItemToDay,
   swapScheduleItems,
-  updateScheduleItem,
   type NewScheduleItem,
-} from "@/lib/queries/schedule-items";
-import type { TablesUpdate } from "@/lib/supabase/database.types";
-import type { ScheduleItem } from "@/lib/types";
+  updateScheduleItem,
+} from "../api/schedule-items";
+import type { TablesUpdate } from "@/shared/api/supabase/database.types";
+import type { ScheduleItem } from "./types";
 
 export function useScheduleItems(tripId: string) {
   return useQuery({

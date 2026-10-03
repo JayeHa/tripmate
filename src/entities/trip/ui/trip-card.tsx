@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin } from "lucide-react";
 import Link from "next/link";
-import { dateRangeLabel, dayCount } from "@/lib/itinerary/days";
-import type { Trip } from "@/lib/types";
+import { dateRangeLabel, dayCount } from "@/shared/lib/days";
+import type { Trip } from "../model/types";
 
 export function TripCard({ trip }: { trip: Trip }) {
   const nights = dayCount(trip.start_date, trip.end_date) - 1;

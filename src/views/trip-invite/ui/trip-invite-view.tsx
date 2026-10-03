@@ -1,9 +1,9 @@
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { dateRangeLabel } from "@/lib/itinerary/days";
-import { createClient } from "@/lib/supabase/server";
-import { JoinButton } from "./join-button";
+import { Button } from "@/shared/ui/button";
+import { dateRangeLabel } from "@/shared/lib/days";
+import { createClient } from "@/shared/api/supabase/server";
+import { JoinButton } from "@/features/join-trip";
 
 export async function TripInviteView({ token }: { token: string }) {
   const supabase = await createClient();

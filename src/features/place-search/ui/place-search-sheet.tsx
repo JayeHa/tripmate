@@ -3,14 +3,8 @@
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Input } from "@/shared/ui/input";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
 
 export type PickedPlace = {
   name: string;

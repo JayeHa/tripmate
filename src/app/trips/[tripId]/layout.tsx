@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { TripShell } from "@/components/layout/trip-shell";
+import { BottomNav } from "@/widgets/bottom-nav";
+import { TripShell } from "@/widgets/trip-shell";
 
 export default async function TripLayout({ children, params }: LayoutProps<"/trips/[tripId]">) {
   const { tripId } = await params;

@@ -2,8 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { queryKeys } from "@/lib/queries/keys";
-import { createClient } from "@/lib/supabase/client";
+import { queryKeys } from "@/shared/api/query-keys";
+import { createClient } from "@/shared/api/supabase/client";
 
 /**
  * 여행 하나에 채널 1개. 테이블 변경 시 해당 쿼리를 invalidate.

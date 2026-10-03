@@ -4,15 +4,15 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-import { AppHeader } from "@/components/layout/app-header";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useExpenses } from "@/hooks/use-expenses";
-import { useTrip } from "@/hooks/use-trip";
-import { useTripMembers } from "@/hooks/use-trip-members";
-import { dateToDayIndex, dayLabel } from "@/lib/itinerary/days";
-import { MissingRateError, formatMoney, toHome } from "@/lib/money";
-import { EXPENSE_CATEGORY_LABEL, type ExpenseCategory, type ExpenseWithSplits } from "@/lib/types";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { useExpenses } from "@/entities/expense";
+import { useTrip } from "@/entities/trip";
+import { useTripMembers } from "@/entities/trip-member";
+import { dateToDayIndex, dayLabel } from "@/shared/lib/days";
+import { MissingRateError, formatMoney, toHome } from "@/shared/lib/money";
+import { EXPENSE_CATEGORY_LABEL, ExpenseCategory, ExpenseWithSplits } from "@/entities/expense";
 
 export function ExpenseListView() {
   const { tripId } = useParams<{ tripId: string }>();

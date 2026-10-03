@@ -2,9 +2,9 @@
 
 import { Check, Copy, RefreshCw, Share2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useRotateInviteToken } from "@/hooks/use-trip";
-import type { Trip } from "@/lib/types";
+import { Button } from "@/shared/ui/button";
+import { useRotateInviteToken } from "@/entities/trip";
+import type { Trip } from "@/entities/trip";
 
 export function InviteLinkCard({ trip }: { trip: Trip }) {
   const [copied, setCopied] = useState(false);

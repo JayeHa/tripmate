@@ -3,15 +3,15 @@
 import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { AppHeader } from "@/components/layout/app-header";
-import { DayChips } from "@/components/itinerary/day-chips";
-import { PlaceSearchSheet, type PickedPlace } from "@/components/itinerary/place-search-sheet";
-import { ScheduleItemForm } from "@/components/itinerary/schedule-item-form";
-import { ScheduleList } from "@/components/itinerary/schedule-list";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDayParam } from "@/hooks/use-day-param";
-import { useDayRoute } from "@/hooks/use-day-route";
+import { AppHeader } from "@/shared/ui/app-header";
+import { DayChips } from "@/features/day-selector";
+import { PlaceSearchSheet, type PickedPlace } from "@/features/place-search";
+import { ScheduleItemForm } from "@/features/schedule-item-form";
+import { ScheduleList } from "@/entities/schedule-item";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { useDayParam } from "@/features/day-selector";
+import { useDayRoute } from "@/entities/schedule-item";
 import {
   useCreateScheduleItem,
   useDeleteScheduleItem,
@@ -19,11 +19,11 @@ import {
   useScheduleItems,
   useSwapScheduleItems,
   useUpdateScheduleItem,
-} from "@/hooks/use-schedule-items";
-import { useTrip } from "@/hooks/use-trip";
-import { useUser } from "@/hooks/use-user";
-import { dayCount } from "@/lib/itinerary/days";
-import type { ScheduleItem } from "@/lib/types";
+} from "@/entities/schedule-item";
+import { useTrip } from "@/entities/trip";
+import { useUser } from "@/entities/session";
+import { dayCount } from "@/shared/lib/days";
+import type { ScheduleItem } from "@/entities/schedule-item";
 
 export function TripItineraryView() {
   const { tripId } = useParams<{ tripId: string }>();

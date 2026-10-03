@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { ExpenseWithSplits } from "@/lib/entities/expense";
+import type { ExpenseWithSplits } from "../model/types";
 import { computeNetBalances } from "./balances";
-import { splitEqual } from "@/lib/money";
+import { splitEqual } from "@/shared/lib/money";
 
 const rates = { JPY: { unit: 100, value: 900 } };
 

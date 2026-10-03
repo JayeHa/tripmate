@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EXPENSE_CATEGORIES } from "@/lib/types";
+import { EXPENSE_CATEGORIES } from "./types";
 
 export const expenseFormSchema = z.object({
   amount: z.number().positive("금액을 입력하세요"),

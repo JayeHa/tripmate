@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { dayLabel } from "@/lib/itinerary/days";
-import { cn } from "@/lib/utils";
+import { dayLabel } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
 
 type Props = {
   startDate: string;
