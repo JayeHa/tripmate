@@ -93,10 +93,36 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - **블록 중첩은 3단까지**(린트 오류). `try` 를 반복문 안에 넣지 말고 함수로 뺀다
 - **함수 복잡도 15 초과는 경고.** 폼처럼 큰 컴포넌트가 걸리면 그 화면을 다시 만들 때 나눈다
 
+## props 타입
+
+- **컴포넌트 props 타입은 `type 컴포넌트이름Props = { … }` 로 따로 선언한다**(린트 오류).
+  파라미터에 `{ a }: { a: string }` 처럼 바로 쓰지 않는다. 훅·유틸의 객체 파라미터는 해당 없음
+- 이름 있는 컴포넌트는 `function` 선언, 렌더 중에 컴포넌트를 정의하지 않는다, 배열 index 를 key 로 쓰지 않는다(린트)
+
+## Promise
+
+- **기다리지 않는 Promise 는 `void` 로 표시한다.** 예: `void qc.invalidateQueries(…)` — 빼먹으면 린트 오류
+- 이벤트 핸들러·콜백에 async 함수를 넘길 땐 `onClick={() => void fn()}`. 실패를 삼키면 안 되는 곳이면 함수 안에서 처리한다
+- `||` 와 `??`: 숫자·객체는 `??`(린트). **문자열은 `||` 를 허용한다** — 빈 문자열을 `null`·기본값으로 바꾸려는 의도가 많다
+
+## Tailwind
+
+- **정식 클래스를 쓴다.** `size-[22px]` 대신 `size-5.5` 처럼 간격 단위로 표현되는 값은 린트가 자동으로 고친다.
+  `text-[13px]` 처럼 대응 클래스가 없는 임의값은 그대로
+- 클래스 **순서**는 `prettier-plugin-tailwindcss` 가 정렬한다. 손으로 맞추지 않는다
+- **`rounded`·`rounded-sm` 은 쓰지 않는다.** 이 테마의 `rounded-sm` 은 shadcn 값(`--radius × 0.6`)이라
+  기본 Tailwind 와 다르다. 시안 값은 토큰으로: `rounded-tag`(4) · `rounded-pill-sm`(6) · `rounded-button`(8) ·
+  `rounded-memo`(10) · `rounded-card`(12) · `rounded-sheet`(22)
+
 ## import
 
 - 정렬(외부 → `@/` → 상대경로), 타입 전용 `type` 표기, 중복 import 는 `--fix` 가 고친다
 - 순환 import 금지(`import/no-cycle`). 배럴끼리 다시 내보내다 생기기 쉽다
+
+## 왜 airbnb 규칙을 안 쓰나
+
+`eslint-config-airbnb` 는 ESLint 8 까지만 지원한다(이 레포는 9 · flat config). 커뮤니티 포크가 있지만 규칙 다수가
+`eslint-config-next`·typescript-eslint·Prettier 와 겹치거나 부딪친다. 필요한 규칙을 골라 켜는 쪽을 택했다.
 
 ## 커밋 전 검사
 
