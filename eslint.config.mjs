@@ -14,10 +14,21 @@ import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
  * 뜨지만 규칙이 실제로 동작하는 쪽을 택했다.
  */
 
-/** 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부 */
+/**
+ * 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부.
+ *
+ * 그룹 안에서는 도메인 접두사를 떼므로 `trip/form` 과 `expense/form` 처럼 이름이 겹친다.
+ * 그래서 그룹 슬라이스는 `slice` 대신 `group`·`groupedSlice` 를 캡처한다. 셀렉터의 캡처
+ * 키가 대상에 없으면 불일치이므로 평면 슬라이스와 그룹 슬라이스가 서로 섞이지 않는다.
+ */
 function allowedFrom(layer) {
   const below = ORDER.slice(ORDER.indexOf(layer) + 1);
-  const self = SLICED.includes(layer) ? [[layer, { group: "${from.group}", slice: "${from.slice}" }]] : [layer];
+  const self = SLICED.includes(layer)
+    ? [
+        [layer, { slice: "${from.slice}" }],
+        [layer, { group: "${from.group}", groupedSlice: "${from.groupedSlice}" }],
+      ]
+    : [layer];
   return [...self, ...below];
 }
 
@@ -38,7 +49,7 @@ const eslintConfig = defineConfig([
                   type: layer,
                   pattern: `src/${layer}/(${groups.join("|")})/*/**/*`,
                   mode: "full",
-                  capture: ["group", "slice"],
+                  capture: ["group", "groupedSlice"],
                 },
               ]
             : [];
