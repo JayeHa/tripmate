@@ -3,6 +3,7 @@
 import { CalendarDays, Trash2 } from "lucide-react";
 import { dateRangeLabel } from "@/shared/lib/days";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
+import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
 import type { Trip } from "@/entities/trip";
 
 type Props = {
@@ -33,23 +34,24 @@ export function TripActionsSheet({ trip, canDelete, onClose, onEdit, onDelete }:
                 {dateRangeLabel(trip.start_date, trip.end_date)}
               </span>
             </div>
-            <button
-              type="button"
+            <SheetMenuItem
+              icon={CalendarDays}
+              iconClassName="size-[22px] text-ink-700"
               onClick={() => onEdit(trip)}
-              className="flex h-13 items-center gap-3 border-t border-surface-muted px-1 text-base font-semibold text-ink-900"
+              className="border-t border-surface-muted px-1"
             >
-              <CalendarDays className="size-[22px] text-ink-700" />
               여행일정 수정
-            </button>
+            </SheetMenuItem>
             {canDelete && (
-              <button
-                type="button"
+              <SheetMenuItem
+                icon={Trash2}
+                iconClassName="size-[22px]"
+                danger
                 onClick={() => onDelete(trip)}
-                className="flex h-13 items-center gap-3 border-t border-surface-muted px-1 text-base font-semibold text-destructive"
+                className="border-t border-surface-muted px-1"
               >
-                <Trash2 className="size-[22px]" />
                 여행 삭제
-              </button>
+              </SheetMenuItem>
             )}
           </>
         )}

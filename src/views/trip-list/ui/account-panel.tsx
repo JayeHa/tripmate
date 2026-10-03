@@ -12,6 +12,7 @@ import {
 } from "@/entities/session";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
+import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
 import { cn } from "@/shared/lib/utils";
 
 type TitleComponent = React.ComponentType<{ className?: string; children: React.ReactNode }>;
@@ -72,45 +73,25 @@ function MainMenu({
       </div>
       <div className="py-1.5">
         {/* 편집기는 마운트할 때 한 번만 이름을 읽는다. 불러오기 전에 열면 빈 칸으로 남는다. */}
-        <MenuItem
+        <SheetMenuItem
           icon={UserRound}
-          label="내 정보 수정"
           onClick={onEditProfile}
           disabled={!profile}
-        />
-        <MenuItem icon={LogOut} label="로그아웃" onClick={signOut} danger />
+          className="px-5 hover:bg-surface-sunken"
+        >
+          내 정보 수정
+        </SheetMenuItem>
+        <SheetMenuItem
+          icon={LogOut}
+          onClick={signOut}
+          danger
+          className="px-5 hover:bg-surface-sunken"
+        >
+          로그아웃
+        </SheetMenuItem>
       </div>
       <div className="h-3.5" />
     </>
-  );
-}
-
-function MenuItem({
-  icon: Icon,
-  label,
-  onClick,
-  danger,
-  disabled,
-}: {
-  icon: typeof UserRound;
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "flex h-13 w-full items-center gap-3 px-5 text-left text-base font-semibold hover:bg-surface-sunken disabled:opacity-40",
-        danger ? "text-destructive" : "text-ink-900",
-      )}
-    >
-      <Icon className="size-5" />
-      <span className="flex-1">{label}</span>
-    </button>
   );
 }
 
