@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/shared/ui/app-header";
-import { ExpenseForm } from "@/features/expense-form";
+import { ExpenseForm } from "@/features/expense/form";
 import { useCreateExpense } from "@/entities/expense";
 import { useScheduleItems } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";

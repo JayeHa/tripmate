@@ -15,6 +15,18 @@ import boundaries from "eslint-plugin-boundaries";
 const SLICED = ["views", "widgets", "features", "entities"];
 const ORDER = ["app", ...SLICED, "shared"];
 
+/**
+ * 그룹된 슬라이스. 가까운 슬라이스를 폴더로 묶되 그룹 자체는 코드를 갖지 않고,
+ * 그룹 안의 슬라이스끼리도 서로 import 할 수 없다 (FSD: slices-segments).
+ *
+ * 그룹을 여기에 적어야 하는 이유: 플러그인은 경로 모양만으로는
+ * `<group>/<slice>/<segment>` 와 `<slice>/<segment>/<file>` 을 구분하지 못한다.
+ * 적지 않으면 그룹 안의 교차 import 가 조용히 통과한다.
+ */
+const GROUPS = {
+  features: ["auth", "trip", "schedule", "expense"],
+};
+
 /** 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부 */
 function allowedFrom(layer) {
   const below = ORDER.slice(ORDER.indexOf(layer) + 1);
@@ -31,12 +43,26 @@ const eslintConfig = defineConfig([
       "boundaries/include": ["src/**/*"],
       "boundaries/elements": [
         { type: "app", pattern: "src/app/**/*", mode: "full" },
-        ...SLICED.map((layer) => ({
-          type: layer,
-          pattern: `src/${layer}/*/**/*`,
-          mode: "full",
-          capture: ["slice"],
-        })),
+        ...SLICED.flatMap((layer) => {
+          const groups = GROUPS[layer] ?? [];
+          const grouped = groups.length
+            ? [
+                {
+                  type: layer,
+                  pattern: `src/${layer}/(${groups.join("|")})/*/**/*`,
+                  mode: "full",
+                  capture: ["group", "slice"],
+                },
+              ]
+            : [];
+          const flatPattern = groups.length
+            ? `src/${layer}/!(${groups.join("|")})/**/*`
+            : `src/${layer}/*/**/*`;
+          return [
+            ...grouped,
+            { type: layer, pattern: flatPattern, mode: "full", capture: ["slice"] },
+          ];
+        }),
         { type: "shared", pattern: "src/shared/**/*", mode: "full" },
       ],
     },

@@ -14,9 +14,9 @@ import {
   AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
 import { AppHeader } from "@/shared/ui/app-header";
-import { InviteLinkCard } from "@/features/invite-member";
+import { InviteLinkCard } from "@/features/trip/invite-member";
 import { MemberList } from "@/entities/trip-member";
-import { TripForm } from "@/features/trip-form";
+import { TripForm } from "@/features/trip/form";
 import { Button } from "@/shared/ui/button";
 import { useDeleteTrip, useTrip, useUpdateTrip } from "@/entities/trip";
 import { useRemoveMember, useTripMembers } from "@/entities/trip-member";

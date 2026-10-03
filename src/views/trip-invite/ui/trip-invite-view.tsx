@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/shared/ui/button";
 import { dateRangeLabel } from "@/shared/lib/days";
 import { createClient } from "@/shared/api/supabase/server";
-import { JoinButton } from "@/features/join-trip";
+import { JoinButton } from "@/features/trip/join";
 
 export async function TripInviteView({ token }: { token: string }) {
   const supabase = await createClient();
