@@ -24,7 +24,11 @@ const EMPTY: TripFormValues = {
   rates: [],
 };
 
-type RateDraft = { currency: string; unit: string; value: string };
+/** 환율 한 줄. id 는 React key 용 — 중간 줄을 지워도 다른 줄의 입력이 섞이지 않게 */
+type RateDraft = { id: string; currency: string; unit: string; value: string };
+
+let nextRateId = 0;
+const rateId = () => `rate-${nextRateId++}`;
 
 export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
   const [form, setForm] = useState({
@@ -35,6 +39,7 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
   });
   const [rates, setRates] = useState<RateDraft[]>(
     (initial?.rates ?? []).map((r) => ({
+      id: rateId(),
       currency: r.currency,
       unit: String(r.unit),
       value: String(r.value),
@@ -49,7 +54,10 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
   function addRate() {
     const used = new Set([form.home_currency, ...rates.map((r) => r.currency)]);
     const next = CURRENCY_OPTIONS.find((c) => !used.has(c)) ?? "";
-    setRates((r) => [...r, { currency: next, unit: next === "JPY" ? "100" : "1", value: "" }]);
+    setRates((r) => [
+      ...r,
+      { id: rateId(), currency: next, unit: next === "JPY" ? "100" : "1", value: "" },
+    ]);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -131,7 +139,7 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
           </p>
         )}
         {rates.map((r, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={r.id} className="flex items-center gap-2">
             <select
               className="h-9 w-24 rounded-lg border border-input bg-transparent px-2 text-sm"
               value={r.currency}

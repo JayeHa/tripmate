@@ -36,7 +36,9 @@ export function MonthGrid({ cells, size, onPick, className }: Props) {
     <div className={cn("grid grid-cols-7", size === "lg" ? "gap-y-1" : "gap-y-0.5", className)}>
       {cells.map((cell, i) =>
         cell.kind === "blank" ? (
-          <div key={`b${i}`} className={s.cell} />
+          // 달 앞쪽 빈 칸은 위치 말고는 구분할 것이 없고 순서도 바뀌지 않는다
+          // eslint-disable-next-line react/no-array-index-key
+          <div key={`blank-${i}`} className={s.cell} />
         ) : (
           <DayCell key={cell.date} cell={cell} size={size} onPick={onPick} />
         ),

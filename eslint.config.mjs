@@ -152,6 +152,25 @@ const eslintConfig = defineConfig([
     },
   },
   /**
+   * React 스타일. eslint-config-next 가 이미 넣은 eslint-plugin-react 에서 골라 켠다.
+   */
+  {
+    files: ["**/*.tsx"],
+    rules: {
+      "react/jsx-no-useless-fragment": ["error", { allowExpressions: true }],
+      "react/self-closing-comp": "error",
+      "react/no-array-index-key": "error",
+      "react/no-unstable-nested-components": "error",
+      "react/jsx-boolean-value": "error",
+      "react/jsx-curly-brace-presence": ["error", { props: "never", children: "never" }],
+      // 지금 코드의 관례: 이름 있는 컴포넌트는 function 선언
+      "react/function-component-definition": [
+        "error",
+        { namedComponents: "function-declaration", unnamedComponents: "arrow-function" },
+      ],
+    },
+  },
+  /**
    * Tailwind 클래스. 정식 이름(size-[22px] → size-5.5)·충돌·중복·없는 클래스를 잡는다.
    * 순서와 줄바꿈은 포매터(prettier-plugin-tailwindcss) 몫이라 여기서 켜지 않는다.
    * cn · cva 안의 문자열도 검사한다(플러그인 기본값).
