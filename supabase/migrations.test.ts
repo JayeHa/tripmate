@@ -89,17 +89,40 @@ describe("security definer 함수의 익명 계정 처리", () => {
   });
 });
 
-describe("assert_not_anonymous 헬퍼", () => {
-  const sql = sqlFiles().join("\n");
+/**
+ * 헬퍼 본문을 통째로 고정한다.
+ *
+ * 방향을 정규식으로 보려 했더니 `if not`, `= false`, `is not true` 처럼 뒤집는
+ * 방법이 끝없이 나왔다. 금지 목록은 무한하고 허용 목록은 유한하다.
+ * 헬퍼는 하나뿐이고 바뀔 일이 거의 없으니 기대 본문과 정확히 같은지만 본다.
+ * 일부러 바꾸려면 이 문자열도 같이 고쳐야 하고, 그때 방향을 다시 보게 된다.
+ */
+const EXPECTED_HELPER_BODY = `
+begin
+if coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) then
+raise exception 'anonymous account is not allowed here';
+end if;
+end
+`;
 
-  it("조건의 방향이 맞다. 익명일 때만 막는다", () => {
-    const body = definitions().get("assert_not_anonymous") ?? "";
-    expect(body).toMatch(/if\s+coalesce\(\(auth\.jwt\(\)[^)]*'is_anonymous'\)[^)]*\)[\s\S]*?then/i);
-    expect(body).not.toMatch(/if\s+not\s/i);
-    expect(body).toMatch(/raise\s+exception/i);
+/** 공백·대소문자 차이는 무시한다. 구조와 토큰만 비교한다. */
+function normalize(sql: string) {
+  return sql
+    .toLowerCase()
+    .split("\n")
+    .map((line) => line.trim().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .join("\n");
+}
+
+describe("assert_not_anonymous 헬퍼", () => {
+  it("본문이 기대한 것과 정확히 같다", () => {
+    const definition = definitions().get("assert_not_anonymous") ?? "";
+    const body = definition.slice(definition.indexOf("$$") + 2, definition.lastIndexOf("$$"));
+    expect(normalize(body)).toBe(normalize(EXPECTED_HELPER_BODY));
   });
 
   it("거부가 필요한 함수는 이 헬퍼를 쓴다", () => {
-    expect(sql).toMatch(REJECTS_ANONYMOUS);
+    expect(sqlFiles().join("\n")).toMatch(REJECTS_ANONYMOUS);
   });
 });
