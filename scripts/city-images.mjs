@@ -82,7 +82,9 @@ for (const file of readdirSync(INBOX).sort()) {
 
   // 같은 도시의 이전 사진은 지운다
   for (const old of readdirSync(OUT)) {
-    if (old.startsWith(`${city.id}.`) && old !== name) rmSync(path.join(OUT, old));
+    // 스크립트가 만든 {id}.{해시}.webp 만 지운다. 손으로 둔 다른 파일은 건드리지 않는다.
+    if (/^[a-z-]+\.[0-9a-f]{8}\.webp$/.test(old) && old.startsWith(`${city.id}.`) && old !== name)
+      rmSync(path.join(OUT, old));
   }
   writeFileSync(path.join(OUT, name), webp);
   renameSync(path.join(INBOX, file), path.join(DONE, file));
