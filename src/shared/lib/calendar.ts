@@ -1,5 +1,6 @@
 import {
   addMonths,
+  differenceInCalendarMonths,
   format,
   getDay,
   getDaysInMonth,
@@ -111,10 +112,16 @@ export function pickDate(selection: DateSelection, date: string): NonNullable<Da
   return { start: selection.start, end: date };
 }
 
-/** center 가 속한 달을 기준으로 before 달 전부터 after 달 뒤까지. [year, month(1~12)] */
-export function monthsAround(center: string, before: number, after: number): [number, number][] {
-  const from = format(subMonths(parseISO(center), before), "yyyy-MM-dd");
-  return monthsFrom(from, before + 1 + after);
+/**
+ * 두 날짜가 속한 달을 모두 포함하고, 이른 쪽 before 달 전부터 늦은 쪽 after 달 뒤까지.
+ * focusIndex 는 첫 번째 날짜(a)가 속한 달의 위치 — 처음 보일 달이다.
+ */
+export function monthsSpanning(a: string, b: string, before: number, after: number) {
+  const [early, late] = a <= b ? [a, b] : [b, a];
+  const from = format(subMonths(parseISO(early), before), "yyyy-MM-dd");
+  const count = differenceInCalendarMonths(parseISO(late), parseISO(early)) + before + 1 + after;
+  const focusIndex = differenceInCalendarMonths(parseISO(a), parseISO(from));
+  return { months: monthsFrom(from, count), focusIndex };
 }
 
 /** from 이 속한 달부터 count 달. [year, month(1~12)] */
