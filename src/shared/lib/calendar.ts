@@ -1,4 +1,12 @@
-import { addMonths, format, getDay, getDaysInMonth, parseISO, startOfMonth } from "date-fns";
+import {
+  addMonths,
+  format,
+  getDay,
+  getDaysInMonth,
+  parseISO,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 
 /** 날짜는 모두 yyyy-MM-dd 문자열이다. 사전순 비교가 곧 날짜 비교다. */
 export type DateRange = { start: string; end: string };
@@ -86,6 +94,12 @@ export function monthCells(year: number, month: number, opts: MonthOptions): Cal
 export function pickDate(selection: DateSelection, date: string): NonNullable<DateSelection> {
   if (!selection || selection.end || date < selection.start) return { start: date, end: null };
   return { start: selection.start, end: date };
+}
+
+/** center 가 속한 달을 기준으로 before 달 전부터 after 달 뒤까지. [year, month(1~12)] */
+export function monthsAround(center: string, before: number, after: number): [number, number][] {
+  const from = format(subMonths(parseISO(center), before), "yyyy-MM-dd");
+  return monthsFrom(from, before + 1 + after);
 }
 
 /** from 이 속한 달부터 count 달. [year, month(1~12)] */

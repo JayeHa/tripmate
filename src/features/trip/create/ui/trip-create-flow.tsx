@@ -1,14 +1,14 @@
 "use client";
 
 import { ArrowLeft, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { type City, CityPicker, CityThumb, useCityCatalog } from "@/entities/city";
 import { titleFromCities, useCreateTrip, useTrips } from "@/entities/trip";
 import {
   type DateRange,
   type DateSelection,
   monthCells,
-  monthsFrom,
+  monthsAround,
   pickDate,
 } from "@/shared/lib/calendar";
 import { todayISO } from "@/shared/lib/days";
@@ -31,8 +31,12 @@ type Props = {
   Title?: TitleComponent;
 };
 
-/** 모바일은 열두 달을 세로로, PC 는 두 달씩 넘겨 본다 */
-const MONTHS = 12;
+/**
+ * 고를 수 있는 달. 지난 여행도 기록할 수 있게 3년 전부터 연다(시안 수정 모드와 같은 범위).
+ * 모바일은 세로로 이어 그리고 이번 달로 스크롤해 둔다. PC 는 이번 달부터 두 달씩 넘긴다.
+ */
+const PAST_MONTHS = 36;
+const FUTURE_MONTHS = 11;
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /** 새 여행 만들기: 도시 다중 선택 → 출발·도착일 → 생성 */
@@ -46,14 +50,12 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
   const [selection, setSelection] = useState<DateSelection>(null);
 
   const today = todayISO();
-  // 다가오는 여행만 「다른 일정」으로 깐다
+  // 지난 날짜도 고를 수 있으니 지난 여행까지 「다른 일정」으로 깐다
   const others = useMemo<DateRange[]>(
-    () =>
-      (trips ?? [])
-        .filter((t) => t.end_date >= today)
-        .map((t) => ({ start: t.start_date, end: t.end_date })),
-    [trips, today],
+    () => (trips ?? []).map((t) => ({ start: t.start_date, end: t.end_date })),
+    [trips],
   );
+  const months = useMemo(() => monthsAround(today, PAST_MONTHS, FUTURE_MONTHS), [today]);
   const names = picked.map((c) => c.name);
 
   const toggle = (city: City) =>
@@ -65,9 +67,14 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
     setSelection(null);
     setStep("date");
   };
+  // 모바일 달력은 지난 달부터 그리므로, 날짜 단계에 들어오면 이번 달로 스크롤해 둔다
+  const thisMonthRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (step === "date") thisMonthRef.current?.scrollIntoView({ block: "start" });
+  }, [step]);
   const pick = (date: string) => setSelection((prev) => pickDate(prev, date));
   const cellsOf = (year: number, month: number) =>
-    monthCells(year, month, { today, selection, others, isHoliday });
+    monthCells(year, month, { today, selection, others, isHoliday, allowPast: true });
   const submit = () => {
     if (!selection?.end || create.isPending) return;
     create.mutate(
@@ -173,8 +180,12 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
             </div>
             <Weekdays className="shrink-0 border-b border-surface-muted bg-[#FAFAFB] py-2.5 text-[13px]" />
             <div className="min-h-0 flex-1 overflow-y-auto bg-[#FAFAFB]">
-              {monthsFrom(today, MONTHS).map(([year, month]) => (
-                <div key={`${year}-${month}`} className="pt-5 pb-2">
+              {months.map(([year, month], i) => (
+                <div
+                  key={`${year}-${month}`}
+                  ref={i === PAST_MONTHS ? thisMonthRef : undefined}
+                  className="pt-5 pb-2"
+                >
                   <h3 className="px-5 pb-2.5 text-base font-bold text-ink-800">
                     {year}년 {month}월
                   </h3>
@@ -240,7 +251,7 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
           {cityBody}
         </>
       ) : (
-        <PcCalendar today={today} cellsOf={cellsOf} onPick={pick} />
+        <PcCalendar months={months} cellsOf={cellsOf} onPick={pick} />
       )}
 
       {error && <div className="shrink-0 px-7 pb-2">{error}</div>}
@@ -325,19 +336,19 @@ function Weekdays({ className }: { className?: string }) {
   );
 }
 
-/** PC: 두 달 나란히, ◀▶ 로 넘긴다. 이번 달보다 앞으로는 못 간다 (시안 6c) */
+/** PC: 두 달 나란히, ◀▶ 로 넘긴다. 처음엔 이번 달부터 보인다 (시안 6c) */
 function PcCalendar({
-  today,
+  months,
   cellsOf,
   onPick,
 }: {
-  today: string;
+  months: readonly [number, number][];
   cellsOf: (year: number, month: number) => ReturnType<typeof monthCells>;
   onPick: (date: string) => void;
 }) {
-  const [offset, setOffset] = useState(0);
-  const months = monthsFrom(today, MONTHS).slice(offset, offset + 2);
-  const last = MONTHS - 2;
+  const [offset, setOffset] = useState(PAST_MONTHS);
+  const shown = months.slice(offset, offset + 2);
+  const last = months.length - 2;
   return (
     <div className="flex min-h-0 flex-1 flex-col px-7 pt-1">
       <div className="flex shrink-0 items-center gap-4 pb-2.5 text-xs text-ink-400">
@@ -367,7 +378,7 @@ function PcCalendar({
         </IconButton>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-8">
-        {months.map(([year, month]) => (
+        {shown.map(([year, month]) => (
           <div key={`${year}-${month}`} className="flex flex-col gap-1.5">
             <h3 className="pb-1 text-center text-base font-extrabold text-ink-900">
               {year}년 {month}월

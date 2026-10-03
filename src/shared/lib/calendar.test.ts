@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type CalendarDay, monthCells, monthsFrom, pickDate } from "./calendar";
+import { type CalendarDay, monthCells, monthsAround, monthsFrom, pickDate } from "./calendar";
 
 const TODAY = "2026-10-03";
 const days = (cells: ReturnType<typeof monthCells>) =>
@@ -112,6 +112,17 @@ describe("pickDate", () => {
       start: "2026-10-25",
       end: null,
     });
+  });
+});
+
+describe("monthsAround", () => {
+  it("기준 달 앞뒤로 펼친다", () => {
+    expect(monthsAround("2026-01-31", 2, 1)).toEqual([
+      [2025, 11],
+      [2025, 12],
+      [2026, 1],
+      [2026, 2],
+    ]);
   });
 });
 
