@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { DayChips } from "@/components/itinerary/day-chips";
-import { formatDistance, formatDuration } from "@/components/itinerary/schedule-list";
+import { formatDistance, formatDuration } from "@/lib/itinerary/format-leg";
 import { DayMap } from "@/components/map/day-map";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDayParam } from "@/hooks/use-day-param";

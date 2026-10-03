@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Footprints, MapPinOff, TrainFront } from "lucide-react";
+import { formatDistance, formatDuration } from "@/lib/itinerary/format-leg";
 import type { RouteLeg, ScheduleItem, TravelMode } from "@/lib/types";
 
 type Props = {
@@ -12,18 +13,6 @@ type Props = {
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
 };
-
-export function formatDuration(sec: number): string {
-  const min = Math.round(sec / 60);
-  if (min < 60) return `${min}분`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m ? `${h}시간 ${m}분` : `${h}시간`;
-}
-
-export function formatDistance(m: number): string {
-  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${Math.round(m)}m`;
-}
 
 export function ScheduleList({
   items,
