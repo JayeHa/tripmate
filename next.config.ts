@@ -1,13 +1,9 @@
 import type { NextConfig } from "next";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
 const nextConfig: NextConfig = {
   images: {
-    // 도시 사진(Supabase Storage 공개 버킷)만 허용한다.
-    remotePatterns: supabaseUrl
-      ? [new URL(`${supabaseUrl}/storage/v1/object/public/city-images/**`)]
-      : [],
+    // 이미지 경로가 DB(cities.image_path)에서 온다. 최적화 대상을 도시 사진 폴더로만 좁힌다.
+    localPatterns: [{ pathname: "/city-images/**", search: "" }],
   },
 };
 

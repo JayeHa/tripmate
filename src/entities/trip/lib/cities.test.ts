@@ -15,8 +15,12 @@ describe("cityCountLabel", () => {
 
 describe("coverImageUrl", () => {
   it("사진이 있는 첫 도시를 쓴다", () => {
-    const url = coverImageUrl([city("tokyo"), city("osaka", "osaka.jpg"), city("kyoto", "k.jpg")]);
-    expect(url).toMatch(/\/storage\/v1\/object\/public\/city-images\/osaka\.jpg$/);
+    const url = coverImageUrl([
+      city("tokyo"),
+      city("osaka", "/city-images/osaka.webp"),
+      city("kyoto", "/city-images/kyoto.webp"),
+    ]);
+    expect(url).toBe("/city-images/osaka.webp");
   });
 
   it("사진이 하나도 없으면 null", () => {

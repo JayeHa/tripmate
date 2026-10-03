@@ -25,7 +25,7 @@ create table public.cities (
   country_code text not null,                    -- ISO 3166-1 alpha-2
   currency     text not null,                    -- ISO 4217. 가계부 기본 통화
   timezone     text not null,                    -- IANA. 일정 시각
-  image_path   text,                             -- storage city-images 버킷 안의 경로. 없으면 틴트로 대신
+  image_path   text,                             -- 대표 사진. public/ 기준 경로('/city-images/tokyo.webp'). 없으면 틴트로 대신
   constraint cities_region_chk check ((scope = 'abroad') = (region_id is not null))
 );
 create index cities_order_idx on public.cities(scope, region_id, position);
@@ -58,12 +58,6 @@ create policy "trip_cities_update" on public.trip_cities
   for update to authenticated using (public.is_trip_member(trip_id)) with check (public.is_trip_member(trip_id));
 create policy "trip_cities_delete" on public.trip_cities
   for delete to authenticated using (public.is_trip_member(trip_id));
-
--- ---------- 도시 사진 버킷 ----------
--- 공개 버킷은 공개 URL 로 정책 없이 읽힌다. 업로드는 service role 스크립트로만 한다.
-insert into storage.buckets (id, name, public)
-values ('city-images', 'city-images', true)
-on conflict (id) do nothing;
 
 -- ---------- 시드 ----------
 insert into public.city_regions (id, name, position) values
