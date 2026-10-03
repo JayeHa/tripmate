@@ -17,8 +17,10 @@ begin
     raise exception 'end date must not be before start date';
   end if;
 
-  -- 옮기기 전 출발일. RLS 로 안 보이면 아래 update 가 0행이라 같은 예외로 끝난다
-  select start_date into v_old_start from public.trips where id = p_trip_id;
+  -- 옮기기 전 출발일. 행을 잠가서 읽는다: 두 멤버가 동시에 고치면 뒤 사람이 앞 사람의 커밋을
+  -- 기다린 뒤 바뀐 출발일을 읽는다. 잠그지 않으면 둘 다 옛 출발일 기준으로 지출을 옮겨 두 번 밀린다.
+  -- RLS 로 안 보이면 null 이고, 아래 update 가 0행이라 같은 예외로 끝난다
+  select start_date into v_old_start from public.trips where id = p_trip_id for update;
 
   update public.trips set start_date = p_start, end_date = p_end where id = p_trip_id;
   if not found then
