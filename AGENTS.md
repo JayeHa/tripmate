@@ -21,7 +21,7 @@ app > views > widgets > features > entities > shared
 `views` 는 FSD 의 pages 레이어다. Next 의 `app/` 과 겹쳐서 이름을 바꿨다.
 
 **ESLint 가 이미 막아 주는 것** — 레이어 역방향 import, 같은 레이어의 슬라이스 간
-import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
+import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 ## 어디에 둘 것인가
 
@@ -62,7 +62,9 @@ import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 **`server-only` 나 `next/headers` 를 쓰는 모듈은 배럴에 올리지 않는다.**
 클라이언트 번들에 섞여 빌드가 깨진다. full path 로만 참조한다.
-`shared/api/supabase` 는 그래서 배럴이 없다.
+`shared/api/supabase` 는 그래서 배럴이 없다. 슬라이스 안의 서버 전용 모듈을 밖에서 쓸 때는
+배럴 우회 규칙에 걸리므로 그 import 한 줄에 `eslint-disable-next-line no-restricted-imports`
+와 이유를 단다(예: `app/api/routes/route.ts`).
 
 ## 테스트 위치
 
@@ -71,6 +73,36 @@ import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 대상과 같은 자리에 있으면 파일을 옮길 때 테스트가 따라가고, 테스트가 없는 모듈이
 눈에 띈다. vitest 는 `**/*.test.ts` 로 수집하므로 위치 제약이 없다.
+
+# 코드 규칙
+
+린트로 잡을 수 있는 건 린트가 잡는다(`eslint.config.mjs`). 판단이 필요한 건 아래 기준을 따른다.
+
+## 컴포넌트는 한 가지 일만
+
+- **레이아웃이 다르면 컴포넌트를 나눈다.** 모바일과 PC 의 구조가 다르면 `if (layout === …)` 로
+  한 함수에 두 화면을 그리지 않는다. 예: `features/trip/create/ui/{mobile,pc}`
+- **상태와 이펙트는 훅(`model/use-*.ts`), 순수 계산은 `lib/` + 테스트.** 컴포넌트는 받은 것을 그린다.
+  두 레이아웃이 같은 상태를 쓰면 훅을 상위(뷰)로 올려 하나만 둔다
+- **파일이 200줄을 넘으면 나눌 신호다**(린트 경고). 생성 파일·데이터·shadcn 원본·테스트는 제외
+
+## 분기는 읽히게
+
+- **중첩 삼항 금지**(린트 오류). 대신 early return 하는 작은 함수, 조회 객체
+  (`COPY[state.step]`, `NET_TONE[Math.sign(net)]`), 하위 컴포넌트
+- **블록 중첩은 3단까지**(린트 오류). `try` 를 반복문 안에 넣지 말고 함수로 뺀다
+- **함수 복잡도 15 초과는 경고.** 폼처럼 큰 컴포넌트가 걸리면 그 화면을 다시 만들 때 나눈다
+
+## import
+
+- 정렬(외부 → `@/` → 상대경로), 타입 전용 `type` 표기, 중복 import 는 `--fix` 가 고친다
+- 순환 import 금지(`import/no-cycle`). 배럴끼리 다시 내보내다 생기기 쉽다
+
+## 커밋 전 검사
+
+`husky` 의 pre-commit 이 `lint-staged` 로 **스테이징된 파일에만** `eslint --fix` → `prettier --write`
+를 돌린다. 린트 오류가 남으면 커밋이 막힌다. `tsc`·`test`·`build` 는 무거워서 넣지 않았으니
+PR 전에 직접 돌린다.
 
 # 인증 경계
 
