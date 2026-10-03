@@ -22,7 +22,7 @@ export function TripCreateView() {
             if (!user) return;
             create.mutate(
               { values, ownerId: user.id },
-              { onSuccess: (trip) => router.replace(`/trips/${trip.id}/itinerary`) },
+              { onSuccess: (trip) => router.replace(`/trips/${trip.id}/home`) },
             );
           }}
         />

@@ -24,7 +24,7 @@ import { useUser } from "@/entities/session";
 import { dayCount } from "@/shared/lib/days";
 import type { ScheduleItem } from "@/entities/schedule-item";
 
-export function TripItineraryView({ tripId }: { tripId: string }) {
+export function TripScheduleView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
   const { data: user } = useUser();
   const { data: items, isPending } = useScheduleItems(tripId);

@@ -24,7 +24,7 @@ export function JoinButton({ token }: { token: string }) {
       return;
     }
     await qc.invalidateQueries({ queryKey: queryKeys.trips.all });
-    router.replace(`/trips/${tripId}/itinerary`);
+    router.replace(`/trips/${tripId}/home`);
   }
 
   return (

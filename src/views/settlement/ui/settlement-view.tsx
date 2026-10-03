@@ -40,7 +40,7 @@ export function SettlementView({ tripId }: { tripId: string }) {
 
   return (
     <>
-      <AppHeader title="정산" back={`/trips/${tripId}/itinerary`} />
+      <AppHeader title="정산" back={`/trips/${tripId}/expenses`} />
       <main className="flex flex-1 flex-col gap-4 p-4">
         {result?.missing && (
           <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">

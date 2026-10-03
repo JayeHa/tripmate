@@ -51,7 +51,7 @@ export function ExpenseListView({ tripId }: { tripId: string }) {
 
   return (
     <>
-      <AppHeader title="가계부" back={`/trips/${tripId}/itinerary`} />
+      <AppHeader title="가계부" back="/trips" />
       <main className="flex flex-1 flex-col gap-4 p-4 pb-28">
         {trip && expenses && expenses.length > 0 && (
           <section className="rounded-xl border bg-card p-4">
