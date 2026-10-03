@@ -47,3 +47,6 @@ supabase/.branches
 
 # 디자인 핸드오프 패키지 (로컬 참조용, 레포에 커밋하지 않음)
 design_handoff_tripmate/
+
+# 도시 사진 원본 (scripts/upload-city-images.mjs 로 Storage 에 올린다)
+city-images/
