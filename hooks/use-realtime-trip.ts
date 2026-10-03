@@ -22,7 +22,7 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "schedule_items", filter },
         () => {
           qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
-          qc.invalidateQueries({ queryKey: ["trips", tripId, "route"] });
+          qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
         },
       )
       .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>

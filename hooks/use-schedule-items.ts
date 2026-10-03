@@ -25,7 +25,7 @@ function useInvalidateItems(tripId: string) {
   const qc = useQueryClient();
   return () => {
     qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
-    qc.invalidateQueries({ queryKey: ["trips", tripId, "route"] });
+    qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
   };
 }
 
@@ -78,7 +78,7 @@ export function useSwapScheduleItems(tripId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: key });
-      qc.invalidateQueries({ queryKey: ["trips", tripId, "route"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
     },
   });
 }
