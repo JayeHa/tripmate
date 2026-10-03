@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 /**
  * 마이그레이션을 실제 Postgres(PGlite, WASM)에 순서대로 적용하고 DB 함수·RLS 동작을 확인한다.
  * Supabase 가 주는 auth.uid() · 역할 · storage 는 최소 대역으로 흉내 낸다.
- * 원격과 다른 점: 기본 grant 를 직접 준다, PostgREST 는 없다, 연결이 하나라 동시성은 못 본다.
+ * 원격과 다른 점: PostgREST 는 없다, 연결이 하나라 동시성은 못 본다.
  */
 const DIR = path.resolve(__dirname, "migrations");
 const A = "11111111-1111-1111-1111-111111111111";
@@ -28,11 +28,16 @@ const STUBS = `
   create publication supabase_realtime;
 `;
 
-/** Supabase 가 authenticated 에 기본으로 주는 권한 */
+/**
+ * Supabase 가 프로젝트에 미리 깔아 두는 기본 권한. 마이그레이션 **전에** 둬야
+ * 마이그레이션 안의 revoke 가 덮이지 않고 살아남는다(원격과 같은 순서).
+ */
 const GRANTS = `
-  grant usage on schema public, auth to authenticated;
-  grant select, insert, update, delete on all tables in schema public to authenticated;
-  grant execute on all functions in schema public, auth to authenticated;
+  grant usage on schema public, auth to anon, authenticated, service_role;
+  grant execute on all functions in schema auth to anon, authenticated, service_role;
+  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+  alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+  alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 `;
 
 /** 이후 쿼리를 그 사용자로 실행한다 (RLS 적용) */
@@ -61,6 +66,7 @@ async function newTrip(start: string, end: string) {
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(STUBS);
+  await db.exec(GRANTS);
   for (const file of readdirSync(DIR)
     .filter((f) => f.endsWith(".sql"))
     .sort()) {
@@ -68,7 +74,6 @@ beforeAll(async () => {
     await db.exec(sql);
   }
   await db.exec(`insert into auth.users (id, email) values ('${A}', 'a@x'), ('${B}', 'b@x');`);
-  await db.exec(GRANTS);
 }, 30_000);
 
 describe("create_trip", () => {
