@@ -114,6 +114,7 @@ export function TripListView() {
         }}
         onDelete={(trip) => {
           setSheetFor(null);
+          deleteTrip.reset();
           setConfirmFor(trip);
         }}
       />
@@ -121,8 +122,10 @@ export function TripListView() {
       <DeleteTripDialog
         trip={confirmFor}
         pending={deleteTrip.isPending}
+        error={deleteTrip.error?.message ?? null}
         onCancel={() => setConfirmFor(null)}
-        onConfirm={(trip) => deleteTrip.mutate(trip.id, { onSettled: () => setConfirmFor(null) })}
+        // 실패하면 닫지 않는다. 닫히면 지워졌는지 알 수 없다.
+        onConfirm={(trip) => deleteTrip.mutate(trip.id, { onSuccess: () => setConfirmFor(null) })}
       />
     </main>
   );

@@ -12,11 +12,12 @@ import type { Trip } from "@/entities/trip";
 type Props = {
   trip: Trip | null;
   pending: boolean;
+  error: string | null;
   onCancel: () => void;
   onConfirm: (trip: Trip) => void;
 };
 
-export function DeleteTripDialog({ trip, pending, onCancel, onConfirm }: Props) {
+export function DeleteTripDialog({ trip, pending, error, onCancel, onConfirm }: Props) {
   return (
     <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent className="rounded-sheet px-[22px] pt-6 pb-5">
@@ -28,6 +29,7 @@ export function DeleteTripDialog({ trip, pending, onCancel, onConfirm }: Props) 
             <AlertDialogDescription className="text-sm leading-[1.5] text-ink-500">
               일정, 메모, 가계부 기록이 함께 지워지고 되돌릴 수 없어요.
             </AlertDialogDescription>
+            {error && <p className="text-sm text-destructive">삭제하지 못했어요: {error}</p>}
             <div className="mt-3.5 flex gap-2">
               <Button variant="outline" size="form" className="flex-1" onClick={onCancel}>
                 취소
