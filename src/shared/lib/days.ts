@@ -29,3 +29,18 @@ export function dateRangeLabel(startDate: string, endDate: string): string {
   const sameYear = s.getFullYear() === e.getFullYear();
   return `${format(s, "yyyy.M.d")} - ${format(e, sameYear ? "M.d" : "yyyy.M.d")}`;
 }
+
+/**
+ * 출발일까지 남은 일수. 오늘이면 "D-DAY", 이미 지났으면 null.
+ * 기준일을 받는 이유는 테스트에서 오늘을 고정하기 위해서다.
+ */
+export function ddayLabel(startDate: string, today: string): string | null {
+  const diff = differenceInCalendarDays(parseISO(startDate), parseISO(today));
+  if (diff < 0) return null;
+  return diff === 0 ? "D-DAY" : `D-${diff}`;
+}
+
+/** 오늘 날짜 (yyyy-MM-dd, 로컬 기준) */
+export function todayISO(): string {
+  return format(new Date(), "yyyy-MM-dd");
+}

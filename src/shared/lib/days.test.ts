@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { dateRangeLabel, dateToDayIndex, dayCount, dayIndexToDate, dayLabel } from "./days";
+import {
+  dateRangeLabel,
+  dateToDayIndex,
+  dayCount,
+  dayIndexToDate,
+  dayLabel,
+  ddayLabel,
+} from "./days";
 
 describe("days", () => {
   it("counts inclusive days", () => {
@@ -22,5 +29,19 @@ describe("days", () => {
     expect(dayLabel("2026-10-29", 0)).toBe("10.29 (목)");
     expect(dateRangeLabel("2026-10-29", "2026-11-02")).toBe("2026.10.29 - 11.2");
     expect(dateRangeLabel("2026-12-30", "2027-01-02")).toBe("2026.12.30 - 2027.1.2");
+  });
+});
+
+describe("ddayLabel", () => {
+  it("counts days until departure", () => {
+    expect(ddayLabel("2026-10-31", "2026-10-03")).toBe("D-28");
+  });
+
+  it("says D-DAY on the start date", () => {
+    expect(ddayLabel("2026-10-03", "2026-10-03")).toBe("D-DAY");
+  });
+
+  it("returns null once the trip has started", () => {
+    expect(ddayLabel("2026-10-02", "2026-10-03")).toBeNull();
   });
 });
