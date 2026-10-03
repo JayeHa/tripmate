@@ -17,6 +17,7 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@googlemaps/polyline-codec": "^1.0.28",
+    "@hyunbinseo/holidays-kr": "^5.2027.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "@tanstack/query-async-storage-persister": "^5.104.0",

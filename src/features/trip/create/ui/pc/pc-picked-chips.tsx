@@ -1,0 +1,45 @@
+import { X } from "lucide-react";
+import { type City, CityThumb } from "@/entities/city";
+
+const CHIP = "flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-surface-muted pl-1";
+
+/** PC 바닥의 고른 도시 칩. 도시 단계에서만 눌러서 뺄 수 있다 (시안 6b · 6c) */
+export function PcPickedChips({
+  picked,
+  onRemove,
+}: {
+  picked: City[];
+  /** 없으면 읽기 전용 칩 */
+  onRemove?: (city: City) => void;
+}) {
+  if (picked.length === 0) {
+    return <span className="text-[13px] text-ink-350">도시를 1개 이상 골라 주세요</span>;
+  }
+  return picked.map((city) =>
+    onRemove ? (
+      <button
+        key={city.id}
+        type="button"
+        onClick={() => onRemove(city)}
+        aria-label={`${city.name} 빼기`}
+        className={`${CHIP} pr-2`}
+      >
+        <ChipLabel city={city} />
+        <X className="size-3.5 text-ink-450" strokeWidth={2.4} />
+      </button>
+    ) : (
+      <span key={city.id} className={`${CHIP} pr-2.5`}>
+        <ChipLabel city={city} />
+      </span>
+    ),
+  );
+}
+
+function ChipLabel({ city }: { city: City }) {
+  return (
+    <>
+      <CityThumb city={city} size={24} />
+      <span className="text-[13px] font-bold text-ink-800">{city.name}</span>
+    </>
+  );
+}

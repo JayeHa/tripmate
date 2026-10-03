@@ -16,7 +16,7 @@ export function IconButton({ label, type = "button", className, ...props }: Prop
       type={type}
       aria-label={label}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-button outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "inline-flex shrink-0 items-center justify-center rounded-button outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-40",
         className,
       )}
       {...props}

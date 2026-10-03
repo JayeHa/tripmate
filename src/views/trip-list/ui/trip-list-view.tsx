@@ -14,10 +14,11 @@ import {
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
+import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { todayISO } from "@/shared/lib/days";
-import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
-import { buttonVariants } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
@@ -27,8 +28,11 @@ import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
-/** 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다. */
-export function TripListView() {
+/**
+ * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
+ * 만들기는 모바일이면 /trips/new 전체 화면, PC 면 이 화면 위 모달(6b·6c)이다.
+ */
+export function TripListView({ createdId }: { createdId: string | null }) {
   const router = useRouter();
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
@@ -37,6 +41,15 @@ export function TripListView() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const createFlow = useTripCreate((tripId) => {
+    setCreateOpen(false);
+    router.replace(`/trips?created=${tripId}`);
+  });
+  const openCreate = () => {
+    createFlow.reset();
+    setCreateOpen(true);
+  };
 
   const today = todayISO();
   const groups = useMemo(() => groupTrips(trips ?? [], today), [trips, today]);
@@ -83,12 +96,9 @@ export function TripListView() {
               {trips.length}
             </span>
           )}
-          <Link
-            href="/trips/new"
-            className={cn(buttonVariants({ size: "pill" }), "ml-auto hidden lg:inline-flex")}
-          >
+          <Button size="pill" className="ml-auto hidden lg:inline-flex" onClick={openCreate}>
             + 여행 일정 만들기
-          </Link>
+          </Button>
         </div>
 
         <div className="px-5 pt-5 pb-1 lg:hidden">
@@ -139,6 +149,7 @@ export function TripListView() {
                   trip={trip}
                   today={today}
                   companionCount={trip.companionCount}
+                  highlighted={trip.id === createdId}
                   actions={
                     <IconButton
                       label={`${trip.title} 메뉴`}
@@ -160,12 +171,14 @@ export function TripListView() {
                     trip={trip}
                     today={today}
                     companionCount={trip.companionCount}
+                    highlighted={trip.id === createdId}
                     actions={pcActions(trip)}
                   />
                 ))}
                 {/* 시안 6a: 다가오는 여행 그리드의 마지막 칸 */}
-                <Link
-                  href="/trips/new"
+                <button
+                  type="button"
+                  onClick={openCreate}
                   className="flex min-h-[236px] flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
                 >
                   <span className="flex size-12 items-center justify-center rounded-full bg-primary">
@@ -175,7 +188,7 @@ export function TripListView() {
                   <span className="text-[13px] text-ink-400">
                     도시와 날짜만 고르면 바로 시작돼요
                   </span>
-                </Link>
+                </button>
               </div>
             ) : (
               <div className="hidden grid-cols-2 gap-x-8 lg:grid">
@@ -206,6 +219,37 @@ export function TripListView() {
           askDelete(trip);
         }}
       />
+      {/* 만드는 중에는 Esc · 바깥 클릭으로 닫히지 않는다 (useTripCreate 의 locked) */}
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
+      >
+        {/* 1024px 아래로 창을 줄이면 전체 화면 모바일 레이아웃으로 바뀐다. 상태는 createFlow 하나를 함께 쓴다.
+            창 높이가 낮으면 모달도 줄고 본문이 안에서 스크롤된다(머리·바닥은 고정) */}
+        <DialogContent
+          showCloseButton={false}
+          className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
+        >
+          {/* DialogContent 가 grid 라 자식이 min-width:auto 로 내용 폭만큼 커진다.
+              줄바꿈 없는 권역 칩 줄이 모달을 화면 밖으로 밀지 않게 min-w-0 으로 묶는다 */}
+          <div className="flex h-full min-h-0 min-w-0 flex-col lg:hidden">
+            <TripCreateFlow
+              layout="mobile"
+              state={createFlow}
+              Title={DialogTitle}
+              onClose={() => setCreateOpen(false)}
+            />
+          </div>
+          <div className="hidden h-full min-h-0 min-w-0 lg:block">
+            <TripCreateFlow
+              layout="pc"
+              state={createFlow}
+              Title={DialogTitle}
+              onClose={() => setCreateOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
       <DeleteTripDialog
         trip={confirmFor}

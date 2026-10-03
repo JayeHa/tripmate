@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
-import { initialOf, tintOf } from "../lib/tint";
+import { initialOf, tintOf } from "@/shared/lib/tint";
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
 
@@ -11,18 +12,25 @@ type Props = {
   today: string;
   /** 나를 뺀 일행 수 */
   companionCount?: number;
+  /** 방금 만들거나 수정한 여행을 강조한다. */
+  highlighted?: boolean;
   /** 제목 옆 `···`. 넘기지 않으면 그리지 않는다. */
   actions?: React.ReactNode;
 };
 
 /** PC 다가오는 여행 카드 (시안 6a). 썸네일 132(도시 사진, 없으면 틴트) + 본문. */
-export function TripCard({ trip, today, companionCount, actions }: Props) {
+export function TripCard({ trip, today, companionCount, highlighted, actions }: Props) {
   const dday = ddayLabel(trip.start_date, today);
   const { bg, fg } = tintOf(trip.title);
   const imageUrl = coverImageUrl(trip.cities);
   return (
     // 카드 전체가 링크지만 `···` 는 링크 밖이어야 한다. 제목 링크를 카드 전체로 늘린다.
-    <div className="relative rounded-card border border-line-card bg-white shadow-card">
+    <div
+      className={cn(
+        "relative rounded-card border border-line-card shadow-card",
+        highlighted ? "bg-surface-memo" : "bg-white",
+      )}
+    >
       <div
         aria-hidden="true"
         className="relative flex h-[132px] items-center justify-center overflow-hidden rounded-t-[11px] text-[44px] font-extrabold"
