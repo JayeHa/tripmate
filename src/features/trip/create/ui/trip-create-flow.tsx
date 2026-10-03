@@ -55,8 +55,16 @@ export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }:
   // 모바일 달력은 지난 달부터 그리므로, 날짜 단계에 들어오면 이번 달로 스크롤해 둔다
   const thisMonthRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    if (step === "date") thisMonthRef.current?.scrollIntoView({ block: "start" });
-  }, [step]);
+    if (layout !== "mobile" || step !== "date") return;
+    const scroll = () => thisMonthRef.current?.scrollIntoView({ block: "start" });
+    scroll();
+    // PC 폭에서 날짜 단계에 들어오면 이 달력은 숨겨져(display:none) 스크롤이 먹지 않는다.
+    // 창이 좁아져(태블릿 회전) 보이게 되는 순간 다시 이번 달로 맞춘다. lg = 1024px
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => !wide.matches && scroll();
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, [layout, step]);
   const cellsOf = (year: number, month: number) =>
     monthCells(year, month, { today, selection, others, isHoliday, allowPast: true });
   const ready = Boolean(selection?.end);
