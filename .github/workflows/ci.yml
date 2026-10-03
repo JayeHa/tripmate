@@ -49,6 +49,6 @@ jobs:
       - name: 포맷
         run: pnpm format:check
 
-      # 비밀값 없이 빌드한다. Supabase 클라이언트는 브라우저에서만 만들어 env 없이도 빌드된다
+      # 비밀값 없이 빌드한다. Supabase 클라이언트는 모듈 최상위가 아니라 요청(서버)·이벤트(브라우저) 때 만들어져 env 없이도 빌드된다
       - name: 빌드
         run: pnpm build
