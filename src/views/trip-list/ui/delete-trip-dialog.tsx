@@ -44,8 +44,9 @@ export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onCon
                 취소
               </Button>
               <Button
+                variant="danger"
                 size="form"
-                className="flex-1 bg-destructive text-white hover:bg-destructive/90"
+                className="flex-1"
                 disabled={pending}
                 onClick={() => onConfirm(trip)}
               >
