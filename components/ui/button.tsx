@@ -7,7 +7,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/80 disabled:bg-primary-disabled disabled:opacity-100",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -17,6 +18,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        // 디자인 시스템 Button: chip(회색 알약) / text(파란 텍스트 버튼)
+        chip: "bg-surface-muted text-ink-700",
+        text: "text-primary hover:text-primary-pressed",
       },
       size: {
         default:
@@ -30,6 +34,12 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // 디자인 시스템 Button 치수 (handoff README · Design Tokens)
+        cta: "h-13 gap-1.5 rounded-card px-5 text-base font-extrabold",
+        form: "h-11 gap-1.5 rounded-button px-4 text-[15px] font-semibold",
+        pill: "h-10 gap-1.5 rounded-full px-[18px] text-[15px] font-bold",
+        chip: "h-9 gap-1.5 rounded-full px-3.5 text-sm font-semibold",
+        text: "h-auto gap-1 px-0 py-1 text-[13px] font-bold",
       },
     },
     defaultVariants: {
