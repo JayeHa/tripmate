@@ -130,7 +130,6 @@ export type Database = {
           country_code: string;
           currency: string;
           timezone: string;
-          image_path: string | null;
         };
         Insert: {
           id: string;
@@ -146,7 +145,6 @@ export type Database = {
           country_code: string;
           currency: string;
           timezone: string;
-          image_path?: string | null;
         };
         Update: {
           id?: string;
@@ -162,7 +160,6 @@ export type Database = {
           country_code?: string;
           currency?: string;
           timezone?: string;
-          image_path?: string | null;
         };
         Relationships: [
           {

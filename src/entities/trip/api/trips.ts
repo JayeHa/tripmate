@@ -16,8 +16,8 @@ export function ratesToForm(rates: ExchangeRates): TripFormValues["rates"] {
   return Object.entries(rates).map(([currency, r]) => ({ currency, unit: r.unit, value: r.value }));
 }
 
-/** 목록에 보이는 도시. 첫 도시의 사진이 여행 썸네일이 된다. */
-export type TripCity = { id: string; name: string; image_path: string | null };
+/** 목록에 보이는 도시. 사진이 있는 첫 도시가 여행 썸네일이 된다. */
+export type TripCity = { id: string; name: string };
 
 /** 목록에서 「N명과 함께」·「N개 도시」를 보여주려고 멤버 수와 도시를 함께 읽는다. */
 export type TripListItem = Trip & { companionCount: number; cities: TripCity[] };
@@ -31,7 +31,7 @@ export async function fetchTrips(): Promise<TripListItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("trips")
-    .select("*, trip_members(count), trip_cities(position, city:cities(id, name, image_path))")
+    .select("*, trip_members(count), trip_cities(position, city:cities(id, name))")
     .order("start_date", { ascending: false });
   if (error) throw error;
   // database.types.ts 가 수기 작성이라 관계 집계(count)·별칭 임베드의 타입이 없다. 그 부분만 좁게 단언한다.

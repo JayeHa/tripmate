@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { cityCountLabel, coverImageUrl } from "./cities";
 
-const city = (id: string, image_path: string | null = null) => ({ id, name: id, image_path });
+const city = (id: string) => ({ id, name: id });
+const images = { osaka: "/city-images/osaka.aaaa.webp", kyoto: "/city-images/kyoto.bbbb.webp" };
 
 describe("cityCountLabel", () => {
   it("도시 수를 센다", () => {
@@ -15,15 +16,12 @@ describe("cityCountLabel", () => {
 
 describe("coverImageUrl", () => {
   it("사진이 있는 첫 도시를 쓴다", () => {
-    const url = coverImageUrl([
-      city("tokyo"),
-      city("osaka", "/city-images/osaka.webp"),
-      city("kyoto", "/city-images/kyoto.webp"),
-    ]);
-    expect(url).toBe("/city-images/osaka.webp");
+    expect(coverImageUrl([city("tokyo"), city("osaka"), city("kyoto")], images)).toBe(
+      "/city-images/osaka.aaaa.webp",
+    );
   });
 
   it("사진이 하나도 없으면 null", () => {
-    expect(coverImageUrl([city("tokyo")])).toBeNull();
+    expect(coverImageUrl([city("tokyo")], images)).toBeNull();
   });
 });

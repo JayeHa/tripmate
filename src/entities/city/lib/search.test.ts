@@ -16,7 +16,6 @@ const city = (id: string, name: string, areas: string[], extra: Partial<City> = 
   country_code: "JP",
   currency: "JPY",
   timezone: "Asia/Tokyo",
-  image_path: null,
   ...extra,
 });
 

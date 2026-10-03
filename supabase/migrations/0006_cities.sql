@@ -1,5 +1,5 @@
 -- 도시 기준 데이터. 트리플의 도시 선택 화면을 기준으로 우리가 정의한다.
--- 여행은 trip_cities 로 도시를 여러 개 고른다. 도시에는 지도 중심·통화·시간대·사진이 붙고,
+-- 여행은 trip_cities 로 도시를 여러 개 고른다. 도시에는 지도 중심·통화·시간대가 붙고,
 -- 이후 추천 장소(city_places)도 도시에 붙는다.
 -- 기준 데이터라 앱에서는 읽기만 한다. 바꿀 때는 마이그레이션으로 바꾼다.
 
@@ -25,7 +25,7 @@ create table public.cities (
   country_code text not null,                    -- ISO 3166-1 alpha-2
   currency     text not null,                    -- ISO 4217. 가계부 기본 통화
   timezone     text not null,                    -- IANA. 일정 시각
-  image_path   text,                             -- 대표 사진. public/ 기준 경로('/city-images/tokyo.webp'). 없으면 틴트로 대신
+  -- 대표 사진은 DB 에 두지 않는다. public/city-images 와 src/shared/config/city-images.ts (pnpm cities:images)
   constraint cities_region_chk check ((scope = 'abroad') = (region_id is not null))
 );
 create index cities_order_idx on public.cities(scope, region_id, position);
