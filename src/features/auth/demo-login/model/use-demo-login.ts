@@ -21,7 +21,8 @@ export function useDemoLogin() {
 
     const supabase = createClient();
 
-    // 앞선 시도가 시딩에서 멈췄다면 익명 세션이 이미 있다. 또 만들면 고아 계정이 쌓인다.
+    // 앞선 시도가 시딩에서 멈췄다면 익명 세션이 이미 있다. 그 세션을 그대로 쓴다.
+    // 세션을 버리고 다시 로그인하면 시도할 때마다 auth.users 에 고아가 하나씩 쌓인다.
     const { data: existing } = await supabase.auth.getUser();
     let user = existing.user?.is_anonymous ? existing.user : null;
 
@@ -45,9 +46,9 @@ export function useDemoLogin() {
       .select("id")
       .single();
     if (tripError || !trip) {
-      // 여행 없이 로그인만 된 상태로 두면 안 된다. proxy 가 /login 을 /trips 로 돌려보내서
-      // 빈 목록에 갇히고 Google 버튼으로 돌아갈 수 없다.
-      await supabase.auth.signOut();
+      // 여기서 signOut 하면 안 된다. auth-js 는 서버 응답과 무관하게 로컬 세션을 지우므로
+      // 위의 재사용 분기가 무력해지고, 누를 때마다 익명 계정이 하나씩 늘어난다.
+      // 세션은 두고 DemoLoginButton 이 「여행 없는 익명」에게 다시 버튼을 보여 준다.
       setError(tripError?.message ?? "샘플 여행을 만들지 못했어요. 다시 시도해 주세요.");
       setLoading(false);
       return;
