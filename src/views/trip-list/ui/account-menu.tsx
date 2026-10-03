@@ -8,8 +8,10 @@ import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/shared/
 
 import { AccountPanel } from "./account-panel";
 
+type AccountMenuProps = { profile: MyProfile | null | undefined };
+
 /** PC: 헤더의 「아바타 이름 ▾」를 누르면 열리는 320px 계정 드롭다운 (시안 6a · 16). */
-export function AccountMenu({ profile }: { profile: MyProfile | null | undefined }) {
+export function AccountMenu({ profile }: AccountMenuProps) {
   return (
     <Popover>
       <PopoverTrigger className="flex items-center gap-2.5">

@@ -316,15 +316,13 @@ export function ExpenseForm({
   );
 }
 
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
+type ChipProps = {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
-}) {
+};
+
+function Chip({ active, onClick, children }: ChipProps) {
   return (
     <button
       type="button"

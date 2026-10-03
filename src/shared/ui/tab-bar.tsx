@@ -12,11 +12,13 @@ export type TabItem = {
   href: string;
 };
 
+type BottomTabBarProps = { items: TabItem[]; active: string };
+
 /**
  * 여행 안 화면의 하단 탭. 높이 83 고정, 활성은 파랑이 아니라 잉크(#222).
  * (design_handoff_tripmate/design-system.md · VISUAL FOUNDATIONS)
  */
-export function BottomTabBar({ items, active }: { items: TabItem[]; active: string }) {
+export function BottomTabBar({ items, active }: BottomTabBarProps) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 h-[calc(83px+env(safe-area-inset-bottom))] border-t border-divider bg-background pt-2 pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto flex h-18.75 max-w-lg">

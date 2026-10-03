@@ -22,7 +22,9 @@ import {
 import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
 
-export function TripSettingsView({ tripId }: { tripId: string }) {
+type TripSettingsViewProps = { tripId: string };
+
+export function TripSettingsView({ tripId }: TripSettingsViewProps) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);

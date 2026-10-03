@@ -4,8 +4,10 @@ import type { TripCreateState } from "../../model/use-trip-create";
 import { CitySearchInput } from "../parts/city-search-input";
 import { CityStepBody } from "../parts/city-step-body";
 
+type PcCityStepProps = { state: TripCreateState };
+
 /** PC 도시 단계 본문 (시안 6b). 회색 검색창 + 도시 목록 */
-export function PcCityStep({ state }: { state: TripCreateState }) {
+export function PcCityStep({ state }: PcCityStepProps) {
   return (
     <>
       <div className="shrink-0 px-7">

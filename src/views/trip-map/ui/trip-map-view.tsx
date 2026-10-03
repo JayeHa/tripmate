@@ -19,7 +19,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 
 import { DayMap } from "./day-map";
 
-export function TripMapView({ tripId }: { tripId: string }) {
+type TripMapViewProps = { tripId: string };
+
+export function TripMapView({ tripId }: TripMapViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: items } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;

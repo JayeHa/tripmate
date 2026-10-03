@@ -13,16 +13,14 @@ import type { TitleComponent } from "../parts/title";
 import { MobileFooter } from "./mobile-footer";
 import { PickedTray } from "./picked-tray";
 
-/** 모바일 도시 단계 (시안 5b). 헤더에 검색, 아래에 트레이와 CTA */
-export function MobileCityStep({
-  state,
-  onClose,
-  Title,
-}: {
+type MobileCityStepProps = {
   state: TripCreateState;
   onClose: () => void;
   Title: TitleComponent;
-}) {
+};
+
+/** 모바일 도시 단계 (시안 5b). 헤더에 검색, 아래에 트레이와 CTA */
+export function MobileCityStep({ state, onClose, Title }: MobileCityStepProps) {
   return (
     <>
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-surface-muted px-4.5">

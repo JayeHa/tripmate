@@ -163,6 +163,17 @@ const eslintConfig = defineConfig([
       "react/no-unstable-nested-components": "error",
       "react/jsx-boolean-value": "error",
       "react/jsx-curly-brace-presence": ["error", { props: "never", children: "never" }],
+      // props 타입은 파라미터에 바로 쓰지 않고 이름을 붙여 따로 선언한다(AGENTS.md 코드 규칙)
+      "no-restricted-syntax": [
+        "error",
+        ...[
+          "FunctionDeclaration[id.name=/^[A-Z]/] > :matches(ObjectPattern, Identifier) > TSTypeAnnotation > TSTypeLiteral",
+          "VariableDeclarator[id.name=/^[A-Z]/] > ArrowFunctionExpression > :matches(ObjectPattern, Identifier) > TSTypeAnnotation > TSTypeLiteral",
+        ].map((selector) => ({
+          selector,
+          message: "컴포넌트 props 타입은 `type 컴포넌트이름Props = { … }` 로 따로 선언합니다.",
+        })),
+      ],
       // 지금 코드의 관례: 이름 있는 컴포넌트는 function 선언
       "react/function-component-definition": [
         "error",

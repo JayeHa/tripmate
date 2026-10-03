@@ -14,16 +14,14 @@ const COPY = {
   },
 } as const;
 
-/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← (시안 6b · 6c) */
-export function PcHeader({
-  state,
-  onClose,
-  Title,
-}: {
+type PcHeaderProps = {
   state: TripCreateState;
   onClose: () => void;
   Title: TitleComponent;
-}) {
+};
+
+/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← (시안 6b · 6c) */
+export function PcHeader({ state, onClose, Title }: PcHeaderProps) {
   const copy = COPY[state.step];
   return (
     <div className="flex shrink-0 items-center gap-3 px-7 pt-5.5 pb-3.5">

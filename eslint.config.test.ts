@@ -106,3 +106,29 @@ describe("Tailwind 정식 클래스", () => {
     expect(await canonicalErrors("size-5.5 text-[13px]")).toEqual([]);
   });
 });
+
+/** 컴포넌트 props 타입은 이름을 붙여 따로 선언한다 */
+describe("컴포넌트 props 타입", () => {
+  async function propsErrors(code: string) {
+    const [result] = await eslint.lintText(code, {
+      filePath: path.join(ROOT, "src/shared/ui/x.tsx"),
+    });
+    return result.messages.filter((m) => m.ruleId === "no-restricted-syntax");
+  }
+
+  it.each([
+    "export function A({ a }: { a: string }) { return <i>{a}</i>; }",
+    "export function A(props: { a: string }) { return <i>{props.a}</i>; }",
+    "export const A = ({ a }: { a: string }) => <i>{a}</i>;",
+  ])("인라인 타입은 막힌다: %s", async (code) => {
+    expect(await propsErrors(code)).toHaveLength(1);
+  });
+
+  it.each([
+    "type AProps = { a: string };\nexport function A({ a }: AProps) { return <i>{a}</i>; }",
+    // 훅·유틸의 객체 파라미터는 대상이 아니다
+    "export function useA({ a }: { a: string }) { return a; }",
+  ])("허용된다: %s", async (code) => {
+    expect(await propsErrors(code)).toEqual([]);
+  });
+});

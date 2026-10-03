@@ -15,7 +15,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 /** 받을 돈(+) 초록 · 낼 돈(-) 빨강 · 0 은 기본색. Math.sign 의 결과로 고른다 */
 const NET_TONE: Record<number, string> = { 1: "text-emerald-600", [-1]: "text-destructive", 0: "" };
 
-export function SettlementView({ tripId }: { tripId: string }) {
+type SettlementViewProps = { tripId: string };
+
+export function SettlementView({ tripId }: SettlementViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses } = useExpenses(tripId);
@@ -146,8 +148,10 @@ export function SettlementView({ tripId }: { tripId: string }) {
   );
 }
 
+type PersonProps = { name: string; avatarUrl: string | null | undefined };
+
 /** 정산 줄의 사람. 렌더 중에 정의하면 매 렌더마다 새 컴포넌트가 되어 아바타가 다시 마운트된다 */
-function Person({ name, avatarUrl }: { name: string; avatarUrl: string | null | undefined }) {
+function Person({ name, avatarUrl }: PersonProps) {
   return (
     <span className="flex min-w-0 items-center gap-1.5">
       <Avatar size="sm">

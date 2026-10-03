@@ -10,7 +10,9 @@ import { useTripMembers } from "@/entities/trip-member";
 import { ExpenseForm } from "@/features/expense/form";
 import { AppHeader } from "@/shared/ui/app-header";
 
-export function ExpenseCreateView({ tripId }: { tripId: string }) {
+type ExpenseCreateViewProps = { tripId: string };
+
+export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);

@@ -6,7 +6,9 @@ import { createClient } from "@/shared/api/supabase/server";
 import { dateRangeLabel } from "@/shared/lib/days";
 import { Button } from "@/shared/ui/button";
 
-export async function TripInviteView({ token }: { token: string }) {
+type TripInviteViewProps = { token: string };
+
+export async function TripInviteView({ token }: TripInviteViewProps) {
   const supabase = await createClient();
   // 익명 여부는 서버에서 정한다. 클라이언트에서 물어보면 응답 전까지 참여 버튼이 열려 있다.
   const {

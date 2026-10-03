@@ -196,15 +196,13 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
   );
 }
 
-function Field({
-  label,
-  error,
-  children,
-}: {
+type FieldProps = {
   label: string;
   error?: string;
   children: React.ReactNode;
-}) {
+};
+
+function Field({ label, error, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>

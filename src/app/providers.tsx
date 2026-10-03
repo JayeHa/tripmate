@@ -39,7 +39,9 @@ function makePersister() {
   });
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+type ProvidersProps = { children: ReactNode };
+
+export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(makeQueryClient);
   const [persister] = useState(makePersister);
 

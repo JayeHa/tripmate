@@ -16,14 +16,13 @@ import { Weekdays } from "../parts/weekdays";
 import { MobileFooter } from "./mobile-footer";
 import { useScrollToThisMonth } from "./use-scroll-to-this-month";
 
-/** 모바일 날짜 단계 (시안 5c). 3년 전~1년 뒤를 세로로 잇고 이번 달로 스크롤해 둔다 */
-export function MobileDateStep({
-  state,
-  Title,
-}: {
+type MobileDateStepProps = {
   state: TripCreateState;
   Title: TitleComponent;
-}) {
+};
+
+/** 모바일 날짜 단계 (시안 5c). 3년 전~1년 뒤를 세로로 잇고 이번 달로 스크롤해 둔다 */
+export function MobileDateStep({ state, Title }: MobileDateStepProps) {
   const { months, cellsOf } = useCreateCalendar(state.selection);
   const thisMonthRef = useScrollToThisMonth();
   const names = state.picked.map((c) => c.name).join("·");

@@ -47,15 +47,13 @@ function accountLabel(profile: MyProfile | null | undefined, style: "dot" | "par
     : `${profile.email} (${profile.provider})`;
 }
 
-function MainMenu({
-  profile,
-  Title,
-  onEditProfile,
-}: {
+type MainMenuProps = {
   profile: MyProfile | null | undefined;
   Title: TitleComponent;
   onEditProfile: () => void;
-}) {
+};
+
+function MainMenu({ profile, Title, onEditProfile }: MainMenuProps) {
   const signOut = useSignOut();
 
   return (
@@ -97,15 +95,13 @@ function MainMenu({
   );
 }
 
-function ProfileEditor({
-  profile,
-  Title,
-  onBack,
-}: {
+type ProfileEditorProps = {
   profile: MyProfile | null | undefined;
   Title: TitleComponent;
   onBack: () => void;
-}) {
+};
+
+function ProfileEditor({ profile, Title, onBack }: ProfileEditorProps) {
   const current = profile?.display_name ?? "";
   const update = useUpdateDisplayName();
   const [draft, setDraft] = useState(current);

@@ -149,17 +149,14 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
   );
 }
 
-function CityRow({
-  city,
-  on,
-  pc,
-  onToggle,
-}: {
+type CityRowProps = {
   city: City;
   on: boolean;
   pc: boolean;
   onToggle: () => void;
-}) {
+};
+
+function CityRow({ city, on, pc, onToggle }: CityRowProps) {
   return (
     <button
       type="button"

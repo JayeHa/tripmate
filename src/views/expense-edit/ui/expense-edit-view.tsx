@@ -29,7 +29,9 @@ import {
 import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
 
-export function ExpenseEditView({ tripId, expenseId }: { tripId: string; expenseId: string }) {
+type ExpenseEditViewProps = { tripId: string; expenseId: string };
+
+export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);

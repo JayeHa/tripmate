@@ -6,7 +6,9 @@ import { useState } from "react";
 import { type Trip, useRotateInviteToken } from "@/entities/trip";
 import { Button } from "@/shared/ui/button";
 
-export function InviteLinkCard({ trip }: { trip: Trip }) {
+type InviteLinkCardProps = { trip: Trip };
+
+export function InviteLinkCard({ trip }: InviteLinkCardProps) {
   const [copied, setCopied] = useState(false);
   const rotate = useRotateInviteToken(trip.id);
   const url =

@@ -24,7 +24,9 @@ import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
 
-export function TripScheduleView({ tripId }: { tripId: string }) {
+type TripScheduleViewProps = { tripId: string };
+
+export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: user } = useUser();
   const { data: items, isPending } = useScheduleItems(tripId);

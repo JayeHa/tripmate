@@ -47,15 +47,13 @@ export function MonthGrid({ cells, size, onPick, className }: Props) {
   );
 }
 
-function DayCell({
-  cell,
-  size,
-  onPick,
-}: {
+type DayCellProps = {
   cell: CalendarDay;
   size: keyof typeof SIZE;
   onPick: (date: string) => void;
-}) {
+};
+
+function DayCell({ cell, size, onPick }: DayCellProps) {
   const s = SIZE[size];
   const edge = cell.selected === "start" || cell.selected === "end" || cell.selected === "single";
 

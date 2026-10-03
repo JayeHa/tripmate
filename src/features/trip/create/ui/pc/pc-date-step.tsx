@@ -13,8 +13,10 @@ import { Weekdays } from "../parts/weekdays";
 
 const NAV_BUTTON = "size-8 rounded-full border border-line text-ink-700 disabled:opacity-35";
 
+type PcDateStepProps = { state: TripCreateState };
+
 /** PC 날짜 단계 본문 (시안 6c). 두 달 나란히, ◀▶ 로 넘기고 처음엔 이번 달부터 */
-export function PcDateStep({ state }: { state: TripCreateState }) {
+export function PcDateStep({ state }: PcDateStepProps) {
   const { months, cellsOf } = useCreateCalendar(state.selection);
   const [offset, setOffset] = useState(PAST_MONTHS);
   const last = months.length - 2;

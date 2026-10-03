@@ -5,16 +5,14 @@ import { PcDateStep } from "./pc-date-step";
 import { PcFooter } from "./pc-footer";
 import { PcHeader } from "./pc-header";
 
-/** PC 760×660 모달 안 (시안 6b · 6c). 크기는 감싸는 쪽이 정한다 */
-export function PcFlow({
-  state,
-  onClose,
-  Title,
-}: {
+type PcFlowProps = {
   state: TripCreateState;
   onClose: () => void;
   Title: TitleComponent;
-}) {
+};
+
+/** PC 760×660 모달 안 (시안 6b · 6c). 크기는 감싸는 쪽이 정한다 */
+export function PcFlow({ state, onClose, Title }: PcFlowProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <PcHeader state={state} onClose={onClose} Title={Title} />

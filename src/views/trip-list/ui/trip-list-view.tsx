@@ -30,11 +30,13 @@ import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
+type TripListViewProps = { createdId: string | null };
+
 /**
  * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
  * 만들기는 모바일이면 /trips/new 전체 화면, PC 면 이 화면 위 모달(6b·6c)이다.
  */
-export function TripListView({ createdId }: { createdId: string | null }) {
+export function TripListView({ createdId }: TripListViewProps) {
   const router = useRouter();
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();

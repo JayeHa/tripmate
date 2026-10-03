@@ -5,8 +5,10 @@ import type { TripCreateState } from "../../model/use-trip-create";
 import { CreateError } from "../parts/create-error";
 import { PcPickedChips } from "./pc-picked-chips";
 
+type PcFooterProps = { state: TripCreateState };
+
 /** PC 모달 바닥. 고른 도시 칩 + 단계별 CTA (시안 6b · 6c) */
-export function PcFooter({ state }: { state: TripCreateState }) {
+export function PcFooter({ state }: PcFooterProps) {
   const cityStep = state.step === "city";
   return (
     <>

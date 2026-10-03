@@ -32,7 +32,9 @@ function toHomeOrNull(
   }
 }
 
-export function ExpenseListView({ tripId }: { tripId: string }) {
+type ExpenseListViewProps = { tripId: string };
+
+export function ExpenseListView({ tripId }: ExpenseListViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses, isPending } = useExpenses(tripId);

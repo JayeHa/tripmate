@@ -14,7 +14,9 @@ function subscribe(cb: () => void) {
   };
 }
 
-export function TripShell({ tripId, children }: { tripId: string; children: ReactNode }) {
+type TripShellProps = { tripId: string; children: ReactNode };
+
+export function TripShell({ tripId, children }: TripShellProps) {
   useRealtimeTrip(tripId);
   const online = useSyncExternalStore(
     subscribe,

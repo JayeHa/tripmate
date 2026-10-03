@@ -57,7 +57,9 @@ export function DayMap({ items, polyline, selectedId, onSelect, className }: Pro
   );
 }
 
-function FitBounds({ items }: { items: ScheduleItem[] }) {
+type FitBoundsProps = { items: ScheduleItem[] };
+
+function FitBounds({ items }: FitBoundsProps) {
   const map = useMap();
   const key = items.map((it) => it.id).join("|");
   useEffect(() => {
@@ -75,8 +77,10 @@ function FitBounds({ items }: { items: ScheduleItem[] }) {
   return null;
 }
 
+type RoutePolylineProps = { encoded: string | null };
+
 /** vis.gl 에는 Polyline 컴포넌트가 없어 직접 생성/정리 */
-function RoutePolyline({ encoded }: { encoded: string | null }) {
+function RoutePolyline({ encoded }: RoutePolylineProps) {
   const map = useMap();
   useEffect(() => {
     if (!map || !encoded) return;
