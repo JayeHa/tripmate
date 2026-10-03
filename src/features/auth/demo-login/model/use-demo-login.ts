@@ -1,7 +1,9 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
 import { TOKYO_SEED } from "../lib/tokyo-seed";
 
@@ -11,6 +13,7 @@ import { TOKYO_SEED } from "../lib/tokyo-seed";
  */
 export function useDemoLogin() {
   const router = useRouter();
+  const qc = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +63,9 @@ export function useDemoLogin() {
     // 일정이 비어도 여행 자체는 볼 수 있으니 여기서 멈추지 않는다.
     if (itemsError) console.error("샘플 일정 삽입 실패", itemsError);
 
+    // 목록 캐시를 비운다. staleTime 이 30초라, 이 화면에서 이미 빈 목록을 받아 왔으면
+    // 방금 만든 여행이 안 보인다.
+    await qc.invalidateQueries({ queryKey: queryKeys.trips.all });
     router.replace(`/trips/${trip.id}/home`);
   }
 
