@@ -224,10 +224,11 @@ export function TripListView({ createdId }: { createdId: string | null }) {
         open={createOpen}
         onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
       >
-        {/* 1024px 아래로 창을 줄이면 전체 화면 모바일 레이아웃으로 바뀐다. 상태는 createFlow 하나를 함께 쓴다 */}
+        {/* 1024px 아래로 창을 줄이면 전체 화면 모바일 레이아웃으로 바뀐다. 상태는 createFlow 하나를 함께 쓴다.
+            창 높이가 낮으면 모달도 줄고 본문이 안에서 스크롤된다(머리·바닥은 고정) */}
         <DialogContent
           showCloseButton={false}
-          className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[660px] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
+          className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
         >
           <div className="flex h-full min-h-0 flex-col lg:hidden">
             <TripCreateFlow

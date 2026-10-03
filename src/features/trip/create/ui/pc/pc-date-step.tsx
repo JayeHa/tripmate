@@ -38,7 +38,7 @@ export function PcDateStep({ state }: { state: TripCreateState }) {
           <ChevronRight className="size-[18px]" />
         </IconButton>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-8">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-8 overflow-y-auto">
         {months.slice(offset, offset + 2).map(([year, month]) => (
           <div key={`${year}-${month}`} className="flex flex-col gap-1.5">
             <h3 className="pb-1 text-center text-base font-extrabold text-ink-900">
