@@ -33,13 +33,13 @@ export function TripSettingsView({ tripId }: { tripId: string }) {
   const removeMember = useRemoveMember(tripId);
   const [saved, setSaved] = useState(false);
 
-  if (!trip) return <AppHeader title="설정" back={`/trips/${tripId}/itinerary`} />;
+  if (!trip) return <AppHeader title="설정" back="/trips" />;
 
   const isOwner = user?.id === trip.owner_id;
 
   return (
     <>
-      <AppHeader title="여행 설정" back={`/trips/${tripId}/itinerary`} />
+      <AppHeader title="여행 설정" back="/trips" />
       <main className="flex flex-1 flex-col gap-4 p-4">
         <InviteLinkCard trip={trip} />
 

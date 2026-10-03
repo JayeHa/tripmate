@@ -33,7 +33,7 @@ export function TripMapView({ tripId }: { tripId: string }) {
     <div className="flex h-dvh flex-col pb-16">
       <AppHeader
         title={trip?.title ?? "지도"}
-        back={`/trips/${tripId}/itinerary?day=${day}`}
+        back={`/trips/${tripId}/schedule?day=${day}`}
         right={
           <ToggleGroup
             value={[mode]}

@@ -7,7 +7,7 @@ export function TripCard({ trip }: { trip: Trip }) {
   const nights = dayCount(trip.start_date, trip.end_date) - 1;
   return (
     <Link
-      href={`/trips/${trip.id}/itinerary`}
+      href={`/trips/${trip.id}/home`}
       className="block rounded-xl border bg-card p-4 shadow-xs transition-colors active:bg-accent"
     >
       <div className="flex items-start justify-between gap-3">
