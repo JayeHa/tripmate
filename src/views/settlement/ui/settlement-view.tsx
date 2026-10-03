@@ -2,7 +2,6 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
@@ -13,8 +12,7 @@ import { MissingRateError, decimalsOf, formatMoney } from "@/shared/lib/money";
 import { computeNetBalances, minimizeTransfers } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
-export function SettlementView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function SettlementView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses } = useExpenses(tripId);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/shared/ui/app-header";
 import { ExpenseForm } from "@/features/expense-form";
 import { useCreateExpense } from "@/entities/expense";
@@ -9,8 +9,7 @@ import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { useUser } from "@/entities/session";
 
-export function ExpenseCreateView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function ExpenseCreateView({ tripId }: { tripId: string }) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);

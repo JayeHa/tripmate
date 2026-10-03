@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +24,7 @@ import { useUser } from "@/entities/session";
 import type { ExpenseFormValues } from "@/entities/expense";
 import type { ExpenseCategory } from "@/entities/expense";
 
-export function ExpenseEditView() {
-  const { tripId, expenseId } = useParams<{ tripId: string; expenseId: string }>();
+export function ExpenseEditView({ tripId, expenseId }: { tripId: string; expenseId: string }) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
