@@ -1,6 +1,8 @@
 export const queryKeys = {
   user: ["user"] as const,
   myProfile: ["user", "profile"] as const,
+  /** 도시 기준 데이터(권역 + 도시). 마이그레이션으로만 바뀐다. */
+  cities: ["cities"] as const,
   trips: {
     all: ["trips"] as const,
     detail: (tripId: string) => ["trips", tripId] as const,
@@ -15,10 +17,12 @@ export const queryKeys = {
 };
 
 /**
- * 영속화 대상 판별. 여행 데이터만 남기고 경로는 제외한다.
+ * 영속화 대상 판별. 여행 데이터와 도시 기준 데이터만 남기고 경로는 제외한다.
  * 경로는 Google Routes API 응답 캐시라 서버의 day_routes 테이블이 이미 들고 있다.
+ * 도시는 오프라인에서도 도시 이름·지도 중심을 그리려고 남긴다.
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
+  if (queryKey[0] === "cities") return true;
   return queryKey[0] === "trips" && queryKey[2] !== "route";
 }
 
