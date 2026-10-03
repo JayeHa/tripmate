@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Badge } from "@/shared/ui/badge";
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
-import type { Trip } from "../model/types";
+import type { TripListItem } from "../api/trips";
+import { cityCountLabel, coverImageUrl } from "../lib/cities";
 import { TripThumb } from "./trip-thumb";
 
 type Props = {
-  trip: Trip;
+  trip: TripListItem;
   today: string;
   /** 나를 뺀 일행 수 */
   companionCount?: number;
@@ -24,7 +25,7 @@ export function TripRow({ trip, today, companionCount, highlighted, actions }: P
       style={highlighted ? { backgroundColor: "#F4F8FF" } : undefined}
     >
       <Link href={`/trips/${trip.id}/home`} className="flex min-w-0 flex-1 items-center gap-4">
-        <TripThumb title={trip.title} />
+        <TripThumb title={trip.title} imageUrl={coverImageUrl(trip.cities)} />
         <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-lg font-bold tracking-[-0.01em] text-ink-900">
@@ -40,7 +41,7 @@ export function TripRow({ trip, today, companionCount, highlighted, actions }: P
             {dateRangeLabel(trip.start_date, trip.end_date)}
             {companionCount ? `, ${companionCount}명과 함께` : ""}
           </span>
-          <span className="text-[13px] text-ink-400">{trip.destination ?? "목적지 미정"}</span>
+          <span className="text-[13px] text-ink-400">{cityCountLabel(trip.cities)}</span>
         </span>
       </Link>
       {actions}

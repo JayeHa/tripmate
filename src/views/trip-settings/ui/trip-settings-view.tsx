@@ -64,7 +64,6 @@ export function TripSettingsView({ tripId }: { tripId: string }) {
             key={trip.updated_at}
             initial={{
               title: trip.title,
-              destination: trip.destination ?? "",
               start_date: trip.start_date,
               end_date: trip.end_date,
               home_currency: trip.home_currency,

@@ -97,6 +97,116 @@ export type Database = {
           },
         ];
       };
+      city_regions: {
+        Row: {
+          id: string;
+          name: string;
+          position: number;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          position: number;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          position?: number;
+        };
+        Relationships: [];
+      };
+      cities: {
+        Row: {
+          id: string;
+          scope: "abroad" | "domestic";
+          region_id: string | null;
+          name: string;
+          areas: string[];
+          description: string | null;
+          position: number;
+          lat: number;
+          lng: number;
+          zoom: number;
+          country_code: string;
+          currency: string;
+          timezone: string;
+          image_path: string | null;
+        };
+        Insert: {
+          id: string;
+          scope: "abroad" | "domestic";
+          region_id?: string | null;
+          name: string;
+          areas?: string[];
+          description?: string | null;
+          position: number;
+          lat: number;
+          lng: number;
+          zoom?: number;
+          country_code: string;
+          currency: string;
+          timezone: string;
+          image_path?: string | null;
+        };
+        Update: {
+          id?: string;
+          scope?: "abroad" | "domestic";
+          region_id?: string | null;
+          name?: string;
+          areas?: string[];
+          description?: string | null;
+          position?: number;
+          lat?: number;
+          lng?: number;
+          zoom?: number;
+          country_code?: string;
+          currency?: string;
+          timezone?: string;
+          image_path?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cities_region_id_fkey";
+            columns: ["region_id"];
+            isOneToOne: false;
+            referencedRelation: "city_regions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      trip_cities: {
+        Row: {
+          trip_id: string;
+          city_id: string;
+          position: number;
+        };
+        Insert: {
+          trip_id: string;
+          city_id: string;
+          position?: number;
+        };
+        Update: {
+          trip_id?: string;
+          city_id?: string;
+          position?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "trip_cities_trip_id_fkey";
+            columns: ["trip_id"];
+            isOneToOne: false;
+            referencedRelation: "trips";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "trip_cities_city_id_fkey";
+            columns: ["city_id"];
+            isOneToOne: false;
+            referencedRelation: "cities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       schedule_items: {
         Row: {
           id: string;
@@ -264,7 +374,7 @@ export type Database = {
         Returns: {
           id: string;
           title: string;
-          destination: string | null;
+          cities: string[];
           start_date: string;
           end_date: string;
           member_count: number;

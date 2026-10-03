@@ -34,10 +34,10 @@ export async function TripInviteView({ token }: { token: string }) {
         <p className="text-sm text-muted-foreground">여행에 초대되었어요</p>
         <h1 className="mt-1 text-2xl font-bold">{preview.title}</h1>
         <dl className="mt-4 flex flex-col gap-2 text-sm">
-          {preview.destination && (
+          {preview.cities.length > 0 && (
             <div className="flex items-center gap-2">
               <MapPin className="size-4 text-muted-foreground" />
-              {preview.destination}
+              {preview.cities.join(" · ")}
             </div>
           )}
           <div className="flex items-center gap-2">

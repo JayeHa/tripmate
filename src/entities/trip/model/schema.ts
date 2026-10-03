@@ -9,7 +9,6 @@ export const exchangeRateSchema = z.object({
 export const tripFormSchema = z
   .object({
     title: z.string().trim().min(1, "여행 이름을 입력하세요").max(50),
-    destination: z.string().trim().max(50).optional(),
     start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "시작일을 선택하세요"),
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "종료일을 선택하세요"),
     home_currency: z.string().min(1),

@@ -6,7 +6,6 @@
 export const TOKYO_SEED = {
   trip: {
     title: "도쿄 여행",
-    destination: "도쿄",
     start_date: "2026-10-31",
     end_date: "2026-11-04",
     home_currency: "KRW",
@@ -17,6 +16,8 @@ export const TOKYO_SEED = {
       },
     },
   },
+  /** trip_cities. cities 기준 데이터의 id (0006_cities.sql). */
+  cityIds: ["tokyo"],
   items: [
     {
       day_index: 0,

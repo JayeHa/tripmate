@@ -1,11 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/shared/ui/badge";
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
 import { initialOf, tintOf } from "../lib/tint";
-import type { Trip } from "../model/types";
+import type { TripListItem } from "../api/trips";
+import { cityCountLabel, coverImageUrl } from "../lib/cities";
 
 type Props = {
-  trip: Trip;
+  trip: TripListItem;
   today: string;
   /** 나를 뺀 일행 수 */
   companionCount?: number;
@@ -13,19 +15,25 @@ type Props = {
   actions?: React.ReactNode;
 };
 
-/** PC 다가오는 여행 카드 (시안 6a). 썸네일 132 + 본문. */
+/** PC 다가오는 여행 카드 (시안 6a). 썸네일 132(도시 사진, 없으면 틴트) + 본문. */
 export function TripCard({ trip, today, companionCount, actions }: Props) {
   const dday = ddayLabel(trip.start_date, today);
   const { bg, fg } = tintOf(trip.title);
+  const imageUrl = coverImageUrl(trip.cities);
   return (
     // 카드 전체가 링크지만 `···` 는 링크 밖이어야 한다. 제목 링크를 카드 전체로 늘린다.
     <div className="relative rounded-card border border-line-card bg-white shadow-card">
       <div
         aria-hidden="true"
-        className="flex h-[132px] items-center justify-center rounded-t-[11px] text-[44px] font-extrabold"
+        className="relative flex h-[132px] items-center justify-center overflow-hidden rounded-t-[11px] text-[44px] font-extrabold"
         style={{ backgroundColor: bg, color: fg }}
       >
-        {initialOf(trip.title)}
+        {imageUrl ? (
+          // 3열 그리드(본문 1088 - 여백) 기준 한 칸 약 330px
+          <Image src={imageUrl} alt="" fill sizes="330px" className="object-cover" />
+        ) : (
+          initialOf(trip.title)
+        )}
       </div>
       <div className="flex flex-col gap-1 px-[18px] pt-4 pb-[18px]">
         <div className="flex min-w-0 items-center gap-2">
@@ -46,7 +54,7 @@ export function TripCard({ trip, today, companionCount, actions }: Props) {
           {dateRangeLabel(trip.start_date, trip.end_date)}
           {companionCount ? `, ${companionCount}명과 함께` : ""}
         </span>
-        <span className="text-[13px] text-ink-400">{trip.destination ?? "목적지 미정"}</span>
+        <span className="text-[13px] text-ink-400">{cityCountLabel(trip.cities)}</span>
       </div>
     </div>
   );
