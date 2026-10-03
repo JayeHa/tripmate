@@ -98,7 +98,12 @@ export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }:
         {step === "city" ? (
           <>
             <div className="flex h-14 shrink-0 items-center gap-3 border-b border-surface-muted px-[18px]">
-              <IconButton label="닫기" onClick={onClose} className="text-ink-900">
+              <IconButton
+                label="닫기"
+                onClick={onClose}
+                disabled={state.locked}
+                className="text-ink-900"
+              >
                 <ArrowLeft className="size-6" strokeWidth={2} />
               </IconButton>
               <Title className="sr-only">어디로 떠나시나요?</Title>
@@ -138,6 +143,7 @@ export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }:
               <IconButton
                 label="도시 다시 고르기"
                 onClick={backToCity}
+                disabled={state.locked}
                 className="self-start py-2 text-ink-900"
               >
                 <X className="size-6" strokeWidth={2} />
@@ -185,7 +191,12 @@ export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }:
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="flex shrink-0 items-center gap-3 px-7 pt-[22px] pb-3.5">
         {step === "date" && (
-          <IconButton label="도시 다시 고르기" onClick={backToCity} className="text-ink-900">
+          <IconButton
+            label="도시 다시 고르기"
+            onClick={backToCity}
+            disabled={state.locked}
+            className="text-ink-900"
+          >
             <ArrowLeft className="size-[22px]" strokeWidth={2} />
           </IconButton>
         )}
@@ -202,7 +213,7 @@ export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }:
         <span className="text-[13px] font-bold text-ink-400">
           {step === "city" ? "1 / 2" : "2 / 2"}
         </span>
-        <IconButton label="닫기" onClick={onClose} className="text-ink-400">
+        <IconButton label="닫기" onClick={onClose} disabled={state.locked} className="text-ink-400">
           <X className="size-6" strokeWidth={2} />
         </IconButton>
       </div>

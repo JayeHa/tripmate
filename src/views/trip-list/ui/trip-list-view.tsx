@@ -219,7 +219,11 @@ export function TripListView({ createdId }: { createdId: string | null }) {
           askDelete(trip);
         }}
       />
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      {/* 만드는 중에는 Esc · 바깥 클릭으로 닫히지 않는다 (useTripCreate 의 locked) */}
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
+      >
         <DialogContent
           showCloseButton={false}
           className="h-[660px] w-[760px] max-w-[760px] gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-[760px]"
