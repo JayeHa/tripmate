@@ -90,8 +90,11 @@ describe("슬라이스 공개 API", () => {
   });
 });
 
-/** Tailwind 정식 클래스. VS Code 확장만 보던 것을 린트가 잡는다 */
-describe("Tailwind 정식 클래스", () => {
+/**
+ * Tailwind 정식 클래스. VS Code 확장만 보던 것을 린트가 잡는다.
+ * 첫 lint 가 globals.css 로 디자인 시스템을 만든다(로컬 약 2초). CI 는 워커가 동시에 돌아 기본 5초를 넘긴 적이 있다.
+ */
+describe("Tailwind 정식 클래스", { timeout: 20_000 }, () => {
   async function canonicalErrors(className: string) {
     const [result] = await eslint.lintText(
       `export const A = () => <i className="${className}" />;\n`,

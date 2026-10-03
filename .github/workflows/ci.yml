@@ -1,0 +1,55 @@
+# PR 과 main 에서 타입 · 린트 · 테스트 · 포맷 · 빌드를 검사한다.
+# pre-commit 은 스테이징된 파일만 빠르게 보고, 전체 검사(특히 import/no-cycle)는 여기서 한다.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# PR 은 브랜치 단위 그룹이라 새 푸시가 오면 이전 실행을 취소한다.
+# main 은 머지된 커밋마다 결과가 남아야 한다. 한 그룹은 대기 실행을 하나만 두고 나머지를 취소하므로 커밋별 그룹으로 나눈다
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# 코드를 읽기만 한다. 의존성이나 action 이 오염돼도 레포에 쓰지 못하게
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # husky 는 로컬 git 훅 설치용이다. CI 에서는 필요 없다
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v4
+
+      # packageManager(pnpm@11.1.0)를 그대로 쓴다. 서드파티 action 이라 태그 대신 커밋 SHA 로 고정한다
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # PageProps · LayoutProps 같은 라우트 전역 타입은 .next/types 에 생성된다. 새 체크아웃엔 없으니 먼저 만든다
+      - name: 타입
+        run: pnpm typecheck
+
+      - name: 린트
+        run: pnpm lint
+
+      - name: 테스트 (DB 함수 · RLS 는 PGlite 로)
+        run: pnpm test
+
+      - name: 포맷
+        run: pnpm format:check
+
+      # 비밀값 없이 빌드한다. Supabase 클라이언트는 모듈 최상위가 아니라 요청(서버)·이벤트(브라우저) 때 만들어져 env 없이도 빌드된다
+      - name: 빌드
+        run: pnpm build

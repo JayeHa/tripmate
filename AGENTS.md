@@ -124,11 +124,12 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 `eslint-config-airbnb` 는 ESLint 8 까지만 지원한다(이 레포는 9 · flat config). 커뮤니티 포크가 있지만 규칙 다수가
 `eslint-config-next`·typescript-eslint·Prettier 와 겹치거나 부딪친다. 필요한 규칙을 골라 켜는 쪽을 택했다.
 
-## 커밋 전 검사
+## 커밋 전 검사와 CI
 
-`husky` 의 pre-commit 이 `lint-staged` 로 **스테이징된 파일에만** `eslint --fix` → `prettier --write`
-를 돌린다. 린트 오류가 남으면 커밋이 막힌다. `tsc`·`test`·`build` 는 무거워서 넣지 않았으니
-PR 전에 직접 돌린다.
+- **pre-commit**: `husky` → `lint-staged` 가 **스테이징된 파일에만** `eslint --fix` → `prettier --write`.
+  린트 오류가 남으면 커밋이 막힌다. 느린 `import/no-cycle` 은 여기서 끈다(모듈 그래프 전체를 본다)
+- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) · `pnpm test` ·
+  `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
 
 # 인증 경계
 
@@ -152,6 +153,12 @@ if (!user) ...                -- 통과
 판단 기준은 **남의 데이터에 흔적을 남기는가**다. 익명 계정은 복구 수단이 없어서 쿠키가
 지워지면 사라진다. 자기 데이터만 망가지는 건 둘러보기의 의도지만, 남의 여행에 멤버로
 들어가는 것 같은 동작은 막아야 한다. 주인 쪽에 정체 모를 멤버가 남는다.
+
+## DB 함수 테스트
+
+마이그레이션은 `supabase/db.test.ts` 가 **PGlite(WASM Postgres)** 에 순서대로 적용해 확인한다.
+DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부 · 롤백). Supabase 의 `auth.uid()` ·
+역할 · storage 는 최소 대역이고, PostgREST 와 동시성은 확인하지 못한다.
 
 ## security definer 함수
 
