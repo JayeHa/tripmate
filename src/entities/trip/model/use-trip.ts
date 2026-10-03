@@ -23,8 +23,7 @@ export function useTrip(tripId: string) {
 export function useCreateTrip() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ values, ownerId }: { values: TripFormValues; ownerId: string }) =>
-      createTrip(values, ownerId),
+    mutationFn: createTrip,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.trips.all }),
   });
 }

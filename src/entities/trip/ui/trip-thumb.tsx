@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/shared/lib/utils";
-import { initialOf, tintOf } from "../lib/tint";
+import { initialOf, tintOf } from "@/shared/lib/tint";
 
 type Props = {
   title: string;

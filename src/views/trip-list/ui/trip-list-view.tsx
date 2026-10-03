@@ -14,10 +14,11 @@ import {
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
+import { TripCreateFlow } from "@/features/trip/create";
 import { todayISO } from "@/shared/lib/days";
-import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
-import { buttonVariants } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
@@ -27,8 +28,11 @@ import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
-/** 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다. */
-export function TripListView() {
+/**
+ * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
+ * 만들기는 모바일이면 /trips/new 전체 화면, PC 면 이 화면 위 모달(6b·6c)이다.
+ */
+export function TripListView({ createdId }: { createdId: string | null }) {
   const router = useRouter();
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
@@ -37,6 +41,7 @@ export function TripListView() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const today = todayISO();
   const groups = useMemo(() => groupTrips(trips ?? [], today), [trips, today]);
@@ -83,12 +88,13 @@ export function TripListView() {
               {trips.length}
             </span>
           )}
-          <Link
-            href="/trips/new"
-            className={cn(buttonVariants({ size: "pill" }), "ml-auto hidden lg:inline-flex")}
+          <Button
+            size="pill"
+            className="ml-auto hidden lg:inline-flex"
+            onClick={() => setCreateOpen(true)}
           >
             + 여행 일정 만들기
-          </Link>
+          </Button>
         </div>
 
         <div className="px-5 pt-5 pb-1 lg:hidden">
@@ -139,6 +145,7 @@ export function TripListView() {
                   trip={trip}
                   today={today}
                   companionCount={trip.companionCount}
+                  highlighted={trip.id === createdId}
                   actions={
                     <IconButton
                       label={`${trip.title} 메뉴`}
@@ -160,12 +167,14 @@ export function TripListView() {
                     trip={trip}
                     today={today}
                     companionCount={trip.companionCount}
+                    highlighted={trip.id === createdId}
                     actions={pcActions(trip)}
                   />
                 ))}
                 {/* 시안 6a: 다가오는 여행 그리드의 마지막 칸 */}
-                <Link
-                  href="/trips/new"
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
                   className="flex min-h-[236px] flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
                 >
                   <span className="flex size-12 items-center justify-center rounded-full bg-primary">
@@ -175,7 +184,7 @@ export function TripListView() {
                   <span className="text-[13px] text-ink-400">
                     도시와 날짜만 고르면 바로 시작돼요
                   </span>
-                </Link>
+                </button>
               </div>
             ) : (
               <div className="hidden grid-cols-2 gap-x-8 lg:grid">
@@ -206,6 +215,22 @@ export function TripListView() {
           askDelete(trip);
         }}
       />
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="h-[660px] w-[760px] max-w-[760px] gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-[760px]"
+        >
+          <TripCreateFlow
+            layout="pc"
+            Title={DialogTitle}
+            onClose={() => setCreateOpen(false)}
+            onCreated={(tripId) => {
+              setCreateOpen(false);
+              router.replace(`/trips?created=${tripId}`);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
       <DeleteTripDialog
         trip={confirmFor}

@@ -54,22 +54,19 @@ export async function fetchTrip(tripId: string): Promise<Trip> {
   return toTrip(data);
 }
 
-export async function createTrip(values: TripFormValues, ownerId: string): Promise<Trip> {
+export type NewTrip = { title: string; startDate: string; endDate: string; cityIds: string[] };
+
+/** 여행과 도시를 한 트랜잭션으로 만든다 (create_trip, 0007). 새 여행 id 를 돌려준다. */
+export async function createTrip(trip: NewTrip): Promise<string> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("trips")
-    .insert({
-      owner_id: ownerId,
-      title: values.title,
-      start_date: values.start_date,
-      end_date: values.end_date,
-      home_currency: values.home_currency,
-      exchange_rates: ratesFromForm(values.rates),
-    })
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("create_trip", {
+    p_title: trip.title,
+    p_start: trip.startDate,
+    p_end: trip.endDate,
+    p_city_ids: trip.cityIds,
+  });
   if (error) throw error;
-  return toTrip(data);
+  return data;
 }
 
 export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {

@@ -377,6 +377,10 @@ export type Database = {
           member_count: number;
         }[];
       };
+      create_trip: {
+        Args: { p_title: string; p_start: string; p_end: string; p_city_ids: string[] };
+        Returns: string;
+      };
       rotate_invite_token: {
         Args: { p_trip_id: string };
         Returns: string;
