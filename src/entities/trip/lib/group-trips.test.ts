@@ -12,6 +12,7 @@ describe("groupTrips", () => {
     );
     expect(upcoming.trips.map((t) => t.id)).toEqual(["future"]);
     expect(past.trips.map((t) => t.id)).toEqual(["past"]);
+    expect([upcoming.kind, past.kind]).toEqual(["upcoming", "past"]);
   });
 
   it("오늘 끝나는 여행은 아직 다가오는 쪽이다", () => {

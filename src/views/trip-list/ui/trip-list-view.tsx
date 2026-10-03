@@ -5,15 +5,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { initialOfName, useMyProfile, useUser } from "@/entities/session";
-import { type Trip, TripRow, groupTrips, useDeleteTrip, useTrips } from "@/entities/trip";
+import {
+  type Trip,
+  TripCard,
+  TripRow,
+  TripRowCompact,
+  groupTrips,
+  useDeleteTrip,
+  useTrips,
+} from "@/entities/trip";
 import { todayISO } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { buttonVariants } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
+import { AccountMenu } from "./account-menu";
 import { AccountSheet } from "./account-sheet";
 import { DeleteTripDialog } from "./delete-trip-dialog";
+import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
+/** 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다. */
 export function TripListView() {
   const router = useRouter();
   const { data: trips, isPending, error } = useTrips();
@@ -27,9 +40,25 @@ export function TripListView() {
   const today = todayISO();
   const groups = useMemo(() => groupTrips(trips ?? [], today), [trips, today]);
 
+  // 사용자를 아직 모르면 숨긴다. 보여 줬다가 지우지 못하는 쪽보다 낫다.
+  const canDelete = (trip: Trip | null) => Boolean(user) && trip?.owner_id === user?.id;
+  const editTrip = (trip: Trip) => router.push(`/trips/${trip.id}/settings`);
+  const askDelete = (trip: Trip) => {
+    deleteTrip.reset();
+    setConfirmFor(trip);
+  };
+  const pcActions = (trip: Trip) => (
+    <TripActionsMenu
+      trip={trip}
+      canDelete={canDelete(trip)}
+      onEdit={editTrip}
+      onDelete={askDelete}
+    />
+  );
+
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex h-13 shrink-0 items-center justify-between px-5">
+      <header className="flex h-13 shrink-0 items-center justify-between px-5 lg:hidden">
         <Wordmark className="text-[22px]" />
         {/* 시안 5a: 워드마크 + Avatar 32. 누르면 내 정보 · 로그아웃 */}
         <button type="button" aria-label="내 계정" onClick={() => setAccountOpen(true)}>
@@ -38,14 +67,30 @@ export function TripListView() {
           </Avatar>
         </button>
       </header>
+      <header className="hidden h-16 shrink-0 items-center justify-between border-b border-divider px-7 lg:flex">
+        <Wordmark className="text-[22px]" />
+        <AccountMenu profile={profile} />
+      </header>
 
-      <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))]">
-        <div className="flex items-baseline gap-2 px-5 pt-2.5">
-          <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink-900">내 여행</h1>
-          {trips && <span className="text-[17px] font-extrabold text-primary">{trips.length}</span>}
+      <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))] lg:mx-auto lg:w-full lg:max-w-[1088px] lg:gap-9 lg:px-8 lg:pt-9 lg:pb-14">
+        <div className="flex items-baseline gap-2 px-5 pt-2.5 lg:items-center lg:gap-2.5 lg:p-0">
+          <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink-900 lg:text-[28px]">
+            내 여행
+          </h1>
+          {trips && (
+            <span className="text-[17px] font-extrabold text-primary lg:text-xl">
+              {trips.length}
+            </span>
+          )}
+          <Link
+            href="/trips/new"
+            className={cn(buttonVariants({ size: "pill" }), "ml-auto hidden lg:inline-flex")}
+          >
+            + 여행 일정 만들기
+          </Link>
         </div>
 
-        <div className="px-5 pt-5 pb-1">
+        <div className="px-5 pt-5 pb-1 lg:hidden">
           <Link
             href="/trips/new"
             className="flex items-center gap-3.5 rounded-card bg-surface-sunken p-[18px]"
@@ -61,14 +106,16 @@ export function TripListView() {
         </div>
 
         {isPending && (
-          <div className="flex flex-col gap-3 px-5 pt-6">
+          <div className="flex flex-col gap-3 px-5 pt-6 lg:p-0">
             <Skeleton className="h-16 rounded-card" />
             <Skeleton className="h-16 rounded-card" />
           </div>
         )}
 
         {error && (
-          <p className="px-5 pt-6 text-sm text-destructive">불러오지 못했어요: {error.message}</p>
+          <p className="px-5 pt-6 text-sm text-destructive lg:p-0">
+            불러오지 못했어요: {error.message}
+          </p>
         )}
 
         {trips?.length === 0 && (
@@ -79,43 +126,84 @@ export function TripListView() {
         )}
 
         {groups.map((group) => (
-          <section key={group.title} className="pt-6">
-            <h2 className="px-5 pb-1.5 text-[17px] font-extrabold text-ink-900">{group.title}</h2>
-            {group.trips.map((trip) => (
-              <TripRow
-                key={trip.id}
-                trip={trip}
-                today={today}
-                companionCount={trip.companionCount}
-                actions={
-                  <button
-                    type="button"
-                    aria-label={`${trip.title} 메뉴`}
-                    onClick={() => setSheetFor(trip)}
-                    className="-m-2 flex shrink-0 p-2 text-ink-700"
-                  >
-                    <Ellipsis className="size-[22px]" />
-                  </button>
-                }
-              />
-            ))}
+          <section key={group.kind} className="pt-6 lg:pt-0">
+            <h2 className="px-5 pb-1.5 text-[17px] font-extrabold text-ink-900 lg:px-0 lg:pb-3.5 lg:text-lg">
+              {group.title}
+            </h2>
+
+            <div className="lg:hidden">
+              {group.trips.map((trip) => (
+                <TripRow
+                  key={trip.id}
+                  trip={trip}
+                  today={today}
+                  companionCount={trip.companionCount}
+                  actions={
+                    <button
+                      type="button"
+                      aria-label={`${trip.title} 메뉴`}
+                      onClick={() => setSheetFor(trip)}
+                      className="-m-2 flex shrink-0 p-2 text-ink-700"
+                    >
+                      <Ellipsis className="size-[22px]" />
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+
+            {group.kind === "upcoming" ? (
+              <div className="hidden grid-cols-3 gap-5 lg:grid">
+                {group.trips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    today={today}
+                    companionCount={trip.companionCount}
+                    actions={pcActions(trip)}
+                  />
+                ))}
+                {/* 시안 6a: 다가오는 여행 그리드의 마지막 칸 */}
+                <Link
+                  href="/trips/new"
+                  className="flex min-h-[236px] flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
+                >
+                  <span className="flex size-12 items-center justify-center rounded-full bg-primary">
+                    <Plus className="size-[26px] text-white" strokeWidth={2.4} />
+                  </span>
+                  <span className="text-base font-bold text-ink-900">여행 일정 만들기</span>
+                  <span className="text-[13px] text-ink-400">
+                    도시와 날짜만 고르면 바로 시작돼요
+                  </span>
+                </Link>
+              </div>
+            ) : (
+              <div className="hidden grid-cols-2 gap-x-8 lg:grid">
+                {group.trips.map((trip) => (
+                  <TripRowCompact
+                    key={trip.id}
+                    trip={trip}
+                    companionCount={trip.companionCount}
+                    actions={pcActions(trip)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         ))}
       </div>
 
       <TripActionsSheet
         trip={sheetFor}
-        // 사용자를 아직 모르면 숨긴다. 보여 줬다가 지우지 못하는 쪽보다 낫다.
-        canDelete={Boolean(user) && sheetFor?.owner_id === user?.id}
+        canDelete={canDelete(sheetFor)}
         onClose={() => setSheetFor(null)}
         onEdit={(trip) => {
           setSheetFor(null);
-          router.push(`/trips/${trip.id}/settings`);
+          editTrip(trip);
         }}
         onDelete={(trip) => {
           setSheetFor(null);
-          deleteTrip.reset();
-          setConfirmFor(trip);
+          askDelete(trip);
         }}
       />
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />

@@ -12,41 +12,27 @@ import {
 } from "@/entities/session";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
-import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { cn } from "@/shared/lib/utils";
 
+type TitleComponent = React.ComponentType<{ className?: string; children: React.ReactNode }>;
+
 type Props = {
-  open: boolean;
   profile: MyProfile | null | undefined;
-  onClose: () => void;
+  /** 감싸는 쪽(시트 · 팝오버)의 제목 컴포넌트. 접근성 이름이 그 컨테이너에 연결된다. */
+  Title: TitleComponent;
 };
 
 /**
- * 내 여행 헤더 아바타를 누르면 열리는 계정 메뉴 (시안 16 Account Menu).
- * 내 정보 수정은 별도 페이지가 아니라 시트 안에서 화면이 바뀐다.
+ * 계정 메뉴 내용 (시안 16 Account Menu). 모바일은 바텀시트, PC 는 드롭다운이 감싼다.
+ * 내 정보 수정은 별도 페이지가 아니라 같은 자리에서 화면이 바뀐다.
+ * 컨테이너가 닫히면 언마운트되므로 다시 열면 메뉴 화면부터 나온다.
  */
-export function AccountSheet({ open, profile, onClose }: Props) {
+export function AccountPanel({ profile, Title }: Props) {
   const [view, setView] = useState<"main" | "profile">("main");
-
-  function handleOpenChange(next: boolean) {
-    if (next) return;
-    onClose();
-    setView("main");
-  }
-
-  return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="gap-0 rounded-t-sheet p-0 pb-[env(safe-area-inset-bottom)]"
-      >
-        {view === "main" ? (
-          <MainMenu profile={profile} onEditProfile={() => setView("profile")} />
-        ) : (
-          <ProfileEditor profile={profile} onBack={() => setView("main")} />
-        )}
-      </SheetContent>
-    </Sheet>
+  return view === "main" ? (
+    <MainMenu profile={profile} Title={Title} onEditProfile={() => setView("profile")} />
+  ) : (
+    <ProfileEditor profile={profile} Title={Title} onBack={() => setView("main")} />
   );
 }
 
@@ -60,9 +46,11 @@ function accountLabel(profile: MyProfile | null | undefined, style: "dot" | "par
 
 function MainMenu({
   profile,
+  Title,
   onEditProfile,
 }: {
   profile: MyProfile | null | undefined;
+  Title: TitleComponent;
   onEditProfile: () => void;
 }) {
   const signOut = useSignOut();
@@ -76,9 +64,9 @@ function MainMenu({
           </AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <SheetTitle className="truncate text-[17px] font-extrabold text-ink-900">
+          <Title className="truncate text-[17px] font-extrabold text-ink-900">
             {profile?.display_name ?? "이름 없음"}
-          </SheetTitle>
+          </Title>
           <span className="truncate text-[13px] text-ink-400">{accountLabel(profile, "dot")}</span>
         </div>
       </div>
@@ -128,9 +116,11 @@ function MenuItem({
 
 function ProfileEditor({
   profile,
+  Title,
   onBack,
 }: {
   profile: MyProfile | null | undefined;
+  Title: TitleComponent;
   onBack: () => void;
 }) {
   const current = profile?.display_name ?? "";
@@ -153,7 +143,7 @@ function ProfileEditor({
         <button type="button" aria-label="뒤로" onClick={onBack} className="flex text-ink-900">
           <ArrowLeft className="size-[22px]" strokeWidth={2} />
         </button>
-        <SheetTitle className="text-[17px] font-extrabold text-ink-900">내 정보</SheetTitle>
+        <Title className="text-[17px] font-extrabold text-ink-900">내 정보</Title>
       </div>
       <div className="flex flex-col items-center gap-[18px] px-5 pt-2 pb-6">
         <Avatar className="size-[72px]">
