@@ -6,3 +6,4 @@ export * from "./ui/trip-card";
 export * from "./ui/trip-row";
 export * from "./ui/trip-thumb";
 export * from "./lib/tint";
+export * from "./lib/group-trips";

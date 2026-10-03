@@ -4,21 +4,12 @@ import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { type Trip, TripRow, useDeleteTrip, useTrips } from "@/entities/trip";
+import { type Trip, TripRow, groupTrips, useDeleteTrip, useTrips } from "@/entities/trip";
 import { todayISO } from "@/shared/lib/days";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
 import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsSheet } from "./trip-actions-sheet";
-
-/** 다가오는 / 지난 여행으로 가른다. 다가오는 건 가까운 순, 지난 건 최근 순. */
-function groupTrips<T extends Pick<Trip, "start_date" | "end_date">>(trips: T[], today: string) {
-  const sorted = [...trips].sort((a, b) => a.start_date.localeCompare(b.start_date));
-  return [
-    { title: "다가오는 여행", trips: sorted.filter((t) => t.end_date >= today) },
-    { title: "지난 여행", trips: sorted.filter((t) => t.end_date < today).reverse() },
-  ].filter((g) => g.trips.length > 0);
-}
 
 export function TripListView() {
   const router = useRouter();
