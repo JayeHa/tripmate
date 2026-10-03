@@ -9,7 +9,7 @@
 ## 1. Supabase 설정
 
 1. https://supabase.com 에서 새 프로젝트 생성 (리전: Northeast Asia / Seoul 또는 Tokyo).
-2. **SQL Editor** 에서 `supabase/migrations/0001_init.sql` → `0002_realtime.sql` → `0003_trips_select_owner.sql` 순서로 실행.
+2. **SQL Editor** 에서 `supabase/migrations/0001_init.sql` → `0002_realtime.sql` → `0003_trips_select_owner.sql` → `0004_join_requires_real_account.sql` 순서로 실행.
    - 또는 CLI: `supabase login` → `supabase link --project-ref <ref>` → `supabase db push`
 3. **Authentication → Providers → Google** 활성화 (아래 Google OAuth 클라이언트 ID/Secret 입력).
 4. **Authentication → URL Configuration**

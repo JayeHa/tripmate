@@ -4,14 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useUser } from "@/entities/session";
 import { Button } from "@/shared/ui/button";
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
 
-export function JoinButton({ token }: { token: string }) {
+export function JoinButton({ token, isAnonymous }: { token: string; isAnonymous: boolean }) {
   const router = useRouter();
-  const { data: user } = useUser();
   const qc = useQueryClient();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +29,7 @@ export function JoinButton({ token }: { token: string }) {
   }
 
   // 둘러보기 계정으로 합류하면 쿠키가 지워지는 순간 멤버십을 되찾을 수 없다.
-  if (user?.is_anonymous) {
+  if (isAnonymous) {
     return (
       <div className="mt-6 flex flex-col gap-2">
         <Button
