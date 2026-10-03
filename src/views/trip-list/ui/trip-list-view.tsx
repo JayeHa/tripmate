@@ -224,16 +224,27 @@ export function TripListView({ createdId }: { createdId: string | null }) {
         open={createOpen}
         onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
       >
+        {/* 1024px 아래로 창을 줄이면 전체 화면 모바일 레이아웃으로 바뀐다. 상태는 createFlow 하나를 함께 쓴다 */}
         <DialogContent
           showCloseButton={false}
-          className="h-[660px] w-[760px] max-w-[760px] gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-[760px]"
+          className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[660px] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
         >
-          <TripCreateFlow
-            layout="pc"
-            state={createFlow}
-            Title={DialogTitle}
-            onClose={() => setCreateOpen(false)}
-          />
+          <div className="flex h-full min-h-0 flex-col lg:hidden">
+            <TripCreateFlow
+              layout="mobile"
+              state={createFlow}
+              Title={DialogTitle}
+              onClose={() => setCreateOpen(false)}
+            />
+          </div>
+          <div className="hidden h-full min-h-0 lg:block">
+            <TripCreateFlow
+              layout="pc"
+              state={createFlow}
+              Title={DialogTitle}
+              onClose={() => setCreateOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
