@@ -165,7 +165,8 @@ describe("RLS", () => {
     const id = await newTrip("2027-02-01", "2027-02-02");
     await as(B);
     const read = await db.query<{ n: number }>(`select count(*)::int n from public.cities`);
-    expect(read.rows[0].n).toBe(105);
+    // 개수는 supabase/cities.test.ts 가 고정한다. 여기서는 읽힌다는 것만 본다
+    expect(read.rows[0].n).toBeGreaterThan(0);
     expect(
       await rejects(
         `insert into public.cities (id, scope, name, position, lat, lng, country_code, currency, timezone)
