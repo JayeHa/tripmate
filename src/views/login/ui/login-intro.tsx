@@ -1,5 +1,5 @@
-import { Wordmark } from "@/shared/ui/wordmark";
 import { cn } from "@/shared/lib/utils";
+import { Wordmark } from "@/shared/ui/wordmark";
 
 /** 워드마크 + 소개 카피. 모바일(7a)과 PC(7b)는 크기와 줄바꿈만 다르다. */
 export function LoginIntro({ layout }: { layout: "mobile" | "desktop" }) {

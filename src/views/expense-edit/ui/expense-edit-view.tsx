@@ -2,6 +2,19 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import {
+  type ExpenseCategory,
+  type ExpenseFormValues,
+  useDeleteExpense,
+  useExpenses,
+  useUpdateExpense,
+} from "@/entities/expense";
+import { useScheduleItems } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
+import { useTrip } from "@/entities/trip";
+import { useTripMembers } from "@/entities/trip-member";
+import { ExpenseForm } from "@/features/expense/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
 import { AppHeader } from "@/shared/ui/app-header";
-import { ExpenseForm } from "@/features/expense/form";
 import { Button } from "@/shared/ui/button";
-import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/entities/expense";
-import { useScheduleItems } from "@/entities/schedule-item";
-import { useTrip } from "@/entities/trip";
-import { useTripMembers } from "@/entities/trip-member";
-import { useUser } from "@/entities/session";
-import type { ExpenseFormValues } from "@/entities/expense";
-import type { ExpenseCategory } from "@/entities/expense";
 
 export function ExpenseEditView({ tripId, expenseId }: { tripId: string; expenseId: string }) {
   const router = useRouter();

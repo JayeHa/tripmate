@@ -1,5 +1,6 @@
 import { createClient } from "@/shared/api/supabase/client";
 import type { TablesInsert, TablesUpdate } from "@/shared/api/supabase/database.types";
+
 import type { ScheduleItem } from "../model/types";
 
 export async function fetchScheduleItems(tripId: string): Promise<ScheduleItem[]> {

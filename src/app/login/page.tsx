@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import { LoginView } from "@/views/login";
 
 export const metadata = { title: "로그인" };

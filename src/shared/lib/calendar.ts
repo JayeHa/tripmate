@@ -71,19 +71,32 @@ export function monthCells(year: number, month: number, opts: MonthOptions): Cal
       if (date === other.start) cell.label = "다른 일정";
     }
 
-    if (selection) {
-      const end = selection.end ?? selection.start;
-      if (date >= selection.start && date <= end) {
-        const isStart = date === selection.start;
-        const isEnd = date === end;
-        cell.selected = isStart && isEnd ? "single" : isStart ? "start" : isEnd ? "end" : "middle";
-        if (isStart) cell.label = "출발";
-        else if (isEnd && selection.end) cell.label = "도착";
-      }
-    }
+    cell.selected = selectedPosition(selection, date);
+    const selectedLabel = labelOf(selection, cell.selected);
+    if (selectedLabel) cell.label = selectedLabel;
     cells.push(cell);
   }
   return cells;
+}
+
+/** 고른 기간 안에서 date 의 위치. 기간 밖이면 null */
+function selectedPosition(selection: DateSelection, date: string): CalendarDay["selected"] {
+  if (!selection) return null;
+  const end = selection.end ?? selection.start;
+  if (date < selection.start || date > end) return null;
+  const isStart = date === selection.start;
+  const isEnd = date === end;
+  if (isStart && isEnd) return "single";
+  if (isStart) return "start";
+  if (isEnd) return "end";
+  return "middle";
+}
+
+/** 고른 기간의 라벨. 도착은 도착일까지 골랐을 때만 붙는다 */
+function labelOf(selection: DateSelection, position: CalendarDay["selected"]) {
+  if (position === "start" || position === "single") return "출발";
+  if (position === "end" && selection?.end) return "도착";
+  return null;
 }
 
 /**

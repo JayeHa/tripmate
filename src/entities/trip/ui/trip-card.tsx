@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/shared/lib/utils";
-import { Badge } from "@/shared/ui/badge";
+
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
 import { initialOf, tintOf } from "@/shared/lib/tint";
+import { cn } from "@/shared/lib/utils";
+import { Badge } from "@/shared/ui/badge";
+
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
 

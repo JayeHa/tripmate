@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Ellipsis, Trash2 } from "lucide-react";
+
 import type { Trip } from "@/entities/trip";
 import {
   DropdownMenu,

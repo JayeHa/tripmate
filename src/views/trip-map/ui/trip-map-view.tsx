@@ -2,18 +2,22 @@
 
 import { Footprints, TrainFront } from "lucide-react";
 import { useMemo, useState } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { DayChips } from "@/features/schedule/day-selector";
-import { formatDistance, formatDuration } from "@/entities/schedule-item";
-import { DayMap } from "@/views/trip-map/ui/day-map";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import { useDayParam } from "@/features/schedule/day-selector";
-import { useDayRoute } from "@/entities/schedule-item";
-import { useScheduleItems } from "@/entities/schedule-item";
+
+import {
+  formatDistance,
+  formatDuration,
+  type TravelMode,
+  useDayRoute,
+  useScheduleItems,
+} from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
+import { DayChips, useDayParam } from "@/features/schedule/day-selector";
 import { dayCount } from "@/shared/lib/days";
-import type { TravelMode } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
+import { AppHeader } from "@/shared/ui/app-header";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
+
+import { DayMap } from "./day-map";
 
 export function TripMapView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);

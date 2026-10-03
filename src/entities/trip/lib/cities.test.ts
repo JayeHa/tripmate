@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { cityCountLabel, coverImageUrl } from "./cities";
 
 const city = (id: string) => ({ id, name: id });

@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+
 import type { TripCreateState } from "../../model/use-trip-create";
 import { CitySearchInput } from "../parts/city-search-input";
 import { CityStepBody } from "../parts/city-step-body";

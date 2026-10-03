@@ -1,6 +1,7 @@
 "use client";
 
 import { CityPicker, useCityCatalog } from "@/entities/city";
+
 import type { TripCreateState } from "../../model/use-trip-create";
 
 /** 도시 단계 본문. 카탈로그를 불러오는 동안·실패했을 때의 자리를 함께 맡는다. */

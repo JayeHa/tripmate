@@ -2,8 +2,10 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+
 import { IconButton } from "@/shared/ui/icon-button";
 import { MonthGrid } from "@/shared/ui/month-grid";
+
 import { PAST_MONTHS } from "../../lib/range";
 import { useCreateCalendar } from "../../model/use-create-calendar";
 import type { TripCreateState } from "../../model/use-trip-create";

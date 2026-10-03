@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+
 import { GROUPS, SEGMENTS, SLICED } from "./fsd.config.mjs";
 
 const SRC = path.resolve(__dirname, "src");

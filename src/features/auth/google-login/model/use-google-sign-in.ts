@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { del } from "idb-keyval";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+
 import { QUERY_PERSIST_KEY } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
 

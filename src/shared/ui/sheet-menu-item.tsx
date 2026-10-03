@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ComponentProps } from "react";
+
 import { cn } from "@/shared/lib/utils";
 
 type Props = Omit<ComponentProps<"button">, "type"> & {

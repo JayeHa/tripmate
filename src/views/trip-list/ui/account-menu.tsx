@@ -1,9 +1,11 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+
 import { initialOfName, type MyProfile } from "@/entities/session";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/shared/ui/popover";
+
 import { AccountPanel } from "./account-panel";
 
 /** PC: 헤더의 「아바타 이름 ▾」를 누르면 열리는 320px 계정 드롭다운 (시안 6a · 16). */

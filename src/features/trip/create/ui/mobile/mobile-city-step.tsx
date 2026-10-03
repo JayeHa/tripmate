@@ -1,8 +1,10 @@
 "use client";
 
 import { ArrowLeft, Search } from "lucide-react";
+
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
+
 import { cityCtaLabel } from "../../lib/cta";
 import type { TripCreateState } from "../../model/use-trip-create";
 import { CitySearchInput } from "../parts/city-search-input";

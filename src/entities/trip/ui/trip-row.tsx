@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/shared/ui/badge";
+
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
+import { Badge } from "@/shared/ui/badge";
+
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
 import { TripThumb } from "./trip-thumb";

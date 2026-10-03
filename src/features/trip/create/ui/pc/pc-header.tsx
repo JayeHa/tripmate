@@ -1,5 +1,7 @@
 import { ArrowLeft, X } from "lucide-react";
+
 import { IconButton } from "@/shared/ui/icon-button";
+
 import type { TripCreateState } from "../../model/use-trip-create";
 import type { TitleComponent } from "../parts/title";
 

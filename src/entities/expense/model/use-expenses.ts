@@ -1,8 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createExpense, deleteExpense, fetchExpenses, updateExpense } from "../api/expenses";
+
 import { queryKeys } from "@/shared/api/query-keys";
+
+import { createExpense, deleteExpense, fetchExpenses, updateExpense } from "../api/expenses";
 import type { ExpenseFormValues } from "./schema";
 
 export function useExpenses(tripId: string) {

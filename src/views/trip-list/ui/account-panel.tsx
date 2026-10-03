@@ -2,6 +2,7 @@
 
 import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { useState } from "react";
+
 import {
   DISPLAY_NAME_MAX,
   initialOfName,
@@ -10,11 +11,11 @@ import {
   useSignOut,
   useUpdateDisplayName,
 } from "@/entities/session";
+import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
-import { cn } from "@/shared/lib/utils";
 
 type TitleComponent = React.ComponentType<{ className?: string; children: React.ReactNode }>;
 

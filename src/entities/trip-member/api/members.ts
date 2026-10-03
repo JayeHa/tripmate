@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/api/supabase/client";
+
 import type { TripMember } from "../model/types";
 
 export async function fetchMembers(tripId: string): Promise<TripMember[]> {

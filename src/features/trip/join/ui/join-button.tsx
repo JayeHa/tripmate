@@ -4,9 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/shared/ui/button";
+
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
+import { Button } from "@/shared/ui/button";
 
 export function JoinButton({ token, isAnonymous }: { token: string; isAnonymous: boolean }) {
   const router = useRouter();

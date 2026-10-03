@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { City, CityRegion } from "../model/types";
 import { cityAreasLabel, groupByRegion, searchCities } from "./search";
 

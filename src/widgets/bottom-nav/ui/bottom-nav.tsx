@@ -2,6 +2,7 @@
 
 import { CalendarDays, House, NotebookPen, Receipt, Settings } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
+
 import { BottomTabBar, type TabItem } from "@/shared/ui/tab-bar";
 
 /**

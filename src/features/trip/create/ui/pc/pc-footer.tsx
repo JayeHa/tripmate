@@ -1,4 +1,5 @@
 import { Button } from "@/shared/ui/button";
+
 import { dateCtaLabel, pcCityCtaLabel } from "../../lib/cta";
 import type { TripCreateState } from "../../model/use-trip-create";
 import { CreateError } from "../parts/create-error";

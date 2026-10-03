@@ -3,14 +3,17 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-import { useExpenses } from "@/entities/expense";
+
+import { computeNetBalances, minimizeTransfers, useExpenses } from "@/entities/expense";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
-import { MissingRateError, decimalsOf, formatMoney } from "@/shared/lib/money";
-import { computeNetBalances, minimizeTransfers } from "@/entities/expense";
+import { decimalsOf, formatMoney, MissingRateError } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+
+/** 받을 돈(+) 초록 · 낼 돈(-) 빨강 · 0 은 기본색. Math.sign 의 결과로 고른다 */
+const NET_TONE: Record<number, string> = { 1: "text-emerald-600", [-1]: "text-destructive", 0: "" };
 
 export function SettlementView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
@@ -94,12 +97,7 @@ export function SettlementView({ tripId }: { tripId: string }) {
                     <li key={m.user_id} className="flex items-center gap-3 py-2.5">
                       <Person id={m.user_id} />
                       <div className="ml-auto text-right">
-                        <p
-                          className={cn(
-                            "text-sm font-semibold",
-                            net > 0 ? "text-emerald-600" : net < 0 ? "text-destructive" : "",
-                          )}
-                        >
+                        <p className={cn("text-sm font-semibold", NET_TONE[Math.sign(net)])}>
                           {net > 0 ? "+" : ""}
                           {formatMoney(net, trip.home_currency)}
                         </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Footprints, MapPinOff, TrainFront } from "lucide-react";
+
 import { formatDistance, formatDuration } from "../lib/format-leg";
 import type { RouteLeg, ScheduleItem, TravelMode } from "../model/types";
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { type CalendarDay, monthCells, monthsAround, monthsFrom, pickDate } from "./calendar";
 
 const TODAY = "2026-10-03";

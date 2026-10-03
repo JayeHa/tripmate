@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+
+import { decimalsOf, splitEqual } from "@/shared/lib/money";
+
 import type { ExpenseWithSplits } from "../model/types";
 import { computeNetBalances } from "./balances";
-import { decimalsOf, splitEqual } from "@/shared/lib/money";
 import { minimizeTransfers } from "./settle";
 
 /**

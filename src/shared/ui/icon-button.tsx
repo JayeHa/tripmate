@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+
 import { cn } from "@/shared/lib/utils";
 
 type Props = Omit<ComponentProps<"button">, "aria-label"> & {

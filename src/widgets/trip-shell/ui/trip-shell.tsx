@@ -1,7 +1,8 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { useSyncExternalStore, type ReactNode } from "react";
+import { type ReactNode, useSyncExternalStore } from "react";
+
 import { useRealtimeTrip } from "@/features/trip/realtime-sync";
 
 function subscribe(cb: () => void) {

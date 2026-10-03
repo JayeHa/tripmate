@@ -1,6 +1,7 @@
 import { DemoLoginButton } from "@/features/auth/demo-login";
 import { GoogleSignInButton } from "@/features/auth/google-login";
 import { Wordmark } from "@/shared/ui/wordmark";
+
 import { LoginIntro } from "./login-intro";
 import { TermsNotice } from "./terms-notice";
 

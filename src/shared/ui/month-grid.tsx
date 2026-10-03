@@ -57,23 +57,7 @@ function DayCell({
   const s = SIZE[size];
   const edge = cell.selected === "start" || cell.selected === "end" || cell.selected === "single";
 
-  // 고른 기간의 띠가 다른 일정의 띠보다 위다
-  let band: React.CSSProperties | null = null;
-  if (cell.selected && cell.selected !== "single") {
-    band = {
-      left: cell.selected === "start" ? "50%" : 0,
-      right: cell.selected === "end" ? "50%" : 0,
-      backgroundColor: "var(--color-primary-tint)",
-    };
-  } else if (cell.other && !cell.selected) {
-    const { roundStart, roundEnd } = cell.other;
-    band = {
-      left: roundStart ? s.inset : 0,
-      right: roundEnd ? s.inset : 0,
-      borderRadius: `${roundStart ? s.radius : 0} ${roundEnd ? s.radius : 0} ${roundEnd ? s.radius : 0} ${roundStart ? s.radius : 0}`,
-      backgroundColor: "#EEEFF1",
-    };
-  }
+  const band = bandStyle(cell, s);
 
   return (
     <button
@@ -89,15 +73,7 @@ function DayCell({
         className={cn(
           "relative flex items-center justify-center rounded-full",
           s.circle,
-          edge
-            ? "bg-primary font-bold text-white"
-            : cell.disabled
-              ? "font-medium text-[#C9CDD2]"
-              : cell.today
-                ? "font-bold text-primary"
-                : cell.red
-                  ? "font-medium text-destructive"
-                  : "font-medium text-ink-800",
+          dayTone(cell, edge),
         )}
       >
         {cell.day}
@@ -115,4 +91,34 @@ function DayCell({
       )}
     </button>
   );
+}
+
+/** 날짜 숫자 색. 출발·도착 원 > 지난 날(막힘) > 오늘 > 주말·공휴일 > 평일 */
+function dayTone(cell: CalendarDay, edge: boolean) {
+  if (edge) return "bg-primary font-bold text-white";
+  if (cell.disabled) return "font-medium text-[#C9CDD2]";
+  if (cell.today) return "font-bold text-primary";
+  if (cell.red) return "font-medium text-destructive";
+  return "font-medium text-ink-800";
+}
+
+/** 칸 뒤의 띠. 고른 기간의 띠가 다른 일정의 띠보다 위다. 띠가 없으면 null */
+function bandStyle(cell: CalendarDay, s: (typeof SIZE)[keyof typeof SIZE]) {
+  if (cell.selected === "single") return null;
+  if (cell.selected) {
+    return {
+      left: cell.selected === "start" ? "50%" : 0,
+      right: cell.selected === "end" ? "50%" : 0,
+      backgroundColor: "var(--color-primary-tint)",
+    } satisfies React.CSSProperties;
+  }
+  if (!cell.other) return null;
+  const start = cell.other.roundStart ? s.radius : 0;
+  const end = cell.other.roundEnd ? s.radius : 0;
+  return {
+    left: cell.other.roundStart ? s.inset : 0,
+    right: cell.other.roundEnd ? s.inset : 0,
+    borderRadius: `${start} ${end} ${end} ${start}`,
+    backgroundColor: "#EEEFF1",
+  } satisfies React.CSSProperties;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+
 import { queryKeys } from "@/shared/api/query-keys";
+
 import { fetchCityCatalog } from "../api/cities";
 
 const DAY = 24 * 60 * 60 * 1000;

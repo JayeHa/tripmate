@@ -1,7 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { queryKeys } from "@/shared/api/query-keys";
+
 import {
   createTrip,
   deleteTrip,

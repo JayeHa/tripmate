@@ -4,13 +4,14 @@ import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
 import { initialOfName, useMyProfile, useUser } from "@/entities/session";
 import {
+  groupTrips,
   type Trip,
   TripCard,
   TripRow,
   TripRowCompact,
-  groupTrips,
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
@@ -22,6 +23,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
+
 import { AccountMenu } from "./account-menu";
 import { AccountSheet } from "./account-sheet";
 import { DeleteTripDialog } from "./delete-trip-dialog";

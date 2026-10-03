@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import type { City } from "@/entities/city";
 import { titleFromCities, useCreateTrip } from "@/entities/trip";
 import { type DateSelection, pickDate } from "@/shared/lib/calendar";

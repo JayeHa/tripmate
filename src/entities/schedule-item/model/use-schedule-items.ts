@@ -1,17 +1,19 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { queryKeys } from "@/shared/api/query-keys";
+import type { TablesUpdate } from "@/shared/api/supabase/database.types";
+
 import {
   createScheduleItem,
   deleteScheduleItem,
   fetchScheduleItems,
   moveScheduleItemToDay,
-  swapScheduleItems,
   type NewScheduleItem,
+  swapScheduleItems,
   updateScheduleItem,
 } from "../api/schedule-items";
-import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 import type { ScheduleItem } from "./types";
 
 export function useScheduleItems(tripId: string) {
@@ -62,13 +64,11 @@ export function useSwapScheduleItems(tripId: string) {
       const prev = qc.getQueryData<ScheduleItem[]>(key);
       qc.setQueryData<ScheduleItem[]>(key, (items = []) =>
         items
-          .map((it) =>
-            it.id === a.id
-              ? { ...it, position: b.position }
-              : it.id === b.id
-                ? { ...it, position: a.position }
-                : it,
-          )
+          .map((it) => {
+            if (it.id === a.id) return { ...it, position: b.position };
+            if (it.id === b.id) return { ...it, position: a.position };
+            return it;
+          })
           .sort((x, y) => x.day_index - y.day_index || x.position - y.position),
       );
       return { prev };

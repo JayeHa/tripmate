@@ -3,6 +3,7 @@
 import { decode } from "@googlemaps/polyline-codec";
 import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
+
 import type { ScheduleItem } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 

@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/api/supabase/client";
+
 import type { CityCatalog } from "../model/types";
 
 /** 권역과 도시를 화면 순서대로 읽는다. 105행 정도라 한 번에 받는다. */

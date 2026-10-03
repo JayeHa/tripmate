@@ -2,6 +2,9 @@
 
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+
+import { type ScheduleItem, scheduleItemFormSchema } from "@/entities/schedule-item";
+import { dayLabel } from "@/shared/lib/days";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +21,6 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
 import { Textarea } from "@/shared/ui/textarea";
-import { dayLabel } from "@/shared/lib/days";
-import { scheduleItemFormSchema } from "@/entities/schedule-item";
-import type { ScheduleItem } from "@/entities/schedule-item";
 
 type Patch = { name: string; start_time: string | null; memo: string | null };
 

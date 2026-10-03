@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { holidayNames, isHoliday } from "./holidays";
 
 describe("holidays", () => {

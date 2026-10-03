@@ -1,7 +1,8 @@
 import Image from "next/image";
+
 import { CITY_IMAGES } from "@/shared/config/city-images";
-import { cn } from "@/shared/lib/utils";
 import { initialOf, tintOf } from "@/shared/lib/tint";
+import { cn } from "@/shared/lib/utils";
 
 type Props = {
   city: { id: string; name: string };

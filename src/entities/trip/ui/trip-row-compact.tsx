@@ -1,5 +1,7 @@
 import Link from "next/link";
+
 import { dateRangeLabel } from "@/shared/lib/days";
+
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
 import { TripThumb } from "./trip-thumb";

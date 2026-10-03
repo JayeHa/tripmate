@@ -1,10 +1,11 @@
 "use client";
 
 import { CalendarDays, Trash2 } from "lucide-react";
+
+import type { Trip } from "@/entities/trip";
 import { dateRangeLabel } from "@/shared/lib/days";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
-import type { Trip } from "@/entities/trip";
 
 type Props = {
   trip: Trip | null;

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Trip } from "@/entities/trip";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -7,7 +8,6 @@ import {
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
-import type { Trip } from "@/entities/trip";
 
 type Props = {
   trip: Trip | null;
