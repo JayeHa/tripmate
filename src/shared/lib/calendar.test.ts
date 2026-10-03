@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { type CalendarDay, monthCells, monthsAround, monthsFrom, pickDate } from "./calendar";
+import {
+  type CalendarDay,
+  monthCells,
+  monthsAround,
+  monthsFrom,
+  pickDate,
+  rangeCtaLabel,
+} from "./calendar";
 
 const TODAY = "2026-10-03";
 const days = (cells: ReturnType<typeof monthCells>) =>
@@ -134,5 +141,17 @@ describe("monthsFrom", () => {
       [2026, 12],
       [2027, 1],
     ]);
+  });
+});
+
+describe("rangeCtaLabel", () => {
+  it("단계마다 다음 할 일을 알려 주고, 다 고르면 기간과 완료 동작", () => {
+    expect(rangeCtaLabel(null, "수정 완료")).toBe("출발일을 선택해 주세요");
+    expect(rangeCtaLabel({ start: "2026-11-06", end: null }, "수정 완료")).toBe(
+      "도착일을 선택해 주세요",
+    );
+    expect(rangeCtaLabel({ start: "2026-11-06", end: "2026-11-08" }, "수정 완료")).toBe(
+      "2026.11.6 - 11.8 / 수정 완료",
+    );
   });
 });

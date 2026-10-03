@@ -1,5 +1,4 @@
-import type { DateSelection } from "@/shared/lib/calendar";
-import { dateRangeLabel } from "@/shared/lib/days";
+import { type DateSelection, rangeCtaLabel } from "@/shared/lib/calendar";
 
 /** 모바일 도시 단계 CTA. 두 곳까지 이름을 보이고 나머지는 「외 N곳」 (시안 5b) */
 export function cityCtaLabel(names: readonly string[]) {
@@ -17,7 +16,5 @@ export function pcCityCtaLabel(count: number) {
 /** 날짜 단계 CTA. 무엇을 눌러야 하는지 알려 주다가, 다 고르면 기간을 보여 준다 (시안 5c · 6c) */
 export function dateCtaLabel(selection: DateSelection, pending = false) {
   if (pending) return "만드는 중…";
-  if (!selection) return "출발일을 선택해 주세요";
-  if (!selection.end) return "도착일을 선택해 주세요";
-  return `${dateRangeLabel(selection.start, selection.end)} / 등록 완료`;
+  return rangeCtaLabel(selection, "등록 완료");
 }

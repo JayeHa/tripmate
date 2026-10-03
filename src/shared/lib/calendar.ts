@@ -8,6 +8,8 @@ import {
   subMonths,
 } from "date-fns";
 
+import { dateRangeLabel } from "./days";
+
 /** 날짜는 모두 yyyy-MM-dd 문자열이다. 사전순 비교가 곧 날짜 비교다. */
 export type DateRange = { start: string; end: string };
 /** 고르는 중인 기간. 출발만 고른 상태면 end 가 null. */
@@ -122,4 +124,14 @@ export function monthsFrom(from: string, count: number): [number, number][] {
     const d = addMonths(base, i);
     return [d.getFullYear(), d.getMonth() + 1];
   });
+}
+
+/**
+ * 기간 선택 CTA. 무엇을 눌러야 하는지 알려 주다가, 다 고르면 기간과 완료 동작을 보인다
+ * (시안 5c · 6c: 「2026.11.6 - 11.8 / 등록 완료」, 수정 모드는 「… / 수정 완료」).
+ */
+export function rangeCtaLabel(selection: DateSelection, done: string) {
+  if (!selection) return "출발일을 선택해 주세요";
+  if (!selection.end) return "도착일을 선택해 주세요";
+  return `${dateRangeLabel(selection.start, selection.end)} / ${done}`;
 }
