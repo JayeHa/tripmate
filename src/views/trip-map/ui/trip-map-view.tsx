@@ -1,7 +1,6 @@
 "use client";
 
 import { Footprints, TrainFront } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
 import { DayChips } from "@/features/day-selector";
@@ -16,8 +15,7 @@ import { dayCount } from "@/shared/lib/days";
 import type { TravelMode } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
-export function TripMapView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function TripMapView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
   const { data: items } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;

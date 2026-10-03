@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -23,8 +23,7 @@ import { useRemoveMember, useTripMembers } from "@/entities/trip-member";
 import { useUser } from "@/entities/session";
 import { ratesToForm } from "@/entities/trip";
 
-export function TripSettingsView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function TripSettingsView({ tripId }: { tripId: string }) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);

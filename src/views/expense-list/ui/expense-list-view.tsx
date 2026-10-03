@@ -2,7 +2,6 @@
 
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
@@ -14,8 +13,7 @@ import { dateToDayIndex, dayLabel } from "@/shared/lib/days";
 import { MissingRateError, formatMoney, toHome } from "@/shared/lib/money";
 import { EXPENSE_CATEGORY_LABEL, ExpenseCategory, ExpenseWithSplits } from "@/entities/expense";
 
-export function ExpenseListView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function ExpenseListView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses, isPending } = useExpenses(tripId);

@@ -1,7 +1,6 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
 import { DayChips } from "@/features/day-selector";
@@ -25,8 +24,7 @@ import { useUser } from "@/entities/session";
 import { dayCount } from "@/shared/lib/days";
 import type { ScheduleItem } from "@/entities/schedule-item";
 
-export function TripItineraryView() {
-  const { tripId } = useParams<{ tripId: string }>();
+export function TripItineraryView({ tripId }: { tripId: string }) {
   const { data: trip } = useTrip(tripId);
   const { data: user } = useUser();
   const { data: items, isPending } = useScheduleItems(tripId);

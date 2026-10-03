@@ -3,10 +3,11 @@ import { TripMapView } from "@/views/trip-map";
 
 export const metadata = { title: "지도" };
 
-export default function Page() {
+export default async function Page({ params }: PageProps<"/trips/[tripId]/map">) {
+  const { tripId } = await params;
   return (
     <Suspense>
-      <TripMapView />
+      <TripMapView tripId={tripId} />
     </Suspense>
   );
 }
