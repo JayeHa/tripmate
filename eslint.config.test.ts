@@ -70,6 +70,9 @@ describe("슬라이스 공개 API", () => {
     ["src/views/trip-list/ui/x.ts", "@/features/trip/create/ui/pc/pc-flow"],
     ["src/views/trip-list/ui/x.ts", "@/widgets/bottom-nav/ui/bottom-nav"],
     ["src/views/trip-map/ui/x.ts", "@/views/trip-map/ui/day-map"],
+    // 상대경로로 우회해도 막힌다
+    ["src/views/trip-list/ui/x.ts", "../../../entities/trip/ui/trip-row"],
+    ["src/features/trip/create/ui/x.ts", "../../../../shared/ui/button"],
   ])("%s → %s 는 막힌다", async (from, spec) => {
     expect(await restrictedErrors(from, spec)).toHaveLength(1);
   });
@@ -79,6 +82,9 @@ describe("슬라이스 공개 API", () => {
     ["src/views/trip-list/ui/x.ts", "@/features/trip/create"],
     ["src/views/trip-list/ui/x.ts", "@/shared/ui/button"],
     ["src/views/trip-list/ui/x.ts", "@/shared/api/supabase/client"],
+    // 같은 슬라이스 안의 상대경로
+    ["src/features/trip/create/ui/pc/x.ts", "../../lib/cta"],
+    ["src/views/trip-list/ui/x.ts", "./trip-actions-menu"],
   ])("%s → %s 는 공개 API 라 허용된다", async (from, spec) => {
     expect(await restrictedErrors(from, spec)).toEqual([]);
   });

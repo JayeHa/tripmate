@@ -124,6 +124,12 @@ const eslintConfig = defineConfig([
               message:
                 "다른 슬라이스는 index.ts 로만 import 합니다. 같은 슬라이스 안이면 상대경로를 쓰세요.",
             },
+            {
+              // 상대경로로 레이어 폴더까지 올라가면 다른 슬라이스(또는 레이어)다. 별칭 규칙을 우회하지 못하게 막는다.
+              // 같은 슬라이스 안의 상대경로(../model/x, ../../lib/cta)는 레이어 이름을 지나지 않는다.
+              regex: "^(\\.\\./)+(app|views|widgets|features|entities|shared)(/|$)",
+              message: "다른 슬라이스·레이어는 `@/` 경로로 import 합니다.",
+            },
           ],
         },
       ],
