@@ -162,6 +162,37 @@ describe("update_trip_dates", () => {
   });
 });
 
+describe("schedule_items 장소 정보 (0010)", () => {
+  it("기존 방식으로 넣으면 place · 빈 링크 · 빈 대체 장소가 된다", async () => {
+    await as(A);
+    const id = await newTrip("2027-03-01", "2027-03-01");
+    const { rows } = await db.query(
+      `insert into public.schedule_items (trip_id, day_index, position, name)
+       values ('${id}', 0, 0, '도쿄역') returning kind, status, links, alternatives`,
+    );
+    expect(rows).toEqual([{ kind: "place", status: null, links: [], alternatives: [] }]);
+  });
+
+  it.each([
+    ["kind", "'hotel'"],
+    ["status", "'done'"],
+    ["category", "'bar'"],
+    ["rating", "5.5"],
+    ["review_count", "-1"],
+    ["links", `'{"url":"x"}'`],
+    ["alternatives", "'\"x\"'"],
+  ])("%s = %s 는 거부한다", async (column, value) => {
+    await as(A);
+    const id = await newTrip("2027-03-02", "2027-03-02");
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, name, ${column})
+         values ('${id}', 0, 0, 'x', ${value})`,
+      ),
+    ).toMatch(/check constraint/);
+  });
+});
+
 describe("RLS", () => {
   it("도시 기준 데이터는 읽기만, 남의 여행에는 도시를 넣지 못한다", async () => {
     await as(A);
