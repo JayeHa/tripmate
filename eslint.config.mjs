@@ -3,22 +3,32 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
 import boundaries from "eslint-plugin-boundaries";
+import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
 
 /**
  * FSD 레이어 경계. 위에서 아래로만 import 할 수 있고, 같은 레이어에서는
- * 자기 슬라이스 안에서만 참조할 수 있다.
+ * 자기 슬라이스 안에서만 참조할 수 있다. 레이어와 그룹 정의는 fsd.config.mjs 에 있다.
  *
  * eslint-plugin-boundaries v7 의 `policies` 문법은 이 조합에서 위반을 잡지 못해
  * (모든 의존을 조용히 통과시킨다) v5 계열 `rules` 문법을 쓴다. deprecation 경고가
  * 뜨지만 규칙이 실제로 동작하는 쪽을 택했다.
  */
-const SLICED = ["views", "widgets", "features", "entities"];
-const ORDER = ["app", ...SLICED, "shared"];
 
-/** 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부 */
+/**
+ * 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부.
+ *
+ * 그룹 안에서는 도메인 접두사를 떼므로 `trip/form` 과 `expense/form` 처럼 이름이 겹친다.
+ * 그래서 그룹 슬라이스는 `slice` 대신 `group`·`groupedSlice` 를 캡처한다. 셀렉터의 캡처
+ * 키가 대상에 없으면 불일치이므로 평면 슬라이스와 그룹 슬라이스가 서로 섞이지 않는다.
+ */
 function allowedFrom(layer) {
   const below = ORDER.slice(ORDER.indexOf(layer) + 1);
-  const self = SLICED.includes(layer) ? [[layer, { slice: "${from.slice}" }]] : [layer];
+  const self = SLICED.includes(layer)
+    ? [
+        [layer, { slice: "${from.slice}" }],
+        [layer, { group: "${from.group}", groupedSlice: "${from.groupedSlice}" }],
+      ]
+    : [layer];
   return [...self, ...below];
 }
 
@@ -31,12 +41,24 @@ const eslintConfig = defineConfig([
       "boundaries/include": ["src/**/*"],
       "boundaries/elements": [
         { type: "app", pattern: "src/app/**/*", mode: "full" },
-        ...SLICED.map((layer) => ({
-          type: layer,
-          pattern: `src/${layer}/*/**/*`,
-          mode: "full",
-          capture: ["slice"],
-        })),
+        ...SLICED.flatMap((layer) => {
+          const groups = GROUPS[layer] ?? [];
+          const grouped = groups.length
+            ? [
+                {
+                  type: layer,
+                  pattern: `src/${layer}/(${groups.join("|")})/*/**/*`,
+                  mode: "full",
+                  capture: ["group", "groupedSlice"],
+                },
+              ]
+            : [];
+          const flatPattern = `src/${layer}/*/**/*`;
+          return [
+            ...grouped,
+            { type: layer, pattern: flatPattern, mode: "full", capture: ["slice"] },
+          ];
+        }),
         { type: "shared", pattern: "src/shared/**/*", mode: "full" },
       ],
     },

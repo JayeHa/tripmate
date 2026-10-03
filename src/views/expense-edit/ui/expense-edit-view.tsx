@@ -14,7 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
 import { AppHeader } from "@/shared/ui/app-header";
-import { ExpenseForm } from "@/features/expense-form";
+import { ExpenseForm } from "@/features/expense/form";
 import { Button } from "@/shared/ui/button";
 import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/entities/expense";
 import { useScheduleItems } from "@/entities/schedule-item";

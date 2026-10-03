@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/shared/ui/app-header";
-import { TripForm } from "@/features/trip-form";
+import { TripForm } from "@/features/trip/form";
 import { useCreateTrip } from "@/entities/trip";
 import { useUser } from "@/entities/session";
 

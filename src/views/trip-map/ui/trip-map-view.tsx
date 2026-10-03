@@ -3,11 +3,11 @@
 import { Footprints, TrainFront } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
-import { DayChips } from "@/features/day-selector";
+import { DayChips } from "@/features/schedule/day-selector";
 import { formatDistance, formatDuration } from "@/entities/schedule-item";
 import { DayMap } from "@/views/trip-map/ui/day-map";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import { useDayParam } from "@/features/day-selector";
+import { useDayParam } from "@/features/schedule/day-selector";
 import { useDayRoute } from "@/entities/schedule-item";
 import { useScheduleItems } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";

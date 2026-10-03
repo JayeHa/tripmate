@@ -3,13 +3,13 @@
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/shared/ui/app-header";
-import { DayChips } from "@/features/day-selector";
-import { PlaceSearchSheet, type PickedPlace } from "@/features/place-search";
-import { ScheduleItemForm } from "@/features/schedule-item-form";
+import { DayChips } from "@/features/schedule/day-selector";
+import { PlaceSearchSheet, type PickedPlace } from "@/features/schedule/place-search";
+import { ScheduleItemForm } from "@/features/schedule/item-form";
 import { ScheduleList } from "@/entities/schedule-item";
 import { Button } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { useDayParam } from "@/features/day-selector";
+import { useDayParam } from "@/features/schedule/day-selector";
 import { useDayRoute } from "@/entities/schedule-item";
 import {
   useCreateScheduleItem,
