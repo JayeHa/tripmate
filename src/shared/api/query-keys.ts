@@ -20,3 +20,6 @@ export const queryKeys = {
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   return queryKey[0] === "trips" && queryKey[2] !== "route";
 }
+
+/** TanStack Query 캐시를 IndexedDB 에 저장할 때 쓰는 키. */
+export const QUERY_PERSIST_KEY = "tripmate-query-cache";

@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname === "/login") {
+  // 익명(둘러보기) 사용자는 /login 을 막지 않는다. 막으면 Google 로 갈아탈 길이 없어진다.
+  if (user && !user.is_anonymous && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/trips";
     url.search = "";
