@@ -29,8 +29,10 @@ const STUBS = `
 `;
 
 /**
- * Supabase 가 프로젝트에 미리 깔아 두는 기본 권한. 마이그레이션 **전에** 둬야
- * 마이그레이션 안의 revoke 가 덮이지 않고 살아남는다(원격과 같은 순서).
+ * Supabase 가 프로젝트에 미리 깔아 두는 기본 권한. 원격과 같은 순서로 마이그레이션 **전에** 준다.
+ * 마이그레이션 뒤에 주면 그 안의 revoke 를 다시 덮어 버린다.
+ * 주의: 함수 실행 권한은 role 마다 따로 붙는다. 그래서 마이그레이션의 `revoke ... from public` 은
+ * anon 의 실행을 막지 못한다(원격도 같다, #49).
  */
 const GRANTS = `
   grant usage on schema public, auth to anon, authenticated, service_role;
