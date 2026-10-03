@@ -20,24 +20,35 @@ export function useDemoLogin() {
     setError(null);
 
     const supabase = createClient();
-    // handle_new_user 트리거가 raw_user_meta_data 로 profiles 를 채운다.
-    // 이름을 주지 않으면 익명 사용자는 display_name 이 비어 멤버 목록에 공백으로 보인다.
-    const { data: auth, error: authError } = await supabase.auth.signInAnonymously({
-      options: { data: { full_name: "둘러보는 중" } },
-    });
-    if (authError || !auth.user) {
-      setError(authError?.message ?? "둘러보기를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.");
-      setLoading(false);
-      return;
+
+    // 앞선 시도가 시딩에서 멈췄다면 익명 세션이 이미 있다. 또 만들면 고아 계정이 쌓인다.
+    const { data: existing } = await supabase.auth.getUser();
+    let user = existing.user?.is_anonymous ? existing.user : null;
+
+    if (!user) {
+      // handle_new_user 트리거가 raw_user_meta_data 로 profiles 를 채운다.
+      // 이름을 주지 않으면 익명 사용자는 display_name 이 비어 멤버 목록에 공백으로 보인다.
+      const { data: auth, error: authError } = await supabase.auth.signInAnonymously({
+        options: { data: { full_name: "둘러보는 중" } },
+      });
+      if (authError || !auth.user) {
+        setError(authError?.message ?? "둘러보기를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.");
+        setLoading(false);
+        return;
+      }
+      user = auth.user;
     }
 
     const { data: trip, error: tripError } = await supabase
       .from("trips")
-      .insert({ ...TOKYO_SEED.trip, owner_id: auth.user.id })
+      .insert({ ...TOKYO_SEED.trip, owner_id: user.id })
       .select("id")
       .single();
     if (tripError || !trip) {
-      setError(tripError?.message ?? "샘플 여행을 만들지 못했어요.");
+      // 여행 없이 로그인만 된 상태로 두면 안 된다. proxy 가 /login 을 /trips 로 돌려보내서
+      // 빈 목록에 갇히고 Google 버튼으로 돌아갈 수 없다.
+      await supabase.auth.signOut();
+      setError(tripError?.message ?? "샘플 여행을 만들지 못했어요. 다시 시도해 주세요.");
       setLoading(false);
       return;
     }
