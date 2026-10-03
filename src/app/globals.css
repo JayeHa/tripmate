@@ -90,17 +90,13 @@
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
 
-  /* 예약 상태 배지 */
+  /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
   --color-status-ok-bg: #e8f1ff;
   --color-status-wait: #c2410c;
   --color-status-wait-bg: #fff1e6;
-  --color-status-buy: #7c3aed;
-  --color-status-buy-bg: #f3eeff;
   --color-status-opt: #6b7280;
   --color-status-opt-bg: #f1f2f4;
-  --color-status-walk: #0f766e;
-  --color-status-walk-bg: #e6f6f3;
 
   /* 메모 태그 */
   --color-tag-tip: #1f6feb;

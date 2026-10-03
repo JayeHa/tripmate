@@ -1,50 +1,43 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { CircleAlert, CircleCheck, CircleDashed } from "lucide-react";
 import type { ComponentProps } from "react";
 import { cn } from "@/shared/lib/utils";
 
 /**
- * 예약 상태 배지. 색 단어 하나로 끝내고 문장으로 늘이지 않는다.
- * appearance="text" 는 카드 메타 줄에, "soft" 는 목록·칩 옆에 쓴다.
+ * 예약 상태 칩. 장소 카드의 제목 위에 놓는다.
+ * 상태는 세 가지뿐이고, 지정하지 않으면 「상태 없음」이라 칩을 그리지 않는다.
+ * (design-system.md · 확정 이후 변경)
  */
-const statusBadgeVariants = cva("inline-flex w-fit items-center whitespace-nowrap", {
-  variants: {
-    kind: {
-      ok: "text-status-ok",
-      wait: "text-status-wait",
-      buy: "text-status-buy",
-      opt: "text-status-opt",
-      walk: "text-status-walk",
-    },
-    appearance: {
-      text: "text-sm font-semibold",
-      soft: "rounded-tag px-1.5 py-0.5 text-[11px] font-bold",
-    },
-  },
-  compoundVariants: [
-    { kind: "ok", appearance: "soft", className: "bg-status-ok-bg" },
-    { kind: "wait", appearance: "soft", className: "bg-status-wait-bg" },
-    { kind: "buy", appearance: "soft", className: "bg-status-buy-bg" },
-    { kind: "opt", appearance: "soft", className: "bg-status-opt-bg" },
-    { kind: "walk", appearance: "soft", className: "bg-status-walk-bg" },
-  ],
-  defaultVariants: { kind: "ok", appearance: "text" },
-});
+export const STATUS_KINDS = ["ok", "wait", "opt"] as const;
+export type StatusKind = (typeof STATUS_KINDS)[number];
 
-export type StatusKind = NonNullable<VariantProps<typeof statusBadgeVariants>["kind"]>;
+const STATUS = {
+  ok: { label: "예약 확정", icon: CircleCheck, className: "bg-status-ok-bg text-status-ok" },
+  wait: { label: "예약 필요", icon: CircleAlert, className: "bg-status-wait-bg text-status-wait" },
+  opt: { label: "임시", icon: CircleDashed, className: "bg-status-opt-bg text-status-opt" },
+} satisfies Record<StatusKind, { label: string; icon: typeof CircleCheck; className: string }>;
 
-function StatusBadge({
-  className,
-  kind,
-  appearance,
-  ...props
-}: ComponentProps<"span"> & VariantProps<typeof statusBadgeVariants>) {
+type Props = Omit<ComponentProps<"span">, "children"> & {
+  kind: StatusKind;
+  /** 기본 라벨 대신 쓸 문구. 비우면 상태의 기본 라벨을 쓴다. */
+  label?: string;
+};
+
+function StatusBadge({ className, kind, label, ...props }: Props) {
+  const { label: defaultLabel, icon: Icon, className: tone } = STATUS[kind];
   return (
     <span
       data-slot="status-badge"
-      className={cn(statusBadgeVariants({ kind, appearance }), className)}
+      className={cn(
+        "inline-flex h-6 w-fit items-center gap-1 rounded-xl px-2 text-xs font-extrabold whitespace-nowrap",
+        tone,
+        className,
+      )}
       {...props}
-    />
+    >
+      <Icon className="size-3.5" strokeWidth={2} />
+      {label ?? defaultLabel}
+    </span>
   );
 }
 
-export { StatusBadge, statusBadgeVariants };
+export { StatusBadge, STATUS as STATUS_META };
