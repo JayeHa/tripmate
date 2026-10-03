@@ -13,7 +13,7 @@ export function GoogleSignInButton() {
     <>
       <Button
         variant="outline"
-        onClick={signIn}
+        onClick={() => void signIn()}
         disabled={loading}
         className="h-13 w-full gap-2.5 rounded-button border-line-strong bg-white text-base font-bold text-ink-900 hover:bg-surface-sunken disabled:opacity-100"
       >

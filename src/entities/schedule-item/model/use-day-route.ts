@@ -16,9 +16,11 @@ async function fetchDayRoute(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ tripId, dayIndex, travelMode }),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? "경로를 가져오지 못했어요");
-  return json as DayRoute;
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? "경로를 가져오지 못했어요");
+  }
+  return (await res.json()) as DayRoute;
 }
 
 /**

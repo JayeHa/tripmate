@@ -38,7 +38,7 @@ export function DemoLoginButton() {
       <Button
         variant="text"
         size="text"
-        onClick={enterDemo}
+        onClick={() => void enterDemo()}
         disabled={loading}
         className="mx-auto text-sm"
       >

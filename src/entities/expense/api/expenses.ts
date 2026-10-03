@@ -13,7 +13,7 @@ export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]
     .order("spent_on", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data as ExpenseWithSplits[];
+  return data;
 }
 
 /** 폼 값 → 분배 행. custom 이면 검증 후 사용 */

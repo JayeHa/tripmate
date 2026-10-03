@@ -17,7 +17,7 @@ export function useUser() {
       if (event === "SIGNED_OUT") {
         queryClient.clear();
       } else if (event === "SIGNED_IN") {
-        queryClient.invalidateQueries({ queryKey: queryKeys.user });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.user });
       }
     });
     return () => data.subscription.unsubscribe();

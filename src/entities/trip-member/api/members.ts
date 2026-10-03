@@ -10,7 +10,7 @@ export async function fetchMembers(tripId: string): Promise<TripMember[]> {
     .eq("trip_id", tripId)
     .order("joined_at");
   if (error) throw error;
-  return data as unknown as TripMember[];
+  return data;
 }
 
 export async function removeMember(tripId: string, userId: string): Promise<void> {

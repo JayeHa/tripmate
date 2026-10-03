@@ -22,28 +22,34 @@ export function useRealtimeTrip(tripId: string) {
         "postgres_changes",
         { event: "*", schema: "public", table: "schedule_items", filter },
         () => {
-          qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
-          qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
+          void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
+          void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
         },
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>
-        qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "expenses", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "expense_splits" }, () =>
-        qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "expense_splits" },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "trip_members", filter }, () =>
-        qc.invalidateQueries({ queryKey: queryKeys.trips.members(tripId) }),
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trip_members", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.trips.members(tripId) }),
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "trips", filter: `id=eq.${tripId}` },
-        () => qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) }),
+        () => void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) }),
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [tripId, qc]);
 }

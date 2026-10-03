@@ -5,6 +5,7 @@ import prettier from "eslint-config-prettier";
 import betterTailwind from "eslint-plugin-better-tailwindcss";
 import boundaries from "eslint-plugin-boundaries";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
+import tseslint from "typescript-eslint";
 
 import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
 
@@ -125,6 +126,28 @@ const eslintConfig = defineConfig([
             },
           ],
         },
+      ],
+    },
+  },
+  /**
+   * 타입 정보를 쓰는 규칙. 처리 안 된 Promise, 빠진 switch 분기, 늘 참인 조건처럼
+   * 문법만 봐서는 모르는 버그를 잡는다. tsconfig 에 든 TS 파일만 대상이다.
+   */
+  {
+    files: ["**/*.{ts,tsx,mts}"],
+    extends: [tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    rules: {
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      // no-unnecessary-condition 은 켜지 않는다. noUncheckedIndexedAccess 가 꺼져 있어 Record 조회와
+      // 수기 DB 타입이 「늘 있음」으로 보이고, 규칙이 런타임에 필요한 검사(rates[c] 없음,
+      // navigator.share 미지원)를 지우라고 한다. 그 옵션을 켠 뒤 다시 본다(#44).
+      // 문자열의 || 는 빈 문자열을 null · 기본값으로 바꾸려는 의도라 ?? 로 바꾸지 않는다.
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        { ignorePrimitives: { string: true } },
       ],
     },
   },

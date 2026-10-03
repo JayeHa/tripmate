@@ -49,9 +49,9 @@ export function useUpdateDisplayName() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.myProfile });
+      void qc.invalidateQueries({ queryKey: queryKeys.myProfile });
       // 멤버 목록에도 이름이 나온다
-      qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
     },
   });
 }

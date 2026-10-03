@@ -85,7 +85,7 @@ function MainMenu({
         </SheetMenuItem>
         <SheetMenuItem
           icon={LogOut}
-          onClick={signOut}
+          onClick={() => void signOut()}
           danger
           className="px-5 hover:bg-surface-sunken"
         >

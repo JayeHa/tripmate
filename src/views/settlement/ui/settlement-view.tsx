@@ -91,8 +91,8 @@ export function SettlementView({ tripId }: { tripId: string }) {
               </p>
               <ul className="mt-3 flex flex-col divide-y">
                 {members.map((m) => {
-                  const net = result.balances!.net[m.user_id] ?? 0;
-                  const paidBy = result.balances!.paidByCurrency[m.user_id] ?? {};
+                  const net = result.balances.net[m.user_id] ?? 0;
+                  const paidBy = result.balances.paidByCurrency[m.user_id] ?? {};
                   return (
                     <li key={m.user_id} className="flex items-center gap-3 py-2.5">
                       <Person id={m.user_id} />

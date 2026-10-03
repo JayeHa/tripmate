@@ -24,7 +24,7 @@ export function InviteLinkCard({ trip }: { trip: Trip }) {
         .share({ title: `${trip.title} 여행에 초대합니다`, url })
         .catch(() => undefined);
     } else {
-      copy();
+      await copy();
     }
   }
 
@@ -36,10 +36,10 @@ export function InviteLinkCard({ trip }: { trip: Trip }) {
       </p>
       <p className="mt-3 truncate rounded-md bg-muted px-3 py-2 font-mono text-xs">{url}</p>
       <div className="mt-3 flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={copy}>
+        <Button variant="outline" className="flex-1" onClick={() => void copy()}>
           {copied ? <Check /> : <Copy />} {copied ? "복사됨" : "복사"}
         </Button>
-        <Button className="flex-1" onClick={share}>
+        <Button className="flex-1" onClick={() => void share()}>
           <Share2 /> 공유
         </Button>
         <Button

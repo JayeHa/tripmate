@@ -36,7 +36,7 @@ export function useUpdateTrip(tripId: string) {
     mutationFn: (values: TripFormValues) => updateTrip(tripId, values),
     onSuccess: (trip) => {
       qc.setQueryData(queryKeys.trips.detail(tripId), trip);
-      qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
     },
   });
 }

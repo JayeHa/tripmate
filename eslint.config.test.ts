@@ -1,13 +1,18 @@
 import path from "node:path";
 import { ESLint } from "eslint";
+import tseslint from "typescript-eslint";
 import { describe, expect, it } from "vitest";
 
 const ROOT = __dirname;
 /**
- * 디스크에 없는 가상 파일을 lint 한다. import/no-cycle 은 그런 파일에서 모듈 그래프를 못 만들고
- * 예외를 던지므로(eslint-plugin-import 2.32) 이 테스트에서만 끈다. 여기서 보는 건 경계 규칙이다.
+ * 디스크에 없는 가상 파일을 lint 한다. 그런 파일은 tsconfig 프로젝트에 없어 타입 기반 규칙이
+ * 파싱부터 실패하고, import/no-cycle 은 모듈 그래프를 못 만들어 예외를 던진다(eslint-plugin-import 2.32).
+ * 이 테스트에서만 둘 다 끈다. 여기서 보는 건 경계 · import · Tailwind 규칙이다.
  */
-const eslint = new ESLint({ cwd: ROOT, overrideConfig: { rules: { "import/no-cycle": "off" } } });
+const eslint = new ESLint({
+  cwd: ROOT,
+  overrideConfig: [tseslint.configs.disableTypeChecked, { rules: { "import/no-cycle": "off" } }],
+});
 
 /** `from` 위치의 가상 파일에서 `spec` 을 import 했을 때 경계 위반 메시지 */
 async function boundaryErrors(from: string, spec: string) {
