@@ -19,8 +19,9 @@ export function DemoLoginButton() {
   // 익명일 때만 물어본다. 로그인 전에는 어차피 빈 배열이라 받아 올 필요가 없다.
   const { data: trips, isPending: tripsPending } = useTrips({ enabled: isAnonymous });
 
-  if (isAnonymous) {
-    // 아직 모르는 동안은 아무것도 보이지 않는 편이 낫다. 깜빡임을 피한다.
+  // 시딩 중에는 익명 분기를 건너뛴다. signInAnonymously 직후 isAnonymous 가 참이 되는데
+  // 여기서 갈라지면 누르자마자 버튼이 사라졌다가 문구로 바뀌며 깜빡인다.
+  if (isAnonymous && !loading) {
     if (tripsPending) return null;
     if (trips && trips.length > 0) {
       return (
