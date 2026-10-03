@@ -15,14 +15,14 @@ export function PcFooter({ state }: { state: TripCreateState }) {
           <CreateError state={state} />
         </div>
       )}
-      <div className="flex shrink-0 items-center gap-4 border-t border-divider px-7 pt-3.5 pb-[18px]">
+      <div className="flex shrink-0 items-center gap-4 border-t border-divider px-7 pt-3.5 pb-4.5">
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
           <PcPickedChips picked={state.picked} onRemove={cityStep ? state.toggle : undefined} />
         </div>
         {cityStep ? (
           <Button
             size="cta"
-            className="w-[280px] shrink-0"
+            className="w-70 shrink-0"
             disabled={state.picked.length === 0}
             onClick={state.goDate}
           >
@@ -31,7 +31,7 @@ export function PcFooter({ state }: { state: TripCreateState }) {
         ) : (
           <Button
             size="cta"
-            className="w-[280px] shrink-0"
+            className="w-70 shrink-0"
             disabled={!state.selection?.end || state.create.isPending}
             onClick={state.submit}
           >

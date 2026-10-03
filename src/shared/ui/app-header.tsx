@@ -22,7 +22,7 @@ type Props = {
 export function AppHeader({ title, subtitle, back, right, dot }: Props) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-20 flex h-13 shrink-0 items-center gap-3.5 bg-background px-[18px]">
+    <header className="sticky top-0 z-20 flex h-13 shrink-0 items-center gap-3.5 bg-background px-4.5">
       {back && (
         <button
           type="button"
@@ -40,9 +40,9 @@ export function AppHeader({ title, subtitle, back, right, dot }: Props) {
       {right && (
         <div
           className={cn(
-            "flex items-center gap-[22px] text-ink-900",
+            "flex items-center gap-5.5 text-ink-900",
             dot &&
-              "[&>*:last-child]:relative [&>*:last-child]:after:absolute [&>*:last-child]:after:-top-0.5 [&>*:last-child]:after:-right-[3px] [&>*:last-child]:after:size-[7px] [&>*:last-child]:after:rounded-full [&>*:last-child]:after:bg-cat-food [&>*:last-child]:after:content-['']",
+              "[&>*:last-child]:relative [&>*:last-child]:after:absolute [&>*:last-child]:after:-top-0.5 [&>*:last-child]:after:-right-0.75 [&>*:last-child]:after:size-1.75 [&>*:last-child]:after:rounded-full [&>*:last-child]:after:bg-cat-food [&>*:last-child]:after:content-['']",
           )}
         >
           {right}

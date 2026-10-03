@@ -122,14 +122,14 @@ function ProfileEditor({
 
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center gap-3 px-[18px]">
+      <div className="flex h-14 shrink-0 items-center gap-3 px-4.5">
         <IconButton label="뒤로" onClick={onBack} className="text-ink-900">
-          <ArrowLeft className="size-[22px]" strokeWidth={2} />
+          <ArrowLeft className="size-5.5" strokeWidth={2} />
         </IconButton>
         <Title className="text-[17px] font-extrabold text-ink-900">내 정보</Title>
       </div>
-      <div className="flex flex-col items-center gap-[18px] px-5 pt-2 pb-6">
-        <Avatar className="size-[72px]">
+      <div className="flex flex-col items-center gap-4.5 px-5 pt-2 pb-6">
+        <Avatar className="size-18">
           <AvatarFallback className="text-[25px]">
             {initialOfName(trimmed || current)}
           </AvatarFallback>
@@ -159,7 +159,7 @@ function ProfileEditor({
         </div>
 
         <Button
-          className="h-[50px] w-full rounded-button text-base font-bold"
+          className="h-12.5 w-full rounded-button text-base font-bold"
           disabled={!valid || !changed || update.isPending}
           onClick={save}
         >

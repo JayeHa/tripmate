@@ -24,7 +24,7 @@ export function DayChips({ startDate, totalDays, value, onChange }: Props) {
   return (
     <div
       ref={ref}
-      className="flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex scrollbar-none gap-2 overflow-x-auto px-4 py-2 [&::-webkit-scrollbar]:hidden"
     >
       {Array.from({ length: totalDays }, (_, i) => (
         <button

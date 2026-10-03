@@ -35,13 +35,13 @@ export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[168px] rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
+        className="w-42 rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
       >
         <DropdownMenuItem
           onClick={() => onEdit(trip)}
           className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted"
         >
-          <CalendarDays className="size-[18px] text-ink-700" />
+          <CalendarDays className="size-4.5 text-ink-700" />
           여행일정 수정
         </DropdownMenuItem>
         {canDelete && (
@@ -50,7 +50,7 @@ export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
             onClick={() => onDelete(trip)}
             className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-[#FDE8EA]"
           >
-            <Trash2 className="size-[18px]" />
+            <Trash2 className="size-4.5" />
             여행 삭제
           </DropdownMenuItem>
         )}

@@ -80,7 +80,7 @@ export function ScheduleList({
                     aria-label="위로"
                     disabled={i === 0}
                     onClick={() => onMoveUp(i)}
-                    className="rounded p-1 text-muted-foreground disabled:opacity-30 active:bg-accent"
+                    className="rounded-tag p-1 text-muted-foreground active:bg-accent disabled:opacity-30"
                   >
                     <ChevronUp className="size-4" />
                   </button>
@@ -89,7 +89,7 @@ export function ScheduleList({
                     aria-label="아래로"
                     disabled={!hasNext}
                     onClick={() => onMoveDown(i)}
-                    className="rounded p-1 text-muted-foreground disabled:opacity-30 active:bg-accent"
+                    className="rounded-tag p-1 text-muted-foreground active:bg-accent disabled:opacity-30"
                   >
                     <ChevronDown className="size-4" />
                   </button>

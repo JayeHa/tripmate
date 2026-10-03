@@ -21,7 +21,7 @@ export function TripCreateView() {
         <TripCreateFlow layout="mobile" state={state} onClose={close} />
       </div>
       <div className="hidden min-h-dvh items-center justify-center bg-surface-sunken lg:flex">
-        <div className="h-[660px] w-[760px] overflow-hidden rounded-sheet bg-white shadow-sheet">
+        <div className="h-165 w-190 overflow-hidden rounded-sheet bg-white shadow-sheet">
           <TripCreateFlow layout="pc" state={state} onClose={close} />
         </div>
       </div>

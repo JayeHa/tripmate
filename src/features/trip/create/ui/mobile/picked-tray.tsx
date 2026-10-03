@@ -20,7 +20,7 @@ export function PickedTray({
           <IconButton
             label={`${city.name} 빼기`}
             onClick={() => onRemove(city)}
-            className="absolute -top-1.5 -right-2 size-[22px] rounded-full border border-line bg-white text-ink-500"
+            className="absolute -top-1.5 -right-2 size-5.5 rounded-full border border-line bg-white text-ink-500"
           >
             <X className="size-3" strokeWidth={2.4} />
           </IconButton>

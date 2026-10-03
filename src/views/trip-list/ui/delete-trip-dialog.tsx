@@ -23,13 +23,13 @@ export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onCon
   return (
     // 삭제 중에는 닫지 않는다. 닫히면 실패해도 알 수 없다.
     <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && !locked && onCancel()}>
-      <AlertDialogContent className="rounded-sheet px-[22px] pt-6 pb-5">
+      <AlertDialogContent className="rounded-sheet px-5.5 pt-6 pb-5">
         {trip && (
           <>
             <AlertDialogTitle className="text-lg font-extrabold text-ink-900">
               {trip.title}을(를) 삭제할까요?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm leading-[1.5] text-ink-500">
+            <AlertDialogDescription className="text-sm/normal text-ink-500">
               일정, 메모, 가계부 기록이 함께 지워지고 되돌릴 수 없어요.
             </AlertDialogDescription>
             {error && <p className="text-sm text-destructive">삭제하지 못했어요: {error}</p>}

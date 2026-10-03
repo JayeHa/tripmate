@@ -19,7 +19,7 @@ export type TabItem = {
 export function BottomTabBar({ items, active }: { items: TabItem[]; active: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 h-[calc(83px+env(safe-area-inset-bottom))] border-t border-divider bg-background pt-2 pb-[env(safe-area-inset-bottom)]">
-      <ul className="mx-auto flex h-[75px] max-w-lg">
+      <ul className="mx-auto flex h-18.75 max-w-lg">
         {items.map((tab) => {
           const on = tab.key === active;
           return (

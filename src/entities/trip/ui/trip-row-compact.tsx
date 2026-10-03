@@ -23,7 +23,7 @@ export function TripRowCompact({ trip, companionCount, actions }: Props) {
           title={trip.title}
           imageUrl={coverImageUrl(trip.cities)}
           size={52}
-          className="size-[52px] text-[19px]"
+          className="size-13 text-[19px]"
         />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-base font-bold text-ink-900">{trip.title}</span>

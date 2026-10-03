@@ -20,7 +20,7 @@ const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 }; // 도쿄역
 export function DayMap({ items, polyline, selectedId, onSelect, className }: Props) {
   const located = items.filter((it) => it.lat != null && it.lng != null);
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div className={cn("relative size-full", className)}>
       <Map
         mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
         defaultCenter={located[0] ? { lat: located[0].lat!, lng: located[0].lng! } : DEFAULT_CENTER}
@@ -28,7 +28,7 @@ export function DayMap({ items, polyline, selectedId, onSelect, className }: Pro
         gestureHandling="greedy"
         disableDefaultUI
         clickableIcons={false}
-        className="h-full w-full"
+        className="size-full"
       >
         {located.map((it) => (
           <AdvancedMarker

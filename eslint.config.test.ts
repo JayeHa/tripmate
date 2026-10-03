@@ -78,3 +78,26 @@ describe("슬라이스 공개 API", () => {
     expect(await restrictedErrors(from, spec)).toEqual([]);
   });
 });
+
+/** Tailwind 정식 클래스. VS Code 확장만 보던 것을 린트가 잡는다 */
+describe("Tailwind 정식 클래스", () => {
+  async function canonicalErrors(className: string) {
+    const [result] = await eslint.lintText(
+      `export const A = () => <i className="${className}" />;\n`,
+      {
+        filePath: path.join(ROOT, "src/shared/ui/x.tsx"),
+      },
+    );
+    return result.messages.filter(
+      (m) => m.ruleId === "better-tailwindcss/enforce-canonical-classes",
+    );
+  }
+
+  it("px 임의값이 간격 단위로 바뀌면 막힌다", async () => {
+    expect(await canonicalErrors("size-[22px]")).toHaveLength(1);
+  });
+
+  it("정식 클래스와 대응 클래스가 없는 임의값은 통과한다", async () => {
+    expect(await canonicalErrors("size-5.5 text-[13px]")).toEqual([]);
+  });
+});

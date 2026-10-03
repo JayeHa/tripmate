@@ -88,7 +88,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
         <AccountMenu profile={profile} />
       </header>
 
-      <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))] lg:mx-auto lg:w-full lg:max-w-[1088px] lg:gap-9 lg:px-8 lg:pt-9 lg:pb-14">
+      <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))] lg:mx-auto lg:w-full lg:max-w-272 lg:gap-9 lg:px-8 lg:pt-9 lg:pb-14">
         <div className="flex items-baseline gap-2 px-5 pt-2.5 lg:items-center lg:gap-2.5 lg:p-0">
           <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink-900 lg:text-[28px]">
             내 여행
@@ -106,12 +106,12 @@ export function TripListView({ createdId }: { createdId: string | null }) {
         <div className="px-5 pt-5 pb-1 lg:hidden">
           <Link
             href="/trips/new"
-            className="flex items-center gap-3.5 rounded-card bg-surface-sunken p-[18px]"
+            className="flex items-center gap-3.5 rounded-card bg-surface-sunken p-4.5"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary">
               <Plus className="size-6 text-white" strokeWidth={2.4} />
             </span>
-            <span className="flex flex-col gap-[3px]">
+            <span className="flex flex-col gap-0.75">
               <span className="text-base font-bold text-ink-900">여행 일정 만들기</span>
               <span className="text-[13px] text-ink-400">도시와 날짜만 고르면 바로 시작돼요</span>
             </span>
@@ -158,7 +158,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
                       onClick={() => setSheetFor(trip)}
                       className="-m-2 p-2 text-ink-700"
                     >
-                      <Ellipsis className="size-[22px]" />
+                      <Ellipsis className="size-5.5" />
                     </IconButton>
                   }
                 />
@@ -181,10 +181,10 @@ export function TripListView({ createdId }: { createdId: string | null }) {
                 <button
                   type="button"
                   onClick={openCreate}
-                  className="flex min-h-[236px] flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
+                  className="flex min-h-59 flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
                 >
                   <span className="flex size-12 items-center justify-center rounded-full bg-primary">
-                    <Plus className="size-[26px] text-white" strokeWidth={2.4} />
+                    <Plus className="size-6.5 text-white" strokeWidth={2.4} />
                   </span>
                   <span className="text-base font-bold text-ink-900">여행 일정 만들기</span>
                   <span className="text-[13px] text-ink-400">
@@ -230,7 +230,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
             창 높이가 낮으면 모달도 줄고 본문이 안에서 스크롤된다(머리·바닥은 고정) */}
         <DialogContent
           showCloseButton={false}
-          className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
+          className="inset-0 h-dvh w-full max-w-none translate-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-190 lg:max-w-190 lg:-translate-1/2 lg:rounded-sheet"
         >
           {/* DialogContent 가 grid 라 자식이 min-width:auto 로 내용 폭만큼 커진다.
               줄바꿈 없는 권역 칩 줄이 모달을 화면 밖으로 밀지 않게 min-w-0 으로 묶는다 */}

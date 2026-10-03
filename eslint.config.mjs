@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
+import betterTailwind from "eslint-plugin-better-tailwindcss";
 import boundaries from "eslint-plugin-boundaries";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
@@ -125,6 +126,28 @@ const eslintConfig = defineConfig([
           ],
         },
       ],
+    },
+  },
+  /**
+   * Tailwind 클래스. 정식 이름(size-[22px] → size-5.5)·충돌·중복·없는 클래스를 잡는다.
+   * 순서와 줄바꿈은 포매터(prettier-plugin-tailwindcss) 몫이라 여기서 켜지 않는다.
+   * cn · cva 안의 문자열도 검사한다(플러그인 기본값).
+   */
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { "better-tailwindcss": betterTailwind },
+    // rootFontSize 가 있어야 px 임의값을 간격 단위로 바꿔 준다(size-[22px] → size-5.5)
+    settings: { "better-tailwindcss": { entryPoint: "src/app/globals.css", rootFontSize: 16 } },
+    rules: {
+      // shorthand(translate-x + translate-y → translate) 도 이 규칙이 함께 잡는다
+      "better-tailwindcss/enforce-canonical-classes": "error",
+      "better-tailwindcss/no-duplicate-classes": "error",
+      // 끈다: rounded → rounded-sm 으로 자동 수정하는데, 이 프로젝트의 rounded-sm 은 shadcn 테마라
+      // --radius × 0.6(6px)이고 rounded 는 4px 다. 자동 수정이 화면을 조용히 바꾼다.
+      "better-tailwindcss/no-deprecated-classes": "off",
+      "better-tailwindcss/no-unnecessary-whitespace": "error",
+      "better-tailwindcss/no-conflicting-classes": "error",
+      "better-tailwindcss/no-unknown-classes": "error",
     },
   },
   // Disable ESLint rules that conflict with Prettier (keep last).

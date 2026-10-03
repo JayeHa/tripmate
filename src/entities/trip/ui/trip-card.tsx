@@ -35,7 +35,7 @@ export function TripCard({ trip, today, companionCount, highlighted, actions }: 
     >
       <div
         aria-hidden="true"
-        className="relative flex h-[132px] items-center justify-center overflow-hidden rounded-t-[11px] text-[44px] font-extrabold"
+        className="relative flex h-33 items-center justify-center overflow-hidden rounded-t-[11px] text-[44px] font-extrabold"
         style={{ backgroundColor: bg, color: fg }}
       >
         {imageUrl ? (
@@ -45,7 +45,7 @@ export function TripCard({ trip, today, companionCount, highlighted, actions }: 
           initialOf(trip.title)
         )}
       </div>
-      <div className="flex flex-col gap-1 px-[18px] pt-4 pb-[18px]">
+      <div className="flex flex-col gap-1 px-4.5 pt-4 pb-4.5">
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href={`/trips/${trip.id}/home`}
