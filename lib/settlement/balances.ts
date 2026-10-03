@@ -1,5 +1,6 @@
-import type { ExchangeRates, ExpenseWithSplits } from "@/lib/types";
-import { decimalsOf, roundTo, toHome } from "./currency";
+import type { ExpenseWithSplits } from "@/lib/entities/expense";
+import { decimalsOf, roundTo, toHome } from "@/lib/money";
+import type { ExchangeRates } from "@/lib/money";
 
 export type Balances = {
   /** 홈 화폐 기준 낸 금액 */

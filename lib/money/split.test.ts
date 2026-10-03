@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitEqual, validateCustomShares } from "../split";
+import { splitEqual, validateCustomShares } from "./split";
 
 describe("splitEqual", () => {
   it("splits 1000 JPY among 3 as 334/333/333", () => {

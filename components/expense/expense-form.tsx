@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { dayIndexToDate, dayLabel } from "@/lib/itinerary/days";
 import { expenseFormSchema, type ExpenseFormValues } from "@/lib/schemas/expense";
-import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/lib/settlement";
+import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/lib/money";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_LABEL,

@@ -1,4 +1,4 @@
-import { roundTo } from "./currency";
+import { roundTo } from "@/lib/money";
 
 export type Transfer = { from: string; to: string; amount: number };
 

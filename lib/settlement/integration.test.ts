@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { ExpenseWithSplits } from "@/lib/types";
-import { computeNetBalances } from "../balances";
-import { decimalsOf } from "../currency";
-import { minimizeTransfers } from "../settle";
-import { splitEqual } from "../split";
+import type { ExpenseWithSplits } from "@/lib/entities/expense";
+import { computeNetBalances } from "./balances";
+import { decimalsOf, splitEqual } from "@/lib/money";
+import { minimizeTransfers } from "./settle";
 
 /**
  * 픽스처: 3명(민수 m, 지은 j, 현우 h), 일본 여행, 100 JPY = 900 KRW

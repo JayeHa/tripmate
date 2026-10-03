@@ -9,13 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useExpenses } from "@/hooks/use-expenses";
 import { useTrip } from "@/hooks/use-trip";
 import { useTripMembers } from "@/hooks/use-trip-members";
-import {
-  MissingRateError,
-  computeNetBalances,
-  decimalsOf,
-  formatMoney,
-  minimizeTransfers,
-} from "@/lib/settlement";
+import { MissingRateError, decimalsOf, formatMoney } from "@/lib/money";
+import { computeNetBalances, minimizeTransfers } from "@/lib/settlement";
 import { cn } from "@/lib/utils";
 
 export default function SettlementPage() {

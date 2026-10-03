@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ExpenseFormValues } from "@/lib/schemas/expense";
-import { splitEqual, validateCustomShares, type Share } from "@/lib/settlement";
+import { splitEqual, validateCustomShares, type Share } from "@/lib/money";
 import type { ExpenseWithSplits } from "@/lib/types";
 
 export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]> {

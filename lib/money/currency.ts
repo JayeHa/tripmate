@@ -1,4 +1,4 @@
-import type { ExchangeRates } from "@/lib/types";
+import type { ExchangeRates } from "./types";
 
 const CURRENCY_DECIMALS: Record<string, number> = {
   KRW: 0,

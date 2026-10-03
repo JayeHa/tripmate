@@ -11,7 +11,7 @@ import { useExpenses } from "@/hooks/use-expenses";
 import { useTrip } from "@/hooks/use-trip";
 import { useTripMembers } from "@/hooks/use-trip-members";
 import { dateToDayIndex, dayLabel } from "@/lib/itinerary/days";
-import { MissingRateError, formatMoney, toHome } from "@/lib/settlement";
+import { MissingRateError, formatMoney, toHome } from "@/lib/money";
 import { EXPENSE_CATEGORY_LABEL, type ExpenseCategory, type ExpenseWithSplits } from "@/lib/types";
 
 export default function ExpensesPage() {
