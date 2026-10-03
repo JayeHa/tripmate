@@ -16,22 +16,34 @@ export function ratesToForm(rates: ExchangeRates): TripFormValues["rates"] {
   return Object.entries(rates).map(([currency, r]) => ({ currency, unit: r.unit, value: r.value }));
 }
 
-/** 목록에서 「N명과 함께」를 보여주려고 멤버 수를 함께 센다. */
-export type TripListItem = Trip & { companionCount: number };
+/** 목록에 보이는 도시. 사진이 있는 첫 도시가 여행 썸네일이 된다. */
+export type TripCity = { id: string; name: string };
+
+/**
+ * 목록에서 「N명과 함께」·「N개 도시」를 보여주려고 멤버 수와 도시를 함께 읽는다.
+ * IndexedDB 에 저장되는 데이터다. 이 파일이 바뀌면 저장된 캐시는 버려진다(query-cache.config.mjs).
+ */
+export type TripListItem = Trip & { companionCount: number; cities: TripCity[] };
+
+type TripListRow = Tables<"trips"> & {
+  trip_members: { count: number }[];
+  trip_cities: { position: number; city: TripCity }[];
+};
 
 export async function fetchTrips(): Promise<TripListItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("trips")
-    .select("*, trip_members(count)")
+    .select("*, trip_members(count), trip_cities(position, city:cities(id, name))")
     .order("start_date", { ascending: false });
   if (error) throw error;
-  // database.types.ts 가 수기 작성이라 관계 집계(count)의 타입이 없다. 그 부분만 좁게 단언한다.
-  const rows = data as unknown as (Tables<"trips"> & { trip_members: { count: number }[] })[];
-  return rows.map(({ trip_members, ...row }) => ({
+  // database.types.ts 가 수기 작성이라 관계 집계(count)·별칭 임베드의 타입이 없다. 그 부분만 좁게 단언한다.
+  const rows = data as unknown as TripListRow[];
+  return rows.map(({ trip_members, trip_cities, ...row }) => ({
     ...toTrip(row),
     // 나를 뺀 일행 수
     companionCount: Math.max((trip_members[0]?.count ?? 1) - 1, 0),
+    cities: [...trip_cities].sort((a, b) => a.position - b.position).map((tc) => tc.city),
   }));
 }
 
@@ -49,7 +61,6 @@ export async function createTrip(values: TripFormValues, ownerId: string): Promi
     .insert({
       owner_id: ownerId,
       title: values.title,
-      destination: values.destination || null,
       start_date: values.start_date,
       end_date: values.end_date,
       home_currency: values.home_currency,
@@ -67,7 +78,6 @@ export async function updateTrip(tripId: string, values: TripFormValues): Promis
     .from("trips")
     .update({
       title: values.title,
-      destination: values.destination || null,
       start_date: values.start_date,
       end_date: values.end_date,
       home_currency: values.home_currency,

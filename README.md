@@ -3,73 +3,40 @@
 트리플을 대신할 개인용 여행 앱. 일정(구글맵 경로) · 다중 화폐 가계부/정산 · 일행 공유.
 
 - Next.js 16 (App Router) · React 19 · Tailwind v4 · shadcn · TanStack Query
-- Supabase (Google 로그인, Postgres + RLS, Realtime)
+- Supabase (Google 로그인 · 둘러보기, Postgres + RLS, Realtime)
 - Google Maps (Places API New, Routes API)
 
-## 1. Supabase 설정
+## 문서
 
-1. https://supabase.com 에서 새 프로젝트 생성 (리전: Northeast Asia / Seoul 또는 Tokyo).
-2. **SQL Editor** 에서 `supabase/migrations/0001_init.sql` → `0002_realtime.sql` → `0003_trips_select_owner.sql` → `0004_join_requires_real_account.sql` → `0005_assert_not_anonymous.sql` 순서로 실행.
-   - 또는 CLI: `supabase login` → `supabase link --project-ref <ref>` → `supabase db push`
-3. **Authentication → Providers → Google** 활성화 (아래 Google OAuth 클라이언트 ID/Secret 입력).
-4. **Authentication → URL Configuration**
-   - Site URL: 배포 URL (예: `https://tripmate.vercel.app`)
-   - Redirect URLs: `http://localhost:3000/**`, `https://<app>.vercel.app/**`
-5. **Project Settings → API** 의 URL과 anon key를 `.env.local` 에 입력.
-6. 타입 재생성(선택): `pnpm db:types` (link 되어 있어야 함)
-
-## 2. Google Cloud 설정
-
-프로젝트 하나에서 아래를 모두 진행.
-
-### OAuth (로그인)
-
-- **APIs & Services → Credentials → Create OAuth client ID (Web application)**
-  - Authorized JavaScript origins: `http://localhost:3000`, 배포 URL
-  - Authorized redirect URIs: `https://canoqfjexkpbalosdauw.supabase.co/auth/v1/callback`
-- 생성된 Client ID / Secret 을 Supabase Google Provider 에 입력.
-
-### Maps
-
-- **APIs & Services → Library** 에서 활성화:
-  - Maps JavaScript API
-  - Places API (New)
-  - Routes API
-- **Google Maps Platform → Map Management → Create Map ID** (Vector) → `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`
-- **Credentials → API key** 2개 생성:
-  - 브라우저 키 (`NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY`)
-    - Application restriction: HTTP referrers → `http://localhost:3000/*`, `https://*.vercel.app/*`, 배포 도메인
-    - API restriction: Maps JavaScript API, Places API (New)
-  - 서버 키 (`GOOGLE_MAPS_SERVER_KEY`)
-    - Application restriction: None
-    - API restriction: Routes API 만
-- Billing 계정 연결 필요. 개인 사용량은 SKU별 월 무료 한도 안에 들어감 (예산 알림 $5 권장).
-
-## 3. 로컬 실행
+| 문서                                                     | 내용                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| [`docs/setup.md`](docs/setup.md)                         | 처음 설정 — Supabase · Google Cloud · 로컬 실행 · Vercel 배포 |
+| [`AGENTS.md`](AGENTS.md)                                 | 코드 구조(FSD) · 인증 경계 · 할 일 트래커 규칙                |
+| [GitHub 이슈](https://github.com/JayeHa/tripmate/issues) | 로드맵(마일스톤 「디자인 핸드오프 구현」) · 미룬 기술 부채    |
 
 ```bash
-cp .env.local.example .env.local   # 값 채우기
-pnpm install
-pnpm dev                            # http://localhost:3000
-pnpm test                           # 정산/날짜 단위 테스트
+pnpm dev      # http://localhost:3000
+pnpm test
 ```
 
-## 4. Vercel 배포
+## 자주 하는 작업
 
-1. GitHub 에 push 후 Vercel 에서 import.
-2. Environment Variables 에 `.env.local` 의 5개 값을 Production/Preview 모두 등록.
-3. 배포 URL을 Supabase Redirect URLs, Google OAuth origins, 브라우저 키 referrer 에 추가.
-4. 폰에서 열고 **홈 화면에 추가** 하면 앱처럼 사용 가능.
+### 도시 대표 사진 추가
 
-## 구조
+도시 목록·여행 썸네일에 보이는 사진이다. 사진이 없는 도시는 첫 글자 + 색 원으로 보인다.
 
-```
-app/                라우트 (login, join/[token], trips/[tripId]/{itinerary,map,expenses,settlement,settings}, api/routes)
-components/         ui(shadcn), layout, trip, itinerary, map, expense
-hooks/              TanStack Query 훅 (use-trip, use-schedule-items, use-expenses, use-day-route, use-realtime-trip)
-lib/supabase/       client / server / proxy, database.types.ts
-lib/queries/        Supabase 호출 함수
-lib/settlement/     정산 로직 (순수 함수 + 테스트)
-lib/maps/           Routes API 호출 (서버 전용)
-supabase/migrations 스키마 + RLS + RPC
-```
+1. 원본을 레포 루트의 **`city-images-inbox/`** 에 넣는다. 크기·형식은 상관없다(jpg · png · webp · avif · tiff).
+   **파일 이름은 도시 이름이나 id** 로 짓는다: `도쿄.jpg`, `오사카.png`, `chiang-mai.jpg`
+   - 도시 이름·id 목록: `supabase/migrations/0006_cities.sql`
+   - 아이폰 HEIC 는 못 읽는다. 사진 앱에서 jpg 로 내보낸다
+2. 실행한다.
+   ```bash
+   pnpm cities:images
+   ```
+   - 긴 변 800px webp 로 줄여 `public/city-images/{id}.{해시}.webp` 에 저장하고, 사진 목록 `src/shared/config/city-images.ts` 를 다시 쓴다
+   - 원본은 `city-images-inbox/done/` 으로 옮겨진다(커밋되지 않음)
+   - 이름을 못 알아본 파일은 inbox 에 남기고 이유를 알려 준다. 150KB 가 넘으면 경고한다
+3. 바뀐 `public/city-images/` 와 `src/shared/config/city-images.ts` 를 커밋한다. **DB 작업은 없다.**
+
+- **사진 바꾸기**: 같은 도시 이름으로 새 원본을 넣고 다시 실행하면 이전 사진을 지우고 바꾼다. 파일 이름의 해시가 바뀌어 캐시에 옛 사진이 남지 않는다.
+- **사진 빼기**: `public/city-images/` 에서 그 도시 파일을 지우고 `pnpm cities:images` 를 실행한다(inbox 가 비어 있어도 목록을 다시 쓴다).

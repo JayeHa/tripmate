@@ -17,7 +17,6 @@ type Props = {
 
 const EMPTY: TripFormValues = {
   title: "",
-  destination: "",
   start_date: "",
   end_date: "",
   home_currency: "KRW",
@@ -29,7 +28,6 @@ type RateDraft = { currency: string; unit: string; value: string };
 export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
   const [form, setForm] = useState({
     title: initial?.title ?? EMPTY.title,
-    destination: initial?.destination ?? "",
     start_date: initial?.start_date ?? "",
     end_date: initial?.end_date ?? "",
     home_currency: initial?.home_currency ?? "KRW",
@@ -84,14 +82,6 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
           onChange={(e) => set("title", e.target.value)}
           placeholder="예: 도쿄 가을 여행"
           autoFocus
-        />
-      </Field>
-
-      <Field label="목적지 (선택)" error={errors.destination}>
-        <Input
-          value={form.destination}
-          onChange={(e) => set("destination", e.target.value)}
-          placeholder="예: 도쿄, 일본"
         />
       </Field>
 

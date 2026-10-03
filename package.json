@@ -11,6 +11,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "cities:images": "node scripts/city-images.mjs && prettier --write src/shared/config/city-images.ts --log-level warn",
     "db:types": "supabase gen types typescript --linked > src/shared/api/supabase/database.types.ts"
   },
   "dependencies": {
@@ -49,6 +50,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-boundaries": "^7.2.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.2"

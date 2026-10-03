@@ -57,6 +57,14 @@ export function useDemoLogin() {
       return;
     }
 
+    const { error: citiesError } = await supabase
+      .from("trip_cities")
+      .insert(
+        TOKYO_SEED.cityIds.map((city_id, position) => ({ trip_id: trip.id, city_id, position })),
+      );
+    // 도시가 없어도 여행은 볼 수 있다. 목록에 「도시 미정」으로 보일 뿐이다.
+    if (citiesError) console.error("샘플 도시 삽입 실패", citiesError);
+
     const { error: itemsError } = await supabase
       .from("schedule_items")
       .insert(TOKYO_SEED.items.map((item) => ({ ...item, trip_id: trip.id })));

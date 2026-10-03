@@ -7,4 +7,5 @@ export * from "./ui/trip-row";
 export * from "./ui/trip-row-compact";
 export * from "./ui/trip-thumb";
 export * from "./lib/tint";
+export * from "./lib/cities";
 export * from "./lib/group-trips";
