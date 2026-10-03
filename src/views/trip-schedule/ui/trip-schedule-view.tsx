@@ -4,10 +4,10 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
+  buildTimeline,
   type ScheduleItem,
-  ScheduleList,
+  Timeline,
   useCreateScheduleItem,
-  useDayRoute,
   useDeleteScheduleItem,
   useMoveScheduleItemToDay,
   useScheduleItems,
@@ -44,8 +44,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
-  const locatedCount = dayItems.filter((it) => it.lat != null).length;
-  const route = useDayRoute(tripId, day, "WALK", locatedCount >= 2);
+  const rows = useMemo(() => buildTimeline(dayItems), [dayItems]);
+
+  const editIndex = editing ? dayItems.findIndex((it) => it.id === editing.id) : -1;
+  const canReorder = editIndex >= 0 && !swap.isPending;
 
   const bias = useMemo(() => {
     const first = dayItems.find((it) => it.lat != null && it.lng != null);
@@ -76,13 +78,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             <p className="text-sm text-muted-foreground">아래 버튼으로 장소를 추가해보세요.</p>
           </div>
         )}
-        <ScheduleList
-          items={dayItems}
-          legs={route.data?.legs}
-          onSelect={setEditing}
-          onMoveUp={(i) => swap.mutate({ a: dayItems[i], b: dayItems[i - 1] })}
-          onMoveDown={(i) => swap.mutate({ a: dayItems[i], b: dayItems[i + 1] })}
-        />
+        <Timeline rows={rows} onOpen={(row) => setEditing(row.item)} />
       </main>
 
       <div className="fixed inset-x-0 bottom-16 z-20 flex justify-center p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
@@ -113,6 +109,16 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             if (!editing || dayIndex === editing.day_index) return;
             moveDay.mutate({ item: editing, dayIndex }, { onSuccess: () => setEditing(null) });
           }}
+          onMoveUp={
+            canReorder && editIndex > 0
+              ? () => swap.mutate({ a: dayItems[editIndex], b: dayItems[editIndex - 1] })
+              : undefined
+          }
+          onMoveDown={
+            canReorder && editIndex < dayItems.length - 1
+              ? () => swap.mutate({ a: dayItems[editIndex], b: dayItems[editIndex + 1] })
+              : undefined
+          }
           onDelete={() => {
             if (!editing) return;
             remove.mutate(editing.id, { onSuccess: () => setEditing(null) });
