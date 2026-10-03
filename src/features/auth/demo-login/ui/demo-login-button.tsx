@@ -26,7 +26,7 @@ export function DemoLoginButton() {
     if (trips && trips.length > 0) {
       return (
         <p className="text-center text-[13px] leading-[1.6] text-ink-400">
-          지금은 둘러보는 중이에요. 위에서 로그인하면 기록이 계정에 남아요.
+          지금은 둘러보는 중이에요. 로그인하면 새 계정으로 시작하고 둘러본 기록은 사라져요.
         </p>
       );
     }
