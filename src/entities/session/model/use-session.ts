@@ -13,8 +13,11 @@ export function useUser() {
   useEffect(() => {
     const supabase = createClient();
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") queryClient.clear();
-      else if (event === "SIGNED_IN") queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      if (event === "SIGNED_OUT") {
+        queryClient.clear();
+      } else if (event === "SIGNED_IN") {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient]);
