@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { computeDayRoute, type RoutePoint } from "@/shared/api/google-maps/routes";
+import { computeDayRoute, type RoutePoint } from "@/entities/schedule-item/api/compute-day-route";
 import { createClient } from "@/shared/api/supabase/server";
 import type { DayRoute, RouteLeg, TravelMode } from "@/entities/schedule-item";
 
