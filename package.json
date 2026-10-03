@@ -65,7 +65,7 @@
   },
   "packageManager": "pnpm@11.1.0",
   "lint-staged": {
-    "*.{ts,tsx,js,mjs}": [
+    "*.{ts,tsx,mts,cts,js,mjs,cjs}": [
       "eslint --fix --no-warn-ignored",
       "prettier --write"
     ],
