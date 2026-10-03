@@ -21,6 +21,8 @@ const buttonVariants = cva(
         // 디자인 시스템 Button: chip(회색 알약) / text(파란 텍스트 버튼)
         chip: "bg-surface-muted text-ink-700",
         text: "text-primary hover:text-primary-pressed",
+        // 되돌릴 수 없는 동작의 확정 버튼 (#F04452 채움). destructive 는 연한 배경이라 따로 둔다.
+        danger: "bg-destructive text-white hover:bg-destructive/90",
       },
       size: {
         default:
