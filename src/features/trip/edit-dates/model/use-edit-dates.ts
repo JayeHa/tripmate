@@ -15,7 +15,7 @@ export type PendingMove = Shrink & { count: number };
  * 여행 기간 수정 (시안 5c 수정 모드). 기존 기간을 미리 골라 두고, 줄여서 사라지는 날에
  * 일정이 있으면 마지막 날로 옮긴다고 확인받은 뒤 저장한다.
  */
-export function useEditDates(trip: Trip, onDone: (tripId: string) => void) {
+export function useEditDates(trip: Trip, onDone: () => void) {
   const update = useUpdateTripDates();
   const [selection, setSelection] = useState<DateSelection>({
     start: trip.start_date,
@@ -30,7 +30,7 @@ export function useEditDates(trip: Trip, onDone: (tripId: string) => void) {
   const save = (range: { start: string; end: string }) =>
     update.mutate(
       { tripId: trip.id, startDate: range.start, endDate: range.end },
-      { onSuccess: () => onDone(trip.id) },
+      { onSuccess: onDone },
     );
 
   async function submit() {

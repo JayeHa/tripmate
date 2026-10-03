@@ -2,7 +2,6 @@
 
 import { Ellipsis, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { initialOfName, useMyProfile, useUser } from "@/entities/session";
@@ -32,17 +31,11 @@ import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 
-type TripListViewProps = {
-  /** 방금 만들거나 기간을 고친 여행. 목록에서 강조한다 */
-  highlightId: string | null;
-};
-
 /**
  * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
  * 만들기는 모바일이면 /trips/new 전체 화면, PC 면 이 화면 위 모달(6b·6c)이다.
  */
-export function TripListView({ highlightId }: TripListViewProps) {
-  const router = useRouter();
+export function TripListView() {
   const { data: trips, isPending, error } = useTrips();
   const deleteTrip = useDeleteTrip();
   const { data: profile } = useMyProfile();
@@ -52,12 +45,7 @@ export function TripListView({ highlightId }: TripListViewProps) {
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editFor, setEditFor] = useState<Trip | null>(null);
-  const highlight = (tripId: string) => {
-    setCreateOpen(false);
-    setEditFor(null);
-    router.replace(`/trips?highlight=${tripId}`);
-  };
-  const createFlow = useTripCreate(highlight);
+  const createFlow = useTripCreate(() => setCreateOpen(false));
   const openCreate = () => {
     createFlow.reset();
     setCreateOpen(true);
@@ -162,7 +150,6 @@ export function TripListView({ highlightId }: TripListViewProps) {
                   trip={trip}
                   today={today}
                   companionCount={trip.companionCount}
-                  highlighted={trip.id === highlightId}
                   actions={
                     <IconButton
                       label={`${trip.title} 메뉴`}
@@ -184,7 +171,6 @@ export function TripListView({ highlightId }: TripListViewProps) {
                     trip={trip}
                     today={today}
                     companionCount={trip.companionCount}
-                    highlighted={trip.id === highlightId}
                     actions={pcActions(trip)}
                   />
                 ))}
@@ -253,7 +239,7 @@ export function TripListView({ highlightId }: TripListViewProps) {
           />
         }
       />
-      <EditDatesDialog trip={editFor} onClose={() => setEditFor(null)} onDone={highlight} />
+      <EditDatesDialog trip={editFor} onClose={() => setEditFor(null)} />
       <AccountSheet open={accountOpen} profile={profile} onClose={() => setAccountOpen(false)} />
       <DeleteTripDialog
         trip={confirmFor}

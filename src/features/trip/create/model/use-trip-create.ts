@@ -50,7 +50,7 @@ export function useTripCreate(onCreated: (tripId: string) => void) {
     create.reset();
   };
 
-  // 요청이 서버에 가 있는 동안은 닫거나 뒤로 가지 못하게 한다. 닫히면 완료 처리(강조)를 놓치고,
+  // 요청이 서버에 가 있는 동안은 닫거나 뒤로 가지 못하게 한다. 닫히면 완료 처리(목록으로 이동)를 놓치고,
   // 모르고 다시 만들면 같은 여행이 둘 생긴다. 오프라인으로 멈춘 동안은 갇히지 않게 연다(#31).
   const locked = create.isPending && !create.isPaused;
 

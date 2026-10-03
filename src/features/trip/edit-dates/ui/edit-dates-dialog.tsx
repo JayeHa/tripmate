@@ -12,21 +12,21 @@ import { PcEditDates } from "./pc-edit-dates";
 type EditDatesDialogProps = {
   /** 고칠 여행. null 이면 닫힌다 */
   trip: Trip | null;
+  /** 닫기 · 저장 완료 모두 */
   onClose: () => void;
-  onDone: (tripId: string) => void;
 };
 
 /** 여행 기간 수정 다이얼로그. 모바일은 전체 화면, PC 는 가운데 모달 */
-export function EditDatesDialog({ trip, onClose, onDone }: EditDatesDialogProps) {
+export function EditDatesDialog({ trip, onClose }: EditDatesDialogProps) {
   if (!trip) return null;
   // 여행마다 처음부터(기존 기간을 미리 고른 상태로) 시작한다
-  return <EditDatesFlow key={trip.id} trip={trip} onClose={onClose} onDone={onDone} />;
+  return <EditDatesFlow key={trip.id} trip={trip} onClose={onClose} />;
 }
 
-type EditDatesFlowProps = { trip: Trip; onClose: () => void; onDone: (tripId: string) => void };
+type EditDatesFlowProps = { trip: Trip; onClose: () => void };
 
-function EditDatesFlow({ trip, onClose, onDone }: EditDatesFlowProps) {
-  const state = useEditDates(trip, onDone);
+function EditDatesFlow({ trip, onClose }: EditDatesFlowProps) {
+  const state = useEditDates(trip, onClose);
   return (
     <>
       <FlowDialog
