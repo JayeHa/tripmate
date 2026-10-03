@@ -5,9 +5,8 @@ import * as years from "@hyunbinseo/holidays-kr/all";
  * 패키지가 담은 해(지금은 2018~2027)만 안다. 그 밖의 해는 공휴일이 없는 것으로 본다.
  * 다음 해 데이터는 패키지 업데이트로 들어온다.
  */
-const HOLIDAYS: Readonly<Record<string, readonly string[]>> = Object.assign(
-  {},
-  ...Object.values(years),
+const HOLIDAYS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  Object.values(years).flatMap((year) => Object.entries(year)),
 );
 
 /** 날짜(yyyy-MM-dd)의 공휴일 이름들. 공휴일이 아니면 null. */

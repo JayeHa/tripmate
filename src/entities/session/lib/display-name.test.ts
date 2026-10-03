@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { initialOfName, isValidDisplayName } from "./display-name";
 
 describe("isValidDisplayName", () => {

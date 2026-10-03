@@ -39,7 +39,7 @@ const buttonVariants = cva(
         // 디자인 시스템 Button 치수 (handoff README · Design Tokens)
         cta: "h-13 gap-1.5 rounded-card px-5 text-base font-extrabold",
         form: "h-11 gap-1.5 rounded-button px-4 text-[15px] font-semibold",
-        pill: "h-10 gap-1.5 rounded-full px-[18px] text-[15px] font-bold",
+        pill: "h-10 gap-1.5 rounded-full px-4.5 text-[15px] font-bold",
         chip: "h-9 gap-1.5 rounded-full px-3.5 text-sm font-semibold",
         text: "h-auto gap-1 px-0 py-1 text-[13px] font-bold",
       },

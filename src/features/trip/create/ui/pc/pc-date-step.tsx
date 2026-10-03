@@ -2,8 +2,10 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+
 import { IconButton } from "@/shared/ui/icon-button";
 import { MonthGrid } from "@/shared/ui/month-grid";
+
 import { PAST_MONTHS } from "../../lib/range";
 import { useCreateCalendar } from "../../model/use-create-calendar";
 import type { TripCreateState } from "../../model/use-trip-create";
@@ -11,8 +13,10 @@ import { Weekdays } from "../parts/weekdays";
 
 const NAV_BUTTON = "size-8 rounded-full border border-line text-ink-700 disabled:opacity-35";
 
+type PcDateStepProps = { state: TripCreateState };
+
 /** PC 날짜 단계 본문 (시안 6c). 두 달 나란히, ◀▶ 로 넘기고 처음엔 이번 달부터 */
-export function PcDateStep({ state }: { state: TripCreateState }) {
+export function PcDateStep({ state }: PcDateStepProps) {
   const { months, cellsOf } = useCreateCalendar(state.selection);
   const [offset, setOffset] = useState(PAST_MONTHS);
   const last = months.length - 2;
@@ -27,7 +31,7 @@ export function PcDateStep({ state }: { state: TripCreateState }) {
           disabled={offset === 0}
           className={`ml-auto ${NAV_BUTTON}`}
         >
-          <ChevronLeft className="size-[18px]" />
+          <ChevronLeft className="size-4.5" />
         </IconButton>
         <IconButton
           label="다음 달"
@@ -35,7 +39,7 @@ export function PcDateStep({ state }: { state: TripCreateState }) {
           disabled={offset === last}
           className={NAV_BUTTON}
         >
-          <ChevronRight className="size-[18px]" />
+          <ChevronRight className="size-4.5" />
         </IconButton>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-8 overflow-y-auto">
@@ -61,7 +65,7 @@ function Legend() {
         출발 · 도착
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="h-2.5 w-[22px] rounded-[5px] bg-[#EEEFF1]" />
+        <span className="h-2.5 w-5.5 rounded-[5px] bg-[#EEEFF1]" />
         다른 일정
       </span>
     </>

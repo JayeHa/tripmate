@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/shared/ui/badge";
+
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
+import { Badge } from "@/shared/ui/badge";
+
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
 import { TripThumb } from "./trip-thumb";
@@ -26,7 +28,7 @@ export function TripRow({ trip, today, companionCount, highlighted, actions }: P
     >
       <Link href={`/trips/${trip.id}/home`} className="flex min-w-0 flex-1 items-center gap-4">
         <TripThumb title={trip.title} imageUrl={coverImageUrl(trip.cities)} />
-        <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+        <span className="flex min-w-0 flex-1 flex-col gap-0.75">
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-lg font-bold tracking-[-0.01em] text-ink-900">
               {trip.title}

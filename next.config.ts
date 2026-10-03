@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+
 import { queryCacheHash } from "./query-cache.config.mjs";
 
 const nextConfig: NextConfig = {

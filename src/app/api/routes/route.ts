@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+
+import type { DayRoute, RouteLeg, TravelMode } from "@/entities/schedule-item";
+// server-only 라 배럴에 없다. full path 로만 참조한다 (AGENTS.md 배럴)
+// eslint-disable-next-line no-restricted-imports
 import { computeDayRoute, type RoutePoint } from "@/entities/schedule-item/api/compute-day-route";
 import { createClient } from "@/shared/api/supabase/server";
-import type { DayRoute, RouteLeg, TravelMode } from "@/entities/schedule-item";
 
 type Body = { tripId?: string; dayIndex?: number; travelMode?: TravelMode };
 

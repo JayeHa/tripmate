@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MissingRateError, formatMoney, roundTo, toHome } from "./currency";
+
+import { formatMoney, MissingRateError, roundTo, toHome } from "./currency";
 
 const rates = { JPY: { unit: 100, value: 900 }, USD: { unit: 1, value: 1350 } };
 

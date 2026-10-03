@@ -1,4 +1,5 @@
 import { CITY_IMAGES } from "@/shared/config/city-images";
+
 import type { TripCity } from "../api/trips";
 
 /** 목록의 「N개 도시」. 도시를 아직 고르지 않은 여행(목적지 이전에서 못 맞춘 것 포함)은 「도시 미정」. */

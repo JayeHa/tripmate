@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import { BottomNav } from "@/widgets/bottom-nav";
 import { TripShell } from "@/widgets/trip-shell";
 

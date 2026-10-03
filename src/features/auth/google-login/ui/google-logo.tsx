@@ -1,5 +1,7 @@
+type GoogleLogoProps = { className?: string };
+
 /** Google 브랜드 가이드의 4색 "G" 마크. 색과 경로를 임의로 바꾸면 안 된다. */
-export function GoogleLogo({ className }: { className?: string }) {
+export function GoogleLogo({ className }: GoogleLogoProps) {
   return (
     <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" className={className}>
       <path

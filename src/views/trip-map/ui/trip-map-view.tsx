@@ -2,20 +2,26 @@
 
 import { Footprints, TrainFront } from "lucide-react";
 import { useMemo, useState } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { DayChips } from "@/features/schedule/day-selector";
-import { formatDistance, formatDuration } from "@/entities/schedule-item";
-import { DayMap } from "@/views/trip-map/ui/day-map";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import { useDayParam } from "@/features/schedule/day-selector";
-import { useDayRoute } from "@/entities/schedule-item";
-import { useScheduleItems } from "@/entities/schedule-item";
-import { useTrip } from "@/entities/trip";
-import { dayCount } from "@/shared/lib/days";
-import type { TravelMode } from "@/entities/schedule-item";
-import { cn } from "@/shared/lib/utils";
 
-export function TripMapView({ tripId }: { tripId: string }) {
+import {
+  formatDistance,
+  formatDuration,
+  type TravelMode,
+  useDayRoute,
+  useScheduleItems,
+} from "@/entities/schedule-item";
+import { useTrip } from "@/entities/trip";
+import { DayChips, useDayParam } from "@/features/schedule/day-selector";
+import { dayCount } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
+import { AppHeader } from "@/shared/ui/app-header";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
+
+import { DayMap } from "./day-map";
+
+type TripMapViewProps = { tripId: string };
+
+export function TripMapView({ tripId }: TripMapViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: items } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
@@ -66,24 +72,24 @@ export function TripMapView({ tripId }: { tripId: string }) {
           }}
         />
         {locatedCount === 0 && (
-          <div className="absolute inset-x-4 top-4 rounded-lg bg-background/90 p-3 text-center text-sm shadow">
+          <div className="absolute inset-x-4 top-4 rounded-lg bg-background/90 p-3 text-center text-sm shadow-sm">
             이 날에는 지도에 표시할 장소가 없어요
           </div>
         )}
         {route.isFetching && (
-          <div className="absolute top-4 right-4 rounded-full bg-background/90 px-3 py-1 text-xs shadow">
+          <div className="absolute top-4 right-4 rounded-full bg-background/90 px-3 py-1 text-xs shadow-sm">
             경로 계산 중...
           </div>
         )}
         {route.error && (
-          <div className="absolute inset-x-4 top-4 rounded-lg bg-destructive/10 p-3 text-center text-xs text-destructive shadow">
+          <div className="absolute inset-x-4 top-4 rounded-lg bg-destructive/10 p-3 text-center text-xs text-destructive shadow-sm">
             {route.error.message}
           </div>
         )}
       </div>
 
       {dayItems.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto border-t bg-background px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex scrollbar-none gap-2 overflow-x-auto border-t bg-background px-4 py-3 [&::-webkit-scrollbar]:hidden">
           {dayItems.map((it, i) => {
             const leg = legByFrom.get(it.id);
             return (

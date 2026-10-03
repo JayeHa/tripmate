@@ -3,6 +3,7 @@
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
 import { Input } from "@/shared/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
 
@@ -59,13 +60,15 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
   useEffect(() => {
     const input = query.trim();
     if (!places || !input) return;
-    if (!sessionRef.current) sessionRef.current = new places.AutocompleteSessionToken();
+    sessionRef.current ??= new places.AutocompleteSessionToken();
+    // 아래 함수 안에서도 null 이 아님을 유지하려고 지역 상수로 잡는다
+    const lib = places;
 
-    const handle = setTimeout(async () => {
+    async function search() {
       setLoading(true);
       setError(null);
       try {
-        const { suggestions } = await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        const { suggestions } = await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input,
           sessionToken: sessionRef.current ?? undefined,
           language: "ko",
@@ -77,7 +80,9 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }
+    // 입력이 멈추고 250ms 뒤에 찾는다
+    const handle = setTimeout(() => void search(), 250);
     return () => clearTimeout(handle);
   }, [places, query, bias]);
 
@@ -139,7 +144,7 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
             <li key={p.placeId ?? i}>
               <button
                 type="button"
-                onClick={() => pick(s)}
+                onClick={() => void pick(s)}
                 className="flex w-full items-start gap-3 py-3 text-left active:bg-accent"
               >
                 <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

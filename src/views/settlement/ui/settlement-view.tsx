@@ -3,16 +3,21 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-import { useExpenses } from "@/entities/expense";
+
+import { computeNetBalances, minimizeTransfers, useExpenses } from "@/entities/expense";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
-import { MissingRateError, decimalsOf, formatMoney } from "@/shared/lib/money";
-import { computeNetBalances, minimizeTransfers } from "@/entities/expense";
+import { decimalsOf, formatMoney, MissingRateError } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 
-export function SettlementView({ tripId }: { tripId: string }) {
+/** 받을 돈(+) 초록 · 낼 돈(-) 빨강 · 0 은 기본색. Math.sign 의 결과로 고른다 */
+const NET_TONE: Record<number, string> = { 1: "text-emerald-600", [-1]: "text-destructive", 0: "" };
+
+type SettlementViewProps = { tripId: string };
+
+export function SettlementView({ tripId }: SettlementViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses } = useExpenses(tripId);
@@ -67,11 +72,12 @@ export function SettlementView({ tripId }: { tripId: string }) {
                 </p>
               ) : (
                 <ul className="mt-3 flex flex-col gap-3">
-                  {result.transfers.map((t, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <Person id={t.from} />
+                  {result.transfers.map((t) => (
+                    // 그리디 정산은 한 쌍을 한 번만 잇는다(매번 한쪽이 0 이 된다)
+                    <li key={`${t.from}-${t.to}`} className="flex items-center gap-2 text-sm">
+                      <Person name={name(t.from)} avatarUrl={member(t.from)?.profile.avatar_url} />
                       <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                      <Person id={t.to} />
+                      <Person name={name(t.to)} avatarUrl={member(t.to)?.profile.avatar_url} />
                       <span className="ml-auto font-semibold">
                         {formatMoney(t.amount, trip.home_currency)}
                       </span>
@@ -88,18 +94,16 @@ export function SettlementView({ tripId }: { tripId: string }) {
               </p>
               <ul className="mt-3 flex flex-col divide-y">
                 {members.map((m) => {
-                  const net = result.balances!.net[m.user_id] ?? 0;
-                  const paidBy = result.balances!.paidByCurrency[m.user_id] ?? {};
+                  const net = result.balances.net[m.user_id] ?? 0;
+                  const paidBy = result.balances.paidByCurrency[m.user_id] ?? {};
                   return (
                     <li key={m.user_id} className="flex items-center gap-3 py-2.5">
-                      <Person id={m.user_id} />
+                      <Person
+                        name={name(m.user_id)}
+                        avatarUrl={member(m.user_id)?.profile.avatar_url}
+                      />
                       <div className="ml-auto text-right">
-                        <p
-                          className={cn(
-                            "text-sm font-semibold",
-                            net > 0 ? "text-emerald-600" : net < 0 ? "text-destructive" : "",
-                          )}
-                        >
+                        <p className={cn("text-sm font-semibold", NET_TONE[Math.sign(net)])}>
                           {net > 0 ? "+" : ""}
                           {formatMoney(net, trip.home_currency)}
                         </p>
@@ -142,17 +146,19 @@ export function SettlementView({ tripId }: { tripId: string }) {
       </main>
     </>
   );
+}
 
-  function Person({ id }: { id: string }) {
-    const m = member(id);
-    return (
-      <span className="flex min-w-0 items-center gap-1.5">
-        <Avatar size="sm">
-          <AvatarImage src={m?.profile.avatar_url ?? undefined} alt="" />
-          <AvatarFallback>{name(id).slice(0, 1)}</AvatarFallback>
-        </Avatar>
-        <span className="truncate">{name(id)}</span>
-      </span>
-    );
-  }
+type PersonProps = { name: string; avatarUrl: string | null | undefined };
+
+/** 정산 줄의 사람. 렌더 중에 정의하면 매 렌더마다 새 컴포넌트가 되어 아바타가 다시 마운트된다 */
+function Person({ name, avatarUrl }: PersonProps) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Avatar size="sm">
+        <AvatarImage src={avatarUrl ?? undefined} alt="" />
+        <AvatarFallback>{name.slice(0, 1)}</AvatarFallback>
+      </Avatar>
+      <span className="truncate">{name}</span>
+    </span>
+  );
 }

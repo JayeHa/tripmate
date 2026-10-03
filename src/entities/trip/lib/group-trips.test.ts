@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { groupTrips } from "./group-trips";
 
 const trip = (id: string, start: string, end: string) => ({ id, start_date: start, end_date: end });

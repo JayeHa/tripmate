@@ -3,6 +3,7 @@
 import { decode } from "@googlemaps/polyline-codec";
 import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
+
 import type { ScheduleItem } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
@@ -19,7 +20,7 @@ const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 }; // 도쿄역
 export function DayMap({ items, polyline, selectedId, onSelect, className }: Props) {
   const located = items.filter((it) => it.lat != null && it.lng != null);
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div className={cn("relative size-full", className)}>
       <Map
         mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
         defaultCenter={located[0] ? { lat: located[0].lat!, lng: located[0].lng! } : DEFAULT_CENTER}
@@ -27,7 +28,7 @@ export function DayMap({ items, polyline, selectedId, onSelect, className }: Pro
         gestureHandling="greedy"
         disableDefaultUI
         clickableIcons={false}
-        className="h-full w-full"
+        className="size-full"
       >
         {located.map((it) => (
           <AdvancedMarker
@@ -56,7 +57,9 @@ export function DayMap({ items, polyline, selectedId, onSelect, className }: Pro
   );
 }
 
-function FitBounds({ items }: { items: ScheduleItem[] }) {
+type FitBoundsProps = { items: ScheduleItem[] };
+
+function FitBounds({ items }: FitBoundsProps) {
   const map = useMap();
   const key = items.map((it) => it.id).join("|");
   useEffect(() => {
@@ -74,8 +77,10 @@ function FitBounds({ items }: { items: ScheduleItem[] }) {
   return null;
 }
 
+type RoutePolylineProps = { encoded: string | null };
+
 /** vis.gl 에는 Polyline 컴포넌트가 없어 직접 생성/정리 */
-function RoutePolyline({ encoded }: { encoded: string | null }) {
+function RoutePolyline({ encoded }: RoutePolylineProps) {
   const map = useMap();
   useEffect(() => {
     if (!map || !encoded) return;

@@ -21,7 +21,7 @@ app > views > widgets > features > entities > shared
 `views` 는 FSD 의 pages 레이어다. Next 의 `app/` 과 겹쳐서 이름을 바꿨다.
 
 **ESLint 가 이미 막아 주는 것** — 레이어 역방향 import, 같은 레이어의 슬라이스 간
-import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
+import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 ## 어디에 둘 것인가
 
@@ -62,7 +62,9 @@ import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 **`server-only` 나 `next/headers` 를 쓰는 모듈은 배럴에 올리지 않는다.**
 클라이언트 번들에 섞여 빌드가 깨진다. full path 로만 참조한다.
-`shared/api/supabase` 는 그래서 배럴이 없다.
+`shared/api/supabase` 는 그래서 배럴이 없다. 슬라이스 안의 서버 전용 모듈을 밖에서 쓸 때는
+배럴 우회 규칙에 걸리므로 그 import 한 줄에 `eslint-disable-next-line no-restricted-imports`
+와 이유를 단다(예: `app/api/routes/route.ts`).
 
 ## 테스트 위치
 
@@ -71,6 +73,62 @@ import. 이 둘은 외우지 않아도 된다. `pnpm lint` 가 잡는다.
 
 대상과 같은 자리에 있으면 파일을 옮길 때 테스트가 따라가고, 테스트가 없는 모듈이
 눈에 띈다. vitest 는 `**/*.test.ts` 로 수집하므로 위치 제약이 없다.
+
+# 코드 규칙
+
+린트로 잡을 수 있는 건 린트가 잡는다(`eslint.config.mjs`). 판단이 필요한 건 아래 기준을 따른다.
+
+## 컴포넌트는 한 가지 일만
+
+- **레이아웃이 다르면 컴포넌트를 나눈다.** 모바일과 PC 의 구조가 다르면 `if (layout === …)` 로
+  한 함수에 두 화면을 그리지 않는다. 예: `features/trip/create/ui/{mobile,pc}`
+- **상태와 이펙트는 훅(`model/use-*.ts`), 순수 계산은 `lib/` + 테스트.** 컴포넌트는 받은 것을 그린다.
+  두 레이아웃이 같은 상태를 쓰면 훅을 상위(뷰)로 올려 하나만 둔다
+- **파일이 200줄을 넘으면 나눌 신호다**(린트 경고). 생성 파일·데이터·shadcn 원본·테스트는 제외
+
+## 분기는 읽히게
+
+- **중첩 삼항 금지**(린트 오류). 대신 early return 하는 작은 함수, 조회 객체
+  (`COPY[state.step]`, `NET_TONE[Math.sign(net)]`), 하위 컴포넌트
+- **블록 중첩은 3단까지**(린트 오류). `try` 를 반복문 안에 넣지 말고 함수로 뺀다
+- **함수 복잡도 15 초과는 경고.** 폼처럼 큰 컴포넌트가 걸리면 그 화면을 다시 만들 때 나눈다
+
+## props 타입
+
+- **컴포넌트 props 타입은 `type 컴포넌트이름Props = { … }` 로 따로 선언한다**(린트 오류).
+  파라미터에 `{ a }: { a: string }` 처럼 바로 쓰지 않는다. 훅·유틸의 객체 파라미터는 해당 없음
+- 이름 있는 컴포넌트는 `function` 선언, 렌더 중에 컴포넌트를 정의하지 않는다, 배열 index 를 key 로 쓰지 않는다(린트)
+
+## Promise
+
+- **기다리지 않는 Promise 는 `void` 로 표시한다.** 예: `void qc.invalidateQueries(…)` — 빼먹으면 린트 오류
+- 이벤트 핸들러·콜백에 async 함수를 넘길 땐 `onClick={() => void fn()}`. 실패를 삼키면 안 되는 곳이면 함수 안에서 처리한다
+- `||` 와 `??`: 숫자·객체는 `??`(린트). **문자열은 `||` 를 허용한다** — 빈 문자열을 `null`·기본값으로 바꾸려는 의도가 많다
+
+## Tailwind
+
+- **정식 클래스를 쓴다.** `size-[22px]` 대신 `size-5.5` 처럼 간격 단위로 표현되는 값은 린트가 자동으로 고친다.
+  `text-[13px]` 처럼 대응 클래스가 없는 임의값은 그대로
+- 클래스 **순서**는 `prettier-plugin-tailwindcss` 가 정렬한다. 손으로 맞추지 않는다
+- **`rounded`·`rounded-sm` 은 쓰지 않는다.** 이 테마의 `rounded-sm` 은 shadcn 값(`--radius × 0.6`)이라
+  기본 Tailwind 와 다르다. 시안 값은 토큰으로: `rounded-tag`(4) · `rounded-pill-sm`(6) · `rounded-button`(8) ·
+  `rounded-memo`(10) · `rounded-card`(12) · `rounded-sheet`(22)
+
+## import
+
+- 정렬(외부 → `@/` → 상대경로), 타입 전용 `type` 표기, 중복 import 는 `--fix` 가 고친다
+- 순환 import 금지(`import/no-cycle`). 배럴끼리 다시 내보내다 생기기 쉽다
+
+## 왜 airbnb 규칙을 안 쓰나
+
+`eslint-config-airbnb` 는 ESLint 8 까지만 지원한다(이 레포는 9 · flat config). 커뮤니티 포크가 있지만 규칙 다수가
+`eslint-config-next`·typescript-eslint·Prettier 와 겹치거나 부딪친다. 필요한 규칙을 골라 켜는 쪽을 택했다.
+
+## 커밋 전 검사
+
+`husky` 의 pre-commit 이 `lint-staged` 로 **스테이징된 파일에만** `eslint --fix` → `prettier --write`
+를 돌린다. 린트 오류가 남으면 커밋이 막힌다. `tsc`·`test`·`build` 는 무거워서 넣지 않았으니
+PR 전에 직접 돌린다.
 
 # 인증 경계
 

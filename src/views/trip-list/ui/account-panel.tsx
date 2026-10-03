@@ -2,6 +2,7 @@
 
 import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { useState } from "react";
+
 import {
   DISPLAY_NAME_MAX,
   initialOfName,
@@ -10,11 +11,11 @@ import {
   useSignOut,
   useUpdateDisplayName,
 } from "@/entities/session";
+import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
-import { cn } from "@/shared/lib/utils";
 
 type TitleComponent = React.ComponentType<{ className?: string; children: React.ReactNode }>;
 
@@ -46,15 +47,13 @@ function accountLabel(profile: MyProfile | null | undefined, style: "dot" | "par
     : `${profile.email} (${profile.provider})`;
 }
 
-function MainMenu({
-  profile,
-  Title,
-  onEditProfile,
-}: {
+type MainMenuProps = {
   profile: MyProfile | null | undefined;
   Title: TitleComponent;
   onEditProfile: () => void;
-}) {
+};
+
+function MainMenu({ profile, Title, onEditProfile }: MainMenuProps) {
   const signOut = useSignOut();
 
   return (
@@ -84,7 +83,7 @@ function MainMenu({
         </SheetMenuItem>
         <SheetMenuItem
           icon={LogOut}
-          onClick={signOut}
+          onClick={() => void signOut()}
           danger
           className="px-5 hover:bg-surface-sunken"
         >
@@ -96,15 +95,13 @@ function MainMenu({
   );
 }
 
-function ProfileEditor({
-  profile,
-  Title,
-  onBack,
-}: {
+type ProfileEditorProps = {
   profile: MyProfile | null | undefined;
   Title: TitleComponent;
   onBack: () => void;
-}) {
+};
+
+function ProfileEditor({ profile, Title, onBack }: ProfileEditorProps) {
   const current = profile?.display_name ?? "";
   const update = useUpdateDisplayName();
   const [draft, setDraft] = useState(current);
@@ -121,14 +118,14 @@ function ProfileEditor({
 
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center gap-3 px-[18px]">
+      <div className="flex h-14 shrink-0 items-center gap-3 px-4.5">
         <IconButton label="뒤로" onClick={onBack} className="text-ink-900">
-          <ArrowLeft className="size-[22px]" strokeWidth={2} />
+          <ArrowLeft className="size-5.5" strokeWidth={2} />
         </IconButton>
         <Title className="text-[17px] font-extrabold text-ink-900">내 정보</Title>
       </div>
-      <div className="flex flex-col items-center gap-[18px] px-5 pt-2 pb-6">
-        <Avatar className="size-[72px]">
+      <div className="flex flex-col items-center gap-4.5 px-5 pt-2 pb-6">
+        <Avatar className="size-18">
           <AvatarFallback className="text-[25px]">
             {initialOfName(trimmed || current)}
           </AvatarFallback>
@@ -158,7 +155,7 @@ function ProfileEditor({
         </div>
 
         <Button
-          className="h-[50px] w-full rounded-button text-base font-bold"
+          className="h-12.5 w-full rounded-button text-base font-bold"
           disabled={!valid || !changed || update.isPending}
           onClick={save}
         >

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import { TripScheduleView } from "@/views/trip-schedule";
 
 export const metadata = { title: "일정" };

@@ -1,6 +1,7 @@
 import { DemoLoginButton } from "@/features/auth/demo-login";
 import { GoogleSignInButton } from "@/features/auth/google-login";
 import { Wordmark } from "@/shared/ui/wordmark";
+
 import { LoginIntro } from "./login-intro";
 import { TermsNotice } from "./terms-notice";
 
@@ -12,7 +13,7 @@ export function LoginDesktop() {
         <Wordmark className="text-[22px]" />
       </header>
       <div className="flex flex-1 items-center justify-center bg-surface-sunken">
-        <div className="flex w-[420px] flex-col gap-3 rounded-sheet border border-line-card bg-white px-10 pt-11 pb-8 shadow-card">
+        <div className="flex w-105 flex-col gap-3 rounded-sheet border border-line-card bg-white px-10 pt-11 pb-8 shadow-card">
           <LoginIntro layout="desktop" />
           <GoogleSignInButton />
           <DemoLoginButton />

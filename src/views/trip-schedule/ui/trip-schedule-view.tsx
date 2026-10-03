@@ -2,29 +2,31 @@
 
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { DayChips } from "@/features/schedule/day-selector";
-import { PlaceSearchSheet, type PickedPlace } from "@/features/schedule/place-search";
-import { ScheduleItemForm } from "@/features/schedule/item-form";
-import { ScheduleList } from "@/entities/schedule-item";
-import { Button } from "@/shared/ui/button";
-import { Skeleton } from "@/shared/ui/skeleton";
-import { useDayParam } from "@/features/schedule/day-selector";
-import { useDayRoute } from "@/entities/schedule-item";
+
 import {
+  type ScheduleItem,
+  ScheduleList,
   useCreateScheduleItem,
+  useDayRoute,
   useDeleteScheduleItem,
   useMoveScheduleItemToDay,
   useScheduleItems,
   useSwapScheduleItems,
   useUpdateScheduleItem,
 } from "@/entities/schedule-item";
-import { useTrip } from "@/entities/trip";
 import { useUser } from "@/entities/session";
+import { useTrip } from "@/entities/trip";
+import { DayChips, useDayParam } from "@/features/schedule/day-selector";
+import { ScheduleItemForm } from "@/features/schedule/item-form";
+import { type PickedPlace, PlaceSearchSheet } from "@/features/schedule/place-search";
 import { dayCount } from "@/shared/lib/days";
-import type { ScheduleItem } from "@/entities/schedule-item";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
 
-export function TripScheduleView({ tripId }: { tripId: string }) {
+type TripScheduleViewProps = { tripId: string };
+
+export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: user } = useUser();
   const { data: items, isPending } = useScheduleItems(tripId);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { cityCtaLabel, dateCtaLabel, pcCityCtaLabel } from "./cta";
 
 describe("cityCtaLabel", () => {

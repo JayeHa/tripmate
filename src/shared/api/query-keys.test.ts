@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { queryKeys, shouldPersistQuery } from "./query-keys";
 
 describe("shouldPersistQuery", () => {

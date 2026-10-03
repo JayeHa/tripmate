@@ -3,6 +3,7 @@
 import { useUser } from "@/entities/session";
 import { useTrips } from "@/entities/trip";
 import { Button } from "@/shared/ui/button";
+
 import { useDemoLogin } from "../model/use-demo-login";
 
 /**
@@ -37,17 +38,18 @@ export function DemoLoginButton() {
       <Button
         variant="text"
         size="text"
-        onClick={enterDemo}
+        onClick={() => void enterDemo()}
         disabled={loading}
         className="mx-auto text-sm"
       >
-        {loading
-          ? "샘플 여행을 준비하고 있어요…"
-          : isAnonymous
-            ? "샘플 여행 다시 만들기"
-            : "로그인 없이 둘러보기"}
+        {buttonLabel(loading, isAnonymous)}
       </Button>
       {error && <p className="text-center text-sm text-destructive">{error}</p>}
     </>
   );
+}
+
+function buttonLabel(loading: boolean, isAnonymous: boolean) {
+  if (loading) return "샘플 여행을 준비하고 있어요…";
+  return isAnonymous ? "샘플 여행 다시 만들기" : "로그인 없이 둘러보기";
 }

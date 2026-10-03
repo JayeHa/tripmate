@@ -1,18 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
+import {
+  EXPENSE_CATEGORIES,
+  EXPENSE_CATEGORY_LABEL,
+  expenseFormSchema,
+  type ExpenseFormValues,
+} from "@/entities/expense";
+import type { ScheduleItem } from "@/entities/schedule-item";
+import type { Trip } from "@/entities/trip";
+import type { TripMember } from "@/entities/trip-member";
+import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
+import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/shared/lib/money";
+import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
-import { expenseFormSchema, type ExpenseFormValues } from "@/entities/expense";
-import { decimalsOf, formatMoney, splitEqual, validateCustomShares } from "@/shared/lib/money";
-import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABEL } from "@/entities/expense";
-import type { ScheduleItem } from "@/entities/schedule-item";
-import type { Trip } from "@/entities/trip";
-import type { TripMember } from "@/entities/trip-member";
-import { cn } from "@/shared/lib/utils";
 
 type Props = {
   trip: Trip;
@@ -250,11 +255,7 @@ export function ExpenseForm({
                 customDiff === 0 ? "text-muted-foreground" : "text-destructive",
               )}
             >
-              {customDiff === 0
-                ? "합계가 맞아요"
-                : customDiff > 0
-                  ? `${formatMoney(customDiff, currency)} 부족`
-                  : `${formatMoney(-customDiff, currency)} 초과`}
+              {splitDiffLabel(customDiff, currency)}
             </p>
           </div>
         )}
@@ -315,15 +316,13 @@ export function ExpenseForm({
   );
 }
 
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
+type ChipProps = {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
-}) {
+};
+
+function Chip({ active, onClick, children }: ChipProps) {
   return (
     <button
       type="button"
@@ -338,4 +337,11 @@ function Chip({
       {children}
     </button>
   );
+}
+
+/** 직접 나누기 합계와 금액의 차이 안내 */
+function splitDiffLabel(diff: number, currency: string) {
+  if (diff === 0) return "합계가 맞아요";
+  if (diff > 0) return `${formatMoney(diff, currency)} 부족`;
+  return `${formatMoney(-diff, currency)} 초과`;
 }

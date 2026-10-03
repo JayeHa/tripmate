@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
 import { cn } from "@/shared/lib/utils";
+
 import { cityAreasLabel, groupByRegion, searchCities } from "../lib/search";
 import type { City, CityCatalog, CityScope } from "../model/types";
 import { CityThumb } from "./city-thumb";
@@ -22,6 +24,15 @@ const SCOPES: { key: CityScope; label: string }[] = [
   { key: "domestic", label: "국내도시" },
 ];
 const ALL = "전체";
+
+const CHIP_SIZE: Record<Layout, string> = {
+  pc: "h-8 px-3.5 text-[13px] font-bold whitespace-nowrap",
+  mobile: "h-[34px] border px-3.5 text-sm font-semibold",
+};
+const CHIP_OFF: Record<Layout, string> = {
+  pc: "bg-surface-muted text-ink-600",
+  mobile: "border-line bg-white text-ink-700",
+};
 
 /**
  * 도시 다중 선택 (시안 5b · 6b). 해외/국내 탭 + 권역 칩 + 도시 목록.
@@ -71,14 +82,8 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
         onClick={() => setRegion(id)}
         className={cn(
           "flex shrink-0 items-center rounded-full",
-          pc
-            ? "h-8 px-3.5 text-[13px] font-bold whitespace-nowrap"
-            : "h-[34px] border px-3.5 text-sm font-semibold",
-          on
-            ? "border-ink-900 bg-ink-900 text-white"
-            : pc
-              ? "bg-surface-muted text-ink-600"
-              : "border-line bg-white text-ink-700",
+          CHIP_SIZE[layout],
+          on ? "border-ink-900 bg-ink-900 text-white" : CHIP_OFF[layout],
         )}
       >
         {chipLabel(id)}
@@ -118,7 +123,7 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
             <h3
               className={cn(
                 "font-bold text-ink-700",
-                pc ? "pt-[18px] pb-1.5 text-sm" : "px-5 pt-[22px] pb-1.5 text-[15px]",
+                pc ? "pt-4.5 pb-1.5 text-sm" : "px-5 pt-5.5 pb-1.5 text-[15px]",
               )}
             >
               {section.title}
@@ -144,17 +149,14 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
   );
 }
 
-function CityRow({
-  city,
-  on,
-  pc,
-  onToggle,
-}: {
+type CityRowProps = {
   city: City;
   on: boolean;
   pc: boolean;
   onToggle: () => void;
-}) {
+};
+
+function CityRow({ city, on, pc, onToggle }: CityRowProps) {
   return (
     <button
       type="button"
@@ -162,7 +164,7 @@ function CityRow({
       aria-pressed={on}
       className={cn(
         "flex w-full items-center text-left",
-        pc ? "gap-3 py-[9px]" : "gap-3.5 px-5 py-2.5",
+        pc ? "gap-3 py-2.25" : "gap-3.5 px-5 py-2.5",
       )}
     >
       <CityThumb city={city} size={pc ? 44 : 48} />
@@ -177,7 +179,7 @@ function CityRow({
       <span
         className={cn(
           "flex shrink-0 items-center rounded-full border font-bold",
-          pc ? "h-[30px] px-3 text-[13px]" : "h-[34px] px-3.5 text-sm",
+          pc ? "h-7.5 px-3 text-[13px]" : "h-8.5 px-3.5 text-sm",
           on
             ? "border-primary bg-white text-primary"
             : "border-surface-muted bg-surface-muted text-ink-800",

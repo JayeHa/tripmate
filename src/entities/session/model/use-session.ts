@@ -3,8 +3,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { createClient } from "@/shared/api/supabase/client";
+
 import { queryKeys } from "@/shared/api/query-keys";
+import { createClient } from "@/shared/api/supabase/client";
 
 export function useUser() {
   const queryClient = useQueryClient();
@@ -16,7 +17,7 @@ export function useUser() {
       if (event === "SIGNED_OUT") {
         queryClient.clear();
       } else if (event === "SIGNED_IN") {
-        queryClient.invalidateQueries({ queryKey: queryKeys.user });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.user });
       }
     });
     return () => data.subscription.unsubscribe();

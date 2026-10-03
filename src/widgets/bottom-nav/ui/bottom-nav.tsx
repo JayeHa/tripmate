@@ -2,6 +2,7 @@
 
 import { CalendarDays, House, NotebookPen, Receipt, Settings } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
+
 import { BottomTabBar, type TabItem } from "@/shared/ui/tab-bar";
 
 /**
@@ -16,7 +17,9 @@ const TABS = [
   { key: "settings", label: "설정", icon: Settings },
 ] as const;
 
-export function BottomNav({ tripId }: { tripId: string }) {
+type BottomNavProps = { tripId: string };
+
+export function BottomNav({ tripId }: BottomNavProps) {
   const pathname = usePathname();
   const day = useSearchParams().get("day");
 

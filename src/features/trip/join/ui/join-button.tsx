@@ -4,11 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/shared/ui/button";
+
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
+import { Button } from "@/shared/ui/button";
 
-export function JoinButton({ token, isAnonymous }: { token: string; isAnonymous: boolean }) {
+type JoinButtonProps = { token: string; isAnonymous: boolean };
+
+export function JoinButton({ token, isAnonymous }: JoinButtonProps) {
   const router = useRouter();
   const qc = useQueryClient();
   const [pending, setPending] = useState(false);
@@ -49,7 +52,7 @@ export function JoinButton({ token, isAnonymous }: { token: string; isAnonymous:
 
   return (
     <div className="mt-6 flex flex-col gap-2">
-      <Button size="lg" className="w-full" onClick={join} disabled={pending}>
+      <Button size="lg" className="w-full" onClick={() => void join()} disabled={pending}>
         {pending ? "참여 중..." : "참여하기"}
       </Button>
       {error && <p className="text-center text-sm text-destructive">{error}</p>}

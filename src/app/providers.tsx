@@ -1,11 +1,12 @@
 "use client";
 
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { del, get, set } from "idb-keyval";
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -38,7 +39,9 @@ function makePersister() {
   });
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+type ProvidersProps = { children: ReactNode };
+
+export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(makeQueryClient);
   const [persister] = useState(makePersister);
 

@@ -1,15 +1,15 @@
 import { X } from "lucide-react";
+
 import { type City, CityThumb } from "@/entities/city";
 import { IconButton } from "@/shared/ui/icon-button";
 
-/** 고른 도시 트레이 (시안 5b). 44px 원 + ✕ 로 빼기 */
-export function PickedTray({
-  picked,
-  onRemove,
-}: {
+type PickedTrayProps = {
   picked: City[];
   onRemove: (city: City) => void;
-}) {
+};
+
+/** 고른 도시 트레이 (시안 5b). 44px 원 + ✕ 로 빼기 */
+export function PickedTray({ picked, onRemove }: PickedTrayProps) {
   if (picked.length === 0) return null;
   return (
     <div className="flex gap-3.5 overflow-x-auto pt-1.5">
@@ -19,7 +19,7 @@ export function PickedTray({
           <IconButton
             label={`${city.name} 빼기`}
             onClick={() => onRemove(city)}
-            className="absolute -top-1.5 -right-2 size-[22px] rounded-full border border-line bg-white text-ink-500"
+            className="absolute -top-1.5 -right-2 size-5.5 rounded-full border border-line bg-white text-ink-500"
           >
             <X className="size-3" strokeWidth={2.4} />
           </IconButton>

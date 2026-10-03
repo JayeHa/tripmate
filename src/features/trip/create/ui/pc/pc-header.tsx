@@ -1,5 +1,7 @@
 import { ArrowLeft, X } from "lucide-react";
+
 import { IconButton } from "@/shared/ui/icon-button";
+
 import type { TripCreateState } from "../../model/use-trip-create";
 import type { TitleComponent } from "../parts/title";
 
@@ -12,19 +14,17 @@ const COPY = {
   },
 } as const;
 
-/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← (시안 6b · 6c) */
-export function PcHeader({
-  state,
-  onClose,
-  Title,
-}: {
+type PcHeaderProps = {
   state: TripCreateState;
   onClose: () => void;
   Title: TitleComponent;
-}) {
+};
+
+/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← (시안 6b · 6c) */
+export function PcHeader({ state, onClose, Title }: PcHeaderProps) {
   const copy = COPY[state.step];
   return (
-    <div className="flex shrink-0 items-center gap-3 px-7 pt-[22px] pb-3.5">
+    <div className="flex shrink-0 items-center gap-3 px-7 pt-5.5 pb-3.5">
       {state.step === "date" && (
         <IconButton
           label="도시 다시 고르기"
@@ -32,10 +32,10 @@ export function PcHeader({
           disabled={state.locked}
           className="text-ink-900"
         >
-          <ArrowLeft className="size-[22px]" strokeWidth={2} />
+          <ArrowLeft className="size-5.5" strokeWidth={2} />
         </IconButton>
       )}
-      <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.75">
         <Title className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
           {copy.title}
         </Title>

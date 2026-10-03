@@ -1,11 +1,14 @@
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/shared/ui/button";
-import { dateRangeLabel } from "@/shared/lib/days";
-import { createClient } from "@/shared/api/supabase/server";
-import { JoinButton } from "@/features/trip/join";
 
-export async function TripInviteView({ token }: { token: string }) {
+import { JoinButton } from "@/features/trip/join";
+import { createClient } from "@/shared/api/supabase/server";
+import { dateRangeLabel } from "@/shared/lib/days";
+import { Button } from "@/shared/ui/button";
+
+type TripInviteViewProps = { token: string };
+
+export async function TripInviteView({ token }: TripInviteViewProps) {
   const supabase = await createClient();
   // 익명 여부는 서버에서 정한다. 클라이언트에서 물어보면 응답 전까지 참여 버튼이 열려 있다.
   const {

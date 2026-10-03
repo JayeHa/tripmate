@@ -3,17 +3,38 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { AppHeader } from "@/shared/ui/app-header";
-import { Button } from "@/shared/ui/button";
-import { Skeleton } from "@/shared/ui/skeleton";
-import { useExpenses } from "@/entities/expense";
+
+import {
+  EXPENSE_CATEGORY_LABEL,
+  type ExpenseCategory,
+  type ExpenseWithSplits,
+  useExpenses,
+} from "@/entities/expense";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { dateToDayIndex, dayLabel } from "@/shared/lib/days";
-import { MissingRateError, formatMoney, toHome } from "@/shared/lib/money";
-import { EXPENSE_CATEGORY_LABEL, ExpenseCategory, ExpenseWithSplits } from "@/entities/expense";
+import { type ExchangeRates, formatMoney, MissingRateError, toHome } from "@/shared/lib/money";
+import { AppHeader } from "@/shared/ui/app-header";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
 
-export function ExpenseListView({ tripId }: { tripId: string }) {
+/** 기준 화폐로 환산. 환율이 없으면 null(합계에 「환율 없음」 표시) */
+function toHomeOrNull(
+  amount: number,
+  currency: string,
+  trip: { home_currency: string; exchange_rates: ExchangeRates },
+) {
+  try {
+    return toHome(amount, currency, trip.home_currency, trip.exchange_rates);
+  } catch (err) {
+    if (err instanceof MissingRateError) return null;
+    throw err;
+  }
+}
+
+type ExpenseListViewProps = { tripId: string };
+
+export function ExpenseListView({ tripId }: ExpenseListViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses, isPending } = useExpenses(tripId);
@@ -37,14 +58,10 @@ export function ExpenseListView({ tripId }: { tripId: string }) {
     let missing = false;
     for (const e of expenses ?? []) {
       byCurrency[e.currency] = (byCurrency[e.currency] ?? 0) + Number(e.amount);
-      if (trip) {
-        try {
-          home += toHome(Number(e.amount), e.currency, trip.home_currency, trip.exchange_rates);
-        } catch (err) {
-          if (err instanceof MissingRateError) missing = true;
-          else throw err;
-        }
-      }
+      if (!trip) continue;
+      const converted = toHomeOrNull(Number(e.amount), e.currency, trip);
+      if (converted === null) missing = true;
+      else home += converted;
     }
     return { byCurrency, home, missing };
   }, [expenses, trip]);

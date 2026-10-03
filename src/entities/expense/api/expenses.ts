@@ -1,6 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
+import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money";
+
 import type { ExpenseFormValues } from "../model/schema";
-import { splitEqual, validateCustomShares, type Share } from "@/shared/lib/money";
 import type { ExpenseWithSplits } from "../model/types";
 
 export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]> {
@@ -12,7 +13,7 @@ export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]
     .order("spent_on", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data as ExpenseWithSplits[];
+  return data;
 }
 
 /** 폼 값 → 분배 행. custom 이면 검증 후 사용 */

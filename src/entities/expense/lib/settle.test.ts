@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { minimizeTransfers } from "./settle";
 
 function flows(transfers: { from: string; to: string; amount: number }[]) {

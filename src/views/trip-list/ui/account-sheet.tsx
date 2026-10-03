@@ -2,6 +2,7 @@
 
 import type { MyProfile } from "@/entities/session";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
+
 import { AccountPanel } from "./account-panel";
 
 type Props = {

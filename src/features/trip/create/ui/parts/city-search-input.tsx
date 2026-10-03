@@ -1,15 +1,13 @@
 import { cn } from "@/shared/lib/utils";
 
-/** 도시 검색어 입력. 자리와 글자 크기만 레이아웃마다 다르다. */
-export function CitySearchInput({
-  value,
-  onChange,
-  className,
-}: {
+type CitySearchInputProps = {
   value: string;
   onChange: (value: string) => void;
   className?: string;
-}) {
+};
+
+/** 도시 검색어 입력. 자리와 글자 크기만 레이아웃마다 다르다. */
+export function CitySearchInput({ value, onChange, className }: CitySearchInputProps) {
   return (
     <input
       value={value}

@@ -1,8 +1,9 @@
 import { createClient } from "@/shared/api/supabase/client";
 import type { Tables } from "@/shared/api/supabase/database.types";
-import type { Trip } from "../model/types";
 import type { ExchangeRates } from "@/shared/lib/money";
+
 import type { TripFormValues } from "../model/schema";
+import type { Trip } from "../model/types";
 
 function toTrip(row: Tables<"trips">): Trip {
   return { ...row, exchange_rates: (row.exchange_rates ?? {}) as ExchangeRates };
