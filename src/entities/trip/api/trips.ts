@@ -16,14 +16,23 @@ export function ratesToForm(rates: ExchangeRates): TripFormValues["rates"] {
   return Object.entries(rates).map(([currency, r]) => ({ currency, unit: r.unit, value: r.value }));
 }
 
-export async function fetchTrips(): Promise<Trip[]> {
+/** 목록에서 「N명과 함께」를 보여주려고 멤버 수를 함께 센다. */
+export type TripListItem = Trip & { companionCount: number };
+
+export async function fetchTrips(): Promise<TripListItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("trips")
-    .select("*")
+    .select("*, trip_members(count)")
     .order("start_date", { ascending: false });
   if (error) throw error;
-  return data.map(toTrip);
+  // database.types.ts 가 수기 작성이라 관계 집계(count)의 타입이 없다. 그 부분만 좁게 단언한다.
+  const rows = data as unknown as (Tables<"trips"> & { trip_members: { count: number }[] })[];
+  return rows.map(({ trip_members, ...row }) => ({
+    ...toTrip(row),
+    // 나를 뺀 일행 수
+    companionCount: Math.max((trip_members[0]?.count ?? 1) - 1, 0),
+  }));
 }
 
 export async function fetchTrip(tripId: string): Promise<Trip> {
