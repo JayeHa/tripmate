@@ -20,31 +20,41 @@ const ANONYMOUS_ALLOWED: Record<string, string> = {
   handle_new_trip: "trips 트리거. 소유자를 멤버로 넣는다. 둘러보기가 이것 없이는 동작하지 않는다",
 };
 
-/** 익명을 거부한다고 인정하는 형태. 주석이나 허용 조건에 걸리지 않게 좁게 본다. */
-const REJECTS_ANONYMOUS = /if\s+[^;]*is_anonymous[^;]*then\s+raise\s+exception/i;
+/**
+ * 거부는 공용 헬퍼 호출 한 줄로만 인정한다.
+ * 각 함수가 조건을 직접 쓰면 `if not ...` 처럼 방향을 뒤집어도 검사기가 알 수 없다.
+ * 조건의 정확성은 assert_not_anonymous 하나만 지키면 된다.
+ */
+const REJECTS_ANONYMOUS = /perform\s+public\.assert_not_anonymous\s*\(\s*\)/i;
+
+/** `--` 와 `/* *\/` 주석을 지운다. 주석 속 코드가 검사를 통과시키면 안 된다. */
+function stripComments(sql: string) {
+  return sql.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
+}
 
 function sqlFiles() {
   return readdirSync(DIR)
     .filter((f) => f.endsWith(".sql"))
     .sort()
-    .map((f) => readFileSync(path.join(DIR, f), "utf8"));
+    .map((f) => stripComments(readFileSync(path.join(DIR, f), "utf8")));
 }
 
 /**
- * 함수 정의를 통째로 집는다. `create function` 과 `create or replace function`,
- * `public.` 생략, `$$` 외의 달러 인용 태그를 모두 받는다.
- * 여는 태그를 캡처해 같은 태그로 끝을 찾아야 다른 함수의 본문을 끌어오지 않는다.
+ * 함수 정의를 머리부터 다음 `create` 또는 파일 끝까지 한 덩어리로 자른다.
+ * 본문을 달러 인용으로 가정하면 `language sql as '...'` 처럼 따옴표 본문인 함수에서
+ * lazy 매치가 다음 함수까지 넘어가 그 본문을 자기 것으로 가져간다.
  */
-const DEFINITION =
-  /create\s+(?:or\s+replace\s+)?function\s+(?:public\.)?(\w+)\s*\([\s\S]*?\$(\w*)\$([\s\S]*?)\$\2\$/gi;
+const HEAD = /create\s+(?:or\s+replace\s+)?function\s+(?:"?public"?\.)?"?(\w+)"?\s*\(/gi;
 
 function definitions() {
   const found = new Map<string, string>();
   for (const sql of sqlFiles()) {
-    for (const m of sql.matchAll(DEFINITION)) {
-      // 뒤 정의가 앞을 덮는다. 0004 가 0001 의 join_trip_by_token 을 교체하는 식이다.
-      found.set(m[1], m[0]);
-    }
+    const heads = [...sql.matchAll(HEAD)];
+    heads.forEach((m, i) => {
+      const end = i + 1 < heads.length ? heads[i + 1].index : sql.length;
+      // 뒤 정의가 앞을 덮는다. 0005 가 0001 의 join_trip_by_token 을 교체하는 식이다.
+      found.set(m[1], sql.slice(m.index, end));
+    });
   }
   return found;
 }
@@ -53,19 +63,19 @@ const securityDefiner = () =>
   [...definitions()].filter(([, body]) => /security\s+definer/i.test(body));
 
 describe("security definer 함수의 익명 계정 처리", () => {
-  it("정규식이 security definer 정의를 하나도 놓치지 않는다", () => {
-    // 정규식이 못 집는 형태로 함수가 추가되면 아래 개별 검사가 통째로 건너뛰어진다.
+  it("정의를 하나도 놓치지 않는다", () => {
+    // 못 집는 형태가 생기면 아래 개별 검사가 통째로 건너뛰어진다.
     // 단순 등장 횟수와 대조해서 그런 사각지대를 드러낸다.
-    // 같은 함수를 뒤 마이그레이션이 교체하면 등장은 여러 번이므로 파일별로 세고 더한다.
     let occurrences = 0;
-    for (const sql of sqlFiles()) {
-      occurrences += sql.match(/security\s+definer/gi)?.length ?? 0;
-    }
+    for (const sql of sqlFiles()) occurrences += sql.match(/security\s+definer/gi)?.length ?? 0;
+
     let matched = 0;
     for (const sql of sqlFiles()) {
-      for (const m of sql.matchAll(DEFINITION)) {
-        if (/security\s+definer/i.test(m[0])) matched += 1;
-      }
+      const heads = [...sql.matchAll(HEAD)];
+      heads.forEach((m, i) => {
+        const end = i + 1 < heads.length ? heads[i + 1].index : sql.length;
+        if (/security\s+definer/i.test(sql.slice(m.index, end))) matched += 1;
+      });
     }
     expect(matched).toBe(occurrences);
   });
@@ -76,5 +86,20 @@ describe("security definer 함수의 익명 계정 처리", () => {
     const allowed = name in ANONYMOUS_ALLOWED;
     // 둘 중 하나는 참이어야 한다. 아무 판단도 없는 함수가 조용히 늘어나는 걸 막는다.
     expect(rejects || allowed).toBe(true);
+  });
+});
+
+describe("assert_not_anonymous 헬퍼", () => {
+  const sql = sqlFiles().join("\n");
+
+  it("조건의 방향이 맞다. 익명일 때만 막는다", () => {
+    const body = definitions().get("assert_not_anonymous") ?? "";
+    expect(body).toMatch(/if\s+coalesce\(\(auth\.jwt\(\)[^)]*'is_anonymous'\)[^)]*\)[\s\S]*?then/i);
+    expect(body).not.toMatch(/if\s+not\s/i);
+    expect(body).toMatch(/raise\s+exception/i);
+  });
+
+  it("거부가 필요한 함수는 이 헬퍼를 쓴다", () => {
+    expect(sql).toMatch(REJECTS_ANONYMOUS);
   });
 });
