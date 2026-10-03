@@ -230,7 +230,9 @@ export function TripListView({ createdId }: { createdId: string | null }) {
           showCloseButton={false}
           className="inset-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-[760px] lg:max-w-[760px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-sheet"
         >
-          <div className="flex h-full min-h-0 flex-col lg:hidden">
+          {/* DialogContent 가 grid 라 자식이 min-width:auto 로 내용 폭만큼 커진다.
+              줄바꿈 없는 권역 칩 줄이 모달을 화면 밖으로 밀지 않게 min-w-0 으로 묶는다 */}
+          <div className="flex h-full min-h-0 min-w-0 flex-col lg:hidden">
             <TripCreateFlow
               layout="mobile"
               state={createFlow}
@@ -238,7 +240,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
               onClose={() => setCreateOpen(false)}
             />
           </div>
-          <div className="hidden h-full min-h-0 lg:block">
+          <div className="hidden h-full min-h-0 min-w-0 lg:block">
             <TripCreateFlow
               layout="pc"
               state={createFlow}
