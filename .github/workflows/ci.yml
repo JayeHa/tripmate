@@ -31,8 +31,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # PageProps · LayoutProps 같은 라우트 전역 타입은 .next/types 에 생성된다. 새 체크아웃엔 없으니 먼저 만든다
       - name: 타입
-        run: pnpm tsc --noEmit
+        run: pnpm typecheck
 
       - name: 린트
         run: pnpm lint

@@ -128,7 +128,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 
 - **pre-commit**: `husky` → `lint-staged` 가 **스테이징된 파일에만** `eslint --fix` → `prettier --write`.
   린트 오류가 남으면 커밋이 막힌다. 느린 `import/no-cycle` 은 여기서 끈다(모듈 그래프 전체를 본다)
-- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `tsc` · `pnpm lint`(순환 포함) · `pnpm test` ·
+- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) · `pnpm test` ·
   `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
 
 # 인증 경계
