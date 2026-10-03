@@ -1,3 +1,4 @@
+import { DemoLoginButton } from "@/features/auth/demo-login";
 import { GoogleSignInButton } from "@/features/auth/google-login";
 import { Wordmark } from "@/shared/ui/wordmark";
 import { LoginIntro } from "./login-intro";
@@ -14,6 +15,7 @@ export function LoginDesktop() {
         <div className="flex w-[420px] flex-col gap-3 rounded-sheet border border-line-card bg-white px-10 pt-11 pb-8 shadow-card">
           <LoginIntro layout="desktop" />
           <GoogleSignInButton />
+          <DemoLoginButton />
           <div className="pt-1.5">
             <TermsNotice />
           </div>

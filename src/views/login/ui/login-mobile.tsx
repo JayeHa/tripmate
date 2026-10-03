@@ -1,3 +1,4 @@
+import { DemoLoginButton } from "@/features/auth/demo-login";
 import { GoogleSignInButton } from "@/features/auth/google-login";
 import { LoginIntro } from "./login-intro";
 import { TermsNotice } from "./terms-notice";
@@ -11,6 +12,7 @@ export function LoginMobile() {
       </div>
       <div className="flex flex-col gap-3.5 px-5 pb-[calc(44px+env(safe-area-inset-bottom))]">
         <GoogleSignInButton />
+        <DemoLoginButton />
         <TermsNotice />
       </div>
     </div>

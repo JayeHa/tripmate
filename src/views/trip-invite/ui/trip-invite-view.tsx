@@ -7,6 +7,10 @@ import { JoinButton } from "@/features/trip/join";
 
 export async function TripInviteView({ token }: { token: string }) {
   const supabase = await createClient();
+  // 익명 여부는 서버에서 정한다. 클라이언트에서 물어보면 응답 전까지 참여 버튼이 열려 있다.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data, error } = await supabase.rpc("get_trip_preview", { p_token: token });
   const preview = data?.[0];
 
@@ -45,7 +49,7 @@ export async function TripInviteView({ token }: { token: string }) {
             {preview.member_count}명 참여 중
           </div>
         </dl>
-        <JoinButton token={token} />
+        <JoinButton token={token} isAnonymous={user?.is_anonymous ?? false} />
       </div>
     </main>
   );

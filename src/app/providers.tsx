@@ -6,7 +6,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { del, get, set } from "idb-keyval";
 import { useState, type ReactNode } from "react";
-import { shouldPersistQuery } from "@/shared/api/query-keys";
+import { QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -34,7 +34,7 @@ function makePersister() {
       setItem: (key, value) => set(key, value),
       removeItem: (key) => del(key),
     },
-    key: "tripmate-query-cache",
+    key: QUERY_PERSIST_KEY,
   });
 }
 
