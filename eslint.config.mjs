@@ -53,9 +53,7 @@ const eslintConfig = defineConfig([
                 },
               ]
             : [];
-          const flatPattern = groups.length
-            ? `src/${layer}/!(${groups.join("|")})/**/*`
-            : `src/${layer}/*/**/*`;
+          const flatPattern = `src/${layer}/*/**/*`;
           return [
             ...grouped,
             { type: layer, pattern: flatPattern, mode: "full", capture: ["slice"] },
