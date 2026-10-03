@@ -35,7 +35,7 @@ function StatusBadge({ className, kind, label, ...props }: Props) {
       {...props}
     >
       <Icon className="size-3.5" strokeWidth={2} />
-      {label ?? defaultLabel}
+      {label || defaultLabel}
     </span>
   );
 }
