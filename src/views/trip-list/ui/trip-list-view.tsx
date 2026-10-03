@@ -14,7 +14,7 @@ import {
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
-import { TripCreateFlow } from "@/features/trip/create";
+import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { todayISO } from "@/shared/lib/days";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -42,6 +42,14 @@ export function TripListView({ createdId }: { createdId: string | null }) {
   const [sheetFor, setSheetFor] = useState<Trip | null>(null);
   const [confirmFor, setConfirmFor] = useState<Trip | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const createFlow = useTripCreate((tripId) => {
+    setCreateOpen(false);
+    router.replace(`/trips?created=${tripId}`);
+  });
+  const openCreate = () => {
+    createFlow.reset();
+    setCreateOpen(true);
+  };
 
   const today = todayISO();
   const groups = useMemo(() => groupTrips(trips ?? [], today), [trips, today]);
@@ -88,11 +96,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
               {trips.length}
             </span>
           )}
-          <Button
-            size="pill"
-            className="ml-auto hidden lg:inline-flex"
-            onClick={() => setCreateOpen(true)}
-          >
+          <Button size="pill" className="ml-auto hidden lg:inline-flex" onClick={openCreate}>
             + 여행 일정 만들기
           </Button>
         </div>
@@ -174,7 +178,7 @@ export function TripListView({ createdId }: { createdId: string | null }) {
                 {/* 시안 6a: 다가오는 여행 그리드의 마지막 칸 */}
                 <button
                   type="button"
-                  onClick={() => setCreateOpen(true)}
+                  onClick={openCreate}
                   className="flex min-h-[236px] flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
                 >
                   <span className="flex size-12 items-center justify-center rounded-full bg-primary">
@@ -222,12 +226,9 @@ export function TripListView({ createdId }: { createdId: string | null }) {
         >
           <TripCreateFlow
             layout="pc"
+            state={createFlow}
             Title={DialogTitle}
             onClose={() => setCreateOpen(false)}
-            onCreated={(tripId) => {
-              setCreateOpen(false);
-              router.replace(`/trips?created=${tripId}`);
-            }}
           />
         </DialogContent>
       </Dialog>

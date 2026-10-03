@@ -2,15 +2,9 @@
 
 import { ArrowLeft, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { type City, CityPicker, CityThumb, useCityCatalog } from "@/entities/city";
-import { titleFromCities, useCreateTrip, useTrips } from "@/entities/trip";
-import {
-  type DateRange,
-  type DateSelection,
-  monthCells,
-  monthsAround,
-  pickDate,
-} from "@/shared/lib/calendar";
+import { CityPicker, CityThumb, useCityCatalog } from "@/entities/city";
+import { useTrips } from "@/entities/trip";
+import { type DateRange, monthCells, monthsAround } from "@/shared/lib/calendar";
 import { todayISO } from "@/shared/lib/days";
 import { isHoliday } from "@/shared/lib/holidays";
 import { cn } from "@/shared/lib/utils";
@@ -18,6 +12,7 @@ import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 import { MonthGrid } from "@/shared/ui/month-grid";
 import { cityCtaLabel, dateCtaLabel } from "../lib/cta";
+import type { TripCreateState } from "../model/use-trip-create";
 
 type Layout = "mobile" | "pc";
 type TitleComponent = React.ComponentType<{ className?: string; children: React.ReactNode }>;
@@ -25,8 +20,9 @@ type TitleComponent = React.ComponentType<{ className?: string; children: React.
 type Props = {
   /** mobile = 전체 화면(5b·5c), pc = 760×660 모달 안(6b·6c). 크기는 감싸는 쪽이 정한다. */
   layout: Layout;
+  /** useTripCreate 의 상태. 감싸는 화면이 들고 있어 레이아웃이 바뀌어도 이어진다. */
+  state: TripCreateState;
   onClose: () => void;
-  onCreated: (tripId: string) => void;
   /** 감싸는 쪽의 제목 컴포넌트. 다이얼로그면 DialogTitle 을 넘겨 접근성 이름을 잇는다. */
   Title?: TitleComponent;
 };
@@ -40,14 +36,12 @@ const FUTURE_MONTHS = 11;
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /** 새 여행 만들기: 도시 다중 선택 → 출발·도착일 → 생성 */
-export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitle }: Props) {
+export function TripCreateFlow({ layout, state, onClose, Title = DefaultTitle }: Props) {
   const { data: catalog, error: catalogError } = useCityCatalog();
   const { data: trips } = useTrips();
-  const create = useCreateTrip();
-  const [step, setStep] = useState<"city" | "date">("city");
-  const [query, setQuery] = useState("");
-  const [picked, setPicked] = useState<City[]>([]);
-  const [selection, setSelection] = useState<DateSelection>(null);
+  const { step, query, setQuery, picked, toggle, goDate, backToCity, selection, pick, submit } =
+    state;
+  const create = state.create;
 
   const today = todayISO();
   // 지난 날짜도 고를 수 있으니 지난 여행까지 「다른 일정」으로 깐다
@@ -58,36 +52,13 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
   const months = useMemo(() => monthsAround(today, PAST_MONTHS, FUTURE_MONTHS), [today]);
   const names = picked.map((c) => c.name);
 
-  const toggle = (city: City) =>
-    setPicked((prev) =>
-      prev.some((c) => c.id === city.id) ? prev.filter((c) => c.id !== city.id) : [...prev, city],
-    );
-  const goDate = () => {
-    if (picked.length === 0) return;
-    setSelection(null);
-    setStep("date");
-  };
   // 모바일 달력은 지난 달부터 그리므로, 날짜 단계에 들어오면 이번 달로 스크롤해 둔다
   const thisMonthRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (step === "date") thisMonthRef.current?.scrollIntoView({ block: "start" });
   }, [step]);
-  const pick = (date: string) => setSelection((prev) => pickDate(prev, date));
   const cellsOf = (year: number, month: number) =>
     monthCells(year, month, { today, selection, others, isHoliday, allowPast: true });
-  const submit = () => {
-    if (!selection?.end || create.isPending) return;
-    create.mutate(
-      {
-        title: titleFromCities(names),
-        startDate: selection.start,
-        endDate: selection.end,
-        cityIds: picked.map((c) => c.id),
-      },
-      { onSuccess: onCreated },
-    );
-  };
-
   const ready = Boolean(selection?.end);
   const dateCta = create.isPending ? "만드는 중…" : dateCtaLabel(selection);
   const error = create.error && (
@@ -166,7 +137,7 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
             <div className="flex shrink-0 flex-col gap-2.5 border-b border-divider px-5 pt-1.5 pb-4">
               <IconButton
                 label="도시 다시 고르기"
-                onClick={() => setStep("city")}
+                onClick={backToCity}
                 className="self-start py-2 text-ink-900"
               >
                 <X className="size-6" strokeWidth={2} />
@@ -214,11 +185,7 @@ export function TripCreateFlow({ layout, onClose, onCreated, Title = DefaultTitl
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="flex shrink-0 items-center gap-3 px-7 pt-[22px] pb-3.5">
         {step === "date" && (
-          <IconButton
-            label="도시 다시 고르기"
-            onClick={() => setStep("city")}
-            className="text-ink-900"
-          >
+          <IconButton label="도시 다시 고르기" onClick={backToCity} className="text-ink-900">
             <ArrowLeft className="size-[22px]" strokeWidth={2} />
           </IconButton>
         )}
