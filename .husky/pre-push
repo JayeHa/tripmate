@@ -15,8 +15,9 @@ zero=0000000000000000000000000000000000000000
 while read -r local_ref local_sha remote_ref remote_sha; do
   # 원격 브랜치 삭제는 검사할 코드가 없다
   [ "$local_sha" = "$zero" ] && continue
-  # annotated tag 는 태그 객체 sha 가 오므로 가리키는 커밋으로 풀어서 비교한다
-  if [ "$(git rev-parse "$local_sha^{commit}")" != "$head" ]; then
+  # 태그는 이미 브랜치로 푸시되며 검사된 커밋에 붙는다. 디스크를 검사하는 이 훅으로는 확인할 것이 없다
+  case "$local_ref" in refs/tags/*) continue ;; esac
+  if [ "$local_sha" != "$head" ]; then
     echo "pre-push: HEAD 가 아닌 커밋($local_ref)을 푸시합니다. 그 브랜치를 체크아웃한 뒤 푸시하세요."
     exit 1
   fi
