@@ -30,6 +30,14 @@ export function dateRangeLabel(startDate: string, endDate: string): string {
   return `${format(s, "yyyy.M.d")} - ${format(e, sameYear ? "M.d" : "yyyy.M.d")}`;
 }
 
+/** "10.31 - 11.4". 연도가 바뀌면 "2026.12.30 - 2027.1.2" (PC 헤더의 여행 칩) */
+export function shortRangeLabel(startDate: string, endDate: string): string {
+  const s = parseISO(startDate);
+  const e = parseISO(endDate);
+  if (s.getFullYear() === e.getFullYear()) return `${format(s, "M.d")} - ${format(e, "M.d")}`;
+  return `${format(s, "yyyy.M.d")} - ${format(e, "yyyy.M.d")}`;
+}
+
 /**
  * 출발일까지 남은 일수. 오늘이면 "D-DAY", 이미 지났으면 null.
  * 기준일을 받는 이유는 테스트에서 오늘을 고정하기 위해서다.

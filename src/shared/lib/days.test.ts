@@ -7,6 +7,7 @@ import {
   dayIndexToDate,
   dayLabel,
   ddayLabel,
+  shortRangeLabel,
 } from "./days";
 
 describe("days", () => {
@@ -30,6 +31,11 @@ describe("days", () => {
     expect(dayLabel("2026-10-29", 0)).toBe("10.29 (목)");
     expect(dateRangeLabel("2026-10-29", "2026-11-02")).toBe("2026.10.29 - 11.2");
     expect(dateRangeLabel("2026-12-30", "2027-01-02")).toBe("2026.12.30 - 2027.1.2");
+  });
+
+  it("shortRangeLabel: 같은 해면 연도 없이, 해가 바뀌면 양쪽 모두 연도", () => {
+    expect(shortRangeLabel("2026-10-31", "2026-11-04")).toBe("10.31 - 11.4");
+    expect(shortRangeLabel("2026-12-30", "2027-01-02")).toBe("2026.12.30 - 2027.1.2");
   });
 });
 
