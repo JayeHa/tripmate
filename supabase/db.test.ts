@@ -663,6 +663,52 @@ describe("create_place_schedule (0017)", () => {
   });
 });
 
+describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
+  it("같은 구글 장소를 직접 추가로 다시 담으면 그 장소를 쓰고, 적은 칸만 덮어쓴다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-04", "2027-08-04");
+    const first = await addPlace(id, 0, {
+      name: "이치란 시부야",
+      google_place_id: "g-ichiran",
+      lat: 35.66,
+      lng: 139.7,
+      address: "시부야구",
+    });
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 0, $2, $3) id`,
+      [
+        id,
+        JSON.stringify({
+          name: "이치란",
+          category: "food",
+          google_place_id: "g-ichiran",
+          wait: "30분",
+          links: [],
+        }),
+        JSON.stringify({ memo: "카운터석" }),
+      ],
+    );
+    const { rows: got } = await db.query<Record<string, unknown>>(
+      `select si.place_id = (select place_id from public.schedule_items where id = '${first}') same,
+              si.memo, p.name, p.category, p.wait, p.address, p.lat
+       from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
+    );
+    expect(got[0]).toMatchObject({
+      same: true,
+      memo: "카운터석",
+      name: "이치란",
+      category: "food",
+      wait: "30분",
+      address: "시부야구",
+      lat: 35.66,
+    });
+    const count = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${A}' and google_place_id = 'g-ichiran'`,
+    );
+    expect(count.rows[0].n).toBe(1);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
