@@ -17,7 +17,7 @@ export function LinkChips({ links }: LinkChipsProps) {
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-7 max-w-full items-center gap-1 truncate rounded-full bg-surface-muted px-2.5 text-[13px] font-bold text-ink-700"
+          className="relative inline-flex h-7 max-w-full items-center gap-1 truncate rounded-full bg-surface-muted px-2.5 text-[13px] font-bold text-ink-700"
         >
           {link.gmap ? (
             <MapPin className="size-3.25 shrink-0 text-cat-food" />

@@ -9,6 +9,7 @@ import {
   Timeline,
   useCreateScheduleItem,
   useDeleteScheduleItem,
+  useMoves,
   useMoveScheduleItemToDay,
   useScheduleItems,
   useSwapScheduleItems,
@@ -18,6 +19,7 @@ import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { DayChips, useDayParam } from "@/features/schedule/day-selector";
 import { ScheduleItemForm } from "@/features/schedule/item-form";
+import { MoveDialog, type MovePair } from "@/features/schedule/move-form";
 import { type PickedPlace, PlaceSearchSheet } from "@/features/schedule/place-search";
 import { dayCount } from "@/shared/lib/days";
 import { AppHeader } from "@/shared/ui/app-header";
@@ -44,7 +46,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
-  const rows = useMemo(() => buildTimeline(dayItems), [dayItems]);
+  const { data: moves } = useMoves(tripId);
+  const rows = useMemo(() => buildTimeline(dayItems, moves), [dayItems, moves]);
+  const [movePair, setMovePair] = useState<MovePair | null>(null);
 
   const editIndex = editing ? dayItems.findIndex((it) => it.id === editing.id) : -1;
   const canReorder = editIndex >= 0 && !swap.isPending;
@@ -78,7 +82,22 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             <p className="text-sm text-muted-foreground">아래 버튼으로 장소를 추가해보세요.</p>
           </div>
         )}
-        <Timeline rows={rows} onOpen={(row) => setEditing(row.item)} />
+        <Timeline
+          rows={rows}
+          onOpen={(row) => setEditing(row.item)}
+          onEditMove={({ leg, item }) =>
+            leg &&
+            setMovePair({
+              fromItemId: leg.fromItemId,
+              fromName: leg.fromName,
+              toItemId: item.id,
+              toName: item.name,
+              mode: leg.mode,
+              detail: leg.detail,
+              hasMove: leg.hasMove,
+            })
+          }
+        />
       </main>
 
       <div className="fixed inset-x-0 bottom-16 z-20 flex justify-center p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:bottom-0">
@@ -86,6 +105,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           <Plus /> 장소 추가
         </Button>
       </div>
+
+      <MoveDialog tripId={tripId} pair={movePair} onClose={() => setMovePair(null)} />
 
       <PlaceSearchSheet
         open={searchOpen}
