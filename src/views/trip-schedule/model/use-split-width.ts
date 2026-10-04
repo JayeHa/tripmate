@@ -23,7 +23,9 @@ const KEY_STEP = 16;
 export function useSplitWidth() {
   const viewport = useWindowWidth();
   const [wanted, setWanted] = useState(LIST_DEFAULT_WIDTH);
-  const [dragging, setDragging] = useState(false);
+  // 드래그를 시작할 때의 너비. 드래그 중이 아니면 null
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const dragging = dragStart !== null;
   const width = clampListWidth(wanted, viewport);
 
   /** 범위 안으로 잘라서 정한다 */
@@ -42,14 +44,14 @@ export function useSplitWidth() {
    */
   const end = () => {
     origin.current = null;
-    setDragging(false);
+    setDragStart(null);
   };
   const dragHandlers = {
     onPointerDown(e: PointerEvent) {
       e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
       origin.current = { x: e.clientX, width };
-      setDragging(true);
+      setDragStart(width);
     },
     onPointerMove(e: PointerEvent) {
       if (!origin.current) return;
@@ -81,6 +83,11 @@ export function useSplitWidth() {
     maxWidth: listMaxWidth(viewport),
     onKeyDown,
     dragging,
+    /**
+     * 자리 잡은 너비 — 드래그 중에는 시작 너비를 유지한다. 지도는 이 값이 바뀔 때 핀을 다시 맞춘다
+     * (드래그하는 동안 계속 맞추면 지도가 흔들린다)
+     */
+    settledWidth: dragStart ?? width,
     presets: splitPresets(viewport),
     setWidth,
     dragHandlers,

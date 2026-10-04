@@ -55,7 +55,13 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
         onReset={split.reset}
       />
       <div className="relative min-w-80 flex-1">
-        <ScheduleMap rows={body.rows} selectedId={selectedId} onSelect={selectPin} pinSize="lg" />
+        <ScheduleMap
+          rows={body.rows}
+          selectedId={selectedId}
+          onSelect={selectPin}
+          pinSize="lg"
+          fitKey={split.settledWidth}
+        />
         <SplitPresets presets={split.presets} width={split.width} onSelect={split.setWidth} />
       </div>
     </div>

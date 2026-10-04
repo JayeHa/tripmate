@@ -32,6 +32,8 @@ type ScheduleMapProps = {
   rows: TimelineRow[];
   /** 모바일 접히는 지도는 md(24), PC 3단 지도는 lg(28) */
   pinSize?: MapPinSize;
+  /** 바뀌면 핀을 다시 맞춘다. PC 에서 지도 폭이 바뀌었을 때(경계선 · 프리셋) 넘긴다 */
+  fitKey?: string | number;
   selectedId?: string | null;
   onSelect?: (row: TimelineRow) => void;
   className?: string;
@@ -46,6 +48,7 @@ type ScheduleMapProps = {
 export function ScheduleMap({
   rows,
   pinSize = "md",
+  fitKey,
   selectedId,
   onSelect,
   className,
@@ -79,7 +82,7 @@ export function ScheduleMap({
             />
           </AdvancedMarker>
         ))}
-        <FitPins points={pins.map((p) => p.at)} />
+        <FitPins points={pins.map((p) => p.at)} fitKey={fitKey} />
         <DashedPath points={pins.map((p) => p.at)} />
       </Map>
     </div>
@@ -87,13 +90,14 @@ export function ScheduleMap({
 }
 
 type PointsProps = { points: LatLng[] };
+type FitPinsProps = PointsProps & { fitKey?: string | number };
 
 /**
  * 핀 목록이 바뀌면(날짜 변경 · 추가 · 삭제) 모두 보이게 맞춘다.
  * 맞출 줌을 직접 계산해서(fitZoom), 15 이상이면(한 점 · 한 동네) 중심 + 15 로, 아니면 fitBounds 로.
  * fitBounds 결과를 기다렸다 고치지 않으므로 idle 리스너 · 타이머가 필요 없다.
  */
-function FitPins({ points }: PointsProps) {
+function FitPins({ points, fitKey }: FitPinsProps) {
   const map = useMap();
   const key = points.map((p) => `${p.lat},${p.lng}`).join("|");
   useEffect(() => {
@@ -109,7 +113,7 @@ function FitPins({ points }: PointsProps) {
     map.fitBounds(bounds, FIT_PADDING);
     // points 배열은 렌더마다 새로 만들어져 내용(key)으로 비교한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, key]);
+  }, [map, key, fitKey]);
   return null;
 }
 
