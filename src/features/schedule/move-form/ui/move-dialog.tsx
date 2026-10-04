@@ -7,12 +7,12 @@ import {
   MOVE_MODE_LABEL,
   MOVE_MODES,
   type MoveMode,
-  useDeleteMove,
-  useSaveMove,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/dialog";
+
+import { useMoveActions } from "../model/use-move-actions";
 
 /** 창이 다루는 장소 쌍과 지금 적혀 있는 값 */
 export type MovePair = {
@@ -36,17 +36,23 @@ type MoveDialogProps = {
 /**
  * 「이동 방법」 창. 모바일 · PC 모두 가운데 400px.
  * 수단 칩은 하나만, 다시 누르면 해제. 상세는 60자. 둘 다 비우고 저장하면 지운다.
+ * 저장 · 지우기 요청이 서버에 가 있는 동안은 Esc · 바깥 클릭 · 취소로 닫히지 않는다(useMoveActions 의 locked).
  */
 export function MoveDialog({ tripId, open, pair, onClose }: MoveDialogProps) {
+  const actions = useMoveActions(tripId);
+  const close = () => {
+    actions.reset();
+    onClose();
+  };
   return (
-    <Dialog open={open && !!pair} onOpenChange={(next) => !next && onClose()}>
+    <Dialog open={open && !!pair} onOpenChange={(next) => !next && !actions.locked && close()}>
       <DialogContent className="grid-cols-[minmax(0,1fr)] gap-3.5 rounded-2xl px-5 pt-5.5 pb-4.5 sm:max-w-100">
         {pair && (
           <MoveFields
             key={`${pair.fromItemId}>${pair.toItemId}`}
-            tripId={tripId}
             pair={pair}
-            onClose={onClose}
+            actions={actions}
+            onClose={close}
           />
         )}
       </DialogContent>
@@ -54,28 +60,18 @@ export function MoveDialog({ tripId, open, pair, onClose }: MoveDialogProps) {
   );
 }
 
-type MoveFieldsProps = { tripId: string; pair: MovePair; onClose: () => void };
+type MoveFieldsProps = {
+  pair: MovePair;
+  actions: ReturnType<typeof useMoveActions>;
+  onClose: () => void;
+};
 
 /** 창 내용. 쌍이 바뀌면 key 로 새로 만들어 입력값을 초기화한다 */
-function MoveFields({ tripId, pair, onClose }: MoveFieldsProps) {
+function MoveFields({ pair, actions, onClose }: MoveFieldsProps) {
   const [mode, setMode] = useState<MoveMode | null>(pair.mode);
   const [detail, setDetail] = useState(pair.detail ?? "");
-  const save = useSaveMove(tripId);
-  const remove = useDeleteMove(tripId);
   const ids = { fromItemId: pair.fromItemId, toItemId: pair.toItemId };
-  const trimmed = detail.trim();
-  const empty = !mode && !trimmed;
-  const pending = save.isPending || remove.isPending;
-  const error = save.error ?? remove.error;
-
-  /** 저장. 둘 다 비었으면 기록을 지운다 */
-  function submit() {
-    if (empty) {
-      remove.mutate(ids, { onSuccess: onClose });
-      return;
-    }
-    save.mutate({ ...ids, mode, detail: trimmed || null }, { onSuccess: onClose });
-  }
+  const empty = !mode && !detail.trim();
 
   return (
     <>
@@ -113,28 +109,37 @@ function MoveFields({ tripId, pair, onClose }: MoveFieldsProps) {
           className="h-11.5 w-full rounded-memo border border-line px-3 text-[15px] text-ink-900 outline-none focus:border-primary"
         />
       </label>
-      {error && <p className="text-[13px] text-destructive">저장하지 못했어요: {error.message}</p>}
+      {actions.paused && (
+        <p className="text-[13px] text-ink-500">오프라인이에요. 연결되면 저장돼요.</p>
+      )}
+      {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
       <div className="flex gap-2">
         {pair.hasMove && (
           <Button
             variant="destructive"
             size="form"
             className="text-sm font-bold"
-            disabled={pending}
-            onClick={() => remove.mutate(ids, { onSuccess: onClose })}
+            disabled={actions.pending}
+            onClick={() => actions.erase(ids, onClose)}
           >
             지우기
           </Button>
         )}
         <div className="flex-1" />
-        <Button variant="chip" size="form" className="text-sm font-bold" onClick={onClose}>
+        <Button
+          variant="chip"
+          size="form"
+          className="text-sm font-bold"
+          disabled={actions.locked}
+          onClick={onClose}
+        >
           취소
         </Button>
         <Button
           size="form"
           className="px-5 text-sm font-bold"
-          disabled={pending || (empty && !pair.hasMove)}
-          onClick={submit}
+          disabled={actions.pending || (empty && !pair.hasMove)}
+          onClick={() => actions.submit(ids, mode, detail, onClose)}
         >
           저장
         </Button>
