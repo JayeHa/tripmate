@@ -145,6 +145,12 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) ·
   `lint:changed`(PR 만) · `pnpm test` · `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
 
+# 의존성
+
+새 의존성 추가 · 자체 구현과 라이브러리 사이의 교체 · 메이저 업그레이드 · 제거는 **코드를 쓰기 전에**
+[`docs/library-policy.md`](docs/library-policy.md) 절차를 따르고 결과를 그 문서의 결정 기록 로그에 남긴다.
+사용자 승인 전에는 `pnpm add` 하지 않는다.
+
 # 인증 경계
 
 로그인은 Google OAuth 와 **익명(둘러보기)** 두 가지다. 둘러보기는 샘플 여행이 담긴
