@@ -245,6 +245,37 @@ describe("moves (0011)", () => {
     expect(left.rows[0].n).toBe(0);
   });
 
+  it("같은 여행 조건은 FK 가 고정한다: RLS 를 우회해도 다른 여행의 일정은 못 잇고, 이어진 일정은 다른 여행으로 못 옮긴다", async () => {
+    await as(A);
+    const one = await tripWithTwoPlaces("2027-04-05");
+    const two = await tripWithTwoPlaces("2027-04-06");
+    await db.query(
+      `insert into public.moves (trip_id, from_item_id, to_item_id, mode) values ('${one.id}', '${one.a}', '${one.b}', 'taxi')`,
+    );
+    // 두 여행 모두 A 의 것이라 RLS 가시성으로는 막히지 않는다. 같은 여행 조건만이 막는다
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, mode) values ('${one.id}', '${one.a}', '${two.a}', 'walk')`,
+      ),
+    ).toMatch(/row-level security|foreign key/);
+    expect(
+      await rejects(
+        `update public.moves set to_item_id = '${two.b}' where from_item_id = '${one.a}'`,
+      ),
+    ).toMatch(/row-level security|foreign key/);
+    expect(
+      await rejects(`update public.schedule_items set trip_id = '${two.id}' where id = '${one.b}'`),
+    ).toMatch(/foreign key/);
+
+    // 정책을 고치다 같은 여행 검사가 빠져도 FK 가 남는지: RLS 를 끈 소유자 권한으로 직접 넣어 본다
+    await db.exec("reset role");
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, mode) values ('${one.id}', '${one.a}', '${two.a}', 'walk')`,
+      ),
+    ).toMatch(/foreign key/);
+  });
+
   it("남의 여행에는 못 붙이고, 내 여행이어도 남의 일정을 끌어올 수 없다", async () => {
     await as(A);
     const mine = await tripWithTwoPlaces("2027-04-03");
