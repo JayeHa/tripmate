@@ -11,4 +11,5 @@ export * from "./model/use-day-route";
 export * from "./model/use-moves";
 export * from "./model/use-schedule-items";
 export * from "./ui/reservation-badge";
+export * from "./ui/schedule-map/schedule-map";
 export * from "./ui/timeline/timeline";

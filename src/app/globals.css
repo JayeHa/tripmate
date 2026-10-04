@@ -90,8 +90,11 @@
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
 
-  /* 타임라인 — 임시(opt) 마커의 점선 */
+  /* 타임라인 — 임시(opt) 마커의 점선. 지도 핀은 지도 위에서 보이게 더 진하다 */
   --color-marker-opt: #aeb4bc;
+  --color-pin-opt: #8b929b;
+  /* 지도 타일이 오기 전 바탕 */
+  --color-map-bg: #e8eef2;
 
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
