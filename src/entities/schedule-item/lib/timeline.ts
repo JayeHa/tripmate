@@ -5,6 +5,7 @@ import {
   CATEGORY_LABEL,
   categoryOf,
   DEFAULT_PLACE_EMOJI,
+  isHttpUrl,
   type ItemKind,
   kindOf,
   linksOf,
@@ -63,7 +64,9 @@ function metaOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | nu
 }
 
 function linksFor(item: ScheduleItem): TimelineLink[] {
-  const gmap = item.gmap_url ? [{ title: "구글맵", url: item.gmap_url, gmap: true }] : [];
+  const gmap = isHttpUrl(item.gmap_url)
+    ? [{ title: "구글맵", url: item.gmap_url, gmap: true }]
+    : [];
   return [
     ...gmap,
     ...linksOf(item).map((l) => ({ title: l.title || "링크", url: l.url, gmap: false })),

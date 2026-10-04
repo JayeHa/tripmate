@@ -34,10 +34,19 @@ export const CATEGORY_EMOJI = {
 
 export const DEFAULT_PLACE_EMOJI = "📍";
 
-const linkSchema = z.object({ title: z.string(), url: z.string().min(1) });
+/**
+ * href 로 그릴 수 있는 링크인지. http(s) 만 허용한다.
+ * React 가 `javascript:` 를 막아 주지만, 사용자가 적은 값이라 `data:` 등도 화면에 닿기 전에 거른다.
+ */
+export function isHttpUrl(value: string | null | undefined): value is string {
+  return !!value && /^https?:\/\//i.test(value);
+}
+
+const httpUrl = z.string().refine(isHttpUrl);
+const linkSchema = z.object({ title: z.string(), url: httpUrl });
 const alternativeSchema = z.object({
   name: z.string().min(1),
-  gmap: z.string().min(1),
+  gmap: httpUrl,
   sub: z.string().optional(),
   hours: z.string().optional(),
 });

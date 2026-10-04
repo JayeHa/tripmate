@@ -95,8 +95,17 @@ describe("buildTimeline", () => {
         status: "done",
         category: "bar",
         gmap_url: "https://maps.google.com/x",
-        links: [{ title: "", url: "https://a" }, { url: 1 }, "x"],
-        alternatives: [{ name: "B", gmap: "https://b" }, { name: "C" }],
+        links: [
+          { title: "", url: "https://a" },
+          { url: 1 },
+          "x",
+          { title: "스크립트", url: "javascript:alert(1)" },
+        ],
+        alternatives: [
+          { name: "B", gmap: "https://b" },
+          { name: "C" },
+          { name: "D", gmap: "data:text/html,x" },
+        ],
       }),
     ]);
     expect(row.status).toBeNull();
