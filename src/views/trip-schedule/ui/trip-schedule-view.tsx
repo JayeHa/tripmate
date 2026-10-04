@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import {
+  addPlaceErrorMessage,
   buildTimeline,
   itemCoords,
   type ScheduleItem,
@@ -102,7 +103,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         bias={bias}
         onPick={addPlace}
         pending={addToSchedule.isPending}
-        error={addToSchedule.error && "일정에 담지 못했어요. 잠시 후 다시 시도해 주세요."}
+        error={addToSchedule.error && addPlaceErrorMessage(addToSchedule.error)}
       />
 
       {trip && (
