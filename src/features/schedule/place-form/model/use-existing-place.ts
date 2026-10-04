@@ -27,14 +27,19 @@ export function useExistingPlace(tripId: string) {
     setChecking(false);
   }, []);
 
-  /** 고른 구글 장소로 이미 있는 장소를 찾는다. 결과를 돌려주고, 그사이 위치가 바뀌었으면 "none" */
-  async function check(googleId: string | null): Promise<ExistingCheck> {
+  /**
+   * 위치 검색 결과를 고른다 — `pick` 이 구글 상세를 받아 폼에 반영하고 그 장소 id 를 돌려주면, 그 id 로 이미 있는 장소를 찾는다.
+   * 고르는 순간부터(상세 조회 중에도) checking 이라 그사이 다음 단계로 못 간다. 그사이 위치가 바뀌었으면 "none".
+   * 상세 조회가 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다)
+   */
+  async function check(pick: () => Promise<string | null>): Promise<ExistingCheck> {
     clear();
-    if (!googleId) return "none";
-    if (!user) return "failed";
     const seq = seqRef.current;
     setChecking(true);
     try {
+      const googleId = await pick();
+      if (seqRef.current !== seq || !googleId) return "none";
+      if (!user) return "failed";
       const found = await findAttachablePlace(tripId, user.id, googleId);
       if (seqRef.current !== seq) return "none";
       setExisting(found);
