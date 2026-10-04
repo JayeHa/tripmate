@@ -33,7 +33,6 @@ export function usePlaceSuggestions(query: string, city: City | null) {
 
   useEffect(() => {
     if (!places || !input) return;
-    sessionRef.current ??= new places.AutocompleteSessionToken();
     // 아래 함수 안에서도 null 이 아님을 유지하려고 지역 상수로 잡는다
     const lib = places;
     let cancelled = false;
@@ -41,16 +40,19 @@ export function usePlaceSuggestions(query: string, city: City | null) {
     async function search() {
       setLoading(true);
       setError(null);
+      // 이 요청이 쓰는 토큰. 응답을 기다리는 사이 고르기로 세션이 끝나면 sessionRef 가 바뀐다
+      const token = (sessionRef.current ??= new lib.AutocompleteSessionToken());
       try {
         const res = await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input,
-          sessionToken: sessionRef.current ?? undefined,
+          sessionToken: token,
           language: "ko",
           ...(city ? searchArea(city) : {}),
         });
         if (!cancelled) {
           setSuggestions(res.suggestions);
-          resultsLive.current = true;
+          // 세션이 그대로일 때만 살아 있는 목록이다. 이미 끝났으면 보여 주되 고를 때 토큰 없이 조회한다
+          resultsLive.current = sessionRef.current === token;
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "검색에 실패했어요");
