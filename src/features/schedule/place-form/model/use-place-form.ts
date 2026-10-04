@@ -48,9 +48,8 @@ type PlaceFormOptions = {
  * ② 장소 정보: 이름(고른 장소 이름으로 채움) · 카테고리 · 운영시간 … 을 적고 「day N에 담기」
  */
 export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: PlaceFormOptions) {
-  const [values, setValues] = useState<PlaceFormValues>(() =>
-    blankPlaceForm(city ? { lat: city.lat, lng: city.lng } : null),
-  );
+  // 위치는 비운 채 시작한다 — 고르거나 지도를 끌어야 정해진다. 지도는 그동안 도시 중심을 보인다(mapCenter)
+  const [values, setValues] = useState<PlaceFormValues>(() => blankPlaceForm(null));
   const [step, setStep] = useState<PlaceFormStep>("location");
   const [locationQuery, setLocationQuery] = useState(initialQuery);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +170,8 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     moveToAddress,
     moveTo,
     found,
+    /** 지도 중심: 정한 위치, 아직 없으면 도시 중심. 도시도 없으면 null(검색으로 고르기 전엔 지도가 없다) */
+    mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
     save,
     saving: create.isPending || attach.isPending,
     /** 저장 요청이 서버에 가 있는 동안은 창을 닫지 못한다. 오프라인으로 멈춘(paused) 동안은 닫을 수 있다 */
