@@ -10,7 +10,7 @@ import {
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
-  toPlaceSchedule,
+  toNewPlace,
 } from "../lib/place-form";
 
 type PlaceFormOptions = {
@@ -65,10 +65,10 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     setValues((v) => ({ ...v, at, google: null }));
   }, []);
 
-  /** 검증을 통과하면 새 장소 + 일정을 그날 끝에 담는다. 담는 동안 다시 누르지 못한다 */
+  /** 검증을 통과하면 장소를 만들어(이미 가진 구글 장소면 그것) 그날 끝에 담는다. 담는 동안 다시 누르지 못한다 */
   function save() {
     if (savingRef.current) return;
-    const result = toPlaceSchedule(values);
+    const result = toNewPlace(values);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -76,9 +76,9 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     setError(null);
     savingRef.current = true;
     create.mutate(
-      { dayIndex, ...result.value },
+      { dayIndex, place: result.value },
       {
-        onSuccess: () => onSaved(result.value.place.name),
+        onSuccess: () => onSaved(result.value.name),
         onSettled: () => {
           savingRef.current = false;
         },

@@ -12,7 +12,6 @@ import {
   fetchSavedPlaces,
   fetchScheduleItems,
   moveScheduleItemToDay,
-  type NewItemFields,
   type NewPlaceFields,
   type ScheduleEntry,
   swapScheduleItems,
@@ -58,8 +57,8 @@ export function useCreatePlaceSchedule(tripId: string) {
   const qc = useQueryClient();
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: (v: { dayIndex: number; place: NewPlaceFields; item: NewItemFields }) =>
-      createPlaceSchedule(tripId, v.dayIndex, v.place, v.item),
+    mutationFn: (v: { dayIndex: number; place: NewPlaceFields }) =>
+      createPlaceSchedule(tripId, v.dayIndex, v.place),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });

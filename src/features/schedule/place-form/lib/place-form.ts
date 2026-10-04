@@ -1,17 +1,14 @@
-import {
-  isHttpUrl,
-  type NewItemFields,
-  type NewPlaceFields,
-  type PlaceCategory,
-  type ReservationStatus,
-} from "@/entities/schedule-item";
+import { isHttpUrl, type NewPlaceFields, type PlaceCategory } from "@/entities/schedule-item";
 
 /** 링크 한 줄(입력 중) */
 export type LinkDraft = { title: string; url: string };
 
 export type LatLng = { lat: number; lng: number };
 
-/** 장소 입력 폼의 값. 입력 칸이 다루는 문자열 그대로 들고, 저장할 때 toPlaceSchedule 로 바꾼다 */
+/**
+ * 장소 입력 폼의 값. 입력 칸이 다루는 문자열 그대로 들고, 저장할 때 toNewPlace 로 바꾼다.
+ * 장소 정보만 받는다 — 이번 일정(예약 상태 · 시간 · 일정 링크 · 메모)은 담은 뒤 일정 상세에서 고친다.
+ */
 export type PlaceFormValues = {
   emoji: string;
   name: string;
@@ -27,10 +24,6 @@ export type PlaceFormValues = {
   description: string;
   gmap: string;
   links: LinkDraft[];
-  status: ReservationStatus | null;
-  time: string;
-  planLinks: LinkDraft[];
-  memo: string;
 };
 
 /** 새 폼. 이름은 일정 추가 화면의 검색어, 위치는 비어 있다 */
@@ -48,10 +41,6 @@ export function blankPlaceForm(name: string): PlaceFormValues {
     description: "",
     gmap: "",
     links: [],
-    status: null,
-    time: "",
-    planLinks: [],
-    memo: "",
   };
 }
 
@@ -75,8 +64,7 @@ export function normalizeReviews(input: string): string {
   return digits ? Number(digits).toLocaleString("en-US") : "";
 }
 
-type Saved = { place: NewPlaceFields; item: NewItemFields };
-export type PlaceFormResult = { ok: true; value: Saved } | { ok: false; error: string };
+export type PlaceFormResult = { ok: true; value: NewPlaceFields } | { ok: false; error: string };
 
 /** 빈 줄(주소 없음)은 버리고, 주소가 http(s) 가 아니면 그 줄을 짚어 오류 */
 function linksOf(drafts: LinkDraft[], label: string): LinkDraft[] | string {
@@ -104,46 +92,35 @@ function problemOf(v: PlaceFormValues): string | null {
   if (!v.name.trim()) return "장소 이름을 입력해 주세요";
   const gmap = v.gmap.trim();
   if (gmap && !isHttpUrl(gmap)) return "구글맵 링크는 https:// 로 시작해야 해요";
-  if (v.time && !/^\d{2}:\d{2}$/.test(v.time)) return "방문 시간을 확인해 주세요";
   return null;
 }
 
 /**
- * 폼 값을 저장할 모양으로(0017 create_place_schedule). 사용자가 고칠 수 있는 문제면 첫 오류 문구를 돌려준다.
- * 칸 범위(카테고리 · 상태 · 대기 길이)는 DB 제약이 다시 지킨다 — 여기서는 입력 중 알 수 있는 것만 본다.
+ * 폼 값을 저장할 장소 모양으로(create_place_schedule 의 p_place). 사용자가 고칠 수 있는 문제면 첫 오류 문구를 돌려준다.
+ * 칸 범위(카테고리 · 대기 길이)는 DB 제약이 다시 지킨다 — 여기서는 입력 중 알 수 있는 것만 본다.
  */
-export function toPlaceSchedule(v: PlaceFormValues): PlaceFormResult {
+export function toNewPlace(v: PlaceFormValues): PlaceFormResult {
   const problem = problemOf(v);
   if (problem) return { ok: false, error: problem };
   const links = linksOf(v.links, "장소 링크");
   if (typeof links === "string") return { ok: false, error: links };
-  const planLinks = linksOf(v.planLinks, "일정 링크");
-  if (typeof planLinks === "string") return { ok: false, error: planLinks };
   return {
     ok: true,
     value: {
-      place: {
-        name: v.name.trim().slice(0, 100),
-        emoji: orNull(v.emoji),
-        category: v.category,
-        lat: v.at?.lat ?? null,
-        lng: v.at?.lng ?? null,
-        address: v.google?.address ?? null,
-        google_place_id: v.google?.id ?? null,
-        hours: orNull(v.hours),
-        rating: numberOf(v.rating, 1),
-        review_count: numberOf(v.reviews),
-        wait: orNull(v.wait),
-        description: orNull(v.description),
-        gmap_url: orNull(v.gmap),
-        links,
-      },
-      item: {
-        status: v.status,
-        start_time: v.time || null,
-        memo: orNull(v.memo),
-        links: planLinks,
-      },
+      name: v.name.trim().slice(0, 100),
+      emoji: orNull(v.emoji),
+      category: v.category,
+      lat: v.at?.lat ?? null,
+      lng: v.at?.lng ?? null,
+      address: v.google?.address ?? null,
+      google_place_id: v.google?.id ?? null,
+      hours: orNull(v.hours),
+      rating: numberOf(v.rating, 1),
+      review_count: numberOf(v.reviews),
+      wait: orNull(v.wait),
+      description: orNull(v.description),
+      gmap_url: orNull(v.gmap),
+      links,
     },
   };
 }

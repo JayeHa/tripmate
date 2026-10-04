@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 import { usePlaceForm } from "../model/use-place-form";
 import { PlaceInfoFields } from "./place-info-fields";
-import { PlanFields } from "./plan-fields";
 
 type PlaceFormDialogProps = {
   tripId: string;
@@ -25,7 +24,7 @@ type PlaceFormDialogProps = {
 
 /**
  * 장소 입력 폼 — 일정 직접 추가(일정 모드). 1024px 아래는 전체 화면, 이상은 가운데 560×760 모달.
- * 장소 정보(장소 테이블)와 이번 일정(일정 테이블)을 나눠 받아 「day N에 담기」로 한 번에 만든다.
+ * 장소 정보만 받아 「day N에 담기」로 그날 끝에 담는다. 이번 일정(상태 · 시간 · 메모)은 담은 뒤 일정 상세에서 고친다.
  * 가이드 모드(장소만 저장)와 수정은 홈 가이드(#17) · 일정 상세(#13 ③)에서 붙인다.
  */
 export function PlaceFormDialog({ open, onOpenChange, ...rest }: PlaceFormDialogProps) {
@@ -69,7 +68,6 @@ function PlaceFormBody({
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-4.5 pb-6">
         <PlaceInfoFields form={form} cityName={city?.name ?? null} />
-        <PlanFields form={form} dayLabel={dayLabel} />
       </div>
       <div className="flex shrink-0 flex-col gap-2 border-t border-divider px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
         {form.error && <p className="text-[13px] text-destructive">{form.error}</p>}
