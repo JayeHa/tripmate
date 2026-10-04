@@ -101,11 +101,9 @@ function sublocalityLevel(types: string[]): number | null {
   return level ? Number(level) : null;
 }
 
-/** 번지 결과가 일본 주소인지(나라 구성 요소의 짧은 이름) */
-function isJapan(result: GeocodeResult): boolean {
-  return result.address_components.some(
-    (c) => c.types.includes("country") && c.short_name === "JP",
-  );
+/** 번지 결과의 나라 코드(나라 구성 요소의 짧은 이름 — 「JP」 · 「KR」). 없으면 null */
+function countryOf(result: GeocodeResult): string | null {
+  return result.address_components.find((c) => c.types.includes("country"))?.short_name ?? null;
 }
 
 /** 번지 결과에서 한글 동네(단계 level)보다 자세한 칸 중 숫자만, 큰 단위부터 — 「1 조메」 뒤의 「22-7」 */
@@ -121,7 +119,8 @@ function numbersBelow(street: GeocodeResult, level: number): string[] {
 
 /**
  * 한글 주소. 구글은 해외 번지 주소를 한국어로 요청해도 로마자로 주고, 동네 단위(sublocality) 결과만 한글로 준다
- * (「도쿄도 시부야구 진난 1 조메」). 한글 결과가 없거나 번지 주소가 이미 한글이면(한국) null — 같은 줄을 두 번 보이지 않게.
+ * (「도쿄도 시부야구 진난 1 조메」). 한글 결과가 없거나 한국 주소면 null — 번지 주소가 곧 한글이라 같은 줄을 두 번 보이지 않게.
+ * 한국인지는 나라 코드로 본다 — 해외 번지 주소에도 건물 이름이 한글로 섞여 온다(「… 1-chōme−10−10 우사기야 빌딩」).
  * **일본만** 그 뒤에 번지 숫자를 붙인다. 한글 결과의 가장 자세한 동네 단계와 같은 단계를 번지 결과에서 찾아 그보다 자세한 숫자만
  * 붙이고(「1 조메」 = level 3 → 「22 · 7」), 한글 결과가 조메(level 3)보다 덜 자세하면 붙이지 않는다 — 「진난 22-7」 처럼
  * 조메가 빠진 틀린 주소가 된다. 다른 나라는 도로명 · 번지 구조가 달라 한글 동네 이름만 둔다.
@@ -130,13 +129,13 @@ export function koreanAddress(
   results: GeocodeResult[],
   street: GeocodeResult | null,
 ): string | null {
-  if (street && HANGUL.test(cleanAddress(street))) return null;
+  if (street && countryOf(street) === "KR") return null;
   // 나라 이름(「일본」)은 로마자 결과에도 한글로 붙어 오므로 나라 · 우편번호를 뺀 뒤에 본다
   const ko = results.find((r) => r.types.includes("political") && HANGUL.test(cleanAddress(r)));
   if (!ko) return null;
   const line = cleanAddress(ko);
   const level = sublocalityLevel(ko.address_components[0]?.types ?? []);
-  if (!street || !isJapan(street) || level === null || level < 3) return line;
+  if (!street || countryOf(street) !== "JP" || level === null || level < 3) return line;
   const numbers = numbersBelow(street, level);
   return numbers.length > 0 ? `${line} ${numbers.join("-")}` : line;
 }

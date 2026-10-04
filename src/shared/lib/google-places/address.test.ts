@@ -180,6 +180,14 @@ describe("koreanAddress", () => {
     expect(koreanAddress([vnStreet, vnKo], vnStreet)).toBe("호찌민 1군 벤응에");
   });
 
+  it("일본 번지 주소에 한글 건물 이름이 섞여 있어도 한글 줄을 만든다", () => {
+    const withHangul = {
+      ...STREET,
+      formatted_address: "1-chōme-22-7 Jinnan, Shibuya, Tokyo 우사기야 빌딩",
+    };
+    expect(koreanAddress([withHangul, CHOME], withHangul)).toBe("도쿄도 시부야구 진난 1 조메 22-7");
+  });
+
   it("번지 주소가 이미 한글이면(한국) null", () => {
     const seoul = result(
       "대한민국 서울특별시 중구 세종대로 110",
