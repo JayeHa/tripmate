@@ -719,6 +719,35 @@ describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
   });
 });
 
+describe("create_place_schedule — 재사용 경로 롤백 (0018)", () => {
+  it("멤버가 아닌 여행에 이미 가진 구글 장소로 담으면 거부하고, 내 장소도 고쳐지지 않는다", async () => {
+    await as(A);
+    const mine = await newTrip("2027-08-06", "2027-08-06");
+    await addPlace(mine, 0, {
+      name: "A 의 장소",
+      google_place_id: "g-rollback",
+      lat: 35.7,
+      lng: 139.7,
+    });
+    await as(B);
+    const theirs = await newTrip("2027-08-07", "2027-08-07");
+    await as(A);
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${theirs}', 0, '${JSON.stringify({
+          name: "바뀐 이름",
+          google_place_id: "g-rollback",
+          wait: "10분",
+        })}', '{}')`,
+      ),
+    ).toMatch(/row-level security/);
+    const { rows } = await db.query<{ name: string; wait: string | null }>(
+      `select name, wait from public.places where created_by = '${A}' and google_place_id = 'g-rollback'`,
+    );
+    expect(rows).toEqual([{ name: "A 의 장소", wait: null }]);
+  });
+});
+
 describe("copy_places_on_leave — 예상 대기 (0019)", () => {
   it("나간 멤버의 장소 사본에 예상 대기도 옮긴다", async () => {
     await as(A);
