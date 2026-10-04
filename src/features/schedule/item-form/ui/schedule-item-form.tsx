@@ -31,6 +31,8 @@ type Props = {
    * false 면 이름 칸을 읽기 전용으로 두고 이유를 보인다.
    */
   canEditName: boolean;
+  /** 저장 실패 문구(서버). 입력 검증 오류가 있으면 그쪽이 먼저 보인다 */
+  saveError?: string | null;
   startDate: string;
   totalDays: number;
   pending?: boolean;
@@ -60,6 +62,7 @@ export function ScheduleItemForm({ item, onClose, ...rest }: Props) {
 function Fields({
   item,
   canEditName,
+  saveError,
   startDate,
   totalDays,
   pending,
@@ -143,7 +146,7 @@ function Fields({
           rows={3}
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {(error ?? saveError) && <p className="text-sm text-destructive">{error ?? saveError}</p>}
       <div className="flex gap-2">
         <AlertDialog>
           <AlertDialogTrigger

@@ -40,6 +40,10 @@ export function ItemEditSheet({
   const updatePlace = useUpdatePlace(tripId);
   const place = editing?.place ?? null;
   const canEditName = !place || (!!user && place.created_by === user.id);
+  // 일정 칸은 저장됐는데 장소 이름만 실패할 수 있다 — 무엇이 저장됐는지 알려 준다
+  const saveError =
+    (update.error && "저장하지 못했어요. 잠시 후 다시 시도해 주세요.") ??
+    (updatePlace.error && "일정은 저장했지만 장소 이름은 바꾸지 못했어요.");
   const remove = useDeleteScheduleItem(tripId);
   const swap = useSwapScheduleItems(tripId);
   const moveDay = useMoveScheduleItemToDay(tripId);
@@ -57,10 +61,15 @@ export function ItemEditSheet({
     <ScheduleItemForm
       item={editing}
       canEditName={canEditName}
+      saveError={saveError}
       startDate={startDate}
       totalDays={totalDays}
       pending={update.isPending || updatePlace.isPending}
-      onClose={onClose}
+      onClose={() => {
+        update.reset();
+        updatePlace.reset();
+        onClose();
+      }}
       onSave={({ name, ...patch }) => {
         if (!editing) return;
         // 일정 칸을 먼저 저장하고, 장소 이름이 바뀌었으면 장소를 고친 뒤 닫는다
