@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { buildTimeline, useMoves, useOpenMemos, useScheduleItems } from "@/entities/schedule-item";
+import type { City } from "@/entities/city";
+import {
+  buildTimeline,
+  type Place,
+  useMoves,
+  useOpenMemos,
+  useScheduleItems,
+} from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
@@ -11,6 +18,7 @@ import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount, dayOfWeek } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
+import { Toast } from "@/shared/ui/toast";
 
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
@@ -40,6 +48,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   }, [direct]);
   // 상세를 연 일정. 줄은 그날 목록에서 다시 찾는다 — 고친 내용이 바로 보이고, 다른 날로 옮기면 저절로 닫힌다
   const [openId, setOpenId] = useState<string | null>(null);
+  // 상세의 「장소 정보 수정」 으로 연 장소 입력 폼. 저장하면 닫고 상세 위에 토스트를 띄운다
+  const [placeEdit, setPlaceEdit] = useState<{ place: Place; city: City | null } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -140,8 +151,28 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           dayItems={dayItems}
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
+          onEditPlace={(place, city) => setPlaceEdit({ place, city })}
         />
       )}
+
+      {placeEdit && (
+        <PlaceFormDialog
+          tripId={tripId}
+          city={placeEdit.city}
+          mode={{
+            kind: "edit",
+            place: placeEdit.place,
+            onSaved: (changed) => {
+              setPlaceEdit(null);
+              if (changed) setToast("장소 정보를 수정했어요");
+            },
+          }}
+          open
+          onOpenChange={(open) => !open && setPlaceEdit(null)}
+        />
+      )}
+
+      <Toast message={toast} onDone={() => setToast(null)} />
     </>
   );
 }
