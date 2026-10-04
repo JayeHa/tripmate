@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   buildTimeline,
@@ -40,6 +40,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   // 일정 추가에 아직 담지 않은 고른 곳이 있으면 그 창은 닫지 않고 한 줄 알린다(닫으면 고른 곳이 사라진다)
   const [direct, setDirect] = useState<DirectAddRequest | null>(null);
   const [addNotice, setAddNotice] = useState<string | null>(null);
+  const directRef = useRef(direct);
+  useEffect(() => {
+    directRef.current = direct;
+  }, [direct]);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
@@ -51,6 +55,24 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const memos = useOpenMemos(rows);
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
+
+  /**
+   * 직접 추가 요청 하나의 담기가 끝났다. 저장은 폼을 닫아도 끝까지 돌아서, 그 사이 다른 직접 추가를 열었으면
+   * 새 폼과 일정 추가 창은 건드리지 않는다(입력 중인 폼이 닫히면 안 된다)
+   */
+  function finishDirect(req: DirectAddRequest) {
+    const current = directRef.current;
+    if (current && current !== req) return;
+    setDirect(null);
+    if (req.pendingCount > 0) {
+      setAddNotice(
+        `직접 추가한 곳을 day ${req.dayIndex + 1}에 담았어요. 고른 ${req.pendingCount}곳은 아직 담지 않았어요`,
+      );
+      return;
+    }
+    setAddOpen(false);
+    setDay(req.dayIndex);
+  }
 
   return (
     <>
@@ -101,17 +123,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           initialName={direct.name}
           open
           onOpenChange={(open) => !open && setDirect(null)}
-          onSaved={() => {
-            setDirect(null);
-            if (direct.pendingCount > 0) {
-              setAddNotice(
-                `직접 추가한 곳을 day ${direct.dayIndex + 1}에 담았어요. 고른 ${direct.pendingCount}곳은 아직 담지 않았어요`,
-              );
-              return;
-            }
-            setAddOpen(false);
-            setDay(direct.dayIndex);
-          }}
+          onSaved={() => finishDirect(direct)}
         />
       )}
 
