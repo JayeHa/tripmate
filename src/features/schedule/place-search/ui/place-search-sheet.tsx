@@ -20,8 +20,11 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** 검색 편향 중심 (예: 해당 날 첫 장소) */
   bias?: { lat: number; lng: number } | null;
-  /** 고른 장소를 담는다. 시트는 담기에 성공하면 부른 쪽이 닫는다 — 실패하면 열어 둔 채 error 를 보인다 */
-  onPick: (place: PickedPlace) => void;
+  /**
+   * 고른 장소를 담는다. 시트는 담기에 성공하면 부른 쪽이 닫는다 — 실패하면 열어 둔 채 error 를 보인다.
+   * 담기가 끝나면(성공 · 실패) `settled` 를 불러 다시 고를 수 있게 한다.
+   */
+  onPick: (place: PickedPlace, settled: () => void) => void;
   /** 담는 중이면 다시 고르지 못하게 막는다 */
   pending?: boolean;
   /** 담기 실패 문구 */
@@ -58,12 +61,12 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
   // 검색 여러 번 + 선택 1번 = 세션 1회 과금
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   // 누른 순간부터 담기가 끝날 때까지 다시 고르지 못하게. 렌더를 기다리지 않고 바로 막는다.
-  // 장소 정보 받기에 실패하면 바로 풀고, 담기 요청을 보냈으면 pending 이 끝날 때(실패) 푼다. 성공하면 시트가 닫힌다.
-  // pending 은 요청을 보낸 뒤 다음 렌더에야 true 가 되므로, 그 틈을 ref 가 메운다
+  // 장소 정보 받기에 실패하면 바로 풀고, 담기 요청을 보냈으면 그 요청이 끝날 때(onPick 의 settled) 푼다.
+  // pending 렌더에 기대지 않는다 — 요청이 렌더보다 먼저 실패하면 pending 이 true 인 렌더가 없다
   const pickingRef = useRef(false);
-  useEffect(() => {
-    if (!pending) pickingRef.current = false;
-  }, [pending]);
+  const release = () => {
+    pickingRef.current = false;
+  };
 
   useEffect(() => {
     const input = query.trim();
@@ -109,17 +112,20 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
       await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
       sessionRef.current = null;
       setLoading(false);
-      onPick({
-        name: place.displayName ?? prediction.mainText?.text ?? query,
-        place_id: place.id ?? null,
-        lat: place.location?.lat() ?? null,
-        lng: place.location?.lng() ?? null,
-        address: place.formattedAddress ?? null,
-      });
+      onPick(
+        {
+          name: place.displayName ?? prediction.mainText?.text ?? query,
+          place_id: place.id ?? null,
+          lat: place.location?.lat() ?? null,
+          lng: place.location?.lng() ?? null,
+          address: place.formattedAddress ?? null,
+        },
+        release,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
       setLoading(false);
-      pickingRef.current = false;
+      release();
     }
   }
 
@@ -127,7 +133,7 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
     const name = query.trim();
     if (!name || pending || pickingRef.current) return;
     pickingRef.current = true;
-    onPick({ name, place_id: null, lat: null, lng: null, address: null });
+    onPick({ name, place_id: null, lat: null, lng: null, address: null }, release);
   }
 
   return (

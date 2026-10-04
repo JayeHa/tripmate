@@ -57,11 +57,12 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   /**
    * 장소 검색에서 고른 곳을 그날 끝에 붙인다. 장소와 일정을 서버에서 한 번에 만든다.
    * 담기에 성공해야 시트를 닫는다 — 실패하면 시트에 이유를 보이고 다시 고를 수 있게 둔다.
+   * 끝나면(성공 · 실패) `settled` 로 시트의 고르기 잠금을 푼다.
    */
-  function addPlace({ place_id, ...place }: PickedPlace) {
+  function addPlace({ place_id, ...place }: PickedPlace, settled: () => void) {
     addToSchedule.mutate(
       { dayIndex: day, place: { ...place, google_place_id: place_id } },
-      { onSuccess: () => setSearchOpen(false) },
+      { onSuccess: () => setSearchOpen(false), onSettled: settled },
     );
   }
 
