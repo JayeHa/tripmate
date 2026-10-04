@@ -30,7 +30,8 @@ type FocusState = { key: unknown; id: string | null };
 
 /**
  * 스크롤 연동 강조 — 기준선을 지난 마지막 장소를 「지금 보고 있는 장소」로 고른다.
- * 스크롤 중에만 다시 고른다(프레임당 한 번). 날짜를 바꾸거나 다시 켜지면 스크롤할 때까지 강조가 없다.
+ * 스크롤할 때(프레임당 한 번), 강조가 있으면 행 위치가 바뀔 때도 다시 고른다.
+ * 날짜를 바꾸거나 다시 켜지면 스크롤할 때까지 강조가 없다.
  *
  * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고 그 행을 기준선 바로 위로 smooth 스크롤한다.
  * 스크롤이 끝날 때까지 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다.
@@ -45,15 +46,17 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     setWasEnabled(enabled);
     setState((s) => (s.id === null ? s : { ...s, id: null }));
   }
-  const latest = useRef({ line, enabled, resetKey });
+  const focusId = enabled && state.key === resetKey ? state.id : null;
+  // 콜백 · 리스너가 다시 만들어지지 않게 최신 값은 ref 로 읽는다
+  const latest = useRef({ list, scroller, line, enabled, resetKey, focused: focusId !== null });
   useLayoutEffect(() => {
-    latest.current = { line, enabled, resetKey };
+    latest.current = { list, scroller, line, enabled, resetKey, focused: focusId !== null };
   });
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scan = useCallback(() => {
-    const root = list.current;
-    const { line: lineOf, enabled: on, resetKey: key } = latest.current;
+    const { list: listRef, line: lineOf, enabled: on, resetKey: key } = latest.current;
+    const root = listRef.current;
     if (!on || !root) return;
     const candidates = Array.from(root.querySelectorAll<HTMLElement>("[data-focus-id]"), (el) => ({
       id: el.dataset.focusId ?? "",
@@ -61,7 +64,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     }));
     const id = pickFocus(candidates, lineOf());
     setState((s) => (s.key === key && s.id === id ? s : { key, id }));
-  }, [list]);
+  }, []);
 
   /** 스크롤이 HOLD_MS 동안 멈출 때까지 다시 고르지 않다가, 멈추면 한 번 고른다 */
   const holdScan = useCallback(() => {
@@ -83,14 +86,27 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(scan);
     };
+    // 스크롤 없이 행이 움직일 때(메모 펼치기 · 추가 · 삭제 · 회전). 범위 안 자식들의 크기를 본다 —
+    // PC 는 범위가 높이 고정인 스크롤 칸이라 범위 자체는 크기가 변하지 않는다.
+    // 강조가 있을 때만 다시 고른다 — 날짜를 막 바꾼 뒤엔 지도가 핀 전체를 보이고 있어 첫 장소로 옮기지 않는다
+    const onLayout = () => {
+      if (hold.current || !latest.current.focused) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(scan);
+    };
+    const observer = new ResizeObserver(onLayout);
+    for (const child of list.current?.children ?? []) observer.observe(child);
     target.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onLayout);
     return () => {
       target.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onLayout);
+      observer.disconnect();
       cancelAnimationFrame(frame);
       if (hold.current) clearTimeout(hold.current);
       hold.current = null;
     };
-  }, [scroller, scan, holdScan]);
+  }, [scroller, list, scan, holdScan]);
 
   /**
    * 핀으로 고른 장소를 바로 강조하고, 그 행을 기준선보다 조금 위로 스크롤한다.
@@ -101,13 +117,14 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     (id: string) => {
       setState({ key: latest.current.resetKey, id });
       holdScan();
-      const row = list.current?.querySelector(`[data-focus-id="${id}"]`);
+      const { list: listRef, scroller: scrollerRef, line: lineOf } = latest.current;
+      const row = listRef.current?.querySelector(`[data-focus-id="${id}"]`);
       if (!row) return;
-      const by = row.getBoundingClientRect().top - (latest.current.line() - PIN_SCROLL_MARGIN);
-      scrollTargetOf(scroller).scrollBy({ top: by, behavior: "smooth" });
+      const by = row.getBoundingClientRect().top - (lineOf() - PIN_SCROLL_MARGIN);
+      scrollTargetOf(scrollerRef).scrollBy({ top: by, behavior: "smooth" });
     },
-    [holdScan, list, scroller],
+    [holdScan],
   );
 
-  return { focusId: enabled && state.key === resetKey ? state.id : null, focusOn };
+  return { focusId, focusOn };
 }
