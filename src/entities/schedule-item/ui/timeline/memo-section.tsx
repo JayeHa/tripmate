@@ -16,7 +16,8 @@ export function MemoSection({ notes, hours, open, onToggle }: MemoSectionProps) 
   return (
     <>
       {open && (
-        <div className="mt-1.5 flex flex-col gap-1.5 border-t border-divider pt-3">
+        // relative: 카드 전체를 덮는 상세 열기 영역 위로 올린다. 펼친 메모 본문은 눌러도 반응하지 않는다
+        <div className="relative mt-1.5 flex flex-col gap-1.5 border-t border-divider pt-3">
           {withKeys(notes, (note) => note).map(({ key, value: note }) => (
             <p key={key} className="flex gap-1.5 text-sm/normal text-ink-600">
               <span className="text-[#bbb]">·</span>
@@ -30,7 +31,7 @@ export function MemoSection({ notes, hours, open, onToggle }: MemoSectionProps) 
         type="button"
         aria-expanded={open}
         onClick={onToggle}
-        className="mt-0.5 self-start text-[13px] font-semibold text-ink-400"
+        className="relative mt-0.5 self-start text-[13px] font-semibold text-ink-400"
       >
         {open ? "메모 접기 ⌃" : `메모 ${notes.length + (hours ? 1 : 0)}개 보기 ⌄`}
       </button>

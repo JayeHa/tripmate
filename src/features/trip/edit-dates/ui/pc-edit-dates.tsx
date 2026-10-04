@@ -17,7 +17,7 @@ type PcEditDatesProps = {
   Title: TitleComponent;
 };
 
-/** PC 기간 수정 (시안 6c 수정 모드). 760×660 모달 안, 이 여행의 출발 달부터 */
+/** PC 기간 수정. 760×660 모달 안, 이 여행의 출발 달부터 */
 export function PcEditDates({ state, onClose, Title }: PcEditDatesProps) {
   const calendar = useEditCalendar(state.trip, state.selection);
   return (

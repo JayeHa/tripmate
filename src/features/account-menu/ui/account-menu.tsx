@@ -10,11 +10,11 @@ import { AccountPanel } from "./account-panel";
 
 type AccountMenuProps = {
   profile: MyProfile | null | undefined;
-  /** 아바타 옆 「이름 ▾」. 내 여행 헤더는 보이고, 여행 안 PC 헤더는 아바타만 (시안 17) */
+  /** 아바타 옆 「이름 ▾」. 내 여행 헤더는 보이고, 여행 안 PC 헤더는 아바타만 */
   showName?: boolean;
 };
 
-/** PC: 헤더의 아바타(「아바타 이름 ▾」)를 누르면 열리는 320px 계정 드롭다운 (시안 6a · 16 · 17). */
+/** PC: 헤더의 아바타(「아바타 이름 ▾」)를 누르면 열리는 320px 계정 드롭다운. */
 export function AccountMenu({ profile, showName = true }: AccountMenuProps) {
   return (
     <Popover>

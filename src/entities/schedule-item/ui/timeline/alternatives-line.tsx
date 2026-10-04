@@ -16,7 +16,7 @@ export function AlternativesLine({ alternatives }: AlternativesLineProps) {
           href={first.gmap}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 font-bold text-primary"
+          className="relative inline-flex items-center gap-0.5 font-bold text-primary"
         >
           {first.name}
           <ArrowUpRight className="size-3.25" strokeWidth={2.2} />

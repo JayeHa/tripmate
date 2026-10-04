@@ -10,7 +10,7 @@ type PcPickedChipsProps = {
   onRemove?: (city: City) => void;
 };
 
-/** PC 바닥의 고른 도시 칩. 도시 단계에서만 눌러서 뺄 수 있다 (시안 6b · 6c) */
+/** PC 바닥의 고른 도시 칩. 도시 단계에서만 눌러서 뺄 수 있다 */
 export function PcPickedChips({ picked, onRemove }: PcPickedChipsProps) {
   if (picked.length === 0) {
     return <span className="text-[13px] text-ink-350">도시를 1개 이상 골라 주세요</span>;

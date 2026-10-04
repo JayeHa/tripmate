@@ -20,7 +20,7 @@ type PcHeaderProps = {
   Title: TitleComponent;
 };
 
-/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← (시안 6b · 6c) */
+/** PC 모달 머리. 제목 · 단계 · 닫기, 날짜 단계에서는 ← */
 export function PcHeader({ state, onClose, Title }: PcHeaderProps) {
   const copy = COPY[state.step];
   return (

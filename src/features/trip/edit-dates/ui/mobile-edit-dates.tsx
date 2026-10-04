@@ -17,7 +17,7 @@ type MobileEditDatesProps = {
   Title: TitleComponent;
 };
 
-/** 모바일 기간 수정 (시안 5c 수정 모드). 출발 달로 스크롤해 둔다 */
+/** 모바일 기간 수정. 출발 달로 스크롤해 둔다 */
 export function MobileEditDates({ state, onClose, Title }: MobileEditDatesProps) {
   const calendar = useEditCalendar(state.trip, state.selection);
   return (

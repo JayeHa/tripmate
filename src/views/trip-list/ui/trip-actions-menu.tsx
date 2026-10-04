@@ -19,7 +19,7 @@ type Props = {
   onDelete: (trip: Trip) => void;
 };
 
-/** PC 여행 카드 · 행의 `···` 드롭다운 (시안 6a, 168px). 모바일은 TripActionsSheet. */
+/** PC 여행 카드 · 행의 `···` 드롭다운(168px). 모바일은 TripActionsSheet. */
 export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
   return (
     <DropdownMenu>

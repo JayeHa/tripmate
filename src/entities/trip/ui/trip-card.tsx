@@ -17,7 +17,7 @@ type Props = {
   actions?: React.ReactNode;
 };
 
-/** PC 다가오는 여행 카드 (시안 6a). 썸네일 132(도시 사진, 없으면 틴트) + 본문. */
+/** PC 다가오는 여행 카드. 썸네일 132(도시 사진, 없으면 틴트) + 본문. */
 export function TripCard({ trip, today, companionCount, actions }: Props) {
   const dday = ddayLabel(trip.start_date, today);
   const { bg, fg } = tintOf(trip.title);

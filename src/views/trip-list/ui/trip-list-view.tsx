@@ -54,7 +54,7 @@ export function TripListView() {
 
   // 사용자를 아직 모르면 숨긴다. 보여 줬다가 지우지 못하는 쪽보다 낫다.
   const canDelete = (trip: Trip | null) => Boolean(user) && trip?.owner_id === user?.id;
-  // 「여행일정 수정」은 기간 달력으로 (시안 5a · 6a)
+  // 「여행일정 수정」은 기간 달력으로
   const editTrip = (trip: Trip) => setEditFor(trip);
   const askDelete = (trip: Trip) => {
     deleteTrip.reset();

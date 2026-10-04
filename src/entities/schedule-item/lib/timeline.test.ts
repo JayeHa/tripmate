@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { Move } from "../model/move";
 import type { ScheduleItem } from "../model/types";
 import { buildTimeline, placeNumbers } from "./timeline";
 
@@ -58,7 +59,7 @@ describe("buildTimeline", () => {
   it("번호는 좌표 있는 place 에만, 길찾기는 직전 번호 장소에서", () => {
     const rows = buildTimeline([
       item({ ...TOKYO_STATION }),
-      item({ kind: "move", name: "이동" }),
+      item({ kind: "note", name: "메모" }),
       item({ name: "좌표 없음" }),
       item({ ...SKYTREE }),
       item({ lat: SKYTREE.lat + 0.0001, lng: SKYTREE.lng }),
@@ -68,6 +69,38 @@ describe("buildTimeline", () => {
     expect(rows[3].leg?.url).toContain("origin=35.6812%2C139.7671");
     // 11m 떨어진 곳은 같은 장소로 본다
     expect(rows[4].leg).toBeNull();
+  });
+
+  it("이동 방법은 직전 번호 장소 → 이 장소 쌍에 붙고, 순서가 바뀌어 이웃하지 않으면 보이지 않는다", () => {
+    const a = item({ id: "a", name: "도쿄역", ...TOKYO_STATION });
+    const b = item({ id: "b", name: "스카이트리", ...SKYTREE });
+    const move = (patch: Partial<Move>): Move => ({
+      id: "m",
+      trip_id: "t",
+      from_item_id: "a",
+      to_item_id: "b",
+      mode: null,
+      detail: null,
+      created_at: "",
+      updated_at: "",
+      ...patch,
+    });
+
+    const [, withMode] = buildTimeline([a, b], [move({ mode: "subway", detail: "긴자선" })]);
+    expect(withMode.leg).toMatchObject({
+      fromItemId: "a",
+      fromName: "도쿄역",
+      mode: "subway",
+      modeLabel: "🚇 지하철",
+      detail: "긴자선",
+      hasMove: true,
+    });
+
+    const [, detailOnly] = buildTimeline([a, b], [move({ detail: "걸어서" })]);
+    expect(detailOnly.leg).toMatchObject({ modeLabel: null, detail: "걸어서", hasMove: true });
+
+    const [, swapped] = buildTimeline([b, a], [move({ mode: "subway" })]);
+    expect(swapped.leg).toMatchObject({ fromItemId: "b", hasMove: false, modeLabel: null });
   });
 
   it("메타 줄은 카테고리 · 별점(리뷰) · 설명", () => {

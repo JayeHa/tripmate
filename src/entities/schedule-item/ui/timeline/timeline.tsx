@@ -3,17 +3,22 @@
 import { useState } from "react";
 
 import type { TimelineRow } from "../../lib/timeline";
-import { DistancePill } from "./distance-pill";
 import { ItemCard } from "./item-card";
+import { LegLine } from "./leg-line";
 import { NumberMarker } from "./number-marker";
 
 type TimelineProps = {
   rows: TimelineRow[];
   onOpen: (row: TimelineRow) => void;
+  /**
+   * 직전 장소 → 이 장소의 이동 방법 창을 연다. 넘기지 않으면 「+ 이동 방법」을 그리지 않는다.
+   * 이동 기록을 아직 못 불러왔을 때가 그렇다. 빈 창에서 저장하면 같은 쌍의 기존 기록을 덮어쓴다.
+   */
+  onEditMove?: (row: TimelineRow) => void;
 };
 
 /** 하루치 일정. 왼쪽 72px 거터에 표식과 시각, x=35 에 세로선 */
-export function Timeline({ rows, onOpen }: TimelineProps) {
+export function Timeline({ rows, onOpen, onEditMove }: TimelineProps) {
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
 
   /** 그 카드의 메모를 펼치거나 접는다 */
@@ -30,11 +35,7 @@ export function Timeline({ rows, onOpen }: TimelineProps) {
       <span aria-hidden="true" className="absolute inset-y-0 left-8.75 w-0.5 bg-divider" />
       {rows.map((row) => (
         <li key={row.item.id} id={`item-${row.item.id}`} className="relative">
-          {row.leg && (
-            <div className="flex pb-2.5 pl-2">
-              <DistancePill label={row.leg.label} url={row.leg.url} />
-            </div>
-          )}
+          {row.leg && <LegLine leg={row.leg} onEditMove={onEditMove && (() => onEditMove(row))} />}
           <div className="flex pr-5 pb-3">
             <div className="flex w-18 shrink-0 flex-col items-center gap-1.5 pt-4.5">
               <NumberMarker kind={row.kind} num={row.num} status={row.status} />
@@ -44,35 +45,15 @@ export function Timeline({ rows, onOpen }: TimelineProps) {
                 </span>
               )}
             </div>
-            {row.kind === "move" ? (
-              <MoveRow row={row} onOpen={() => onOpen(row)} />
-            ) : (
-              <ItemCard
-                row={row}
-                open={openIds.has(row.item.id)}
-                onToggle={() => toggle(row.item.id)}
-                onOpen={() => onOpen(row)}
-              />
-            )}
+            <ItemCard
+              row={row}
+              open={openIds.has(row.item.id)}
+              onToggle={() => toggle(row.item.id)}
+              onOpen={() => onOpen(row)}
+            />
           </div>
         </li>
       ))}
     </ol>
-  );
-}
-
-type MoveRowProps = { row: TimelineRow; onOpen: () => void };
-
-/** 이동 구간. 카드 없이 두 줄이고, 눌러서 편집 시트를 연다(순서 · 날짜 이동 · 삭제가 거기 있다) */
-function MoveRow({ row, onOpen }: MoveRowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="flex min-w-0 flex-1 flex-col gap-0.5 pt-4.25 pb-1 text-left"
-    >
-      <span className="text-sm font-semibold text-ink-500">{row.item.name}</span>
-      {row.meta && <span className="text-[13px] text-ink-400">{row.meta}</span>}
-    </button>
   );
 }

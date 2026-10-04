@@ -6,7 +6,7 @@ import { CityStepBody } from "../parts/city-step-body";
 
 type PcCityStepProps = { state: TripCreateState };
 
-/** PC 도시 단계 본문 (시안 6b). 회색 검색창 + 도시 목록 */
+/** PC 도시 단계 본문. 회색 검색창 + 도시 목록 */
 export function PcCityStep({ state }: PcCityStepProps) {
   return (
     <>

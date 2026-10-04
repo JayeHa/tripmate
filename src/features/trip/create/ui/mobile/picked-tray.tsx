@@ -8,7 +8,7 @@ type PickedTrayProps = {
   onRemove: (city: City) => void;
 };
 
-/** 고른 도시 트레이 (시안 5b). 44px 원 + ✕ 로 빼기 */
+/** 고른 도시 트레이. 44px 원 + ✕ 로 빼기 */
 export function PickedTray({ picked, onRemove }: PickedTrayProps) {
   if (picked.length === 0) return null;
   return (

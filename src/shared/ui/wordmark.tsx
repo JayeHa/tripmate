@@ -2,7 +2,7 @@ import { cn } from "@/shared/lib/utils";
 
 type WordmarkProps = { className?: string };
 
-/** 로고 이미지가 없어 서비스명을 텍스트로만 표기한다 (design-system.md · Brand). */
+/** 로고 이미지가 없어 서비스명을 텍스트로만 표기한다. */
 export function Wordmark({ className }: WordmarkProps) {
   return (
     <span className={cn("font-extrabold tracking-[-0.03em] text-ink-900", className)}>

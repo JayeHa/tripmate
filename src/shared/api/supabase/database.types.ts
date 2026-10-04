@@ -288,6 +288,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      moves: {
+        Row: {
+          id: string;
+          trip_id: string;
+          from_item_id: string;
+          to_item_id: string;
+          mode: string | null;
+          detail: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          from_item_id: string;
+          to_item_id: string;
+          mode?: string | null;
+          detail?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          from_item_id?: string;
+          to_item_id?: string;
+          mode?: string | null;
+          detail?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       day_routes: {
         Row: {
           trip_id: string;

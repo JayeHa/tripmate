@@ -14,7 +14,7 @@ type Props = {
   actions?: React.ReactNode;
 };
 
-/** PC 지난 여행의 한 줄 (시안 6a). 52px 원 + 제목과 한 줄 요약. */
+/** PC 지난 여행의 한 줄. 52px 원 + 제목과 한 줄 요약. */
 export function TripRowCompact({ trip, companionCount, actions }: Props) {
   return (
     <div className="flex items-center gap-3.5 border-b border-surface-muted py-3">

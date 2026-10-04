@@ -16,7 +16,7 @@ type Props = {
   actions?: React.ReactNode;
 };
 
-/** 모바일 여행 목록의 한 줄 (시안 5a). */
+/** 모바일 여행 목록의 한 줄. */
 export function TripRow({ trip, today, companionCount, actions }: Props) {
   const dday = ddayLabel(trip.start_date, today);
   return (

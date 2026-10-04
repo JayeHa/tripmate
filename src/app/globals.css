@@ -56,7 +56,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* ---- Tripmate design tokens (design_handoff_tripmate/design-system.md) ---- */
+  /* ---- Tripmate design tokens ---- */
   /* Ink: 디자인 시스템의 gray 스케일과 같은 이름을 쓴다 */
   --color-ink-900: #222222;
   --color-ink-800: #333333;
@@ -90,9 +90,7 @@
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
 
-  /* 타임라인 — 식사(food) 카드, 임시(opt) 마커의 점선 */
-  --color-meal-bg: #fdf6f6;
-  --color-meal-line: #f5e3e3;
+  /* 타임라인 — 임시(opt) 마커의 점선 */
   --color-marker-opt: #aeb4bc;
 
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */

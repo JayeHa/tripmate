@@ -36,7 +36,7 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
-        // 디자인 시스템 Button 치수 (handoff README · Design Tokens)
+        // 디자인 시스템 Button 치수
         cta: "h-13 gap-1.5 rounded-card px-5 text-base font-extrabold",
         form: "h-11 gap-1.5 rounded-button px-4 text-[15px] font-semibold",
         pill: "h-10 gap-1.5 rounded-full px-4.5 text-[15px] font-bold",

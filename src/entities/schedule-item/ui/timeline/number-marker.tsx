@@ -1,4 +1,4 @@
-import { Plane, TrainFront } from "lucide-react";
+import { Plane } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 
@@ -30,13 +30,6 @@ export function NumberMarker({ kind, num, status }: NumberMarkerProps) {
   }
   if (kind === "note") {
     return <span className="mt-1.5 size-2.5 shrink-0 rounded-full bg-primary" />;
-  }
-  if (kind === "move") {
-    return (
-      <span className="flex size-5.5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-handle bg-white">
-        <TrainFront className="size-3 text-ink-450" strokeWidth={2.2} />
-      </span>
-    );
   }
   return (
     <span

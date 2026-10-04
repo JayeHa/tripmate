@@ -16,7 +16,6 @@ type BottomTabBarProps = { items: TabItem[]; active: string };
 
 /**
  * 여행 안 화면의 하단 탭. 높이 83 고정, 활성은 파랑이 아니라 잉크(#222).
- * (design_handoff_tripmate/design-system.md · VISUAL FOUNDATIONS)
  */
 export function BottomTabBar({ items, active }: BottomTabBarProps) {
   return (
