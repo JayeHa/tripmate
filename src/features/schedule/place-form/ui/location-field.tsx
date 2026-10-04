@@ -60,6 +60,8 @@ export function LocationField({ form }: LocationFieldProps) {
             defaultCenter={form.mapCenter}
             defaultZoom={at ? 15 : 13}
             gestureHandling="greedy"
+            // 화살표 키 이동은 끌기(dragstart)로 잡히지 않아 핀으로 되돌아간다. 키보드로는 위 검색으로 위치를 정한다
+            keyboardShortcuts={false}
             disableDefaultUI
             clickableIcons={false}
             className="size-full"
