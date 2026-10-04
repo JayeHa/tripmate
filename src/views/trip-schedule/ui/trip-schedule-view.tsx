@@ -2,22 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  buildTimeline,
-  type ScheduleItem,
-  useMoves,
-  useOpenMemos,
-  useScheduleItems,
-} from "@/entities/schedule-item";
+import { buildTimeline, useMoves, useOpenMemos, useScheduleItems } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
+import { ItemDetailDialog } from "@/features/schedule/item-detail";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount, dayOfWeek } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
-import { ItemEditSheet } from "./item-edit-sheet";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
 
@@ -44,7 +38,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   useEffect(() => {
     directRef.current = direct;
   }, [direct]);
-  const [editing, setEditing] = useState<ScheduleItem | null>(null);
+  // 상세를 연 일정. 줄은 그날 목록에서 다시 찾는다 — 고친 내용이 바로 보이고, 다른 날로 옮기면 저절로 닫힌다
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -86,7 +81,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           rows={rows}
           isPending={isPending}
           memos={memos}
-          onOpen={(row) => setEditing(row.item)}
+          onOpen={(row) => setOpenId(row.item.id)}
           onEditMove={moveDialog.openFor}
           onAddPlace={() => {
             setAddNotice(null);
@@ -128,14 +123,15 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         />
       )}
 
-      {trip && (
-        <ItemEditSheet
+      {trip && isDesktop !== null && (
+        <ItemDetailDialog
           tripId={tripId}
           startDate={trip.start_date}
           totalDays={totalDays}
-          editing={editing}
+          row={rows.find((r) => r.item.id === openId) ?? null}
           dayItems={dayItems}
-          onClose={() => setEditing(null)}
+          isDesktop={isDesktop}
+          onClose={() => setOpenId(null)}
         />
       )}
     </>

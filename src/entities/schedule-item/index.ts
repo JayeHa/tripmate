@@ -7,7 +7,6 @@ export * from "./model/hours";
 export * from "./model/move";
 export * from "./model/place";
 export * from "./model/reservation-status";
-export * from "./model/schema";
 export * from "./model/types";
 export * from "./model/use-day-route";
 export * from "./model/use-moves";
