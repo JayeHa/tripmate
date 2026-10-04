@@ -19,8 +19,10 @@ type AddScheduleDialogProps = {
   items: ScheduleItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** 「‘검색어’ 직접 추가」 — 화면이 장소 입력 폼을 연다. 폼에서 담으면 화면이 이 창도 닫는다 */
+  /** 「‘검색어’ 직접 추가」 — 화면이 장소 입력 폼을 연다. 폼에서 담으면 화면이 이 창도 닫는다(고른 곳이 남아 있으면 둔다) */
   onDirectAdd: (request: DirectAddRequest) => void;
+  /** 직접 추가로 담았는데 고른 곳이 남아 창을 닫지 않았을 때 보일 한 줄 */
+  notice?: string | null;
 };
 
 /**
@@ -52,6 +54,7 @@ function AddScheduleBody({
   initialDay,
   items,
   onDirectAdd,
+  notice,
   onClose,
 }: AddScheduleBodyProps) {
   const state = useAddSchedule({ tripId, initialDay, items, onDone: onClose, onDirectAdd });
@@ -67,7 +70,7 @@ function AddScheduleBody({
       />
       <AddScheduleFilters state={state} />
       <AddScheduleList state={state} />
-      <AddScheduleFooter state={state} />
+      <AddScheduleFooter state={state} notice={notice ?? null} />
     </div>
   );
 }

@@ -37,8 +37,16 @@ type AddScheduleOptions = {
   onDirectAdd: (request: DirectAddRequest) => void;
 };
 
-/** 장소 입력 폼을 열 때 넘기는 값: 이름(검색어) · 담을 날 · 검색 범위 도시 */
-export type DirectAddRequest = { name: string; dayIndex: number; city: City | null };
+/**
+ * 장소 입력 폼을 열 때 넘기는 값: 이름(검색어) · 담을 날 · 검색 범위 도시 ·
+ * 아직 담지 않은 고른 곳 수(있으면 화면이 직접 추가를 담은 뒤에도 이 창을 닫지 않는다 — 닫으면 고른 곳이 사라진다)
+ */
+export type DirectAddRequest = {
+  name: string;
+  dayIndex: number;
+  city: City | null;
+  pendingCount: number;
+};
 
 /**
  * 「일정 추가」 화면의 상태와 동작. 열릴 때마다 새로 마운트돼 처음 값에서 시작한다.
@@ -117,7 +125,7 @@ export function useAddSchedule({
   /** 검색어를 이름으로 장소 입력 폼을 연다(위치 · 시간 · 예약 상태를 직접 입력) */
   function directAdd() {
     const name = query.trim();
-    if (name) onDirectAdd({ name, dayIndex, city });
+    if (name) onDirectAdd({ name, dayIndex, city, pendingCount: chosen.length });
   }
 
   /** 고른 곳을 그날 끝에 한 번에 담는다 */
