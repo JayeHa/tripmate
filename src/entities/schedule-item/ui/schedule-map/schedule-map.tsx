@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/utils";
 
 import { fitZoom } from "../../lib/map-fit";
 import type { TimelineRow } from "../../lib/timeline";
-import { MapPin } from "./map-pin";
+import { MapPin, type MapPinSize } from "./map-pin";
 
 /** 핀이 하나도 없는 날의 중심. 여행 도시 좌표를 아직 받지 않아 도쿄역으로 둔다 */
 const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 };
@@ -30,6 +30,10 @@ function pinsOf(rows: TimelineRow[]): Pin[] {
 
 type ScheduleMapProps = {
   rows: TimelineRow[];
+  /** 모바일 접히는 지도는 md(24), PC 3단 지도는 lg(28) */
+  pinSize?: MapPinSize;
+  /** 바뀌면 핀을 다시 맞춘다. PC 에서 지도 폭이 바뀌었을 때(경계선 · 프리셋) 넘긴다 */
+  fitKey?: string | number;
   selectedId?: string | null;
   onSelect?: (row: TimelineRow) => void;
   className?: string;
@@ -41,7 +45,14 @@ type ScheduleMapProps = {
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다.
  * 컨테이너는 isolation 으로 쌓임 맥락을 가둬, 지도 내부 패널의 z-index 가 시트 · 모달 위로 올라오지 않게 한다.
  */
-export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleMapProps) {
+export function ScheduleMap({
+  rows,
+  pinSize = "md",
+  fitKey,
+  selectedId,
+  onSelect,
+  className,
+}: ScheduleMapProps) {
   const pins = pinsOf(rows);
   return (
     <div className={cn("relative isolate z-0 size-full bg-map-bg", className)}>
@@ -64,13 +75,14 @@ export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleM
           >
             <MapPin
               num={pin.num}
+              size={pinSize}
               status={pin.row.status}
               category={pin.row.category}
               selected={selectedId === pin.id}
             />
           </AdvancedMarker>
         ))}
-        <FitPins points={pins.map((p) => p.at)} />
+        <FitPins points={pins.map((p) => p.at)} fitKey={fitKey} />
         <DashedPath points={pins.map((p) => p.at)} />
       </Map>
     </div>
@@ -78,13 +90,14 @@ export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleM
 }
 
 type PointsProps = { points: LatLng[] };
+type FitPinsProps = PointsProps & { fitKey?: string | number };
 
 /**
  * 핀 목록이 바뀌면(날짜 변경 · 추가 · 삭제) 모두 보이게 맞춘다.
  * 맞출 줌을 직접 계산해서(fitZoom), 15 이상이면(한 점 · 한 동네) 중심 + 15 로, 아니면 fitBounds 로.
  * fitBounds 결과를 기다렸다 고치지 않으므로 idle 리스너 · 타이머가 필요 없다.
  */
-function FitPins({ points }: PointsProps) {
+function FitPins({ points, fitKey }: FitPinsProps) {
   const map = useMap();
   const key = points.map((p) => `${p.lat},${p.lng}`).join("|");
   useEffect(() => {
@@ -100,7 +113,7 @@ function FitPins({ points }: PointsProps) {
     map.fitBounds(bounds, FIT_PADDING);
     // points 배열은 렌더마다 새로 만들어져 내용(key)으로 비교한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, key]);
+  }, [map, key, fitKey]);
   return null;
 }
 

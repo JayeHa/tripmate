@@ -1,0 +1,79 @@
+import { Timeline, type TimelineRow, type useOpenMemos } from "@/entities/schedule-item";
+import { Button } from "@/shared/ui/button";
+import { Skeleton } from "@/shared/ui/skeleton";
+
+import { DayHeader } from "./day-header";
+
+type DayBodyProps = {
+  startDate: string | null;
+  day: number;
+  rows: TimelineRow[];
+  isPending: boolean;
+  memos: ReturnType<typeof useOpenMemos>;
+  /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 을 함께 보인다 */
+  showCounts?: boolean;
+  onOpen: (row: TimelineRow) => void;
+  onEditMove?: (row: TimelineRow) => void;
+  onAddPlace: () => void;
+};
+
+/** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「장소 추가」. 모바일과 PC 목록이 같이 쓴다 */
+export function DayBody({
+  startDate,
+  day,
+  rows,
+  isPending,
+  memos,
+  showCounts,
+  onOpen,
+  onEditMove,
+  onAddPlace,
+}: DayBodyProps) {
+  return (
+    <>
+      {startDate && (
+        <DayHeader
+          startDate={startDate}
+          day={day}
+          hasMemos={memos.hasMemos}
+          allOpen={memos.allOpen}
+          onToggleAll={memos.toggleAll}
+          counts={showCounts ? countsOf(rows) : undefined}
+        />
+      )}
+      {isPending && (
+        <div className="flex flex-col gap-3 px-4">
+          <Skeleton className="h-16 rounded-lg" />
+          <Skeleton className="h-16 rounded-lg" />
+        </div>
+      )}
+      {!isPending && rows.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+          <p className="font-medium">아직 일정이 없어요</p>
+          <p className="text-sm text-muted-foreground">아래 버튼으로 장소를 추가해보세요.</p>
+        </div>
+      )}
+      <Timeline
+        rows={rows}
+        openIds={memos.openIds}
+        onToggleMemo={memos.toggle}
+        onOpen={onOpen}
+        onEditMove={onEditMove}
+      />
+      {/* 메모 추가는 메모 단계에서 이 옆에 붙는다 */}
+      <div className="flex gap-2.5 px-5 pt-1 pb-8">
+        <Button variant="outline" size="form" className="flex-1" onClick={onAddPlace}>
+          장소 추가
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/** 「메모 N개 · 장소 N곳」. 메모는 카드의 「메모 N개 보기」와 같은 기준(노트 줄 + 운영시간) */
+function countsOf(rows: TimelineRow[]) {
+  return {
+    memos: rows.reduce((n, r) => n + r.notes.length + (r.hours ? 1 : 0), 0),
+    places: rows.filter((r) => r.kind === "place").length,
+  };
+}

@@ -23,8 +23,13 @@ const CATEGORY_BADGE: Partial<Record<PlaceCategory, { icon: LucideIcon; tone: st
   stay: { icon: BedDouble, tone: "bg-ink-900 text-white" },
 };
 
+/** 보통 핀 지름. 모바일 지도는 작아서 24, PC 3단 지도는 28. 선택하면 둘 다 38 */
+const PIN_SIZE = { md: "size-6 text-xs", lg: "size-7 text-xs" } as const;
+export type MapPinSize = keyof typeof PIN_SIZE;
+
 type MapPinProps = {
   num: number;
+  size?: MapPinSize;
   status: ReservationStatus | null;
   category: PlaceCategory | null;
   selected?: boolean;
@@ -32,17 +37,17 @@ type MapPinProps = {
 
 /**
  * 지도 위 번호 핀. 숫자 = 순서, 색 · 테두리 = 예약 상태, 오른쪽 위 배지 = 카테고리(식당 흰색 · 숙소 잉크).
- * 보통 24px, 선택하면 38px.
+ * 숫자 12/800, 그림자 0 1px 4px .28. 배지는 17px 원에 lucide 11px(stroke 2.4).
  */
-export function MapPin({ num, status, category, selected }: MapPinProps) {
+export function MapPin({ num, size = "md", status, category, selected }: MapPinProps) {
   const badge = category ? CATEGORY_BADGE[category] : undefined;
   return (
     <span className="relative inline-flex">
       <span
         className={cn(
-          "flex items-center justify-center rounded-full border-2 font-bold shadow-[0_1px_4px_rgba(0,0,0,.3)]",
+          "flex items-center justify-center rounded-full border-2 font-extrabold shadow-[0_1px_4px_rgba(0,0,0,.28)]",
           status ? PIN_TONE[status] : NO_STATUS_PIN,
-          selected ? "size-9.5 text-sm" : "size-6 text-xs",
+          selected ? "size-9.5 text-sm" : PIN_SIZE[size],
         )}
       >
         {num}
@@ -54,7 +59,7 @@ export function MapPin({ num, status, category, selected }: MapPinProps) {
             badge.tone,
           )}
         >
-          <badge.icon className="size-2.5" strokeWidth={2.4} />
+          <badge.icon className="size-2.75" strokeWidth={2.4} />
         </span>
       )}
     </span>
