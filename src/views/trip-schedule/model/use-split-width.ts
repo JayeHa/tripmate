@@ -1,10 +1,19 @@
 "use client";
 
-import { type PointerEvent, useRef, useState } from "react";
+import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
 
 import { useWindowWidth } from "@/shared/lib/use-window-width";
 
-import { clampListWidth, LIST_DEFAULT_WIDTH, splitPresets } from "../lib/split";
+import {
+  clampListWidth,
+  LIST_DEFAULT_WIDTH,
+  LIST_MIN_WIDTH,
+  listMaxWidth,
+  splitPresets,
+} from "../lib/split";
+
+/** 화살표 키 한 번에 바뀌는 너비 */
+const KEY_STEP = 16;
 
 /**
  * PC 일정 목록 너비와 경계선 드래그. 드래그 중에는 경계선을 파랗게 그린다.
@@ -52,8 +61,25 @@ export function useSplitWidth() {
     onLostPointerCapture: end,
   };
 
+  /** 키보드로 조절 — ←/→ 16px, Home/End 최소 · 최대, Enter 기본 너비 (WAI-ARIA window splitter) */
+  function onKeyDown(e: KeyboardEvent) {
+    const next = {
+      ArrowLeft: width - KEY_STEP,
+      ArrowRight: width + KEY_STEP,
+      Home: LIST_MIN_WIDTH,
+      End: listMaxWidth(viewport),
+      Enter: LIST_DEFAULT_WIDTH,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    setWidth(next);
+  }
+
   return {
     width,
+    minWidth: LIST_MIN_WIDTH,
+    maxWidth: listMaxWidth(viewport),
+    onKeyDown,
     dragging,
     presets: splitPresets(viewport),
     setWidth,

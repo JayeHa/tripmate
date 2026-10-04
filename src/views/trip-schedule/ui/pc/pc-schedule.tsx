@@ -48,6 +48,10 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
       <SplitHandle
         dragging={split.dragging}
         dragHandlers={split.dragHandlers}
+        width={split.width}
+        minWidth={split.minWidth}
+        maxWidth={split.maxWidth}
+        onKeyDown={split.onKeyDown}
         onReset={split.reset}
       />
       <div className="relative min-w-80 flex-1">
