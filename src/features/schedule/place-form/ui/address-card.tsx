@@ -15,7 +15,7 @@ function addressLine(found: PlaceFormState["found"]): string {
   return found.address ?? "지도를 움직이면 주소가 표시돼요";
 }
 
-/** 핀 위치 주소 카드: 한국어로 요청한 주소(일본은 로마자) + 현지어 작게 */
+/** 핀 위치 주소 카드: 로마자(한국어로 요청한 번지 주소) → 현지어 → 한글 순으로 함께 적는다. 없는 줄은 뺀다 */
 export function AddressCard({ found, action }: AddressCardProps) {
   const ready = !found.busy && !!found.address;
   return (
@@ -27,9 +27,15 @@ export function AddressCard({ found, action }: AddressCardProps) {
         >
           {addressLine(found)}
         </span>
-        {ready && found.addressLocal && (
-          <span className="text-xs/snug text-ink-400">{found.addressLocal}</span>
-        )}
+        {ready &&
+          [found.addressLocal, found.addressKo].map(
+            (line) =>
+              line && (
+                <span key={line} className="text-xs/snug text-ink-400">
+                  {line}
+                </span>
+              ),
+          )}
       </div>
       {action && (
         <button

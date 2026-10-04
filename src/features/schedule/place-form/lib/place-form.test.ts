@@ -17,7 +17,7 @@ const form = (patch: Partial<PlaceFormValues>) => ({
 });
 
 /** 주소를 못 불러온 경우 */
-const NO_ADDRESS = { address: null, addressLocal: null };
+const NO_ADDRESS = { address: null, addressLocal: null, addressKo: null };
 
 describe("입력 정리", () => {
   it("별점은 숫자 · 점만 세 글자까지, 5 를 넘으면 5", () => {
@@ -76,7 +76,7 @@ describe("toNewPlace", () => {
         googleId: "g1",
         addressDetail: " 3층 ",
       }),
-      { address: "Shibuya, Tokyo", addressLocal: "東京都渋谷区" },
+      { address: "Shibuya, Tokyo", addressLocal: "東京都渋谷区", addressKo: "도쿄도 시부야구" },
     );
     expect(r).toEqual({
       ok: true,
@@ -88,6 +88,7 @@ describe("toNewPlace", () => {
         lng: 139.7,
         address: "Shibuya, Tokyo",
         address_local: "東京都渋谷区",
+        address_ko: "도쿄도 시부야구",
         address_detail: "3층",
         google_place_id: "g1",
         hours: null,

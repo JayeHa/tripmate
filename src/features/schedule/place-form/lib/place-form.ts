@@ -94,8 +94,12 @@ export function normalizeReviews(input: string): string {
 
 export type PlaceFormResult = { ok: true; value: NewPlaceFields } | { ok: false; error: string };
 
-/** 핀 위치에서 불러온 주소 두 줄(useReverseGeocode). 못 불러왔으면 null */
-export type FoundAddress = { address: string | null; addressLocal: string | null };
+/** 핀 위치에서 불러온 주소 세 줄(useReverseGeocode — 로마자 · 현지어 · 한글). 못 불러왔으면 null */
+export type FoundAddress = {
+  address: string | null;
+  addressLocal: string | null;
+  addressKo: string | null;
+};
 
 /** 빈 줄(주소 없음)은 버리고, 주소가 http(s) 가 아니면 그 줄을 짚어 오류 */
 function linksOf(drafts: LinkDraft[], label: string): LinkDraft[] | string {
@@ -146,6 +150,7 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
       lng: v.at?.lng ?? null,
       address: found.address,
       address_local: found.addressLocal,
+      address_ko: found.addressKo,
       address_detail: orNull(v.addressDetail)?.slice(0, 100) ?? null,
       google_place_id: v.googleId,
       hours: orNull(v.hours),

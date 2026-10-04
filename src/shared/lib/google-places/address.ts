@@ -84,3 +84,32 @@ export function cleanAddress(result: GeocodeResult): string {
     .replace(/\s{2,}/g, " ")
     .replace(/^[\s,、]+|[\s,、]+$/g, "");
 }
+
+/** 한글이 들어 있는지 */
+const HANGUL = /[가-힣]/;
+
+/**
+ * 한글 주소. 구글은 일본 등 해외 번지 주소를 한국어로 요청해도 로마자로 주지만, 동네 단위(sublocality) 결과는 한글로 준다
+ * (「도쿄도 시부야구 진난 1 조메」). 그 뒤에 번지 결과에만 있는 숫자(「22-7」)를 붙인다.
+ * 번지 결과가 한글 결과보다 앞(더 자세한 쪽)에 가진 구성 요소 중 숫자만 — 「7 · 22」 를 거꾸로 이어 「22-7」.
+ * 한글 결과가 동네 단위가 아니면(구 · 시까지만) 숫자를 붙이지 않는다 — 사이 동네 이름이 빠진 채 번지만 붙게 된다.
+ * 한글 결과가 없거나 번지 주소가 이미 한글이면(한국) null — 같은 줄을 두 번 보이지 않게.
+ */
+export function koreanAddress(
+  results: GeocodeResult[],
+  street: GeocodeResult | null,
+): string | null {
+  if (street && HANGUL.test(cleanAddress(street))) return null;
+  // 나라 이름(「일본」)은 로마자 결과에도 한글로 붙어 오므로 나라 · 우편번호를 뺀 뒤에 본다
+  const ko = results.find((r) => r.types.includes("political") && HANGUL.test(cleanAddress(r)));
+  if (!ko) return null;
+  const line = cleanAddress(ko);
+  if (!street || !ko.types.includes("sublocality")) return line;
+  const extra = street.address_components.length - ko.address_components.length;
+  const numbers = street.address_components
+    .slice(0, Math.max(0, extra))
+    .map((c) => c.long_name)
+    .filter((n) => /^[\d-]+$/.test(n))
+    .reverse();
+  return numbers.length > 0 ? `${line} ${numbers.join("-")}` : line;
+}
