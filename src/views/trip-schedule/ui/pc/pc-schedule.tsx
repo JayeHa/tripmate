@@ -47,7 +47,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
       </div>
       <SplitHandle
         dragging={split.dragging}
-        onPointerDown={split.startDrag}
+        dragHandlers={split.dragHandlers}
         onReset={split.reset}
       />
       <div className="relative min-w-80 flex-1">

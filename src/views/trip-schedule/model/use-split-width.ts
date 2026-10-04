@@ -1,6 +1,6 @@
 "use client";
 
-import { type PointerEvent as ReactPointerEvent, useState } from "react";
+import { type PointerEvent, useRef, useState } from "react";
 
 import { useWindowWidth } from "@/shared/lib/use-window-width";
 
@@ -22,28 +22,42 @@ export function useSplitWidth() {
     setWanted(clampListWidth(next, viewport));
   }
 
-  /** 경계선을 누른 채 끌면 목록 너비가 따라온다. 시작점은 화면에 보이는 너비 */
-  function startDrag(e: ReactPointerEvent) {
-    e.preventDefault();
-    const x0 = e.clientX;
-    const w0 = width;
-    const move = (ev: PointerEvent) => setWidth(w0 + ev.clientX - x0);
-    const up = () => {
-      setDragging(false);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    setDragging(true);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  }
+  // 드래그 시작점. 끝나면 null
+  const origin = useRef<{ x: number; width: number } | null>(null);
+
+  /**
+   * 경계선 드래그 핸들러 — 경계선 요소에 그대로 펼쳐 붙인다.
+   * pointer capture 로 포인터가 지도(캔버스) 위나 창 밖으로 나가도 이벤트가 경계선으로 온다.
+   * 창 밖에서 버튼을 놓거나 alt-tab 처럼 pointerup 이 오지 않는 경우는 cancel · lostpointercapture ·
+   * 「버튼이 이미 떼어짐(buttons === 0)」 에서 끝낸다. window 리스너가 없어 언마운트돼도 남는 것이 없다.
+   */
+  const end = () => {
+    origin.current = null;
+    setDragging(false);
+  };
+  const dragHandlers = {
+    onPointerDown(e: PointerEvent) {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      origin.current = { x: e.clientX, width };
+      setDragging(true);
+    },
+    onPointerMove(e: PointerEvent) {
+      if (!origin.current) return;
+      if (e.buttons === 0) return end();
+      setWidth(origin.current.width + e.clientX - origin.current.x);
+    },
+    onPointerUp: end,
+    onPointerCancel: end,
+    onLostPointerCapture: end,
+  };
 
   return {
     width,
     dragging,
     presets: splitPresets(viewport),
     setWidth,
-    startDrag,
+    dragHandlers,
     reset: () => setWidth(LIST_DEFAULT_WIDTH),
   };
 }
