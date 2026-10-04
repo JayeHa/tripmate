@@ -110,25 +110,44 @@ describe("toPlanPatch", () => {
       links: [{ title: "예약", url: "https://a" }],
     });
     expect(
-      toPlanPatch(it0, {
-        ...draft,
-        status: null,
-        time: "",
-        links: [...draft.links, { title: "", url: " " }],
-      }),
+      toPlanPatch(
+        it0,
+        {
+          ...draft,
+          status: null,
+          time: "",
+          links: [...draft.links, { title: "", url: " " }],
+        },
+        draft,
+      ),
     ).toEqual({
+      // 링크는 빈 줄만 더해 실제로는 그대로 — 달라진 상태 · 시간만 보낸다
       ok: true,
-      patch: { status: null, start_time: null, links: [{ title: "예약", url: "https://a" }] },
+      patch: { status: null, start_time: null },
     });
+  });
+
+  it("「수정」 을 연 뒤 바뀌지 않은 칸은 보내지 않는다(그사이 일행이 바꾼 링크를 덮지 않게)", () => {
+    const it0 = item({ links: [{ title: "예약", url: "https://a" }] });
+    const opened = planDraftOf(it0);
+    expect(toPlanPatch(it0, { ...opened, time: "10:00" }, opened)).toEqual({
+      ok: true,
+      patch: { start_time: "10:00" },
+    });
+    expect(toPlanPatch(it0, opened, opened)).toEqual({ ok: true, patch: {} });
   });
 
   it("링크 주소가 http(s) 가 아니면 오류", () => {
     const it0 = item();
     expect(
-      toPlanPatch(it0, {
-        ...planDraftOf(it0),
-        links: [{ title: "x", url: "javascript:alert(1)" }],
-      }),
+      toPlanPatch(
+        it0,
+        {
+          ...planDraftOf(it0),
+          links: [{ title: "x", url: "javascript:alert(1)" }],
+        },
+        planDraftOf(it0),
+      ),
     ).toEqual({
       ok: false,
       error: "일정 링크 주소는 http:// 나 https:// 로 시작해야 해요",
@@ -137,10 +156,20 @@ describe("toPlanPatch", () => {
 
   it("note 는 제목 · 시간만, 제목이 비면 오류", () => {
     const note = item({ kind: "note", place_id: null, place: null, name: "체크인" });
-    expect(toPlanPatch(note, { ...planDraftOf(note), name: " 체크아웃 ", time: "11:00" })).toEqual({
+    expect(
+      toPlanPatch(
+        note,
+        { ...planDraftOf(note), name: " 체크아웃 ", time: "11:00" },
+        planDraftOf(note),
+      ),
+    ).toEqual({
       ok: true,
       patch: { name: "체크아웃", start_time: "11:00" },
     });
-    expect(toPlanPatch(note, { ...planDraftOf(note), name: " " })).toMatchObject({ ok: false });
+    expect(toPlanPatch(note, { ...planDraftOf(note), name: " " }, planDraftOf(note))).toMatchObject(
+      {
+        ok: false,
+      },
+    );
   });
 });

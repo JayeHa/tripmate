@@ -19,6 +19,8 @@ export function useMemoEdit(tripId: string, item: ScheduleItem) {
   function save() {
     if (text === null || update.isPending) return;
     const memo = text.trim().slice(0, MEMO_MAX) || null;
+    // 바꾸지 않았으면 보내지 않는다 — 그사이 일행이 고친 메모를 연 때의 글로 덮지 않게
+    if (memo === (item.memo?.trim() || null)) return setText(null);
     update.mutate({ id: item.id, patch: { memo } }, { onSuccess: () => setText(null) });
   }
 

@@ -96,7 +96,7 @@ export type PlanPatchResult =
  * 수정 칸 값을 저장할 일정 칸으로. 빈 링크 줄은 버리고, 주소가 http(s) 가 아니면 그 줄을 짚어 오류.
  * place 는 상태 · 시간 · 링크만, note · flight 는 제목 · 시간(상태 · 링크는 장소 일정에만 쓴다)
  */
-export function toPlanPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResult {
+function fullPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResult {
   const start_time = draft.time || null;
   if (start_time && !/^\d{2}:\d{2}$/.test(start_time))
     return { ok: false, error: "시간을 확인해 주세요" };
@@ -112,4 +112,23 @@ export function toPlanPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResu
     return { ok: false, error: "일정 링크 주소는 http:// 나 https:// 로 시작해야 해요" };
   }
   return { ok: true, patch: { status: draft.status, start_time, links } };
+}
+
+/**
+ * 저장할 칸 — 「수정」 을 연 때(initial)와 **달라진 칸만**. 그사이 일행이 다른 칸(예: 링크)을 바꿨어도
+ * 내가 손대지 않은 칸은 보내지 않아 덮어쓰지 않는다. 바뀐 칸이 없으면 빈 patch
+ */
+export function toPlanPatch(
+  item: ScheduleItem,
+  draft: PlanDraft,
+  initial: PlanDraft,
+): PlanPatchResult {
+  const next = fullPatch(item, draft);
+  if (!next.ok) return next;
+  const base = fullPatch(item, initial);
+  const before: Record<string, unknown> = base.ok ? base.patch : {};
+  const patch = Object.fromEntries(
+    Object.entries(next.patch).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(before[k])),
+  );
+  return { ok: true, patch };
 }

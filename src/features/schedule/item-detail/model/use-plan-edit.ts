@@ -13,13 +13,17 @@ import { type PlanDraft, planDraftOf, toPlanPatch } from "../lib/detail";
 export function usePlanEdit(tripId: string, item: ScheduleItem) {
   const update = useUpdateScheduleItem(tripId);
   const [draft, setDraft] = useState<PlanDraft | null>(null);
+  // 「수정」 을 연 때의 값 — 저장은 이것과 달라진 칸만 보낸다
+  const [initial, setInitial] = useState<PlanDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   /** 수정 칸을 연다 — 지금 값으로 */
   function start() {
     update.reset();
     setError(null);
-    setDraft(planDraftOf(item));
+    const now = planDraftOf(item);
+    setDraft(now);
+    setInitial(now);
   }
 
   /** 고친 것을 버리고 닫는다 */
@@ -30,13 +34,14 @@ export function usePlanEdit(tripId: string, item: ScheduleItem) {
 
   /** 검증해 저장하고 닫는다 */
   function save() {
-    if (!draft || update.isPending) return;
-    const result = toPlanPatch(item, draft);
+    if (!draft || !initial || update.isPending) return;
+    const result = toPlanPatch(item, draft, initial);
     if (!result.ok) {
       setError(result.error);
       return;
     }
     setError(null);
+    if (Object.keys(result.patch).length === 0) return cancel();
     update.mutate({ id: item.id, patch: result.patch }, { onSuccess: cancel });
   }
 
