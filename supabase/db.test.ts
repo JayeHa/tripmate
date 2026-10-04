@@ -709,6 +709,28 @@ describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
   });
 });
 
+describe("copy_places_on_leave — 예상 대기 (0019)", () => {
+  it("나간 멤버의 장소 사본에 예상 대기도 옮긴다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-05", "2027-08-05");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${id}', '${B}', 'member');`,
+    );
+    await as(B);
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 0, $2, '{}') id`,
+      [id, JSON.stringify({ name: "줄 서는 곳", wait: "40분" })],
+    );
+    await db.query(`delete from public.trip_members where trip_id = '${id}' and user_id = '${B}'`);
+    await as(A);
+    const { rows: got } = await db.query<{ owner: string; wait: string }>(
+      `select p.created_by owner, p.wait from public.schedule_items si
+       join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
+    );
+    expect(got[0]).toEqual({ owner: A, wait: "40분" });
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
