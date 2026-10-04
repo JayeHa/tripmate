@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import { type ScheduleItem, scheduleItemFormSchema } from "@/entities/schedule-item";
+import { itemName, type ScheduleItem, scheduleItemFormSchema } from "@/entities/schedule-item";
 import { dayLabel } from "@/shared/lib/days";
 import {
   AlertDialog,
@@ -26,6 +26,11 @@ type Patch = { name: string; start_time: string | null; memo: string | null };
 
 type Props = {
   item: ScheduleItem | null;
+  /**
+   * 이름을 고칠 수 있는지. place 의 이름은 장소 정보라 장소를 만든 사람만 바꾼다(0013).
+   * false 면 이름 칸을 읽기 전용으로 두고 이유를 보인다.
+   */
+  canEditName: boolean;
   startDate: string;
   totalDays: number;
   pending?: boolean;
@@ -44,7 +49,7 @@ export function ScheduleItemForm({ item, onClose, ...rest }: Props) {
       <SheetContent side="bottom" className="rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>일정 편집</SheetTitle>
-          {item?.address && <SheetDescription>{item.address}</SheetDescription>}
+          {item?.place?.address && <SheetDescription>{item.place.address}</SheetDescription>}
         </SheetHeader>
         {item && <Fields key={item.id} item={item} {...rest} />}
       </SheetContent>
@@ -54,6 +59,7 @@ export function ScheduleItemForm({ item, onClose, ...rest }: Props) {
 
 function Fields({
   item,
+  canEditName,
   startDate,
   totalDays,
   pending,
@@ -63,7 +69,7 @@ function Fields({
   onMoveDown,
   onDelete,
 }: Omit<Props, "item" | "onClose"> & { item: ScheduleItem }) {
-  const [name, setName] = useState(item.name);
+  const [name, setName] = useState(itemName(item));
   const [time, setTime] = useState(item.start_time?.slice(0, 5) ?? "");
   const [memo, setMemo] = useState(item.memo ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +95,12 @@ function Fields({
     >
       <div className="flex flex-col gap-1.5">
         <Label>이름</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Input value={name} onChange={(e) => setName(e.target.value)} disabled={!canEditName} />
+        {!canEditName && (
+          <p className="text-xs text-muted-foreground">
+            장소 이름은 장소를 만든 사람만 바꿀 수 있어요.
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
@@ -144,7 +155,7 @@ function Fields({
             <AlertDialogHeader>
               <AlertDialogTitle>이 일정을 삭제할까요?</AlertDialogTitle>
               <AlertDialogDescription>
-                “{item.name}”이(가) 일정에서 사라져요.
+                “{itemName(item)}”이(가) 일정에서 사라져요.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

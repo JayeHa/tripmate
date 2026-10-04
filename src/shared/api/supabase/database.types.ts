@@ -204,24 +204,16 @@ export type Database = {
           },
         ];
       };
-      schedule_items: {
+      places: {
         Row: {
           id: string;
-          trip_id: string;
-          day_index: number;
-          position: number;
+          city_id: string;
+          created_by: string;
           name: string;
-          place_id: string | null;
+          google_place_id: string | null;
           lat: number | null;
           lng: number | null;
           address: string | null;
-          start_time: string | null;
-          memo: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-          kind: string;
-          status: string | null;
           category: string | null;
           emoji: string | null;
           rating: number | null;
@@ -230,63 +222,115 @@ export type Database = {
           hours: string | null;
           gmap_url: string | null;
           links: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          city_id: string;
+          created_by?: string;
+          name: string;
+          google_place_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          address?: string | null;
+          category?: string | null;
+          emoji?: string | null;
+          rating?: number | null;
+          review_count?: number | null;
+          description?: string | null;
+          hours?: string | null;
+          gmap_url?: string | null;
+          links?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          city_id?: string;
+          created_by?: string;
+          name?: string;
+          google_place_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          address?: string | null;
+          category?: string | null;
+          emoji?: string | null;
+          rating?: number | null;
+          review_count?: number | null;
+          description?: string | null;
+          hours?: string | null;
+          gmap_url?: string | null;
+          links?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      schedule_items: {
+        Row: {
+          id: string;
+          trip_id: string;
+          day_index: number;
+          position: number;
+          kind: string;
+          place_id: string | null;
+          name: string | null;
+          description: string | null;
+          emoji: string | null;
+          start_time: string | null;
+          status: string | null;
+          memo: string | null;
           alternatives: Json;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           trip_id: string;
           day_index: number;
           position: number;
-          name: string;
+          kind?: string;
           place_id?: string | null;
-          lat?: number | null;
-          lng?: number | null;
-          address?: string | null;
+          name?: string | null;
+          description?: string | null;
+          emoji?: string | null;
           start_time?: string | null;
+          status?: string | null;
           memo?: string | null;
+          alternatives?: Json;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
-          kind?: string;
-          status?: string | null;
-          category?: string | null;
-          emoji?: string | null;
-          rating?: number | null;
-          review_count?: number | null;
-          description?: string | null;
-          hours?: string | null;
-          gmap_url?: string | null;
-          links?: Json;
-          alternatives?: Json;
         };
         Update: {
           id?: string;
           trip_id?: string;
           day_index?: number;
           position?: number;
-          name?: string;
+          kind?: string;
           place_id?: string | null;
-          lat?: number | null;
-          lng?: number | null;
-          address?: string | null;
+          name?: string | null;
+          description?: string | null;
+          emoji?: string | null;
           start_time?: string | null;
+          status?: string | null;
           memo?: string | null;
+          alternatives?: Json;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
-          kind?: string;
-          status?: string | null;
-          category?: string | null;
-          emoji?: string | null;
-          rating?: number | null;
-          review_count?: number | null;
-          description?: string | null;
-          hours?: string | null;
-          gmap_url?: string | null;
-          links?: Json;
-          alternatives?: Json;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "schedule_items_place_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       moves: {
         Row: {
@@ -442,6 +486,14 @@ export type Database = {
           end_date: string;
           member_count: number;
         }[];
+      };
+      add_schedule_place: {
+        Args: { p_trip: string; p_day: number; p_place: Json };
+        Returns: string;
+      };
+      can_attach_place: {
+        Args: { p_place: string; p_trip: string };
+        Returns: boolean;
       };
       create_trip: {
         Args: { p_title: string; p_start: string; p_end: string; p_city_ids: string[] };

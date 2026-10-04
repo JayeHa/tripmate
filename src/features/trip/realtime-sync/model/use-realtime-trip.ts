@@ -8,7 +8,7 @@ import { createClient } from "@/shared/api/supabase/client";
 
 /**
  * 여행 하나에 채널 1개. 테이블 변경 시 해당 쿼리를 invalidate.
- * expense_splits 에는 trip_id 가 없어 필터 없이 구독 (RLS로 내 여행 것만 수신됨).
+ * expense_splits · places 에는 trip_id 가 없어 필터 없이 구독 (RLS로 볼 수 있는 것만 수신됨).
  */
 export function useRealtimeTrip(tripId: string) {
   const qc = useQueryClient();
@@ -26,6 +26,11 @@ export function useRealtimeTrip(tripId: string) {
           void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
         },
       )
+      // 장소에는 trip_id 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 장소(만든 것 · 내 여행이 쓰는 것)만 온다
+      .on("postgres_changes", { event: "*", schema: "public", table: "places" }, () => {
+        void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
+        void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
+      })
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },

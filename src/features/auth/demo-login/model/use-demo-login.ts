@@ -7,7 +7,34 @@ import { useState } from "react";
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
 
+import { toSeedRows } from "../lib/seed-rows";
 import { TOKYO_SEED } from "../lib/tokyo-seed";
+
+type Client = ReturnType<typeof createClient>;
+
+/**
+ * 샘플 여행에 도시 · 장소 · 일정을 심는다. 실패해도 여행 자체는 볼 수 있어서 멈추지 않고 콘솔에만 남긴다.
+ * 도시가 없으면 목록에 「도시 미정」으로 보이고, 일정이 없으면 빈 일정이 보인다.
+ * 장소를 먼저 넣고 일정이 그 장소를 참조한다. 장소 id 는 미리 만들어 둔다(seed-rows.ts).
+ */
+async function seedTrip(supabase: Client, tripId: string) {
+  const { error: citiesError } = await supabase
+    .from("trip_cities")
+    .insert(
+      TOKYO_SEED.cityIds.map((city_id, position) => ({ trip_id: tripId, city_id, position })),
+    );
+  if (citiesError) console.error("샘플 도시 삽입 실패", citiesError);
+
+  const rows = toSeedRows(TOKYO_SEED.items, {
+    tripId,
+    cityId: TOKYO_SEED.cityIds[0],
+    newId: () => crypto.randomUUID(),
+  });
+  const { error: placesError } = await supabase.from("places").insert(rows.places);
+  if (placesError) return console.error("샘플 장소 삽입 실패", placesError);
+  const { error: itemsError } = await supabase.from("schedule_items").insert(rows.items);
+  if (itemsError) console.error("샘플 일정 삽입 실패", itemsError);
+}
 
 /**
  * 둘러보기. 익명 계정을 만들고 도쿄 여행 샘플을 심은 뒤 그 여행으로 보낸다.
@@ -59,19 +86,7 @@ export function useDemoLogin() {
       return;
     }
 
-    const { error: citiesError } = await supabase
-      .from("trip_cities")
-      .insert(
-        TOKYO_SEED.cityIds.map((city_id, position) => ({ trip_id: trip.id, city_id, position })),
-      );
-    // 도시가 없어도 여행은 볼 수 있다. 목록에 「도시 미정」으로 보일 뿐이다.
-    if (citiesError) console.error("샘플 도시 삽입 실패", citiesError);
-
-    const { error: itemsError } = await supabase
-      .from("schedule_items")
-      .insert(TOKYO_SEED.items.map((item) => ({ ...item, trip_id: trip.id })));
-    // 일정이 비어도 여행 자체는 볼 수 있으니 여기서 멈추지 않는다.
-    if (itemsError) console.error("샘플 일정 삽입 실패", itemsError);
+    await seedTrip(supabase, trip.id);
 
     // 목록 캐시를 비운다. staleTime 이 30초라, 이 화면에서 이미 빈 목록을 받아 왔으면
     // 방금 만든 여행이 안 보인다.

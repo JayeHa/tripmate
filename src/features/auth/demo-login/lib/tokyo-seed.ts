@@ -1,15 +1,17 @@
 import type { TablesInsert } from "@/shared/api/supabase/database.types";
 
+import type { SeedItem } from "./seed-rows";
+
 /** trip_id 는 시딩할 때 붙인다 */
 type DemoSeed = {
   trip: Omit<TablesInsert<"trips">, "owner_id">;
   cityIds: string[];
-  items: Omit<TablesInsert<"schedule_items">, "trip_id">[];
+  items: SeedItem[];
 };
 
 /**
  * 데모용 시드. 디자인 시안의 도쿄 여행 샘플 데이터를 옮긴 것이다.
- * 장소 정보(종류 · 카테고리 · 예약 상태 · 별점 · 링크 · 대체 장소)는 0010 의 칸에 그대로 담는다.
+ * 시안처럼 한 줄에 장소 정보까지 적고, 시딩할 때 장소 · 일정으로 나눈다(seed-rows.ts, 0013).
  * 이동(move) 6개는 시안에서 빠졌다(이동은 장소 쌍의 기록, 0011). 하루 요약 · 일행 메모 · 항공편 연결(src)은 그 단계에서 채운다.
  */
 export const TOKYO_SEED = {

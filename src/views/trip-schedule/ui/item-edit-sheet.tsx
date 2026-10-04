@@ -5,8 +5,10 @@ import {
   useDeleteScheduleItem,
   useMoveScheduleItemToDay,
   useSwapScheduleItems,
+  useUpdatePlace,
   useUpdateScheduleItem,
 } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import { ScheduleItemForm } from "@/features/schedule/item-form";
 
 type ItemEditSheetProps = {
@@ -23,6 +25,7 @@ type ItemEditSheetProps = {
 /**
  * 일정 편집 시트와 그 동작(저장 · 날짜 이동 · 순서 · 삭제). 장소 상세가 생기기 전까지 카드를 누르면 열린다.
  * 순서는 편집 모드(드래그)가 생기기 전까지 여기의 「앞으로 / 뒤로」로 바꾼다. 이동 중에는 막는다.
+ * 이름은 place 면 장소 이름(만든 사람만, 이 장소를 쓰는 모든 일정에 반영), note · flight 면 일정 제목이다.
  */
 export function ItemEditSheet({
   tripId,
@@ -32,7 +35,11 @@ export function ItemEditSheet({
   dayItems,
   onClose,
 }: ItemEditSheetProps) {
+  const { data: user } = useUser();
   const update = useUpdateScheduleItem(tripId);
+  const updatePlace = useUpdatePlace(tripId);
+  const place = editing?.place ?? null;
+  const canEditName = !place || (!!user && place.created_by === user.id);
   const remove = useDeleteScheduleItem(tripId);
   const swap = useSwapScheduleItems(tripId);
   const moveDay = useMoveScheduleItemToDay(tripId);
@@ -49,13 +56,24 @@ export function ItemEditSheet({
   return (
     <ScheduleItemForm
       item={editing}
+      canEditName={canEditName}
       startDate={startDate}
       totalDays={totalDays}
-      pending={update.isPending}
+      pending={update.isPending || updatePlace.isPending}
       onClose={onClose}
-      onSave={(patch) => {
+      onSave={({ name, ...patch }) => {
         if (!editing) return;
-        update.mutate({ id: editing.id, patch }, { onSuccess: onClose });
+        // 일정 칸을 먼저 저장하고, 장소 이름이 바뀌었으면 장소를 고친 뒤 닫는다
+        const renamePlace = place && canEditName && name !== place.name;
+        update.mutate(
+          { id: editing.id, patch: place ? patch : { ...patch, name } },
+          {
+            onSuccess: () => {
+              if (!renamePlace) return onClose();
+              updatePlace.mutate({ id: place.id, patch: { name } }, { onSuccess: onClose });
+            },
+          },
+        );
       }}
       onMoveDay={(dayIndex) => {
         if (!editing || dayIndex === editing.day_index) return;

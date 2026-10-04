@@ -1,6 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 
 import type { TimelineRow } from "../../lib/timeline";
+import { itemName } from "../../model/place";
 import { ReservationBadge } from "../reservation-badge";
 import { AlternativesLine } from "./alternatives-line";
 import { LinkChips } from "./link-chips";
@@ -53,7 +54,7 @@ export function ItemCard({ row, open, onToggle, onOpen }: ItemCardProps) {
         )}
       >
         {row.emoji && <span className="mr-1.5 font-normal">{row.emoji}</span>}
-        {row.item.name}
+        {itemName(row.item)}
       </button>
       {row.meta && <p className={cn("text-sm text-ink-400", row.isMeal && "pr-19")}>{row.meta}</p>}
       <AlternativesLine alternatives={row.alternatives} />

@@ -79,12 +79,28 @@ export function kindOf(item: Pick<ScheduleItem, "kind">): ItemKind {
   return oneOf(ITEM_KINDS, item.kind) ?? "place";
 }
 
+type Coords = { lat: number; lng: number };
+type WithPlaceCoords = Pick<ScheduleItem, "kind"> & {
+  place: { lat: number | null; lng: number | null } | null;
+};
+
+/** 일정의 좌표. 장소에 좌표가 있을 때만(note · flight 는 늘 null) */
+export function itemCoords(item: WithPlaceCoords): Coords | null {
+  const at = item.place;
+  return at?.lat != null && at.lng != null ? { lat: at.lat, lng: at.lng } : null;
+}
+
 /**
  * 번호 · 지도 핀 · 경로 경유점이 되는 일정인지. 좌표가 있는 place 만 해당한다.
  * 세 곳이 같은 기준을 써야 선이 핀 없는 곳에서 꺾이지 않는다. 서버 경로 API 도 이것을 쓴다.
  */
-export function isMappedPlace(item: Pick<ScheduleItem, "kind" | "lat" | "lng">): boolean {
-  return kindOf(item) === "place" && item.lat != null && item.lng != null;
+export function isMappedPlace(item: WithPlaceCoords): boolean {
+  return kindOf(item) === "place" && itemCoords(item) !== null;
+}
+
+/** 화면에 보일 이름. place 는 장소 이름, note · flight 는 일정 제목 */
+export function itemName(item: Pick<ScheduleItem, "name" | "place">): string {
+  return item.place?.name ?? item.name ?? "";
 }
 
 /** 예약 상태. 없거나 모르는 값이면 null(「상태 없음」) */
@@ -94,12 +110,12 @@ export function statusOf(item: ScheduleItem): ReservationStatus | null {
 
 /** 장소 카테고리. 없거나 모르는 값이면 null */
 export function categoryOf(item: ScheduleItem): PlaceCategory | null {
-  return oneOf(PLACE_CATEGORIES, item.category);
+  return oneOf(PLACE_CATEGORIES, item.place?.category ?? null);
 }
 
-/** 구글맵 외 추가 링크. 모양이 틀린 원소는 버린다 */
+/** 장소의 구글맵 외 추가 링크. 장소가 없거나 모양이 틀린 원소는 버린다 */
 export function linksOf(item: ScheduleItem): PlaceLink[] {
-  return arrayOf(linkSchema, item.links);
+  return arrayOf(linkSchema, item.place?.links);
 }
 
 /** 대체 장소. name · gmap 이 없는 원소는 버린다 */

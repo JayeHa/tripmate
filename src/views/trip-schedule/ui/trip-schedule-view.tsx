@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 
 import {
   buildTimeline,
+  itemCoords,
   type ScheduleItem,
-  useCreateScheduleItem,
+  useAddPlaceToSchedule,
   useMoves,
   useOpenMemos,
   useScheduleItems,
 } from "@/entities/schedule-item";
-import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
@@ -31,7 +31,6 @@ type TripScheduleViewProps = { tripId: string };
  */
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
-  const { data: user } = useUser();
   const { data: items, isPending } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
   const [day, setDay] = useDayParam(totalDays);
@@ -39,7 +38,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
-  const create = useCreateScheduleItem(tripId);
+  const addToSchedule = useAddPlaceToSchedule(tripId);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -49,14 +48,14 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const moveDialog = useMoveDialog(movesReady);
   const memos = useOpenMemos(rows);
 
-  const bias = useMemo(() => {
-    const first = dayItems.find((it) => it.lat != null && it.lng != null);
-    return first ? { lat: first.lat!, lng: first.lng! } : null;
-  }, [dayItems]);
+  const bias = useMemo(
+    () => dayItems.map(itemCoords).find((at) => at !== null) ?? null,
+    [dayItems],
+  );
 
-  /** 장소 검색에서 고른 곳을 그날 끝에 붙인다 */
-  function addPlace(place: PickedPlace) {
-    create.mutate({ trip_id: tripId, day_index: day, created_by: user?.id ?? null, ...place });
+  /** 장소 검색에서 고른 곳을 그날 끝에 붙인다. 장소와 일정을 서버에서 한 번에 만든다 */
+  function addPlace({ place_id, ...place }: PickedPlace) {
+    addToSchedule.mutate({ dayIndex: day, place: { ...place, google_place_id: place_id } });
   }
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;

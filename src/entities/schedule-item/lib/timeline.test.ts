@@ -1,38 +1,77 @@
 import { describe, expect, it } from "vitest";
 
 import type { Move } from "../model/move";
-import type { ScheduleItem } from "../model/types";
+import type { Place, ScheduleItem } from "../model/types";
 import { buildTimeline, placeNumbers } from "./timeline";
 
-/** 기본값이 채워진 일정 한 줄. 필요한 칸만 덮어쓴다 */
-function item(patch: Partial<ScheduleItem>): ScheduleItem {
-  return {
+type PlaceFields = Pick<
+  Place,
+  "lat" | "lng" | "category" | "rating" | "review_count" | "hours" | "gmap_url" | "links"
+>;
+type ItemPatch = Partial<Omit<ScheduleItem, "place">> & Partial<PlaceFields>;
+
+/**
+ * 기본값이 채워진 일정 한 줄. 필요한 칸만 덮어쓴다.
+ * place 면 장소 칸(좌표 · 카테고리 · 별점 …)과 name · description 을 장소로 옮겨 붙인다 — 화면이 받는 모양 그대로.
+ */
+function item(patch: ItemPatch): ScheduleItem {
+  const {
+    lat = null,
+    lng = null,
+    category = null,
+    rating = null,
+    review_count = null,
+    hours = null,
+    gmap_url = null,
+    links = [],
+    ...fields
+  } = patch;
+  const row = {
     id: crypto.randomUUID(),
     trip_id: "t",
     day_index: 0,
     position: 0,
-    name: "장소",
+    kind: "place",
     place_id: null,
-    lat: null,
-    lng: null,
-    address: null,
+    name: "장소",
+    description: null,
+    emoji: null,
     start_time: null,
+    status: null,
     memo: null,
+    alternatives: [],
     created_by: null,
     created_at: "",
     updated_at: "",
-    kind: "place",
-    status: null,
-    category: null,
-    emoji: null,
-    rating: null,
-    review_count: null,
+    ...fields,
+  };
+  if (row.kind !== "place") return { ...row, place: null };
+  const placeId = `p-${row.id}`;
+  return {
+    ...row,
+    name: null,
     description: null,
-    hours: null,
-    gmap_url: null,
-    links: [],
-    alternatives: [],
-    ...patch,
+    place_id: placeId,
+    place: {
+      id: placeId,
+      city_id: "tokyo",
+      created_by: "u",
+      name: row.name ?? "장소",
+      description: row.description,
+      emoji: null,
+      google_place_id: null,
+      address: null,
+      lat,
+      lng,
+      category,
+      rating,
+      review_count,
+      hours,
+      gmap_url,
+      links,
+      created_at: "",
+      updated_at: "",
+    },
   };
 }
 

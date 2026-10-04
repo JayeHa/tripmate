@@ -3,7 +3,7 @@ import {
   EXPENSE_CATEGORY_LABEL,
   type ExpenseFormValues,
 } from "@/entities/expense";
-import type { ScheduleItem } from "@/entities/schedule-item";
+import { itemName, type ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
@@ -157,7 +157,7 @@ export function DateItemFields({ form, trip, items }: DateItemFieldsProps) {
           <option value="">없음</option>
           {dayItems.map((it) => (
             <option key={it.id} value={it.id}>
-              {it.name}
+              {itemName(it)}
             </option>
           ))}
         </select>

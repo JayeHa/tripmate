@@ -7,6 +7,7 @@ import { cn } from "@/shared/lib/utils";
 
 import { fitZoom } from "../../lib/map-fit";
 import type { TimelineRow } from "../../lib/timeline";
+import { itemCoords, itemName } from "../../model/place";
 import { MapPin, type MapPinSize, pinAnchor } from "./map-pin";
 
 /** 핀이 하나도 없는 날의 중심. 여행 도시 좌표를 아직 받지 않아 도쿄역으로 둔다 */
@@ -21,11 +22,10 @@ type Pin = { id: string; num: number; at: LatLng; row: TimelineRow };
 
 /** 번호가 붙은 줄(좌표 있는 place)만 핀이 된다. 타임라인 번호와 같다 */
 function pinsOf(rows: TimelineRow[]): Pin[] {
-  return rows.flatMap((row) =>
-    row.num != null && row.item.lat != null && row.item.lng != null
-      ? [{ id: row.item.id, num: row.num, at: { lat: row.item.lat, lng: row.item.lng }, row }]
-      : [],
-  );
+  return rows.flatMap((row) => {
+    const at = itemCoords(row.item);
+    return row.num != null && at ? [{ id: row.item.id, num: row.num, at, row }] : [];
+  });
 }
 
 type ScheduleMapProps = {
@@ -70,7 +70,7 @@ export function ScheduleMap({
           <AdvancedMarker
             key={pin.id}
             position={pin.at}
-            title={pin.row.item.name}
+            title={itemName(pin.row.item)}
             onClick={() => onSelect?.(pin.row)}
             zIndex={focusId === pin.id ? 10 : 1}
             {...pinAnchor(focusId === pin.id)}

@@ -6,12 +6,13 @@ import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
 import {
-  createScheduleItem,
+  addPlaceToSchedule,
   deleteScheduleItem,
   fetchScheduleItems,
   moveScheduleItemToDay,
-  type NewScheduleItem,
+  type PickedPlaceInput,
   swapScheduleItems,
+  updatePlace,
   updateScheduleItem,
 } from "../api/schedule-items";
 import type { ScheduleItem } from "./types";
@@ -31,10 +32,22 @@ function useInvalidateItems(tripId: string) {
   };
 }
 
-export function useCreateScheduleItem(tripId: string) {
+/** 장소를 그날 끝에 담는다(장소 + 일정) */
+export function useAddPlaceToSchedule(tripId: string) {
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: (input: NewScheduleItem) => createScheduleItem(input),
+    mutationFn: ({ dayIndex, place }: { dayIndex: number; place: PickedPlaceInput }) =>
+      addPlaceToSchedule(tripId, dayIndex, place),
+    onSuccess: invalidate,
+  });
+}
+
+/** 장소 정보를 고친다. 이 장소를 쓰는 모든 일정에 반영된다(만든 사람만) */
+export function useUpdatePlace(tripId: string) {
+  const invalidate = useInvalidateItems(tripId);
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"places"> }) =>
+      updatePlace(id, patch),
     onSuccess: invalidate,
   });
 }
