@@ -76,6 +76,14 @@ describe("운영시간", () => {
     });
   });
 
+  it("요일별인데 아무것도 적지 않으면 요일별도 null(기존 값 유지)", () => {
+    const empty = { mon: "", tue: "", wed: "", thu: "", fri: "", sat: "", sun: "" };
+    expect(toNewPlace(form({ hoursMode: "week", hoursWeek: empty }), NO_ADDRESS)).toMatchObject({
+      ok: true,
+      value: { hours: null, hours_week: null },
+    });
+  });
+
   it("월요일 값(휴무 포함)을 모든 요일에", () => {
     expect(mondayToAll(week).sun).toBe("11:00–22:00");
     expect(Object.values(mondayToAll({ ...week, mon: null }))).toEqual(Array(7).fill(null));

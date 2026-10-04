@@ -141,7 +141,8 @@ function hoursFields(v: PlaceFormValues): Pick<NewPlaceFields, "hours" | "hours_
     const value = v.hoursWeek[day];
     if (value === null || value.trim()) week[day] = value === null ? null : value.trim();
   }
-  return { hours: null, hours_week: week };
+  // 요일별인데 아무것도 적지 않았으면 「모름」 — 매일 같음의 빈칸처럼 null 로 기존 값을 둔다
+  return { hours: null, hours_week: Object.keys(week).length > 0 ? week : null };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */
