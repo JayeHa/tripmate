@@ -1,4 +1,5 @@
 import {
+  Bath,
   BedDouble,
   Check,
   Coffee,
@@ -20,6 +21,7 @@ const CATEGORY_THUMB = {
   food: { icon: UtensilsCrossed, tone: "bg-[#FDE8EA] text-cat-food" },
   cafe: { icon: Coffee, tone: "bg-[#F5EEE3] text-cat-cafe" },
   shop: { icon: ShoppingBag, tone: "bg-[#FEF3DC] text-cat-shop" },
+  rest: { icon: Bath, tone: "bg-[#FCE7F3] text-cat-rest" },
   stay: { icon: BedDouble, tone: "bg-[#E3F6F3] text-cat-stay" },
   air: { icon: Plane, tone: "bg-[#E8F1FF] text-cat-air" },
 } satisfies Record<PlaceCategory, { icon: LucideIcon; tone: string }>;

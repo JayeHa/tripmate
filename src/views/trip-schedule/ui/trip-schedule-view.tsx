@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   buildTimeline,
@@ -10,9 +10,10 @@ import {
   useScheduleItems,
 } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
-import { AddScheduleDialog } from "@/features/schedule/add-schedule";
+import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
+import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
@@ -35,6 +36,14 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [addOpen, setAddOpen] = useState(false);
+  // 일정 추가의 「직접 추가」로 연 장소 입력 폼. 담으면 두 창을 모두 닫고 담은 날을 보인다.
+  // 일정 추가에 아직 담지 않은 고른 곳이 있으면 그 창은 닫지 않고 한 줄 알린다(닫으면 고른 곳이 사라진다)
+  const [direct, setDirect] = useState<DirectAddRequest | null>(null);
+  const [addNotice, setAddNotice] = useState<string | null>(null);
+  const directRef = useRef(direct);
+  useEffect(() => {
+    directRef.current = direct;
+  }, [direct]);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
@@ -46,6 +55,23 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const memos = useOpenMemos(rows);
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
+
+  /**
+   * 직접 추가 요청 하나의 담기가 끝났다. 폼은 저장 중에 닫히지 않지만 오프라인으로 멈춘 동안은 닫을 수 있어서,
+   * 그 폼이 이미 닫혔으면(다른 요청이 열렸거나 아무것도 없으면) 창 닫기 · 날짜 이동을 하지 않는다
+   */
+  function finishDirect(req: DirectAddRequest) {
+    if (directRef.current !== req) return;
+    setDirect(null);
+    if (req.pendingCount > 0) {
+      setAddNotice(
+        `직접 추가한 곳을 day ${req.dayIndex + 1}에 담았어요. 고른 ${req.pendingCount}곳은 아직 담지 않았어요`,
+      );
+      return;
+    }
+    setAddOpen(false);
+    setDay(req.dayIndex);
+  }
 
   return (
     <>
@@ -60,7 +86,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           memos={memos}
           onOpen={(row) => setEditing(row.item)}
           onEditMove={moveDialog.openFor}
-          onAddPlace={() => setAddOpen(true)}
+          onAddPlace={() => {
+            setAddNotice(null);
+            setAddOpen(true);
+          }}
         />
       )}
 
@@ -80,6 +109,20 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           items={items ?? []}
           open={addOpen}
           onOpenChange={setAddOpen}
+          onDirectAdd={setDirect}
+          notice={addNotice}
+        />
+      )}
+
+      {direct && (
+        <PlaceFormDialog
+          tripId={tripId}
+          dayIndex={direct.dayIndex}
+          city={direct.city}
+          initialName={direct.name}
+          open
+          onOpenChange={(open) => !open && setDirect(null)}
+          onSaved={() => finishDirect(direct)}
         />
       )}
 

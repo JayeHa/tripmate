@@ -562,6 +562,214 @@ describe("add_schedule_places (0016)", () => {
   });
 });
 
+describe("create_place_schedule (0017)", () => {
+  it("장소 정보 칸으로 새 장소, 일정 칸으로 그날 끝 일정을 만든다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-01", "2027-08-01");
+    await addPlace(id, 0, { name: "먼저 있던 곳" });
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 0, $2, $3) id`,
+      [
+        id,
+        JSON.stringify({
+          name: "  유야 온천  ",
+          emoji: "♨️",
+          category: "rest",
+          lat: 35.7,
+          lng: 139.7,
+          hours: "10:00–23:00",
+          rating: 4.3,
+          review_count: 812,
+          wait: "20분",
+          description: "노천탕",
+          gmap_url: "https://maps.app.goo.gl/x",
+          links: [{ title: "예약", url: "https://example.com" }],
+        }),
+        JSON.stringify({
+          status: "wait",
+          start_time: "19:30",
+          memo: "수건 챙기기",
+          links: [{ title: "티켓", url: "https://t.example.com" }],
+        }),
+      ],
+    );
+    const { rows: got } = await db.query<Record<string, unknown>>(
+      `select si.position, si.status, si.start_time::text t, si.memo, si.links item_links,
+              p.name, p.emoji, p.category, p.wait, p.review_count, p.city_id, p.links place_links
+       from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
+    );
+    expect(got[0]).toMatchObject({
+      position: 1,
+      status: "wait",
+      t: "19:30:00",
+      memo: "수건 챙기기",
+      name: "유야 온천",
+      emoji: "♨️",
+      category: "rest",
+      wait: "20분",
+      review_count: 812,
+      city_id: "tokyo",
+      item_links: [{ title: "티켓", url: "https://t.example.com" }],
+      place_links: [{ title: "예약", url: "https://example.com" }],
+    });
+  });
+
+  it("이름이 비거나, 도시 · 위치가 없거나, 칸 값이 틀리면 거부하고 장소도 남기지 않는다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-02", "2027-08-02");
+    const before = await db.query<{ n: number }>(`select count(*)::int n from public.places`);
+    expect(
+      await rejects(`select public.create_place_schedule('${id}', 0, '{"name":" "}', '{}')`),
+    ).toMatch(/name is required/);
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${id}', 0, '{"name":"x","category":"bar"}', '{}')`,
+      ),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${id}', 0, '{"name":"x","wait":"${"가".repeat(31)}"}', '{}')`,
+      ),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${id}', 0, '{"name":"x"}', '{"status":"done"}')`,
+      ),
+    ).toMatch(/check constraint/);
+    await db.query(`delete from public.trip_cities where trip_id = '${id}'`);
+    expect(
+      await rejects(`select public.create_place_schedule('${id}', 0, '{"name":"x"}', '{}')`),
+    ).toMatch(/has no city/);
+    const after = await db.query<{ n: number }>(`select count(*)::int n from public.places`);
+    expect(after.rows[0].n).toBe(before.rows[0].n);
+  });
+
+  it("멤버가 아니면 거부하고, 먼저 만든 장소도 롤백된다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-03", "2027-08-03");
+    await as(B);
+    const before = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${B}'`,
+    );
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${id}', 0, '{"name":"x","lat":35.7,"lng":139.7}', '{}')`,
+      ),
+    ).toMatch(/row-level security/);
+    const after = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${B}'`,
+    );
+    expect(after.rows[0].n).toBe(before.rows[0].n);
+  });
+});
+
+describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
+  it("같은 구글 장소를 직접 추가로 다시 담으면 그 장소를 쓰고, 적은 칸만 덮어쓴다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-04", "2027-08-04");
+    const first = await addPlace(id, 0, {
+      name: "이치란 시부야",
+      google_place_id: "g-ichiran",
+      lat: 35.66,
+      lng: 139.7,
+      address: "시부야구",
+    });
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 0, $2, $3) id`,
+      [
+        id,
+        JSON.stringify({
+          name: "이치란",
+          category: "food",
+          google_place_id: "g-ichiran",
+          wait: "30분",
+          links: [],
+        }),
+        JSON.stringify({ memo: "카운터석" }),
+      ],
+    );
+    const { rows: got } = await db.query<Record<string, unknown>>(
+      `select si.place_id = (select place_id from public.schedule_items where id = '${first}') same,
+              si.memo, p.name, p.category, p.wait, p.address, p.lat
+       from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
+    );
+    expect(got[0]).toMatchObject({
+      same: true,
+      memo: "카운터석",
+      name: "이치란",
+      category: "food",
+      wait: "30분",
+      address: "시부야구",
+      lat: 35.66,
+    });
+    const count = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${A}' and google_place_id = 'g-ichiran'`,
+    );
+    expect(count.rows[0].n).toBe(1);
+
+    // 카테고리를 고르지 않고 다시 담으면(폼 기본값 null) 기존 카테고리를 둔다
+    await db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
+      id,
+      JSON.stringify({ name: "이치란", category: null, google_place_id: "g-ichiran" }),
+    ]);
+    const kept = await db.query<{ category: string }>(
+      `select category from public.places where created_by = '${A}' and google_place_id = 'g-ichiran'`,
+    );
+    expect(kept.rows[0].category).toBe("food");
+  });
+});
+
+describe("create_place_schedule — 재사용 경로 롤백 (0018)", () => {
+  it("멤버가 아닌 여행에 이미 가진 구글 장소로 담으면 거부하고, 내 장소도 고쳐지지 않는다", async () => {
+    await as(A);
+    const mine = await newTrip("2027-08-06", "2027-08-06");
+    await addPlace(mine, 0, {
+      name: "A 의 장소",
+      google_place_id: "g-rollback",
+      lat: 35.7,
+      lng: 139.7,
+    });
+    await as(B);
+    const theirs = await newTrip("2027-08-07", "2027-08-07");
+    await as(A);
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${theirs}', 0, '${JSON.stringify({
+          name: "바뀐 이름",
+          google_place_id: "g-rollback",
+          wait: "10분",
+        })}', '{}')`,
+      ),
+    ).toMatch(/row-level security/);
+    const { rows } = await db.query<{ name: string; wait: string | null }>(
+      `select name, wait from public.places where created_by = '${A}' and google_place_id = 'g-rollback'`,
+    );
+    expect(rows).toEqual([{ name: "A 의 장소", wait: null }]);
+  });
+});
+
+describe("copy_places_on_leave — 예상 대기 (0019)", () => {
+  it("나간 멤버의 장소 사본에 예상 대기도 옮긴다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-05", "2027-08-05");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${id}', '${B}', 'member');`,
+    );
+    await as(B);
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 0, $2, '{}') id`,
+      [id, JSON.stringify({ name: "줄 서는 곳", wait: "40분" })],
+    );
+    await db.query(`delete from public.trip_members where trip_id = '${id}' and user_id = '${B}'`);
+    await as(A);
+    const { rows: got } = await db.query<{ owner: string; wait: string }>(
+      `select p.created_by owner, p.wait from public.schedule_items si
+       join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
+    );
+    expect(got[0]).toEqual({ owner: A, wait: "40분" });
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");

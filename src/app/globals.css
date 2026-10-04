@@ -87,6 +87,8 @@
   --color-cat-stay: #14b8a6;
   --color-cat-food: #f04452;
   --color-cat-shop: #f59e0b;
+  /* 휴식(온천 · 스파 · 마사지). 시안에 색이 없어 정했다 */
+  --color-cat-rest: #ec4899;
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
 

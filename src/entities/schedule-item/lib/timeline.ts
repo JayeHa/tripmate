@@ -83,7 +83,7 @@ function metaOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | nu
   return parts.filter(Boolean).join(" · ") || null;
 }
 
-/** 링크 칩: 장소의 구글맵 + 장소 링크 */
+/** 링크 칩: 장소의 구글맵 + 일정 링크 + 장소 링크 */
 function linksFor(item: ScheduleItem): TimelineLink[] {
   const gmapUrl = item.place?.gmap_url;
   const gmap = isHttpUrl(gmapUrl) ? [{ title: "구글맵", url: gmapUrl, gmap: true }] : [];

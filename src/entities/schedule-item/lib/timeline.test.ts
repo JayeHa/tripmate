@@ -40,6 +40,7 @@ function item(patch: ItemPatch): ScheduleItem {
     status: null,
     memo: null,
     alternatives: [],
+    links: [],
     created_by: null,
     created_at: "",
     updated_at: "",
@@ -66,6 +67,7 @@ function item(patch: ItemPatch): ScheduleItem {
       category,
       rating,
       review_count,
+      wait: null,
       hours,
       gmap_url,
       links,
@@ -187,6 +189,17 @@ describe("buildTimeline", () => {
       { title: "링크", url: "https://a", gmap: false },
     ]);
     expect(row.alternatives).toEqual([{ name: "B", gmap: "https://b" }]);
+  });
+
+  it("링크 칩은 구글맵 · 일정 링크 · 장소 링크 순서", () => {
+    const base = item({
+      gmap_url: "https://maps.google.com/x",
+      links: [{ title: "공식", url: "https://place.example" }],
+    });
+    const [row] = buildTimeline([
+      { ...base, links: [{ title: "티켓", url: "https://t.example" }] },
+    ]);
+    expect(row.links.map((l) => l.title)).toEqual(["구글맵", "티켓", "공식"]);
   });
 
   it("메모는 줄 단위 노트, 시각은 HH:mm", () => {

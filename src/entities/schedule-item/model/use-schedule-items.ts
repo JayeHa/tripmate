@@ -7,10 +7,12 @@ import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
 import {
   addPlacesToSchedule,
+  createPlaceSchedule,
   deleteScheduleItem,
   fetchSavedPlaces,
   fetchScheduleItems,
   moveScheduleItemToDay,
+  type NewPlaceFields,
   type ScheduleEntry,
   swapScheduleItems,
   updatePlace,
@@ -43,6 +45,20 @@ export function useAddPlacesToSchedule(tripId: string) {
   return useMutation({
     mutationFn: ({ dayIndex, entries }: { dayIndex: number; entries: ScheduleEntry[] }) =>
       addPlacesToSchedule(tripId, dayIndex, entries),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });
+    },
+  });
+}
+
+/** 장소를 직접 입력해 그날 끝에 담는다(새 장소 + 일정). 저장한 장소 목록도 다시 읽는다 */
+export function useCreatePlaceSchedule(tripId: string) {
+  const qc = useQueryClient();
+  const invalidate = useInvalidateItems(tripId);
+  return useMutation({
+    mutationFn: (v: { dayIndex: number; place: NewPlaceFields }) =>
+      createPlaceSchedule(tripId, v.dayIndex, v.place),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });

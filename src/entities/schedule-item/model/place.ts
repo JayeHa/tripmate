@@ -11,7 +11,7 @@ import type { ScheduleItem } from "./types";
 export const ITEM_KINDS = ["place", "flight", "note"] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
 
-export const PLACE_CATEGORIES = ["sight", "food", "cafe", "shop", "stay", "air"] as const;
+export const PLACE_CATEGORIES = ["sight", "food", "cafe", "shop", "rest", "stay", "air"] as const;
 export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
 
 export const CATEGORY_LABEL = {
@@ -19,6 +19,7 @@ export const CATEGORY_LABEL = {
   food: "음식점",
   cafe: "카페",
   shop: "쇼핑",
+  rest: "휴식",
   stay: "숙소",
   air: "공항·교통",
 } satisfies Record<PlaceCategory, string>;
@@ -29,6 +30,7 @@ export const CATEGORY_EMOJI = {
   food: "🍜",
   cafe: "☕",
   shop: "🛍️",
+  rest: "♨️",
   stay: "🏨",
   air: "✈️",
 } satisfies Record<PlaceCategory, string>;
@@ -113,9 +115,12 @@ export function categoryOf(item: ScheduleItem): PlaceCategory | null {
   return oneOf(PLACE_CATEGORIES, item.place?.category ?? null);
 }
 
-/** 장소의 구글맵 외 추가 링크. 장소가 없거나 모양이 틀린 원소는 버린다 */
+/**
+ * 구글맵 외 링크: 일정 링크(이번 방문의 예약 · 티켓)를 먼저, 장소 링크를 뒤에. 모양이 틀린 원소는 버린다.
+ * 일정 링크가 이 일정에만 해당해 더 구체적이라 앞에 둔다.
+ */
 export function linksOf(item: ScheduleItem): PlaceLink[] {
-  return arrayOf(linkSchema, item.place?.links);
+  return [...arrayOf(linkSchema, item.links), ...arrayOf(linkSchema, item.place?.links)];
 }
 
 /** 대체 장소. name · gmap 이 없는 원소는 버린다 */

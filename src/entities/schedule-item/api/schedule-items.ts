@@ -138,3 +138,42 @@ export async function updatePlace(id: string, patch: TablesUpdate<"places">): Pr
   if (error) throw error;
   if (data.length === 0) throw new Error("이 장소는 만든 사람만 고칠 수 있어요");
 }
+
+/** 장소 입력 폼의 장소 정보 칸. 0017 create_place_schedule 의 p_place */
+export type NewPlaceFields = {
+  name: string;
+  emoji: string | null;
+  category: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  google_place_id: string | null;
+  hours: string | null;
+  rating: number | null;
+  review_count: number | null;
+  wait: string | null;
+  description: string | null;
+  gmap_url: string | null;
+  links: { title: string; url: string }[];
+};
+
+/**
+ * 장소를 직접 입력해 그날 끝에 담는다(create_place_schedule). 장소와 일정을 한 트랜잭션으로 만든다.
+ * 이번 일정 칸(p_item)은 비워 보낸다 — 직접 추가는 장소만 받고, 상태 · 시간 · 메모는 일정 상세에서 고친다.
+ * 새 일정 id 를 돌려준다.
+ */
+export async function createPlaceSchedule(
+  tripId: string,
+  dayIndex: number,
+  place: NewPlaceFields,
+): Promise<string> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("create_place_schedule", {
+    p_trip: tripId,
+    p_day: dayIndex,
+    p_place: place,
+    p_item: {},
+  });
+  if (error) throw error;
+  return data;
+}

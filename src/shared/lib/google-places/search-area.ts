@@ -1,6 +1,7 @@
-import type { City } from "@/entities/city";
-
 type LatLng = { lat: number; lng: number };
+
+/** 검색 범위를 정하는 데 필요한 도시 칸(cities 행의 일부). 도시 엔티티를 몰라도 되게 모양만 받는다 */
+export type SearchCity = LatLng & { id: string; country_code: string; zoom: number };
 
 /**
  * 도시 지도 줌(`cities.zoom`)에 따른 검색 사각형의 반폭(도). 도시 중심에서 위아래 · 좌우로 이만큼 안만 찾는다.
@@ -25,7 +26,7 @@ const WIDE_BIAS_RADIUS_M = 50_000;
  * 나라 · 섬 무리 단위 도시는 사각형 대신 중심 쪽을 먼저 보이는 bias 만 건다.
  * 여러 도시 여행이어도 사각형 하나로 여러 도시를 덮지 않는다 — 사이 지역이 섞인다. 도시 칩으로 하나를 고른다.
  */
-export function searchArea(city: Pick<City, "lat" | "lng" | "country_code" | "zoom">) {
+export function searchArea(city: Omit<SearchCity, "id">) {
   const includedRegionCodes = [city.country_code.toLowerCase()];
   const half = searchHalfSpan(city.zoom);
   if (half === null) {
@@ -49,7 +50,7 @@ export function searchArea(city: Pick<City, "lat" | "lng" | "country_code" | "zo
  * 처음 고를 도시. 그날 첫 장소에서 가장 가까운 여행 도시, 그날 장소가 없으면 첫 도시. 도시가 없으면 null.
  * 대부분 날짜별로 한 도시에 있어서 이 값이 맞는 경우가 많다.
  */
-export function defaultCityId(cities: City[], dayAnchor: LatLng | null): string | null {
+export function defaultCityId(cities: SearchCity[], dayAnchor: LatLng | null): string | null {
   if (cities.length === 0) return null;
   if (!dayAnchor) return cities[0].id;
   let best = cities[0];
