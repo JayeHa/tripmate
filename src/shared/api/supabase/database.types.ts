@@ -218,6 +218,7 @@ export type Database = {
           emoji: string | null;
           rating: number | null;
           review_count: number | null;
+          wait: string | null;
           description: string | null;
           hours: string | null;
           gmap_url: string | null;
@@ -238,6 +239,7 @@ export type Database = {
           emoji?: string | null;
           rating?: number | null;
           review_count?: number | null;
+          wait?: string | null;
           description?: string | null;
           hours?: string | null;
           gmap_url?: string | null;
@@ -258,6 +260,7 @@ export type Database = {
           emoji?: string | null;
           rating?: number | null;
           review_count?: number | null;
+          wait?: string | null;
           description?: string | null;
           hours?: string | null;
           gmap_url?: string | null;
@@ -282,6 +285,7 @@ export type Database = {
           status: string | null;
           memo: string | null;
           alternatives: Json;
+          links: Json;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -300,6 +304,7 @@ export type Database = {
           status?: string | null;
           memo?: string | null;
           alternatives?: Json;
+          links?: Json;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -318,6 +323,7 @@ export type Database = {
           status?: string | null;
           memo?: string | null;
           alternatives?: Json;
+          links?: Json;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -494,6 +500,14 @@ export type Database = {
       add_schedule_places: {
         Args: { p_trip: string; p_day: number; p_places: Json };
         Returns: string[];
+      };
+      create_place_schedule: {
+        Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };
+        Returns: string;
+      };
+      place_city_for_trip: {
+        Args: { p_trip: string; p_lat: number | null; p_lng: number | null };
+        Returns: string | null;
       };
       can_attach_place: {
         Args: { p_place: string; p_trip: string };

@@ -11,7 +11,7 @@ import type { ScheduleItem } from "./types";
 export const ITEM_KINDS = ["place", "flight", "note"] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
 
-export const PLACE_CATEGORIES = ["sight", "food", "cafe", "shop", "stay", "air"] as const;
+export const PLACE_CATEGORIES = ["sight", "food", "cafe", "shop", "rest", "stay", "air"] as const;
 export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
 
 export const CATEGORY_LABEL = {
@@ -19,6 +19,7 @@ export const CATEGORY_LABEL = {
   food: "음식점",
   cafe: "카페",
   shop: "쇼핑",
+  rest: "휴식",
   stay: "숙소",
   air: "공항·교통",
 } satisfies Record<PlaceCategory, string>;
@@ -29,6 +30,7 @@ export const CATEGORY_EMOJI = {
   food: "🍜",
   cafe: "☕",
   shop: "🛍️",
+  rest: "♨️",
   stay: "🏨",
   air: "✈️",
 } satisfies Record<PlaceCategory, string>;
