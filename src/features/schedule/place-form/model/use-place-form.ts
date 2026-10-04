@@ -109,8 +109,9 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
       });
   }
 
-  /** 이미 있는 장소를 쓰지 않고 새로 등록한다 — 그 구글 장소와의 연결을 끊고 같은 핀 위치에서 ② 로 */
+  /** 이미 있는 장소 대신 새로 등록 — 구글 장소 연결을 끊고 ① 에 머문다(「이 위치로 선택」 → ②). 앞선 담기 실패 문구는 지운다 */
   function registerNew() {
+    attach.reset();
     same.clear();
     setValues((v) => ({ ...v, ...dropPickedLink(v), googleId: null }));
   }
