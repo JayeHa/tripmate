@@ -27,7 +27,13 @@ type ItemCardProps = {
  */
 export function ItemCard({ row, open, onToggle, onOpen }: ItemCardProps) {
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col gap-1.5 rounded-card border border-line-card bg-white px-4.5 py-4 shadow-card">
+    <div
+      className={cn(
+        "relative flex min-w-0 flex-1 flex-col gap-1.5 rounded-card border border-line-card bg-white px-4.5 py-4 shadow-card",
+        // 내용이 짧아도 64px 사진 칸(위아래 여백 16 포함 96)이 카드 밖으로 나가지 않게
+        row.isMeal && "min-h-24",
+      )}
+    >
       {row.isMeal && (
         <span
           aria-hidden="true"

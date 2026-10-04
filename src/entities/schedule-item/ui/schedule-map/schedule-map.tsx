@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/utils";
 
 import { fitZoom } from "../../lib/map-fit";
 import type { TimelineRow } from "../../lib/timeline";
-import { MapPin } from "./map-pin";
+import { MapPin, type MapPinSize } from "./map-pin";
 
 /** 핀이 하나도 없는 날의 중심. 여행 도시 좌표를 아직 받지 않아 도쿄역으로 둔다 */
 const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 };
@@ -30,6 +30,8 @@ function pinsOf(rows: TimelineRow[]): Pin[] {
 
 type ScheduleMapProps = {
   rows: TimelineRow[];
+  /** 모바일 접히는 지도는 md(24), PC 3단 지도는 lg(28) */
+  pinSize?: MapPinSize;
   selectedId?: string | null;
   onSelect?: (row: TimelineRow) => void;
   className?: string;
@@ -41,7 +43,13 @@ type ScheduleMapProps = {
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다.
  * 컨테이너는 isolation 으로 쌓임 맥락을 가둬, 지도 내부 패널의 z-index 가 시트 · 모달 위로 올라오지 않게 한다.
  */
-export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleMapProps) {
+export function ScheduleMap({
+  rows,
+  pinSize = "md",
+  selectedId,
+  onSelect,
+  className,
+}: ScheduleMapProps) {
   const pins = pinsOf(rows);
   return (
     <div className={cn("relative isolate z-0 size-full bg-map-bg", className)}>
@@ -64,6 +72,7 @@ export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleM
           >
             <MapPin
               num={pin.num}
+              size={pinSize}
               status={pin.row.status}
               category={pin.row.category}
               selected={selectedId === pin.id}
