@@ -2,17 +2,25 @@
 
 import { useRef, useState } from "react";
 
-import { ScheduleMap, type TimelineRow } from "@/entities/schedule-item";
+import { ScheduleMap } from "@/entities/schedule-item";
 import { DayChips } from "@/features/schedule/day-selector";
+import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
 
+import { useScrollFocus } from "../model/use-scroll-focus";
 import { DayBody } from "./day-body";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
 
 /**
+ * 스크롤 강조 기준선 = sticky 영역(상단바 + 지도 + 날짜 칩) 아래로 이만큼.
+ * 목록 맨 위에 온 장소가 강조되되, 핀으로 고르면 sticky 아래 36px(48 − 12)에 놓여 지도에 붙어 보이지 않는다
+ */
+const FOCUS_LINE_OFFSET = 48;
+
+/**
  * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 하루치 본문.
- * 페이지(window)가 스크롤된다.
+ * 페이지(window)가 스크롤된다. 스크롤하면 기준선을 지난 장소가 지도에 강조된다(지도가 펼쳐져 있을 때만).
  */
 export function MobileSchedule({
   trip,
@@ -22,22 +30,15 @@ export function MobileSchedule({
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * 지도 핀을 누르면 그 카드를 sticky 영역(상단바 + 지도 + 날짜 칩) 바로 아래로 스크롤한다.
-   * scrollIntoView 는 sticky 를 모르고 창 가운데에 맞춰, 작은 폰에서는 카드가 지도 밑에 가려진다.
-   * sticky 높이는 지도를 접으면 바뀌므로 누를 때마다 잰다.
-   */
-  function selectPin(row: TimelineRow) {
-    setSelectedId(row.item.id);
-    const card = document.getElementById(`item-${row.item.id}`);
-    const stickyBottom = stickyRef.current?.getBoundingClientRect().bottom ?? 0;
-    if (!card) return;
-    const top = card.getBoundingClientRect().top + window.scrollY - stickyBottom - 12;
-    window.scrollTo({ top, behavior: "smooth" });
-  }
+  const listRef = useRef<HTMLDivElement>(null);
+  const stickyHeight = useElementHeight(stickyRef);
+  const focus = useScrollFocus({
+    list: listRef,
+    line: () => (stickyRef.current?.getBoundingClientRect().bottom ?? 0) + FOCUS_LINE_OFFSET,
+    enabled: mapOpen,
+    resetKey: day,
+  });
 
   return (
     <>
@@ -45,7 +46,11 @@ export function MobileSchedule({
       {/* 상단바 아래에 붙는 지도 + 날짜 칩. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
-          <ScheduleMap rows={body.rows} selectedId={selectedId} onSelect={selectPin} />
+          <ScheduleMap
+            rows={body.rows}
+            focusId={focus.focusId}
+            onSelect={(row) => focus.focusOn(row.item.id)}
+          />
         </MapPanel>
         {trip && (
           <DayChips
@@ -57,7 +62,26 @@ export function MobileSchedule({
         )}
       </div>
       <main className="flex flex-1 flex-col">
-        <DayBody startDate={trip?.start_date ?? null} day={day} {...body} />
+        {/* 내용 높이를 따라 변하는 감싸개. main 은 flex-1 로 늘어나 내용이 짧으면 크기가 그대로다 */}
+        <div ref={listRef} className="flex flex-col">
+          <DayBody
+            startDate={trip?.start_date ?? null}
+            day={day}
+            focusId={focus.focusId}
+            {...body}
+          />
+        </div>
+        {/*
+          마지막 장소도 기준선까지 올라오게 하는 여백. 기본 340px, 화면이 길면 「화면 높이 − 기준선」 까지 늘린다.
+          기준선 = 상단바(3.25rem) + sticky 영역 + FOCUS_LINE_OFFSET. sticky 높이는 지도를 접고 펼 때 바뀌어 재서 쓴다
+        */}
+        <div
+          aria-hidden="true"
+          className="shrink-0"
+          style={{
+            height: `max(340px, calc(100dvh - var(--shell-top) - 3.25rem - ${stickyHeight + FOCUS_LINE_OFFSET}px))`,
+          }}
+        />
       </main>
     </>
   );

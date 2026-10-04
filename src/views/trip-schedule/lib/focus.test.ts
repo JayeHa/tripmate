@@ -1,0 +1,49 @@
+import { describe, expect, it } from "vitest";
+
+import { pickFocus, pinScrollTarget } from "./focus";
+
+const rows = [
+  { id: "a", top: 100 },
+  { id: "b", top: 300 },
+  { id: "c", top: 500 },
+];
+
+describe("pickFocus", () => {
+  it("기준선을 지난 마지막 행", () => {
+    expect(pickFocus(rows, 350)).toBe("b");
+  });
+
+  it("윗변이 기준선과 같으면 지난 것으로 본다", () => {
+    expect(pickFocus(rows, 500)).toBe("c");
+  });
+
+  it("아무것도 지나지 않았으면 첫 행", () => {
+    expect(pickFocus(rows, 50)).toBe("a");
+  });
+
+  it("후보가 없으면 null", () => {
+    expect(pickFocus([], 200)).toBeNull();
+  });
+});
+
+describe("pinScrollTarget", () => {
+  it("기준선이 고정이면 행을 기준선 − margin 으로 옮기는 만큼 스크롤한다", () => {
+    // 행이 화면 500, 기준선 120 → 392 만큼 내려 행이 108(120 − 12) 에 온다
+    expect(pinScrollTarget(500, 0, 2000, () => 120, 12)).toBe(392);
+  });
+
+  it("기준선이 스크롤과 함께 내려가면 그만큼 덜 스크롤한다", () => {
+    // 기준선 = min(400, t + 120): t 만큼 스크롤하면 행은 500 − t, 기준선은 t + 120 → t = 196
+    const t = pinScrollTarget(500, 0, 2000, (s) => Math.min(400, s + 120), 12);
+    expect(t).toBe(196);
+    expect(500 - t).toBeLessThanOrEqual(Math.min(400, t + 120) - 12 + 0.5);
+  });
+
+  it("이미 기준선 위면 맨 위(0)보다 위로는 가지 않는다", () => {
+    expect(pinScrollTarget(60, 0, 2000, () => 120, 12)).toBe(0);
+  });
+
+  it("끝까지 내려도 닿지 않으면 끝에서 멈춘다", () => {
+    expect(pinScrollTarget(3000, 0, 500, () => 120, 12)).toBe(500);
+  });
+});
