@@ -355,6 +355,48 @@ describe("places (0013)", () => {
     ).toMatch(/row-level security/);
   });
 
+  it("멤버가 나가면 그 사람이 만든 장소는 소유자 사본으로 바뀐다: 나간 사람이 고쳐도 이 여행엔 안 보이고, 소유자가 고친다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-10", "2027-05-10");
+    // A 가 이미 가진 구글 장소는 사본을 만들지 않고 그 장소를 쓴다
+    const mine = await addPlace(id, 0, { name: "츠키지(A)", google_place_id: "g-tsukiji" });
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${id}', '${B}', 'member');`,
+    );
+    await as(B);
+    const fresh = await addPlace(id, 0, { name: "아사쿠사", lat: 35.71, lng: 139.79 });
+    const same = await addPlace(id, 0, { name: "츠키지(B)", google_place_id: "g-tsukiji" });
+    const placeOf = async (item: string) =>
+      (
+        await db.query<{ p: string }>(
+          `select place_id p from public.schedule_items where id = '${item}'`,
+        )
+      ).rows[0].p;
+    const original = await placeOf(fresh);
+
+    await db.query(`delete from public.trip_members where trip_id = '${id}' and user_id = '${B}'`);
+    await db.query(`update public.places set name = '바꿈' where id = '${original}'`);
+
+    await as(A);
+    const rows = await db.query<{ owner: string; name: string; place_id: string }>(
+      `select p.created_by owner, p.name, si.place_id from public.schedule_items si
+       join public.places p on p.id = si.place_id where si.id in ('${fresh}', '${same}') order by si.position`,
+    );
+    expect(rows.rows.map((r) => [r.owner, r.name])).toEqual([
+      [A, "아사쿠사"],
+      [A, "츠키지(A)"],
+    ]);
+    expect(rows.rows[0].place_id).not.toBe(original);
+    expect(rows.rows[1].place_id).toBe(await placeOf(mine));
+    await db.query(
+      `update public.places set name = '아사쿠사 센소지' where id = '${rows.rows[0].place_id}'`,
+    );
+    const renamed = await db.query(
+      `select name from public.places where id = '${rows.rows[0].place_id}'`,
+    );
+    expect(renamed.rows).toEqual([{ name: "아사쿠사 센소지" }]);
+  });
+
   it("일정이 쓰는 장소는 지울 수 없다", async () => {
     await as(A);
     const id = await newTrip("2027-05-09", "2027-05-09");
