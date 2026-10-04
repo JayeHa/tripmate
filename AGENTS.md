@@ -148,7 +148,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 # 의존성
 
 새 의존성 추가 · 자체 구현과 라이브러리 사이의 교체 · 메이저 업그레이드 · 제거는 **코드를 쓰기 전에**
-[`docs/library-policy.md`](docs/library-policy.md) 절차를 따르고 결과를 그 문서의 결정 기록 로그에 남긴다.
+[`docs/engineering/library-policy.md`](docs/engineering/library-policy.md) 절차를 따르고 결과를 그 문서의 결정 기록 로그에 남긴다.
 사용자 승인 전에는 `pnpm add` 하지 않는다.
 
 # 인증 경계
@@ -183,16 +183,14 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 ## security definer 함수
 
 `security definer` 는 호출자 권한을 무시하므로 **RLS 가 걸리지 않는다.** 함수 안의 검사가
-유일한 경계다. 새로 만들 때마다 익명 허용 여부를 정한다.
+유일한 경계다. 새로 만들 때마다 익명 허용 여부를 정해 `supabase/migrations.test.ts` 의 `ANONYMOUS_ALLOWED` 와
+[`docs/policies/data-model.md`](docs/policies/data-model.md) 「DB 함수」 표에 함께 적는다.
 
-| 함수                   | 익명                                       |
-| ---------------------- | ------------------------------------------ |
-| `join_trip_by_token`   | **거부** (0004 에서 claim 검사)            |
-| `get_trip_preview`     | 허용. 읽기 전용 미리보기다                 |
-| `rotate_invite_token`  | 멤버만. `is_trip_member` 로 걸린다         |
-| `is_trip_member`       | 판정 함수 자체                             |
-| `can_attach_place`     | 허용. 판정만 한다(장소 → 일정 RLS)         |
-| `copy_places_on_leave` | 트리거. 나가는 동작(members_delete)이 경계 |
+## 데이터 · 권한 정책 문서
+
+테이블마다 누가 읽고 고치는지, 지켜야 하는 규칙과 그것을 지키는 곳, 동작별로 바뀌는 데이터는
+[`docs/policies/data-model.md`](docs/policies/data-model.md) 에 있다. 권한을 다루는 기능을 만들거나 리뷰할 때 먼저 읽는다.
+**마이그레이션(테이블 · 정책 · 함수 · 트리거)을 바꾸면 같은 PR 에서 이 문서도 고친다.** 테이블 · 함수 이름이 빠지면 `migrations.test.ts` 가 막는다.
 
 ## 클라이언트 가드는 가드가 아니다
 

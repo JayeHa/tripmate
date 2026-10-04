@@ -130,3 +130,50 @@ describe("assert_not_anonymous 헬퍼", () => {
     expect(sqlFiles().join("\n")).toMatch(REJECTS_ANONYMOUS);
   });
 });
+
+/**
+ * public 스키마에 만든 테이블 이름. `if not exists` · `unlogged` 를 건너뛰고, 다른 스키마(storage 등)는 뺀다.
+ * 스키마를 안 쓰면 public 으로 본다. 따옴표 없는 이름은 Postgres 가 소문자로 바꾸므로 `PUBLIC.foo` 도 public 이다.
+ * temp 테이블은 public 이 아니라 세션 전용 스키마(pg_temp)에 생겨서 뺀다.
+ */
+function tableNames(sql: string): string[] {
+  const re =
+    /create\s+(?:(unlogged|temp|temporary)\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:"?(\w+)"?\.)?"?(\w+)"?/gi;
+  return [...sql.matchAll(re)]
+    .filter(
+      ([, kind, schema]) =>
+        !/^temp/i.test(kind ?? "") && (schema ?? "public").toLowerCase() === "public",
+    )
+    .map((m) => m[3]);
+}
+
+describe("tableNames", () => {
+  it.each([
+    ["create table public.places (", ["places"]],
+    ["create table if not exists public.foo (", ["foo"]],
+    ["create unlogged table public.bar (", ["bar"]],
+    ["create temporary table baz (", []],
+    ["create TABLE PUBLIC.upper (", ["upper"]],
+    ['create table "public"."quoted" (', ["quoted"]],
+    ["create table storage.objects (", []],
+  ])("%s → %j", (sql, expected) => {
+    expect(tableNames(sql)).toEqual(expected);
+  });
+});
+
+describe("데이터 정책 문서(docs/policies/data-model.md)", () => {
+  /**
+   * 마이그레이션이 만든 테이블 · 함수가 문서에 모두 적혀 있는지. 새로 만들고 문서를 안 고치면 여기서 막힌다.
+   * 이름이 `백틱` 으로 한 번이라도 나오면 된다 — 권한 · 동작을 제대로 적었는지는 리뷰가 본다.
+   */
+  it("마이그레이션의 테이블 · 함수를 모두 적는다", () => {
+    const doc = readFileSync(path.resolve(__dirname, "../docs/policies/data-model.md"), "utf8");
+    const names = new Set<string>();
+    for (const sql of sqlFiles()) {
+      for (const name of tableNames(sql)) names.add(name);
+      for (const m of sql.matchAll(HEAD)) names.add(m[1]);
+    }
+    expect(names.size).toBeGreaterThan(10);
+    expect([...names].filter((name) => !doc.includes(`\`${name}\``))).toEqual([]);
+  });
+});

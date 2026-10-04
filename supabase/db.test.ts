@@ -184,6 +184,16 @@ describe("update_trip_dates", () => {
   });
 });
 
+describe("trips", () => {
+  it("trips 를 직접 고쳐도 도착이 출발보다 앞서면 check 제약이 거부한다 (#47 의 우회 경로)", async () => {
+    await as(A);
+    const id = await newTrip("2027-01-10", "2027-01-12");
+    expect(
+      await rejects(`update public.trips set end_date = '2027-01-01' where id = '${id}'`),
+    ).toMatch(/trips_dates_chk/);
+  });
+});
+
 describe("schedule_items · places 칸 (0010 · 0013)", () => {
   it("note 는 장소 없이 제목만으로, 상태 없음 · 빈 대체 장소가 된다", async () => {
     await as(A);
