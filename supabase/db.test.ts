@@ -193,6 +193,79 @@ describe("schedule_items 장소 정보 (0010)", () => {
   });
 });
 
+describe("moves (0011)", () => {
+  /** 여행 하나와 그 안의 장소 두 곳을 만든다 */
+  async function tripWithTwoPlaces(day: string) {
+    const id = await newTrip(day, day);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, name)
+       values ('${id}', 0, 0, 'A'), ('${id}', 0, 1, 'B') returning id`,
+    );
+    return { id, a: rows[0].id, b: rows[1].id };
+  }
+
+  it("이동 일정(kind = move)은 더 만들 수 없다", async () => {
+    await as(A);
+    const id = await newTrip("2027-04-01", "2027-04-01");
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, name, kind)
+         values ('${id}', 0, 0, 'x', 'move')`,
+      ),
+    ).toMatch(/check constraint/);
+  });
+
+  it("두 장소 사이에 하나, 비어 있거나 60자를 넘으면 거부, 장소를 지우면 함께 지워진다", async () => {
+    await as(A);
+    const { id, a, b } = await tripWithTwoPlaces("2027-04-02");
+    await db.query(
+      `insert into public.moves (trip_id, from_item_id, to_item_id, mode, detail)
+       values ('${id}', '${a}', '${b}', 'subway', '유라쿠초선 직통')`,
+    );
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, mode) values ('${id}', '${a}', '${b}', 'bus')`,
+      ),
+    ).toMatch(/duplicate key/);
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id) values ('${id}', '${b}', '${a}')`,
+      ),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, detail)
+         values ('${id}', '${b}', '${a}', '${"가".repeat(61)}')`,
+      ),
+    ).toMatch(/check constraint/);
+    await db.query(`delete from public.schedule_items where id = '${a}'`);
+    const left = await db.query<{ n: number }>(
+      `select count(*)::int n from public.moves where trip_id = '${id}'`,
+    );
+    expect(left.rows[0].n).toBe(0);
+  });
+
+  it("남의 여행에는 못 붙이고, 내 여행이어도 남의 일정을 끌어올 수 없다", async () => {
+    await as(A);
+    const mine = await tripWithTwoPlaces("2027-04-03");
+    await as(B);
+    const theirs = await tripWithTwoPlaces("2027-04-04");
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, mode)
+         values ('${mine.id}', '${mine.a}', '${mine.b}', 'walk')`,
+      ),
+    ).toMatch(/row-level security/);
+    await as(A);
+    expect(
+      await rejects(
+        `insert into public.moves (trip_id, from_item_id, to_item_id, mode)
+         values ('${mine.id}', '${mine.a}', '${theirs.a}', 'walk')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+});
+
 describe("RLS", () => {
   it("도시 기준 데이터는 읽기만, 남의 여행에는 도시를 넣지 못한다", async () => {
     await as(A);
