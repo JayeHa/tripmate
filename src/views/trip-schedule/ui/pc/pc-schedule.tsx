@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { ScheduleMap, type TimelineRow } from "@/entities/schedule-item";
+import { ScheduleMap } from "@/entities/schedule-item";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 
 import { useScrollFocus } from "../../model/use-scroll-focus";
@@ -33,17 +33,6 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
     enabled: true,
     resetKey: day,
   });
-
-  /** 지도 핀을 누르면 그 장소를 강조하고, 목록 칸을 그 행이 위에 오도록(기준선보다 위) 스크롤한다 */
-  function selectPin(row: TimelineRow) {
-    focus.focusOn(row.item.id);
-    const list = listRef.current;
-    const card = list?.querySelector(`[data-focus-id="${row.item.id}"]`);
-    if (!list || !card) return;
-    const top =
-      card.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop - 12;
-    list.scrollTo({ top, behavior: "smooth" });
-  }
 
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
@@ -80,7 +69,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
         <ScheduleMap
           rows={body.rows}
           focusId={focus.focusId}
-          onSelect={selectPin}
+          onSelect={(row) => focus.focusOn(row.item.id)}
           pinSize="lg"
           fitKey={fitKey}
         />

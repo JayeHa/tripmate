@@ -2,6 +2,9 @@ import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useSta
 
 import { pickFocus } from "../lib/focus";
 
+/** 핀으로 고른 행을 기준선보다 이만큼 위로 스크롤한다. 기준선을 지난 마지막 행이 그 행이 되게 */
+const PIN_SCROLL_MARGIN = 12;
+
 /** 핀을 눌러 스크롤하는 동안 스크롤이 이만큼 멈추면 끝난 것으로 본다(smooth 스크롤은 매 프레임 scroll 이벤트를 낸다) */
 const HOLD_MS = 150;
 
@@ -18,14 +21,20 @@ type ScrollFocusOptions = {
   resetKey: unknown;
 };
 
+/** 스크롤을 듣고 움직일 대상. 칸을 넘기지 않았으면 window */
+function scrollTargetOf(scroller: RefObject<HTMLElement | null> | undefined): HTMLElement | Window {
+  return scroller?.current ?? window;
+}
+
 type FocusState = { key: unknown; id: string | null };
 
 /**
  * 스크롤 연동 강조 — 기준선을 지난 마지막 장소를 「지금 보고 있는 장소」로 고른다.
  * 스크롤 중에만 다시 고른다(프레임당 한 번). 날짜를 바꾸면 스크롤할 때까지 강조가 없다.
  *
- * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고, 뒤따르는 smooth 스크롤이 끝날 때까지
- * 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다. 끝나면 한 번 다시 고른다.
+ * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고 그 행을 기준선 바로 위로 smooth 스크롤한다.
+ * 스크롤이 끝날 때까지 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다.
+ * 끝나면 한 번 다시 고른다. 행을 기준선 위에 두므로 다시 골라도 같은 행이다(목록 끝 여백이 충분할 때).
  */
 export function useScrollFocus({ scroller, list, line, enabled, resetKey }: ScrollFocusOptions) {
   const [state, setState] = useState<FocusState>({ key: resetKey, id: null });
@@ -57,7 +66,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
   }, [scan]);
 
   useEffect(() => {
-    const target = scroller?.current ?? window;
+    const target = scrollTargetOf(scroller);
     let frame = 0;
     const onScroll = () => {
       if (hold.current) {
@@ -76,13 +85,21 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     };
   }, [scroller, scan, holdScan]);
 
-  /** 핀으로 고른 장소를 바로 강조한다. 스크롤은 부른 쪽이 한다 */
+  /**
+   * 핀으로 고른 장소를 바로 강조하고, 그 행을 기준선보다 조금 위로 스크롤한다.
+   * scrollIntoView 는 쓰지 않는다 — sticky 를 몰라서 모바일에서는 행이 지도 밑에 가려진다.
+   * 기준선은 누를 때마다 다시 잰다(지도를 접으면 바뀐다).
+   */
   const focusOn = useCallback(
     (id: string) => {
       setState({ key: latest.current.resetKey, id });
       holdScan();
+      const row = list.current?.querySelector(`[data-focus-id="${id}"]`);
+      if (!row) return;
+      const by = row.getBoundingClientRect().top - (latest.current.line() - PIN_SCROLL_MARGIN);
+      scrollTargetOf(scroller).scrollBy({ top: by, behavior: "smooth" });
     },
-    [holdScan],
+    [holdScan, list, scroller],
   );
 
   return { focusId: enabled && state.key === resetKey ? state.id : null, focusOn };
