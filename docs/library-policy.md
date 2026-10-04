@@ -166,6 +166,9 @@ gh api repos/<owner>/<repo> --jq '{pushed_at, open_issues_count, archived}'  # �
 UI 라이브러리는 컴포넌트 트리에 직접 붙어서 「호출부가 이름을 모르게」 감싸면 오히려 래퍼가 라이브러리 API 를 다시 만들게 된다.
 그래서 이름을 숨기는 대신 퍼지는 범위를 막는다.
 
+**예외 — 앱 전역 provider.** 라이브러리가 루트에 provider 를 요구하면(`APIProvider`, `QueryClientProvider`) 그 한 줄은 `app` 레이어(`app/providers.tsx`)에 둔다.
+provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에도 provider 를 뺀 나머지 사용처는 위 기준대로 모은다.
+
 ---
 
 ## STEP 5 — 결정 기록 (ADR 5줄)
@@ -215,7 +218,13 @@ UI 라이브러리는 컴포넌트 트리에 직접 붙어서 「호출부가 �
 - **후보**: 기록 없음. 도입은 프로젝트 초기 설정 때였다.
 - **선택**: `@vis.gl/react-google-maps` 1.10.1. MIT, 메인테이너 5명, 최신 1.10.1(2026-09-21), peer `react >=16.8 || ^19`, 타입 내장.
 - **근거**: `useMap()` 으로 원본 `google.maps.Map` 을 받을 수 있다(escape hatch). 실제로 이 경로로 핀 맞춤 줌을 직접 계산하고(`fitBounds` 가 비동기라 줌 상한을 걸 수 없었음), 점선 동선은 `google.maps.Polyline` 으로 그렸다.
-- **포기한 것 / 재평가 트리거**: 지금은 두 슬라이스(`entities/schedule-item/ui/schedule-map`, `views/trip-map`)에서 직접 쓴다. STEP 4 의 「한 슬라이스」 기준에 어긋나므로 경로 지도(#14)에서 한 곳으로 모은다. 숨은 탭에서는 지도가 그려지지 않는다(rAF 가 돌지 않음, #56).
+- **포기한 것 / 재평가 트리거**: 지금은 네 곳에서 직접 import 한다.
+  - `app/providers.tsx` (`APIProvider`) — STEP 4 의 provider 예외라 그대로 둔다
+  - `features/schedule/place-search/ui/place-search-sheet.tsx` (`useMapsLibrary`, Places)
+  - `entities/schedule-item/ui/schedule-map/schedule-map.tsx`
+  - `views/trip-map/ui/day-map.tsx`
+
+  provider 를 뺀 세 곳이 세 슬라이스에 흩어져 STEP 4 의 「한 슬라이스」 기준에 어긋난다. 경로 지도(#14)에서 지도 그리기와 Places 로딩을 어디로 모을지 정한다. 숨은 탭에서는 지도가 그려지지 않는다(rAF 가 돌지 않음, #56).
 
 ### 2026-10 · 한국 공휴일 데이터 → `@hyunbinseo/holidays-kr` (소급)
 
