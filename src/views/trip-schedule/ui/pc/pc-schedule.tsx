@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 
 import { ScheduleMap, type TimelineRow } from "@/entities/schedule-item";
 
-import { MAP_MIN_WIDTH, RAIL_WIDTH, splitPresets } from "../../lib/split";
 import { useSplitWidth } from "../../model/use-split-width";
 import { DayBody } from "../day-body";
 import type { ScheduleLayoutProps } from "../schedule-layout";
@@ -43,12 +42,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
           onChange={onDayChange}
         />
       )}
-      <div
-        ref={listRef}
-        className="shrink-0 overflow-y-auto"
-        // 화면이 줄어 저장된 너비가 넘치면 지도 최소 폭을 남기도록 CSS 가 막는다
-        style={{ width: split.width, maxWidth: `calc(100vw - ${RAIL_WIDTH + MAP_MIN_WIDTH}px)` }}
-      >
+      <div ref={listRef} className="shrink-0 overflow-y-auto" style={{ width: split.width }}>
         <DayBody startDate={trip?.start_date ?? null} day={day} showCounts {...body} />
       </div>
       <SplitHandle
@@ -58,11 +52,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
       />
       <div className="relative min-w-80 flex-1">
         <ScheduleMap rows={body.rows} selectedId={selectedId} onSelect={selectPin} pinSize="lg" />
-        <SplitPresets
-          presets={splitPresets(typeof window === "undefined" ? 1280 : window.innerWidth)}
-          width={split.width}
-          onSelect={split.setWidth}
-        />
+        <SplitPresets presets={split.presets} width={split.width} onSelect={split.setWidth} />
       </div>
     </div>
   );

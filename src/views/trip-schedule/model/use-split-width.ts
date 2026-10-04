@@ -2,22 +2,27 @@
 
 import { type PointerEvent as ReactPointerEvent, useState } from "react";
 
-import { clampListWidth, LIST_DEFAULT_WIDTH } from "../lib/split";
+import { useWindowWidth } from "@/shared/lib/use-window-width";
+
+import { clampListWidth, LIST_DEFAULT_WIDTH, splitPresets } from "../lib/split";
 
 /**
  * PC 일정 목록 너비와 경계선 드래그. 드래그 중에는 경계선을 파랗게 그린다.
- * 화면이 줄어 최대보다 넓어지면 CSS max-width 가 막고, 다음 조작 때 값이 범위 안으로 돌아온다.
+ * 저장한 값(wanted)과 화면에 적용되는 값(width)을 나눈다 — 창이 줄면 width 는 최대로 잘리고,
+ * 다시 넓히면 원래 원하던 너비로 돌아간다. 드래그 · 프리셋 강조 · 접근성 값은 모두 width 기준이다.
  */
 export function useSplitWidth() {
-  const [width, setWidthRaw] = useState(LIST_DEFAULT_WIDTH);
+  const viewport = useWindowWidth();
+  const [wanted, setWanted] = useState(LIST_DEFAULT_WIDTH);
   const [dragging, setDragging] = useState(false);
+  const width = clampListWidth(wanted, viewport);
 
   /** 범위 안으로 잘라서 정한다 */
   function setWidth(next: number) {
-    setWidthRaw(clampListWidth(next, window.innerWidth));
+    setWanted(clampListWidth(next, viewport));
   }
 
-  /** 경계선을 누른 채 끌면 목록 너비가 따라온다 */
+  /** 경계선을 누른 채 끌면 목록 너비가 따라온다. 시작점은 화면에 보이는 너비 */
   function startDrag(e: ReactPointerEvent) {
     e.preventDefault();
     const x0 = e.clientX;
@@ -33,5 +38,12 @@ export function useSplitWidth() {
     window.addEventListener("pointerup", up);
   }
 
-  return { width, dragging, setWidth, startDrag, reset: () => setWidth(LIST_DEFAULT_WIDTH) };
+  return {
+    width,
+    dragging,
+    presets: splitPresets(viewport),
+    setWidth,
+    startDrag,
+    reset: () => setWidth(LIST_DEFAULT_WIDTH),
+  };
 }

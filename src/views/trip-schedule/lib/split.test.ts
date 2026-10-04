@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clampListWidth, listMaxWidth, splitPresets } from "./split";
+import { activePreset, clampListWidth, listMaxWidth, splitPresets } from "./split";
 
 describe("PC 3단 목록 너비", () => {
   it("1280 화면: 최대 728(레일 232 + 지도 320 을 남겨도 728 이 먼저)", () => {
@@ -15,6 +15,13 @@ describe("PC 3단 목록 너비", () => {
     expect(clampListWidth(200, 1280)).toBe(360);
     expect(clampListWidth(900, 1280)).toBe(728);
     expect(clampListWidth(500.6, 1280)).toBe(501);
+  });
+
+  it("좁은 창(1050)에서 일정 크게 = 반반이면 앞의 하나만 켠다", () => {
+    const presets = splitPresets(1050);
+    expect(presets[0].width).toBe(presets[1].width);
+    expect(activePreset(presets, presets[0].width)).toBe("list");
+    expect(activePreset(presets, 440)).toBeNull();
   });
 
   it("프리셋: 일정 크게 = 최대, 반반 = 524, 지도 크게 = 360", () => {

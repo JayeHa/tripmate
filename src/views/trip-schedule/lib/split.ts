@@ -24,6 +24,14 @@ export function clampListWidth(width: number, viewportWidth: number): number {
 
 export type SplitPreset = { key: "list" | "half" | "map"; label: string; width: number };
 
+/**
+ * 지금 너비에 맞는 프리셋 하나. 좁은 창에서는 「일정 크게」 와 「반반」 이 같은 너비가 되는데,
+ * 둘 다 켜지지 않게 앞의 것 하나만 고른다.
+ */
+export function activePreset(presets: SplitPreset[], width: number): SplitPreset["key"] | null {
+  return presets.find((p) => Math.abs(width - p.width) < 4)?.key ?? null;
+}
+
 /** 지도 위 프리셋 「일정 크게 · 반반 · 지도 크게」 */
 export function splitPresets(viewportWidth: number): SplitPreset[] {
   return [
