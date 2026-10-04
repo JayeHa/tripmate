@@ -1,4 +1,11 @@
-import { isHttpUrl, type NewPlaceFields, type PlaceCategory } from "@/entities/schedule-item";
+import {
+  isHttpUrl,
+  type NewPlaceFields,
+  type PlaceCategory,
+  WEEK_DAYS,
+  type WeekDay,
+  type WeekHours,
+} from "@/entities/schedule-item";
 import type { GooglePick } from "@/shared/lib/google-places";
 
 import {
@@ -41,7 +48,11 @@ export type PlaceFormValues = {
   googleId: string | null;
   /** 상세 위치(선택). 「파르코 본관 8F」 */
   addressDetail: string;
+  /** 운영시간 입력 방식 — 매일 같음(hours) · 요일별(hoursWeek) */
+  hoursMode: "same" | "week";
   hours: string;
+  /** 요일별 운영시간. null 이면 휴무, 빈 문자열이면 아직 안 적음 */
+  hoursWeek: Record<WeekDay, string | null>;
   rating: string;
   reviews: string;
   wait: string;
@@ -60,7 +71,9 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
     at: center,
     googleId: null,
     addressDetail: "",
+    hoursMode: "same",
     hours: "",
+    hoursWeek: { mon: "", tue: "", wed: "", thu: "", fri: "", sat: "", sun: "" },
     rating: "",
     reviews: "",
     wait: "",
@@ -106,6 +119,25 @@ export function withGooglePick(
  */
 export function withoutGooglePick(v: PlaceFormValues): PlaceFormValues {
   return { ...v, ...dropPickedLink(v), googleId: null };
+}
+
+/** 월요일 칸의 값(시간 · 휴무)을 모든 요일에 적용한다 */
+export function mondayToAll(week: PlaceFormValues["hoursWeek"]): PlaceFormValues["hoursWeek"] {
+  return Object.fromEntries(WEEK_DAYS.map((d) => [d, week.mon])) as PlaceFormValues["hoursWeek"];
+}
+
+/**
+ * 저장할 운영시간 칸. 매일 같음이면 hours 와 빈 요일별({} — 이미 있는 장소의 예전 요일별 값을 지운다),
+ * 요일별이면 적은 요일 · 휴무만 담은 hours_week(안 적은 요일은 모름)와 빈 hours
+ */
+function hoursFields(v: PlaceFormValues): Pick<NewPlaceFields, "hours" | "hours_week"> {
+  if (v.hoursMode === "same") return { hours: orNull(v.hours), hours_week: {} };
+  const week: WeekHours = {};
+  for (const day of WEEK_DAYS) {
+    const value = v.hoursWeek[day];
+    if (value === null || value.trim()) week[day] = value === null ? null : value.trim();
+  }
+  return { hours: null, hours_week: week };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */
@@ -181,7 +213,7 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
       address_ko: found.addressKo,
       address_detail: orNull(v.addressDetail)?.slice(0, 100) ?? null,
       google_place_id: v.googleId,
-      hours: orNull(v.hours),
+      ...hoursFields(v),
       rating: numberOf(v.rating, 1),
       review_count: numberOf(v.reviews),
       wait: orNull(v.wait),

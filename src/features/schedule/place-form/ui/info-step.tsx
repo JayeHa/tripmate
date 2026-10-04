@@ -5,6 +5,7 @@ import { CATEGORY_LABEL, PLACE_CATEGORIES } from "@/entities/schedule-item";
 import type { PlaceFormState } from "../model/use-place-form";
 import { AddressCard } from "./address-card";
 import { ChipButton, Field, inputClass, LinkListField } from "./form-parts";
+import { HoursField } from "./hours-field";
 
 /** 장소 폼에서 고르는 카테고리. 공항 · 교통은 담을 장소가 아니라 뺀다 */
 const CATEGORIES = PLACE_CATEGORIES.filter((c) => c !== "air");
@@ -78,14 +79,7 @@ export function InfoStep({ form, cityName }: InfoStepProps) {
           ))}
         </div>
       </Field>
-      <Field label="운영시간" optional>
-        <input
-          value={v.hours}
-          onChange={(e) => set("hours", e.target.value)}
-          placeholder="예) 11:00–21:00"
-          className={inputClass}
-        />
-      </Field>
+      <HoursField form={form} />
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)] gap-2.5">
         <Field label="별점">
           <div className="relative flex items-center">

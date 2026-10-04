@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   blankPlaceForm,
+  mondayToAll,
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
@@ -38,6 +39,39 @@ describe("samePoint", () => {
   it("1e-6° 안이면 같은 지점, 넘으면 다른 지점", () => {
     expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.7000004, lng: 139.6999996 })).toBe(true);
     expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.70001, lng: 139.7 })).toBe(false);
+  });
+});
+
+describe("운영시간", () => {
+  const week = {
+    mon: "11:00–22:00",
+    tue: "",
+    wed: " ",
+    thu: "",
+    fri: "",
+    sat: "10:00–23:00",
+    sun: null,
+  };
+
+  it("요일별은 적은 요일 · 휴무만 담고 매일 같음 칸은 비운다", () => {
+    expect(
+      toNewPlace(form({ hoursMode: "week", hoursWeek: week, hours: "9–18" }), NO_ADDRESS),
+    ).toMatchObject({
+      ok: true,
+      value: { hours: null, hours_week: { mon: "11:00–22:00", sat: "10:00–23:00", sun: null } },
+    });
+  });
+
+  it("매일 같음은 빈 요일별({})을 보내 예전 요일별 값을 지운다", () => {
+    expect(toNewPlace(form({ hours: " 10:00–20:00 " }), NO_ADDRESS)).toMatchObject({
+      ok: true,
+      value: { hours: "10:00–20:00", hours_week: {} },
+    });
+  });
+
+  it("월요일 값(휴무 포함)을 모든 요일에", () => {
+    expect(mondayToAll(week).sun).toBe("11:00–22:00");
+    expect(Object.values(mondayToAll({ ...week, mon: null }))).toEqual(Array(7).fill(null));
   });
 });
 
@@ -118,6 +152,7 @@ describe("toNewPlace", () => {
         address_detail: "3층",
         google_place_id: "g1",
         hours: null,
+        hours_week: {},
         rating: 4.3,
         review_count: 1355,
         wait: "20분",

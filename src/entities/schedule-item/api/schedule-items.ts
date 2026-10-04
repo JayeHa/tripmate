@@ -1,6 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
+import type { WeekHours } from "../model/hours";
 import type { Place, ScheduleItem } from "../model/types";
 
 /** 일정과 그 일정이 쓰는 장소를 함께 읽는 select */
@@ -183,6 +184,8 @@ export type NewPlaceFields = {
   address_detail: string | null;
   google_place_id: string | null;
   hours: string | null;
+  /** 요일별 운영시간(null = 휴무, 키 없음 = 모름). {} 이면 이미 있는 장소의 요일별 값을 지운다 */
+  hours_week: WeekHours;
   rating: number | null;
   review_count: number | null;
   wait: string | null;
