@@ -18,7 +18,8 @@ const DEBOUNCE_MS = 250;
  * 도시가 없는 여행(0006 이전)은 제한 없이 찾는다.
  *
  * 과금: 검색 여러 번 + 고르기(상세 조회) 1번 = 세션 1회. 고르면 세션이 끝나고, 다음 입력부터 새 세션이다.
- * 한 검색에서 여러 곳을 고르면 두 번째부터는 상세 조회가 따로 과금된다(docs/policies/place-search.md).
+ * 끝난 세션의 토큰을 다시 쓰면 그 세션이 무효가 되어 요청 전부가 토큰 없이 과금된다(구글 문서).
+ * 그래서 같은 결과 목록에서 두 번째로 고를 때는 토큰 없이 장소 id 로 상세를 조회한다(docs/policies/place-search.md).
  */
 export function usePlaceSuggestions(query: string, city: City | null) {
   const places = useMapsLibrary("places");
@@ -26,6 +27,8 @@ export function usePlaceSuggestions(query: string, city: City | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  // 지금 보이는 결과를 받은 세션이 아직 안 끝났는지. 끝났으면(한 곳을 이미 골랐으면) 그 결과의 토큰을 다시 쓰지 않는다
+  const resultsLive = useRef(false);
   const input = query.trim();
 
   useEffect(() => {
@@ -45,7 +48,10 @@ export function usePlaceSuggestions(query: string, city: City | null) {
           language: "ko",
           ...(city ? searchArea(city) : {}),
         });
-        if (!cancelled) setSuggestions(res.suggestions);
+        if (!cancelled) {
+          setSuggestions(res.suggestions);
+          resultsLive.current = true;
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "검색에 실패했어요");
       } finally {
@@ -65,10 +71,14 @@ export function usePlaceSuggestions(query: string, city: City | null) {
    */
   async function resolve(s: Suggestion): Promise<PickedPlaceInput | null> {
     const prediction = s.placePrediction;
-    if (!prediction) return null;
-    const place = prediction.toPlace();
-    await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
+    if (!prediction || !places) return null;
+    // 첫 고르기는 세션 토큰이 붙은 toPlace 로(세션을 끝낸다), 그다음은 토큰 없는 새 Place 로
+    const place = resultsLive.current
+      ? prediction.toPlace()
+      : new places.Place({ id: prediction.placeId });
+    resultsLive.current = false;
     sessionRef.current = null;
+    await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
     return {
       name: place.displayName ?? prediction.mainText?.text ?? input,
       google_place_id: place.id || null,
