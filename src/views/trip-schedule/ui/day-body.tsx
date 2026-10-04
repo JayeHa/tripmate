@@ -77,7 +77,7 @@ export function DayBody({
 /** 「메모 N개 · 장소 N곳」. 메모는 카드의 「메모 N개 보기」와 같은 기준(노트 줄 + 운영시간) */
 function countsOf(rows: TimelineRow[]) {
   return {
-    memos: rows.reduce((n, r) => n + r.notes.length + (r.hours ? 1 : 0), 0),
+    memos: rows.reduce((n, r) => n + r.notes.length + (r.hours && !r.hoursOff ? 1 : 0), 0),
     places: rows.filter((r) => r.kind === "place").length,
   };
 }

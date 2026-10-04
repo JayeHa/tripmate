@@ -206,6 +206,23 @@ describe("buildTimeline", () => {
     expect(row.links.map((l) => l.title)).toEqual(["구글맵", "티켓", "공식"]);
   });
 
+  it("요일별 운영시간은 그날 요일 값만, 휴무면 hoursOff", () => {
+    const base = item({ hours: "10:00–20:00" });
+    const week = {
+      ...base,
+      place: { ...base.place!, hours_week: { mon: "11:00–22:00", sun: null } },
+    };
+    expect(buildTimeline([week], [], 1)[0]).toMatchObject({
+      hours: "월 11:00–22:00",
+      hoursOff: false,
+    });
+    expect(buildTimeline([week], [], 0)[0]).toMatchObject({ hours: "일요일 휴무", hoursOff: true });
+    expect(buildTimeline([base], [], 0)[0]).toMatchObject({
+      hours: "10:00–20:00",
+      hoursOff: false,
+    });
+  });
+
   it("메모는 줄 단위 노트, 시각은 HH:mm", () => {
     const [row] = buildTimeline([item({ memo: "첫 줄\n\n  둘째 줄 ", start_time: "09:40:00" })]);
     expect(row.notes).toEqual(["첫 줄", "둘째 줄"]);

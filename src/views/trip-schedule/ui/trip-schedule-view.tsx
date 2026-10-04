@@ -14,7 +14,7 @@ import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/ad
 import { useDayParam } from "@/features/schedule/day-selector";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
-import { dayCount } from "@/shared/lib/days";
+import { dayCount, dayOfWeek } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { ItemEditSheet } from "./item-edit-sheet";
@@ -50,7 +50,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   // 이동 기록을 다 불러오기 전(또는 실패)에는 이동 방법 창을 열지 않는다. 빈 창에서 저장하면 기존 기록을 덮어쓴다
   const { data: moves, isSuccess: movesReady } = useMoves(tripId);
-  const rows = useMemo(() => buildTimeline(dayItems, moves), [dayItems, moves]);
+  // 요일별 운영시간에서 그날 값을 고르려고 그날 요일을 넘긴다
+  const dow = trip ? dayOfWeek(trip.start_date, day) : null;
+  const rows = useMemo(() => buildTimeline(dayItems, moves, dow), [dayItems, moves, dow]);
   const moveDialog = useMoveDialog(movesReady);
   const memos = useOpenMemos(rows);
 

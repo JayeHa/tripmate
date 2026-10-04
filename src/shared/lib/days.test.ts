@@ -6,6 +6,7 @@ import {
   dayCount,
   dayIndexToDate,
   dayLabel,
+  dayOfWeek,
   dayParts,
   ddayLabel,
   shortRangeLabel,
@@ -56,5 +57,12 @@ describe("ddayLabel", () => {
 
   it("returns null once the trip has started", () => {
     expect(ddayLabel("2026-10-02", "2026-10-03")).toBeNull();
+  });
+});
+
+describe("dayOfWeek", () => {
+  it("여행 시작일에서 dayIndex 만큼 간 날의 요일(0 = 일요일)", () => {
+    expect(dayOfWeek("2026-10-31", 0)).toBe(6); // 토
+    expect(dayOfWeek("2026-10-31", 1)).toBe(0); // 일
   });
 });

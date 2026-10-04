@@ -17,6 +17,11 @@ export function dateToDayIndex(startDate: string, endDate: string, date: string)
   return Math.min(Math.max(idx, 0), dayCount(startDate, endDate) - 1);
 }
 
+/** dayIndex(0-base)의 요일. Date.getDay() 와 같다(0 = 일요일) */
+export function dayOfWeek(startDate: string, dayIndex: number): number {
+  return addDays(parseISO(startDate), dayIndex).getDay();
+}
+
 /** day 칩 · day 헤더용 날짜 조각: { date: "10.31", dow: "토" } */
 export function dayParts(startDate: string, dayIndex: number): { date: string; dow: string } {
   const d = addDays(parseISO(startDate), dayIndex);

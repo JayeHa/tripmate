@@ -1,3 +1,4 @@
+import { hoursOnDay } from "../model/hours";
 import { type Move, MOVE_MODE_LABEL, moveKey, type MoveMode, moveModeOf } from "../model/move";
 import {
   type Alternative,
@@ -53,7 +54,10 @@ export type TimelineRow = {
   leg: TimelineLeg | null;
   /** memo 의 줄들. 펼치면 `·` 목록으로 보인다 */
   notes: string[];
+  /** 그날의 운영시간(요일별이면 그 요일 값, 「일 10:00–22:00」). 펼친 메모 칸에 「운영 …」 으로 */
   hours: string | null;
+  /** 그날 휴무 — 카드에 경고 칩으로(메모를 접어도 보인다) */
+  hoursOff: boolean;
   links: TimelineLink[];
   alternatives: Alternative[];
 };
@@ -132,8 +136,21 @@ function legOf(
   };
 }
 
-/** 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다 */
-export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): TimelineRow[] {
+/** 그날의 운영시간 칸(hours · hoursOff). 장소가 없거나 그날 값을 모르면 비어 있다 */
+function hoursOf(item: ScheduleItem, dow: number | null): Pick<TimelineRow, "hours" | "hoursOff"> {
+  const day = item.place ? hoursOnDay(item.place, dow) : null;
+  return { hours: day?.text ?? null, hoursOff: day?.off ?? false };
+}
+
+/**
+ * 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다.
+ * dow 는 그날의 요일(Date.getDay(), 0 = 일요일) — 요일별 운영시간에서 그날 값을 고른다. 모르면 null
+ */
+export function buildTimeline(
+  items: ScheduleItem[],
+  moves: Move[] = [],
+  dow: number | null = null,
+): TimelineRow[] {
   const numbers = placeNumbers(items);
   const moveByPair = new Map(moves.map((m) => [moveKey(m.from_item_id, m.to_item_id), m]));
   let prev: { item: ScheduleItem; at: Located } | null = null;
@@ -162,7 +179,7 @@ export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): Timeli
       isMeal: kind === "place" && category === "food",
       leg,
       notes: notesOf(item.memo),
-      hours: item.place?.hours ?? null,
+      ...hoursOf(item, dow),
       links: linksFor(item),
       alternatives: alternativesOf(item),
     };

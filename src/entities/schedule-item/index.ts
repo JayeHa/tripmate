@@ -3,6 +3,7 @@ export * from "./api/schedule-items";
 export * from "./lib/add-place-error";
 export * from "./lib/format-leg";
 export * from "./lib/timeline";
+export * from "./model/hours";
 export * from "./model/move";
 export * from "./model/place";
 export * from "./model/reservation-status";
