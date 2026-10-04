@@ -152,7 +152,9 @@ erDiagram
 `supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `moves` · `places` · `expenses` · `expense_splits` 를 발행한다.
 여행 화면은 여행 하나에 채널 하나를 열고(`features/trip/realtime-sync`) 변경이 오면 해당 쿼리를 다시 읽는다.
 
-- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `moves` · `expenses` · `expense_splits` · `places`). `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 PK 에 `trip_id` 가 있어 기본값으로 충분하다
+- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `moves` · `expenses` · `expense_splits` · `places`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 PK 에 `trip_id` 가 있어 기본값으로 충분하다
+- **삭제 이벤트에는 RLS 가 적용되지 않는다**(지워진 행은 권한을 확인할 수 없다). 필터 없이 구독하는 `places` · `expense_splits` 는 남의 삭제 이벤트가 올 수 있어 확인이 필요하다(#73)
+- 근거: <https://supabase.com/docs/guides/realtime/postgres-changes> (2026-10-04 확인)
 - `places` · `expense_splits` 는 `trip_id` 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 행만 온다
 
 ---
@@ -165,4 +167,5 @@ erDiagram
 - **프로필 공개 범위** — `profiles_select` 가 로그인한 누구나 모든 프로필을 읽게 한다. 지금은 이름 · 아바타뿐이지만 칸이 늘면 같은 여행 멤버로 좁힌다
 - **대체 장소** — 지금은 일정의 jsonb(`{name, gmap, …}`). 핸드오프는 장소 id 목록이라 일정 상세(#13 ③)에서 정한다
 - **장소 슬라이스** — 장소 타입 · API 는 같은 레이어 import 규칙 때문에 `entities/schedule-item` 안에 있다. 가이드(#17)가 장소를 따로 다루면 `entities/place` 로 뺀다
+- **실시간 삭제 이벤트의 RLS**(#73) — 필터 없이 구독하는 테이블의 삭제 이벤트가 권한과 무관하게 전달되는지
 - **오프라인 쓰기**(#31) — 대기 중인 뮤테이션의 표시 · 취소 · 실패
