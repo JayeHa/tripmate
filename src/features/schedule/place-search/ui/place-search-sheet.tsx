@@ -57,8 +57,13 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
   const [error, setError] = useState<string | null>(null);
   // 검색 여러 번 + 선택 1번 = 세션 1회 과금
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
-  // 장소 정보를 받는 동안(담기 요청 전) 두 번 눌러 같은 일정이 둘 생기지 않게. 렌더를 기다리지 않고 바로 막는다
+  // 누른 순간부터 담기가 끝날 때까지 다시 고르지 못하게. 렌더를 기다리지 않고 바로 막는다.
+  // 장소 정보 받기에 실패하면 바로 풀고, 담기 요청을 보냈으면 pending 이 끝날 때(실패) 푼다. 성공하면 시트가 닫힌다.
+  // pending 은 요청을 보낸 뒤 다음 렌더에야 true 가 되므로, 그 틈을 ref 가 메운다
   const pickingRef = useRef(false);
+  useEffect(() => {
+    if (!pending) pickingRef.current = false;
+  }, [pending]);
 
   useEffect(() => {
     const input = query.trim();
@@ -114,14 +119,14 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
       setLoading(false);
-    } finally {
       pickingRef.current = false;
     }
   }
 
   function pickCustom() {
     const name = query.trim();
-    if (!name || pending) return;
+    if (!name || pending || pickingRef.current) return;
+    pickingRef.current = true;
     onPick({ name, place_id: null, lat: null, lng: null, address: null });
   }
 
