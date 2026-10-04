@@ -90,6 +90,11 @@
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
 
+  /* 타임라인 — 식사(food) 카드, 임시(opt) 마커의 점선 */
+  --color-meal-bg: #fdf6f6;
+  --color-meal-line: #f5e3e3;
+  --color-marker-opt: #aeb4bc;
+
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
   --color-status-ok-bg: #e8f1ff;

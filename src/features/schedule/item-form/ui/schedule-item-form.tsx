@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { type ScheduleItem, scheduleItemFormSchema } from "@/entities/schedule-item";
@@ -32,6 +32,9 @@ type Props = {
   onClose: () => void;
   onSave: (patch: Patch) => void;
   onMoveDay: (dayIndex: number) => void;
+  /** 그날 안에서 한 칸 앞으로. 맨 앞이거나 이동 중이면 넘기지 않는다(버튼 비활성) */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   onDelete: () => void;
 };
 
@@ -56,6 +59,8 @@ function Fields({
   pending,
   onSave,
   onMoveDay,
+  onMoveUp,
+  onMoveDown,
   onDelete,
 }: Omit<Props, "item" | "onClose"> & { item: ScheduleItem }) {
   const [name, setName] = useState(item.name);
@@ -104,6 +109,18 @@ function Fields({
               </option>
             ))}
           </select>
+        </div>
+      </div>
+      {/* 편집 모드(드래그)가 생기기 전까지 순서는 여기서 바꾼다 */}
+      <div className="flex flex-col gap-1.5">
+        <Label>순서</Label>
+        <div className="grid grid-cols-2 gap-3">
+          <Button type="button" variant="outline" disabled={!onMoveUp} onClick={onMoveUp}>
+            <ChevronUp /> 앞으로
+          </Button>
+          <Button type="button" variant="outline" disabled={!onMoveDown} onClick={onMoveDown}>
+            <ChevronDown /> 뒤로
+          </Button>
         </div>
       </div>
       <div className="flex flex-col gap-1.5">

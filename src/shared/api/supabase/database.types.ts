@@ -220,6 +220,17 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           updated_at: string;
+          kind: string;
+          status: string | null;
+          category: string | null;
+          emoji: string | null;
+          rating: number | null;
+          review_count: number | null;
+          description: string | null;
+          hours: string | null;
+          gmap_url: string | null;
+          links: Json;
+          alternatives: Json;
         };
         Insert: {
           id?: string;
@@ -236,6 +247,17 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          kind?: string;
+          status?: string | null;
+          category?: string | null;
+          emoji?: string | null;
+          rating?: number | null;
+          review_count?: number | null;
+          description?: string | null;
+          hours?: string | null;
+          gmap_url?: string | null;
+          links?: Json;
+          alternatives?: Json;
         };
         Update: {
           id?: string;
@@ -252,6 +274,17 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          kind?: string;
+          status?: string | null;
+          category?: string | null;
+          emoji?: string | null;
+          rating?: number | null;
+          review_count?: number | null;
+          description?: string | null;
+          hours?: string | null;
+          gmap_url?: string | null;
+          links?: Json;
+          alternatives?: Json;
         };
         Relationships: [];
       };

@@ -4,7 +4,7 @@ import { decode } from "@googlemaps/polyline-codec";
 import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
 
-import type { ScheduleItem } from "@/entities/schedule-item";
+import { placeNumbers, type ScheduleItem } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -18,7 +18,9 @@ type Props = {
 const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 }; // 도쿄역
 
 export function DayMap({ items, polyline, selectedId, onSelect, className }: Props) {
-  const located = items.filter((it) => it.lat != null && it.lng != null);
+  // 핀은 번호가 붙는 장소(좌표 있는 place)에만. 번호는 타임라인과 같은 계산을 쓴다
+  const numbers = placeNumbers(items);
+  const located = items.filter((it) => numbers.has(it.id));
   return (
     <div className={cn("relative size-full", className)}>
       <Map
@@ -46,7 +48,7 @@ export function DayMap({ items, polyline, selectedId, onSelect, className }: Pro
                   : "bg-primary text-primary-foreground",
               )}
             >
-              {items.indexOf(it) + 1}
+              {numbers.get(it.id)}
             </div>
           </AdvancedMarker>
         ))}
