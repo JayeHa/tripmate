@@ -61,7 +61,7 @@ export type PlaceFormValues = {
   links: LinkDraft[];
 };
 
-/** 새 폼. 이름은 비어 있고(장소를 고르면 채운다), 위치는 도시 중심에서 시작한다 */
+/** 새 폼. 이름은 비어 있고(장소를 고르면 채운다), 위치는 받은 값 — 장소 입력은 null 로 시작해 고르거나 지도를 끌어 정한다 */
 export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
   return {
     emoji: "",
