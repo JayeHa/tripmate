@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { ScheduleMap, type TimelineRow } from "@/entities/schedule-item";
+import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 
 import { useSplitWidth } from "../../model/use-split-width";
 import { DayBody } from "../day-body";
@@ -17,6 +18,8 @@ import { SplitPresets } from "./split-presets";
  */
 export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutProps) {
   const split = useSplitWidth();
+  // 지도 폭이 200ms 동안 그대로일 때만 핀을 다시 맞춘다. 키보드 연타 · 창 크기 조절마다 맞추면 지도가 흔들린다
+  const fitKey = useDebouncedValue(split.settledWidth, 200);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +63,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
           selectedId={selectedId}
           onSelect={selectPin}
           pinSize="lg"
-          fitKey={split.settledWidth}
+          fitKey={fitKey}
         />
         <SplitPresets presets={split.presets} width={split.width} onSelect={split.setWidth} />
       </div>
