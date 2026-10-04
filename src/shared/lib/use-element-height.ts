@@ -9,7 +9,8 @@ export function useElementHeight(ref: RefObject<HTMLElement | null>): number {
     const el = ref.current;
     if (!el) return;
     const observer = new ResizeObserver(([entry]) => {
-      setHeight(entry?.borderBoxSize[0]?.blockSize ?? el.offsetHeight);
+      // borderBoxSize 가 없는 브라우저(Safari 15.4 미만)는 offsetHeight 로
+      setHeight(entry?.borderBoxSize?.[0]?.blockSize ?? el.offsetHeight);
     });
     observer.observe(el);
     return () => observer.disconnect();
