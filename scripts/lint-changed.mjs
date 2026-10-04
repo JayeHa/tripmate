@@ -9,10 +9,12 @@ import { execFileSync } from "node:child_process";
 
 const base = process.env.LINT_BASE ?? "origin/main";
 
+// -z: 한글 · 공백이 든 경로가 따옴표 · 8진 이스케이프(core.quotePath)로 바뀌지 않게 NUL 로 나눈다
 const changed = execFileSync(
   "git",
   [
     "diff",
+    "-z",
     "--name-only",
     "--diff-filter=ACMR",
     `${base}...HEAD`,
@@ -24,7 +26,7 @@ const changed = execFileSync(
   ],
   { encoding: "utf8" },
 )
-  .split("\n")
+  .split("\0")
   .filter(Boolean);
 
 if (changed.length === 0) {
