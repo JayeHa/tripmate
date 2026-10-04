@@ -9,6 +9,10 @@ export const queryKeys = {
     members: (tripId: string) => ["trips", tripId, "members"] as const,
   },
   scheduleItems: (tripId: string) => ["trips", tripId, "schedule-items"] as const,
+  /** 여행이 고른 도시(순서대로, 좌표 포함) */
+  tripCities: (tripId: string) => ["trips", tripId, "cities"] as const,
+  /** 「일정 추가」의 저장한 장소 — 이 여행 도시의 내 장소 */
+  savedPlaces: (tripId: string) => ["trips", tripId, "saved-places"] as const,
   /** 장소 쌍 사이의 이동 방법 (0011 moves) */
   moves: (tripId: string) => ["trips", tripId, "moves"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,

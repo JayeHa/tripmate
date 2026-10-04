@@ -6,11 +6,12 @@ import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
 import {
-  addPlaceToSchedule,
+  addPlacesToSchedule,
   deleteScheduleItem,
+  fetchSavedPlaces,
   fetchScheduleItems,
   moveScheduleItemToDay,
-  type PickedPlaceInput,
+  type ScheduleEntry,
   swapScheduleItems,
   updatePlace,
   updateScheduleItem,
@@ -32,13 +33,29 @@ function useInvalidateItems(tripId: string) {
   };
 }
 
-/** 장소를 그날 끝에 담는다(장소 + 일정) */
-export function useAddPlaceToSchedule(tripId: string) {
+/**
+ * 고른 곳들을 그날 끝에 담는다(장소 + 일정). 새 장소가 생길 수 있어 저장한 장소 목록도 다시 읽는다.
+ * 실패 문구는 addPlaceErrorMessage 로 바꿔 보인다.
+ */
+export function useAddPlacesToSchedule(tripId: string) {
+  const qc = useQueryClient();
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: ({ dayIndex, place }: { dayIndex: number; place: PickedPlaceInput }) =>
-      addPlaceToSchedule(tripId, dayIndex, place),
-    onSuccess: invalidate,
+    mutationFn: ({ dayIndex, entries }: { dayIndex: number; entries: ScheduleEntry[] }) =>
+      addPlacesToSchedule(tripId, dayIndex, entries),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });
+    },
+  });
+}
+
+/** 「저장한 장소」 — 이 여행 도시의 내 장소. 사용자 · 도시를 모르면 기다린다 */
+export function useSavedPlaces(tripId: string, userId: string | undefined, cityIds: string[]) {
+  return useQuery({
+    queryKey: [...queryKeys.savedPlaces(tripId), userId, cityIds],
+    queryFn: () => fetchSavedPlaces(userId ?? "", cityIds),
+    enabled: !!userId,
   });
 }
 

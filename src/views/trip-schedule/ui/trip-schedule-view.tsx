@@ -3,19 +3,16 @@
 import { useMemo, useState } from "react";
 
 import {
-  addPlaceErrorMessage,
   buildTimeline,
-  itemCoords,
   type ScheduleItem,
-  useAddPlaceToSchedule,
   useMoves,
   useOpenMemos,
   useScheduleItems,
 } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
+import { AddScheduleDialog } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
-import { type PickedPlace, PlaceSearchSheet } from "@/features/schedule/place-search";
 import { dayCount } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
@@ -37,9 +34,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const [day, setDay] = useDayParam(totalDays);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
-  const addToSchedule = useAddPlaceToSchedule(tripId);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -48,29 +44,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const rows = useMemo(() => buildTimeline(dayItems, moves), [dayItems, moves]);
   const moveDialog = useMoveDialog(movesReady);
   const memos = useOpenMemos(rows);
-
-  const bias = useMemo(
-    () => dayItems.map(itemCoords).find((at) => at !== null) ?? null,
-    [dayItems],
-  );
-
-  /**
-   * 장소 검색에서 고른 곳을 그날 끝에 붙인다. 장소와 일정을 서버에서 한 번에 만든다.
-   * 담기에 성공해야 시트를 닫는다 — 실패하면 시트에 이유를 보이고 다시 고를 수 있게 둔다.
-   * 끝나면(성공 · 실패) `settled` 로 시트의 고르기 잠금을 푼다.
-   */
-  function addPlace({ place_id, ...place }: PickedPlace, settled: () => void) {
-    addToSchedule.mutate(
-      { dayIndex: day, place: { ...place, google_place_id: place_id } },
-      { onSuccess: () => setSearchOpen(false), onSettled: settled },
-    );
-  }
-
-  /** 검색 시트를 열고 닫는다. 지난 실패 문구는 지운다 */
-  function toggleSearch(open: boolean) {
-    addToSchedule.reset();
-    setSearchOpen(open);
-  }
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
 
@@ -87,7 +60,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           memos={memos}
           onOpen={(row) => setEditing(row.item)}
           onEditMove={moveDialog.openFor}
-          onAddPlace={() => toggleSearch(true)}
+          onAddPlace={() => setAddOpen(true)}
         />
       )}
 
@@ -98,14 +71,17 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         onClose={moveDialog.close}
       />
 
-      <PlaceSearchSheet
-        open={searchOpen}
-        onOpenChange={toggleSearch}
-        bias={bias}
-        onPick={addPlace}
-        pending={addToSchedule.isPending}
-        error={addToSchedule.error && addPlaceErrorMessage(addToSchedule.error)}
-      />
+      {trip && (
+        <AddScheduleDialog
+          tripId={tripId}
+          startDate={trip.start_date}
+          totalDays={totalDays}
+          initialDay={day}
+          items={items ?? []}
+          open={addOpen}
+          onOpenChange={setAddOpen}
+        />
+      )}
 
       {trip && (
         <ItemEditSheet

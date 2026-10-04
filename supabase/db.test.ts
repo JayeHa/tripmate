@@ -504,6 +504,64 @@ describe("places (0013)", () => {
   });
 });
 
+describe("add_schedule_places (0016)", () => {
+  /** 일정 id → 그 일정의 장소 id */
+  async function placeOf(item: string) {
+    const { rows } = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${item}'`,
+    );
+    return rows[0].p;
+  }
+
+  it("저장한 장소 · 구글 장소 · 이름만을 고른 순서대로 그날 끝에 담는다", async () => {
+    await as(A);
+    const id = await newTrip("2027-07-01", "2027-07-01");
+    const saved = await placeOf(await addPlace(id, 0, { name: "긴자 센료" }));
+    const { rows } = await db.query<{ ids: string[] }>(
+      `select public.add_schedule_places($1, 0, $2) ids`,
+      [
+        id,
+        JSON.stringify([
+          { name: "센소지", google_place_id: "g-batch-sensoji", lat: 35.71, lng: 139.79 },
+          { place_id: saved },
+          { name: "이름만" },
+        ]),
+      ],
+    );
+    expect(rows[0].ids).toHaveLength(3);
+    const order = await db.query<{ position: number; name: string }>(
+      `select si.position, p.name from public.schedule_items si join public.places p on p.id = si.place_id
+       where si.trip_id = '${id}' order by si.position`,
+    );
+    expect(order.rows.map((r) => `${r.position}:${r.name}`)).toEqual([
+      "0:긴자 센료",
+      "1:센소지",
+      "2:긴자 센료",
+      "3:이름만",
+    ]);
+  });
+
+  it("붙일 수 없는 장소가 하나라도 있으면 거부하고 아무것도 남기지 않는다", async () => {
+    await as(B);
+    const theirs = await newTrip("2027-07-02", "2027-07-02");
+    const foreign = await placeOf(await addPlace(theirs, 0, { name: "B 의 장소" }));
+    await as(A);
+    const id = await newTrip("2027-07-03", "2027-07-03");
+    expect(
+      await rejects(
+        `select public.add_schedule_places('${id}', 0, '${JSON.stringify([{ name: "먼저 담길 곳" }, { place_id: foreign }])}')`,
+      ),
+    ).toMatch(/row-level security/);
+    const left = await db.query<{ n: number }>(
+      `select count(*)::int n from public.schedule_items where trip_id = '${id}'`,
+    );
+    expect(left.rows[0].n).toBe(0);
+    expect(
+      await rejects(`select public.add_schedule_places('${id}', 0, '{"place_id":"x"}')`),
+    ).toMatch(/must be an array/);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
