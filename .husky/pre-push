@@ -1,0 +1,4 @@
+# PR 을 올리려면 푸시해야 하므로, CI 와 같은 검사를 푸시 전에 돌린다 (AGENTS.md 「커밋 전 검사와 CI」)
+# 급할 때만 git push --no-verify. CI 가 같은 검사를 다시 한다
+git fetch origin main --quiet || true
+pnpm check

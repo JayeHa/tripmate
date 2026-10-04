@@ -134,8 +134,12 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 
 - **pre-commit**: `husky` → `lint-staged` 가 **스테이징된 파일에만** `eslint --fix` → `prettier --write`.
   린트 오류가 남으면 커밋이 막힌다. 느린 `import/no-cycle` 은 여기서 끈다(모듈 그래프 전체를 본다)
-- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) · `pnpm test` ·
-  `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
+- **pre-push**: `pnpm check` — CI 와 같은 순서로 `typecheck` · `lint` · `lint:changed` · `test` · `format:check` · `build` (약 1분).
+  git 에는 PR 직전 훅이 없어서, PR 을 올리려면 반드시 거치는 푸시에 건다. 급할 때만 `--no-verify`, CI 가 다시 검사한다
+- **`lint:changed`**: main 이후 **바뀐 파일만 경고 0** 으로 린트한다. 전체 린트는 경고를 허용하므로, 손댄 파일의 긴 파일 · 복잡도 경고는
+  그 PR 에서 정리한다. 손대지 않은 파일의 오래된 경고로는 실패하지 않는다
+- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) ·
+  `lint:changed`(PR 만) · `pnpm test` · `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
 
 # 인증 경계
 
