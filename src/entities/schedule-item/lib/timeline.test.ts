@@ -191,6 +191,17 @@ describe("buildTimeline", () => {
     expect(row.alternatives).toEqual([{ name: "B", gmap: "https://b" }]);
   });
 
+  it("링크 칩은 구글맵 · 일정 링크 · 장소 링크 순서", () => {
+    const base = item({
+      gmap_url: "https://maps.google.com/x",
+      links: [{ title: "공식", url: "https://place.example" }],
+    });
+    const [row] = buildTimeline([
+      { ...base, links: [{ title: "티켓", url: "https://t.example" }] },
+    ]);
+    expect(row.links.map((l) => l.title)).toEqual(["구글맵", "티켓", "공식"]);
+  });
+
   it("메모는 줄 단위 노트, 시각은 HH:mm", () => {
     const [row] = buildTimeline([item({ memo: "첫 줄\n\n  둘째 줄 ", start_time: "09:40:00" })]);
     expect(row.notes).toEqual(["첫 줄", "둘째 줄"]);

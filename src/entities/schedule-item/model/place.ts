@@ -115,9 +115,12 @@ export function categoryOf(item: ScheduleItem): PlaceCategory | null {
   return oneOf(PLACE_CATEGORIES, item.place?.category ?? null);
 }
 
-/** 장소의 구글맵 외 추가 링크. 장소가 없거나 모양이 틀린 원소는 버린다 */
+/**
+ * 구글맵 외 링크: 일정 링크(이번 방문의 예약 · 티켓)를 먼저, 장소 링크를 뒤에. 모양이 틀린 원소는 버린다.
+ * 일정 링크가 이 일정에만 해당해 더 구체적이라 앞에 둔다.
+ */
 export function linksOf(item: ScheduleItem): PlaceLink[] {
-  return arrayOf(linkSchema, item.place?.links);
+  return [...arrayOf(linkSchema, item.links), ...arrayOf(linkSchema, item.place?.links)];
 }
 
 /** 대체 장소. name · gmap 이 없는 원소는 버린다 */
