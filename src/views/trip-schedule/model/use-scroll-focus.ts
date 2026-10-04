@@ -30,7 +30,7 @@ type FocusState = { key: unknown; id: string | null };
 
 /**
  * 스크롤 연동 강조 — 기준선을 지난 마지막 장소를 「지금 보고 있는 장소」로 고른다.
- * 스크롤 중에만 다시 고른다(프레임당 한 번). 날짜를 바꾸면 스크롤할 때까지 강조가 없다.
+ * 스크롤 중에만 다시 고른다(프레임당 한 번). 날짜를 바꾸거나 다시 켜지면 스크롤할 때까지 강조가 없다.
  *
  * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고 그 행을 기준선 바로 위로 smooth 스크롤한다.
  * 스크롤이 끝날 때까지 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다.
@@ -38,6 +38,13 @@ type FocusState = { key: unknown; id: string | null };
  */
 export function useScrollFocus({ scroller, list, line, enabled, resetKey }: ScrollFocusOptions) {
   const [state, setState] = useState<FocusState>({ key: resetKey, id: null });
+  // 꺼졌다 켜지면(모바일 지도 접기 → 펴기) 옛 강조를 지운다. 접은 채 스크롤했으면 그 행은 이미 지나갔다.
+  // 날짜를 바꿨을 때처럼 다음 스크롤에서 다시 고른다. 렌더 중에 고쳐서 옛 강조가 한 번도 그려지지 않는다
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled);
+    setState((s) => (s.id === null ? s : { ...s, id: null }));
+  }
   const latest = useRef({ line, enabled, resetKey });
   useLayoutEffect(() => {
     latest.current = { line, enabled, resetKey };
