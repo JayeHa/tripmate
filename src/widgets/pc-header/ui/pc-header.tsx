@@ -19,7 +19,7 @@ import { InviteDialog } from "./invite-dialog";
 type PcHeaderProps = { tripId: string };
 
 /**
- * PC(lg 이상) 여행 화면 공용 헤더 (README 17). 높이 64, 하단 1px 구분선.
+ * PC(lg 이상) 여행 화면 공용 헤더 (README 17). 높이 64, 하단 1px 구분선. 스크롤해도 위에 붙어 있다.
  * 로고 → 내 여행 · 탭 5개 · 여행 칩 → 내 여행(다른 여행 선택) · 아바타 → 계정 메뉴 · 「+ 일행초대」.
  * 공유 아이콘은 일행초대와 겹쳐 시안에서 뺐다. 화면마다 헤더를 따로 만들지 않는다.
  */
@@ -32,7 +32,7 @@ export function PcHeader({ tripId }: PcHeaderProps) {
   const active = activeTripTab(pathname, tripId);
 
   return (
-    <header className="hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 lg:flex">
+    <header className="sticky top-0 z-30 hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 lg:flex">
       <Link href="/trips" title="내 여행 목록">
         <Wordmark className="text-[22px]" />
       </Link>

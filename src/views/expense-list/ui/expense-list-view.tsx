@@ -155,7 +155,7 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
           })}
       </main>
 
-      <div className="fixed inset-x-0 bottom-16 z-20 flex justify-center p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-16 z-20 flex justify-center p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:bottom-0">
         <Button
           size="lg"
           className="shadow-lg"
