@@ -16,7 +16,7 @@ export type PlaceFormValues = {
   emoji: string;
   name: string;
   category: PlaceCategory;
-  /** 지도 중앙 핀 위치. 처음엔 도시 중심 */
+  /** 저장할 위치(지도 중앙 핀). 처음엔 비어 있고, 검색으로 고르거나 지도를 움직이면 채운다 — 이름만 적고 담으면 위치 없는 장소 */
   at: LatLng | null;
   /** 위치 검색으로 고른 구글 장소(지도를 움직이면 지운다 — 고른 곳과 핀이 달라져서) */
   google: { id: string; address: string | null } | null;
@@ -33,13 +33,13 @@ export type PlaceFormValues = {
   memo: string;
 };
 
-/** 새 폼. 이름은 일정 추가 화면의 검색어, 핀은 도시 중심에서 시작한다 */
-export function blankPlaceForm(name: string, center: LatLng | null): PlaceFormValues {
+/** 새 폼. 이름은 일정 추가 화면의 검색어, 위치는 비어 있다 */
+export function blankPlaceForm(name: string): PlaceFormValues {
   return {
     emoji: "",
     name,
     category: "sight",
-    at: center,
+    at: null,
     google: null,
     hours: "",
     rating: "",

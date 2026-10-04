@@ -16,7 +16,7 @@ import {
 type PlaceFormOptions = {
   tripId: string;
   dayIndex: number;
-  /** 검색 범위와 처음 핀 위치를 정하는 도시. 없으면 제한 없이 찾고 핀도 없다 */
+  /** 검색 범위와 처음 지도 중심을 정하는 도시. 없으면 제한 없이 찾고, 위치를 고르기 전엔 지도도 없다 */
   city: SearchCity | null;
   initialName: string;
   /** 담기에 성공하면 담은 장소 이름으로 부른다 */
@@ -29,9 +29,7 @@ type PlaceFormOptions = {
  * 지도를 움직이면 고른 구글 장소는 지운다(핀과 장소가 달라지므로).
  */
 export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: PlaceFormOptions) {
-  const [values, setValues] = useState<PlaceFormValues>(() =>
-    blankPlaceForm(initialName, city ? { lat: city.lat, lng: city.lng } : null),
-  );
+  const [values, setValues] = useState<PlaceFormValues>(() => blankPlaceForm(initialName));
   const [locationQuery, setLocationQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const suggestions = usePlaceSuggestions(locationQuery, city);
@@ -98,6 +96,8 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     suggestions,
     pickLocation,
     moveTo,
+    /** 지도를 처음 띄울 곳: 고른 위치, 없으면 도시 중심 */
+    mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
     save,
     saving: create.isPending,
     canSave: values.name.trim().length > 0,

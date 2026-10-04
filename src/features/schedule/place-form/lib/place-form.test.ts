@@ -10,7 +10,8 @@ import {
 } from "./place-form";
 
 const form = (patch: Partial<PlaceFormValues>) => ({
-  ...blankPlaceForm("유야 온천", { lat: 35.7, lng: 139.7 }),
+  ...blankPlaceForm("유야 온천"),
+  at: { lat: 35.7, lng: 139.7 },
   ...patch,
 });
 

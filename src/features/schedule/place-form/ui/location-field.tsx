@@ -4,6 +4,8 @@ import { Map, useMap } from "@vis.gl/react-google-maps";
 import { Search } from "lucide-react";
 import { useEffect, useRef } from "react";
 
+import { cn } from "@/shared/lib/utils";
+
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
 import { Field } from "./form-parts";
@@ -52,11 +54,11 @@ export function LocationField({ form }: LocationFieldProps) {
           })}
         </ul>
       )}
-      {at ? (
+      {form.mapCenter ? (
         <div className="relative isolate h-50 overflow-hidden rounded-card border border-line bg-map-bg">
           <Map
-            defaultCenter={at}
-            defaultZoom={15}
+            defaultCenter={form.mapCenter}
+            defaultZoom={at ? 15 : 13}
             gestureHandling="greedy"
             disableDefaultUI
             clickableIcons={false}
@@ -64,15 +66,18 @@ export function LocationField({ form }: LocationFieldProps) {
           >
             <CenterSync at={at} onMove={form.moveTo} />
           </Map>
-          {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울 */}
+          {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울. 위치를 정하기 전엔 흐리게 */}
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full"
+            className={cn(
+              "pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full",
+              !at && "opacity-40",
+            )}
           >
             <span className="block size-7.5 -rotate-45 rounded-[50%_50%_50%_0] border-2 border-white bg-primary shadow-[0_2px_6px_rgba(0,0,0,.3)]" />
           </span>
           <span className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex h-7.5 items-center justify-center rounded-button bg-white/95 text-xs font-semibold text-ink-700">
-            지도를 움직여 핀 위치를 맞춰 주세요
+            {at ? "지도를 움직여 핀 위치를 맞춰 주세요" : "지도를 움직이면 핀 위치로 저장돼요"}
           </span>
         </div>
       ) : (
