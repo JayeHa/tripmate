@@ -6,6 +6,7 @@ import { addPlaceErrorMessage, useCreatePlaceSchedule } from "@/entities/schedul
 import {
   localLanguage,
   type SearchCity,
+  useAddressSearch,
   usePlaceSuggestions,
   useReverseGeocode,
 } from "@/shared/lib/google-places";
@@ -48,6 +49,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
   const [locationQuery, setLocationQuery] = useState(initialQuery);
   const [error, setError] = useState<string | null>(null);
   const suggestions = usePlaceSuggestions(locationQuery, city);
+  const addressHit = useAddressSearch(locationQuery, city);
   const found = useReverseGeocode(values.at, city ? localLanguage(city.country_code) : null);
   const create = useCreatePlaceSchedule(tripId);
   const savingRef = useRef(false);
@@ -73,6 +75,13 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     }
+  }
+
+  /** 주소로 찾은 위치로 핀을 옮긴다. 가게가 아니라 지점이라 고른 구글 장소는 지우고 이름은 그대로 둔다 */
+  function moveToAddress() {
+    if (!addressHit) return;
+    setValues((v) => ({ ...v, at: { lat: addressHit.lat, lng: addressHit.lng }, googleId: null }));
+    setLocationQuery("");
   }
 
   /** 사용자가 지도를 끌어 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
@@ -115,6 +124,8 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     setLocationQuery,
     suggestions,
     pickLocation,
+    addressHit,
+    moveToAddress,
     moveTo,
     found,
     save,

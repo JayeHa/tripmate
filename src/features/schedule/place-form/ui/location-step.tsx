@@ -1,7 +1,7 @@
 "use client";
 
 import { Map, useMap } from "@vis.gl/react-google-maps";
-import { Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { type LatLng, samePoint } from "../lib/place-form";
@@ -34,8 +34,23 @@ export function LocationStep({ form }: LocationStepProps) {
             className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none"
           />
         </label>
-        {suggestions.suggestions.length > 0 && (
+        {(!!form.addressHit || suggestions.suggestions.length > 0) && (
           <ul className="flex max-h-56 flex-col divide-y divide-divider overflow-y-auto rounded-card border border-line">
+            {form.addressHit && (
+              <li>
+                <button
+                  type="button"
+                  onClick={form.moveToAddress}
+                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left"
+                >
+                  <MapPin className="size-4 shrink-0 text-primary" />
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-xs font-bold text-primary">이 주소로 이동</span>
+                    <span className="truncate text-sm text-ink-900">{form.addressHit.label}</span>
+                  </span>
+                </button>
+              </li>
+            )}
             {suggestions.suggestions.slice(0, 5).map((s, i) => {
               const p = s.placePrediction;
               if (!p) return null;
