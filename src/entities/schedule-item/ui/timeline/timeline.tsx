@@ -45,7 +45,7 @@ export function Timeline({ rows, onOpen }: TimelineProps) {
               )}
             </div>
             {row.kind === "move" ? (
-              <MoveRow row={row} />
+              <MoveRow row={row} onOpen={() => onOpen(row)} />
             ) : (
               <ItemCard
                 row={row}
@@ -61,14 +61,18 @@ export function Timeline({ rows, onOpen }: TimelineProps) {
   );
 }
 
-type MoveRowProps = { row: TimelineRow };
+type MoveRowProps = { row: TimelineRow; onOpen: () => void };
 
-/** 이동 구간. 카드 없이 두 줄 */
-function MoveRow({ row }: MoveRowProps) {
+/** 이동 구간. 카드 없이 두 줄이고, 눌러서 편집 시트를 연다(순서 · 날짜 이동 · 삭제가 거기 있다) */
+function MoveRow({ row, onOpen }: MoveRowProps) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-4.25 pb-1">
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex min-w-0 flex-1 flex-col gap-0.5 pt-4.25 pb-1 text-left"
+    >
       <span className="text-sm font-semibold text-ink-500">{row.item.name}</span>
       {row.meta && <span className="text-[13px] text-ink-400">{row.meta}</span>}
-    </div>
+    </button>
   );
 }
