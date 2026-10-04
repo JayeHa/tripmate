@@ -14,10 +14,13 @@ const PIN_TONE = {
 
 const NO_STATUS_PIN = "border-status-opt bg-white text-ink-700";
 
-/** 카테고리 배지는 식당 · 숙소에만. 지도에서 끼니와 잠자리를 번호 · 상태색과 겹치지 않게 알아보게 한다 */
-const CATEGORY_BADGE: Partial<Record<PlaceCategory, LucideIcon>> = {
-  food: Utensils,
-  stay: BedDouble,
+/**
+ * 카테고리 배지는 식당 · 숙소에만. 지도에서 끼니와 잠자리를 번호 · 상태색과 겹치지 않게 알아보게 한다.
+ * 식당은 흰 배지, 숙소만 잉크 배지 — 하루에 한 번뿐인 숙소가 그날의 기준점처럼 도드라진다.
+ */
+const CATEGORY_BADGE: Partial<Record<PlaceCategory, { icon: LucideIcon; tone: string }>> = {
+  food: { icon: Utensils, tone: "bg-white text-ink-700" },
+  stay: { icon: BedDouble, tone: "bg-ink-900 text-white" },
 };
 
 type MapPinProps = {
@@ -28,11 +31,11 @@ type MapPinProps = {
 };
 
 /**
- * 지도 위 번호 핀. 숫자 = 순서, 색 · 테두리 = 예약 상태, 오른쪽 위 배지 = 카테고리(식당 · 숙소만).
+ * 지도 위 번호 핀. 숫자 = 순서, 색 · 테두리 = 예약 상태, 오른쪽 위 배지 = 카테고리(식당 흰색 · 숙소 잉크).
  * 보통 24px, 선택하면 38px.
  */
 export function MapPin({ num, status, category, selected }: MapPinProps) {
-  const Badge = category ? CATEGORY_BADGE[category] : undefined;
+  const badge = category ? CATEGORY_BADGE[category] : undefined;
   return (
     <span className="relative inline-flex">
       <span
@@ -44,9 +47,14 @@ export function MapPin({ num, status, category, selected }: MapPinProps) {
       >
         {num}
       </span>
-      {Badge && (
-        <span className="absolute -top-2 -right-2 flex size-4.25 items-center justify-center rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.3)]">
-          <Badge className="size-2.5 text-ink-700" strokeWidth={2.4} />
+      {badge && (
+        <span
+          className={cn(
+            "absolute -top-2 -right-2 flex size-4.25 items-center justify-center rounded-full shadow-[0_1px_3px_rgba(0,0,0,.3)]",
+            badge.tone,
+          )}
+        >
+          <badge.icon className="size-2.5" strokeWidth={2.4} />
         </span>
       )}
     </span>
