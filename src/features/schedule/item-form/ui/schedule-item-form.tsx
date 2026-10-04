@@ -84,6 +84,8 @@ function Fields({
       setError(parsed.error.issues[0]?.message ?? "입력을 확인하세요");
       return;
     }
+    // 지난 검증 문구가 남아 있으면 서버 저장 실패(saveError)를 가린다
+    setError(null);
     onSave({
       name: parsed.data.name,
       start_time: parsed.data.start_time ? `${parsed.data.start_time}:00` : null,
