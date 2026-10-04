@@ -113,7 +113,13 @@ export function useAddSchedule({
     setResolveError(null);
     try {
       const picked = await suggestions.resolve(s);
-      if (picked) setChosen((list) => toggleChosen(list, chooseNew(picked)));
+      if (picked) {
+        // 담기에 쓰는 칸만 넘긴다(종류는 장소 입력 폼의 카테고리용)
+        const { name, google_place_id, lat, lng, address } = picked;
+        setChosen((list) =>
+          toggleChosen(list, chooseNew({ name, google_place_id, lat, lng, address })),
+        );
+      }
     } catch (e) {
       setResolveError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     } finally {

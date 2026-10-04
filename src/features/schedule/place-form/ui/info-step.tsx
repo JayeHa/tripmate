@@ -1,28 +1,28 @@
-import { MapPin } from "lucide-react";
+import { Info, MapPin } from "lucide-react";
 
 import { CATEGORY_LABEL, PLACE_CATEGORIES } from "@/entities/schedule-item";
 
 import type { PlaceFormState } from "../model/use-place-form";
+import { AddressCard } from "./address-card";
 import { ChipButton, Field, inputClass, LinkListField } from "./form-parts";
-import { LocationField } from "./location-field";
 
 /** 장소 폼에서 고르는 카테고리. 공항 · 교통은 담을 장소가 아니라 뺀다 */
 const CATEGORIES = PLACE_CATEGORIES.filter((c) => c !== "air");
 
-type PlaceInfoFieldsProps = {
+type InfoStepProps = {
   form: PlaceFormState;
   /** 「도쿄 장소 · 모든 도쿄 여행에서 같이 보여요」 의 도시 이름. 없으면 안내를 줄인다 */
   cityName: string | null;
 };
 
 /**
- * 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 이름 · 아이콘 · 카테고리 · 위치 · 운영시간 · 별점 · 리뷰 수 · 대기 ·
- * 설명 · 구글맵 · 장소 링크.
+ * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 아이콘 · 카테고리 ·
+ * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크.
  */
-export function PlaceInfoFields({ form, cityName }: PlaceInfoFieldsProps) {
+export function InfoStep({ form, cityName }: InfoStepProps) {
   const { values: v, set } = form;
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-4.5 pb-6">
       <div className="flex flex-col gap-1">
         <span className="text-[17px] font-extrabold text-ink-900">장소 정보</span>
         <span className="text-[13px]/normal text-ink-400">
@@ -31,6 +31,20 @@ export function PlaceInfoFields({ form, cityName }: PlaceInfoFieldsProps) {
             : "다른 일정 · 여행에서도 같이 보여요"}
         </span>
       </div>
+      <Field label="위치">
+        <AddressCard
+          found={form.found}
+          action={{ label: "위치 변경", onClick: form.changeLocation }}
+        />
+        <input
+          value={v.addressDetail}
+          onChange={(e) => set("addressDetail", e.target.value)}
+          maxLength={100}
+          placeholder="상세 위치 (선택) · 예: 파르코 본관 8F"
+          aria-label="상세 위치"
+          className={inputClass}
+        />
+      </Field>
       <Field label="장소 이름">
         <div className="grid grid-cols-[52px_minmax(0,1fr)] gap-2">
           <input
@@ -64,7 +78,6 @@ export function PlaceInfoFields({ form, cityName }: PlaceInfoFieldsProps) {
           ))}
         </div>
       </Field>
-      <LocationField form={form} />
       <Field label="운영시간" optional>
         <input
           value={v.hours}
@@ -136,6 +149,10 @@ export function PlaceInfoFields({ form, cityName }: PlaceInfoFieldsProps) {
         links={v.links}
         onChange={(links) => set("links", links)}
       />
-    </>
+      <p className="flex items-start gap-2 rounded-card bg-surface-memo px-3.5 py-3 text-[13px]/relaxed text-status-ok">
+        <Info className="mt-0.5 size-4 shrink-0" />
+        장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.
+      </p>
+    </div>
   );
 }

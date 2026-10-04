@@ -7,13 +7,15 @@ import { searchArea, type SearchCity } from "./search-area";
 
 type Suggestion = google.maps.places.AutocompleteSuggestion;
 
-/** 고른 구글 장소의 이름 · 좌표 · 주소 */
+/** 고른 구글 장소의 이름 · 좌표 · 주소 · 종류 */
 export type GooglePick = {
   name: string;
   google_place_id: string | null;
   lat: number | null;
   lng: number | null;
   address: string | null;
+  /** 구글 장소 종류 — 대표 종류(primaryType)를 맨 앞에, 그다음 나머지(types). 카테고리를 미리 고르는 데 쓴다 */
+  types: string[];
 };
 
 /** 입력이 이만큼 멈추면 찾는다 */
@@ -86,13 +88,19 @@ export function usePlaceSuggestions(query: string, city: SearchCity | null) {
       : new places.Place({ id: prediction.placeId });
     resultsLive.current = false;
     sessionRef.current = null;
-    await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
+    // 이름(displayName) 이 Pro 등급이라 같은 등급의 primaryType · 더 낮은 types 는 값이 그대로다(docs/policies/place-search.md)
+    await place.fetchFields({
+      fields: ["id", "displayName", "location", "formattedAddress", "primaryType", "types"],
+    });
     return {
       name: place.displayName ?? prediction.mainText?.text ?? input,
       google_place_id: place.id || null,
       lat: place.location?.lat() ?? null,
       lng: place.location?.lng() ?? null,
       address: place.formattedAddress ?? null,
+      types: [
+        ...new Set([place.primaryType, ...(place.types ?? [])].filter((t): t is string => !!t)),
+      ],
     };
   }
 

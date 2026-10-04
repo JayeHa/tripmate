@@ -47,6 +47,16 @@ export function searchArea(city: Omit<SearchCity, "id">) {
 }
 
 /**
+ * 점이 이 도시의 검색 범위 안인지. 사각형을 거는 도시는 그 안, 나라 · 섬 무리 단위 도시(사각형 없음)는 늘 참.
+ * 주소 검색(지오코딩)은 범위를 제한하지 못하고 우선순위(bounds)만 주므로 결과를 이걸로 거른다
+ */
+export function withinSearchArea(city: Omit<SearchCity, "id">, point: LatLng): boolean {
+  const half = searchHalfSpan(city.zoom);
+  if (half === null) return true;
+  return Math.abs(point.lat - city.lat) <= half && Math.abs(point.lng - city.lng) <= half;
+}
+
+/**
  * 처음 고를 도시. 그날 첫 장소에서 가장 가까운 여행 도시, 그날 장소가 없으면 첫 도시. 도시가 없으면 null.
  * 대부분 날짜별로 한 도시에 있어서 이 값이 맞는 경우가 많다.
  */

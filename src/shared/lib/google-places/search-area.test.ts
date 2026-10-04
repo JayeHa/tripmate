@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultCityId, searchArea, type SearchCity } from "./search-area";
+import { defaultCityId, searchArea, type SearchCity, withinSearchArea } from "./search-area";
 
 const city = (id: string, lat: number, lng: number, zoom = 11, country_code = "JP") =>
   ({ id, lat, lng, zoom, country_code }) satisfies SearchCity;
@@ -48,6 +48,14 @@ describe("searchArea", () => {
     if (!r) throw new Error("도시 단위는 사각형이 있어야 한다");
     // 벳푸(33.28, 131.49)는 중심에서 경도 +1.09° 라 빠진다 — 지역 좌표가 시드에 생기면(#76) 이 테스트를 뒤집는다
     expect(131.49 > r.east).toBe(true);
+  });
+});
+
+describe("withinSearchArea", () => {
+  it("사각형 도시는 반폭 안만, 사각형이 없는 넓은 도시는 늘 참", () => {
+    expect(withinSearchArea(TOKYO, { lat: 35.66, lng: 139.7 })).toBe(true); // 시부야
+    expect(withinSearchArea(TOKYO, { lat: 34.69, lng: 135.5 })).toBe(false); // 오사카
+    expect(withinSearchArea({ ...TOKYO, zoom: 8 }, { lat: 34.69, lng: 135.5 })).toBe(true);
   });
 });
 
