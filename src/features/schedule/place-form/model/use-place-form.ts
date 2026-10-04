@@ -88,7 +88,10 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
         googleId: picked.google_place_id,
       }));
       setLocationQuery("");
-      await same.check(picked.google_place_id);
+      // 이미 있는 장소인지 확인하지 못했으면 구글 장소 연결을 끊는다 — 붙은 채 저장하면 그 장소를 모른 채 고쳐 쓸 수 있다
+      if ((await same.check(picked.google_place_id)) === "failed") {
+        setValues((v) => ({ ...v, googleId: null }));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     }
@@ -161,8 +164,8 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     setRating: (input: string) => set("rating", normalizeRating(input)),
     setReviews: (input: string) => set("reviews", normalizeReviews(input)),
     step,
-    /** ① 에서 다음으로: 핀이 있고 주소를 불러왔거나(못 불러왔어도) 기다리는 중이 아닐 때 */
-    canChooseLocation: !!values.at && !found.busy,
+    /** ① 에서 다음으로: 핀이 있고, 주소 · 이미 있는 장소 확인을 기다리는 중이 아닐 때(주소는 못 불러왔어도 된다) */
+    canChooseLocation: !!values.at && !found.busy && !same.checking,
     chooseLocation: () => setStep("info"),
     /** ② 「위치 변경」 · 뒤로 */
     changeLocation: () => setStep("location"),
