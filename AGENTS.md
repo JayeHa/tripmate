@@ -148,7 +148,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 # 의존성
 
 새 의존성 추가 · 자체 구현과 라이브러리 사이의 교체 · 메이저 업그레이드 · 제거는 **코드를 쓰기 전에**
-[`docs/library-policy.md`](docs/library-policy.md) 절차를 따르고 결과를 그 문서의 결정 기록 로그에 남긴다.
+[`docs/engineering/library-policy.md`](docs/engineering/library-policy.md) 절차를 따르고 결과를 그 문서의 결정 기록 로그에 남긴다.
 사용자 승인 전에는 `pnpm add` 하지 않는다.
 
 # 인증 경계
