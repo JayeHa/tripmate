@@ -48,6 +48,13 @@ export function ItemEditSheet({
   const swap = useSwapScheduleItems(tripId);
   const moveDay = useMoveScheduleItemToDay(tripId);
 
+  /** 시트를 닫는다. 어떤 경로로 닫든(취소 · 저장 · 날짜 이동 · 삭제) 지난 저장 오류를 지워 다음 일정에 남지 않게 */
+  function close() {
+    update.reset();
+    updatePlace.reset();
+    onClose();
+  }
+
   const index = editing ? dayItems.findIndex((it) => it.id === editing.id) : -1;
   const canReorder = index >= 0 && !swap.isPending;
   /** 그날 안에서 이웃과 자리를 바꾼다. 끝이면 undefined(버튼 비활성) */
@@ -65,11 +72,7 @@ export function ItemEditSheet({
       startDate={startDate}
       totalDays={totalDays}
       pending={update.isPending || updatePlace.isPending}
-      onClose={() => {
-        update.reset();
-        updatePlace.reset();
-        onClose();
-      }}
+      onClose={close}
       onSave={({ name, ...patch }) => {
         if (!editing) return;
         // 일정 칸을 먼저 저장하고, 장소 이름이 바뀌었으면 장소를 고친 뒤 닫는다
@@ -78,21 +81,21 @@ export function ItemEditSheet({
           { id: editing.id, patch: place ? patch : { ...patch, name } },
           {
             onSuccess: () => {
-              if (!renamePlace) return onClose();
-              updatePlace.mutate({ id: place.id, patch: { name } }, { onSuccess: onClose });
+              if (!renamePlace) return close();
+              updatePlace.mutate({ id: place.id, patch: { name } }, { onSuccess: close });
             },
           },
         );
       }}
       onMoveDay={(dayIndex) => {
         if (!editing || dayIndex === editing.day_index) return;
-        moveDay.mutate({ item: editing, dayIndex }, { onSuccess: onClose });
+        moveDay.mutate({ item: editing, dayIndex }, { onSuccess: close });
       }}
       onMoveUp={swapWith(-1)}
       onMoveDown={swapWith(1)}
       onDelete={() => {
         if (!editing) return;
-        remove.mutate(editing.id, { onSuccess: onClose });
+        remove.mutate(editing.id, { onSuccess: close });
       }}
     />
   );
