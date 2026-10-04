@@ -24,16 +24,33 @@ export function LocationStep({ form }: LocationStepProps) {
   const { values } = form;
   const at = values.at;
   // 검색 결과 목록은 지도 위에 뜬다. 처음엔(일정 추가의 검색어가 들어와 있어도) 닫아 두어 지도를 가리지 않고,
-  // 검색칸을 누르거나 입력하면 연다(포커스로는 열지 않는다 — Esc 로 닫고 검색칸에 포커스를 돌려줄 때 다시 열리지 않게).
+  // 검색칸을 누르거나 입력하거나 ↓ 를 누르면 연다(포커스로는 열지 않는다 — Esc 로 닫고 검색칸에 포커스를 돌려줄 때 다시 열리지 않게).
   // 고르거나 지도를 만지면 닫는다
   const [listOpen, setListOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  // ↓ 로 연 경우 목록이 그려진 뒤 첫 항목으로 포커스를 옮긴다
+  const focusFirstRef = useRef(false);
+  useEffect(() => {
+    if (!listOpen || !focusFirstRef.current) return;
+    focusFirstRef.current = false;
+    searchRef.current?.querySelector<HTMLElement>("ul button")?.focus();
+  }, [listOpen]);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* 목록이 열려 있으면 Esc 는 목록만 닫는다 — 입력칸 · 목록 항목 어디에 포커스가 있어도. 다이얼로그까지 닫혀 입력이 사라지지 않게 */}
       <div
+        ref={searchRef}
         className="relative z-10 shrink-0 px-5 pt-3.5 pb-2.5"
         onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && e.target === inputRef.current) {
+            // 키보드로 목록을 연다 — 열고 나서 첫 항목으로(위 effect)
+            e.preventDefault();
+            if (listOpen) searchRef.current?.querySelector<HTMLElement>("ul button")?.focus();
+            focusFirstRef.current = !listOpen;
+            setListOpen(true);
+            return;
+          }
           if (e.key !== "Escape" || !listOpen) return;
           e.stopPropagation();
           setListOpen(false);
