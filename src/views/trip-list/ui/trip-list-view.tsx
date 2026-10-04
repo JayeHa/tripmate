@@ -14,6 +14,7 @@ import {
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
+import { AccountMenu, AccountSheet } from "@/features/account-menu";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { todayISO } from "@/shared/lib/days";
@@ -25,8 +26,6 @@ import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Wordmark } from "@/shared/ui/wordmark";
 
-import { AccountMenu } from "./account-menu";
-import { AccountSheet } from "./account-sheet";
 import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
