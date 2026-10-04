@@ -1,13 +1,14 @@
 "use client";
 
 import { Map, useMap } from "@vis.gl/react-google-maps";
-import { MapPin, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
 import { AddressCard } from "./address-card";
 import { ExistingPlaceCard } from "./existing-place-card";
+import { LocationSuggestions } from "./location-suggestions";
 
 /** 지도를 처음 띄울 때와 위치를 고를 때 이만큼은 확대해 보인다 */
 const PICKED_ZOOM = 15;
@@ -20,11 +21,11 @@ type LocationStepProps = { form: PlaceFormState };
  * 지도 컨테이너는 isolation 으로 쌓임 맥락을 가둬 지도 패널이 다이얼로그 위로 올라오지 않게 한다.
  */
 export function LocationStep({ form }: LocationStepProps) {
-  const { values, suggestions } = form;
+  const { values } = form;
   const at = values.at;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-col gap-2.5 px-5 pt-3.5 pb-2.5">
+      <div className="relative z-10 shrink-0 px-5 pt-3.5 pb-2.5">
         <label className="flex h-10.5 items-center gap-2 rounded-card bg-surface-muted px-3">
           <Search className="size-4.5 shrink-0 text-ink-400" />
           <input
@@ -35,43 +36,7 @@ export function LocationStep({ form }: LocationStepProps) {
             className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none"
           />
         </label>
-        {(!!form.addressHit || suggestions.suggestions.length > 0) && (
-          <ul className="flex max-h-56 flex-col divide-y divide-divider overflow-y-auto rounded-card border border-line">
-            {form.addressHit && (
-              <li>
-                <button
-                  type="button"
-                  onClick={form.moveToAddress}
-                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left"
-                >
-                  <MapPin className="size-4 shrink-0 text-primary" />
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-xs font-bold text-primary">이 주소로 이동</span>
-                    <span className="truncate text-sm text-ink-900">{form.addressHit.label}</span>
-                  </span>
-                </button>
-              </li>
-            )}
-            {suggestions.suggestions.slice(0, 5).map((s, i) => {
-              const p = s.placePrediction;
-              if (!p) return null;
-              return (
-                <li key={p.placeId || i}>
-                  <button
-                    type="button"
-                    onClick={() => void form.pickLocation(s)}
-                    className="flex w-full flex-col gap-0.5 px-3.5 py-2.5 text-left"
-                  >
-                    <span className="truncate text-sm font-bold text-ink-900">
-                      {p.mainText?.text}
-                    </span>
-                    <span className="truncate text-xs text-ink-400">{p.secondaryText?.text}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <LocationSuggestions form={form} />
       </div>
       {at ? (
         <div className="relative isolate min-h-40 flex-1 border-t border-divider bg-map-bg">
