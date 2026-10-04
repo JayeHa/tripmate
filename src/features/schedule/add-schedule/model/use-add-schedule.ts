@@ -33,7 +33,12 @@ type AddScheduleOptions = {
   items: ScheduleItem[];
   /** 담기에 성공하면 부른다(화면을 닫는다) */
   onDone: () => void;
+  /** 「‘검색어’ 직접 추가」. 장소 입력 폼은 다른 기능이라 화면(view)이 연다 */
+  onDirectAdd: (request: DirectAddRequest) => void;
 };
+
+/** 장소 입력 폼을 열 때 넘기는 값: 이름(검색어) · 담을 날 · 검색 범위 도시 */
+export type DirectAddRequest = { name: string; dayIndex: number; city: City | null };
 
 /**
  * 「일정 추가」 화면의 상태와 동작. 열릴 때마다 새로 마운트돼 처음 값에서 시작한다.
@@ -41,7 +46,13 @@ type AddScheduleOptions = {
  * - 저장한 장소: 이 여행 도시의 내 장소. 카테고리 · 검색어로 거른다
  * - 고른 곳은 하단 트레이에 고른 순서대로 모이고, 담기는 한 번에(add_schedule_places)
  */
-export function useAddSchedule({ tripId, initialDay, items, onDone }: AddScheduleOptions) {
+export function useAddSchedule({
+  tripId,
+  initialDay,
+  items,
+  onDone,
+  onDirectAdd,
+}: AddScheduleOptions) {
   const { data: user } = useUser();
   const { data: cities = [] } = useTripCities(tripId);
   const cityIds = useMemo(() => cities.map((c) => c.id), [cities]);
@@ -103,16 +114,10 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
     }
   }
 
-  /** 검색어를 이름으로만 고른다(지도에 표시되지 않음). 위치를 정하는 입력 폼은 ②-b 에서 */
-  function chooseName() {
+  /** 검색어를 이름으로 장소 입력 폼을 연다(위치 · 시간 · 예약 상태를 직접 입력) */
+  function directAdd() {
     const name = query.trim();
-    if (!name) return;
-    setChosen((list) =>
-      toggleChosen(
-        list,
-        chooseNew({ name, google_place_id: null, lat: null, lng: null, address: null }),
-      ),
-    );
+    if (name) onDirectAdd({ name, dayIndex, city });
   }
 
   /** 고른 곳을 그날 끝에 한 번에 담는다 */
@@ -155,7 +160,7 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
     resolving: resolvingIds.size > 0,
     toggleSaved,
     toggleSuggestion,
-    chooseName,
+    directAdd,
     removeChosen: (key: string) => setChosen((list) => list.filter((c) => c.key !== key)),
     submit,
     submitting: add.isPending,

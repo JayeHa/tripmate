@@ -3,7 +3,7 @@
 import type { ScheduleItem } from "@/entities/schedule-item";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
-import { useAddSchedule } from "../model/use-add-schedule";
+import { type DirectAddRequest, useAddSchedule } from "../model/use-add-schedule";
 import { AddScheduleFilters } from "./add-schedule-filters";
 import { AddScheduleFooter } from "./add-schedule-footer";
 import { AddScheduleHeader } from "./add-schedule-header";
@@ -19,6 +19,10 @@ type AddScheduleDialogProps = {
   items: ScheduleItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 「‘검색어’ 직접 추가」 — 화면이 장소 입력 폼을 연다 */
+  onDirectAdd: (request: DirectAddRequest) => void;
+  /** 직접 추가로 담은 뒤 보일 한 줄(「‘유야 온천’을 day 2에 담았어요」) */
+  notice?: string | null;
 };
 
 /**
@@ -49,9 +53,11 @@ function AddScheduleBody({
   totalDays,
   initialDay,
   items,
+  onDirectAdd,
+  notice,
   onClose,
 }: AddScheduleBodyProps) {
-  const state = useAddSchedule({ tripId, initialDay, items, onDone: onClose });
+  const state = useAddSchedule({ tripId, initialDay, items, onDone: onClose, onDirectAdd });
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       <AddScheduleHeader
@@ -64,7 +70,7 @@ function AddScheduleBody({
       />
       <AddScheduleFilters state={state} />
       <AddScheduleList state={state} />
-      <AddScheduleFooter state={state} />
+      <AddScheduleFooter state={state} notice={notice ?? null} />
     </div>
   );
 }

@@ -16,7 +16,7 @@ function categoryOf(value: string | null): PlaceCategory | null {
 }
 
 /**
- * 목록 칸. 검색어가 있으면 맨 위에 「‘검색어’ 이름만으로 추가」, 그 아래 탭의 목록.
+ * 목록 칸. 검색어가 있으면 맨 위에 「‘검색어’ 직접 추가」(장소 입력 폼), 그 아래 탭의 목록.
  * - 추천 장소: 구글 검색 결과(고른 도시 근처로 제한). 검색어가 없으면 안내
  * - 저장한 장소: 이 여행 도시의 내 장소
  */
@@ -27,18 +27,15 @@ export function AddScheduleList({ state }: AddScheduleListProps) {
       {q && (
         <button
           type="button"
-          aria-pressed={state.isChosen(`name:${q}`)}
-          onClick={state.chooseName}
+          onClick={state.directAdd}
           className="flex w-full items-center gap-3 border-b border-surface-muted px-5 py-3 text-left"
         >
           <span className="flex size-14 shrink-0 items-center justify-center rounded-memo border-[1.5px] border-dashed border-handle text-primary">
             <Plus className="size-5.5" strokeWidth={2} />
           </span>
           <span className="flex min-w-0 flex-col gap-0.75">
-            <span className="truncate text-[15px] font-bold text-primary">
-              ‘{q}’ 이름만으로 추가
-            </span>
-            <span className="text-[13px] text-ink-400">지도에는 표시되지 않아요</span>
+            <span className="truncate text-[15px] font-bold text-primary">‘{q}’ 직접 추가</span>
+            <span className="text-[13px] text-ink-400">위치·시간·예약 상태를 직접 입력해요</span>
           </span>
         </button>
       )}
@@ -66,7 +63,7 @@ function SuggestionRows({ state }: AddScheduleListProps) {
     );
   }
   if (s.suggestions.length === 0) {
-    return <Empty>검색 결과가 없어요. 위에서 이름만으로 추가할 수 있어요.</Empty>;
+    return <Empty>검색 결과가 없어요. 위에서 직접 추가할 수 있어요.</Empty>;
   }
   return s.suggestions.map((sug, i) => {
     const p = sug.placePrediction;
