@@ -57,6 +57,8 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
   const [error, setError] = useState<string | null>(null);
   // 검색 여러 번 + 선택 1번 = 세션 1회 과금
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  // 장소 정보를 받는 동안(담기 요청 전) 두 번 눌러 같은 일정이 둘 생기지 않게. 렌더를 기다리지 않고 바로 막는다
+  const pickingRef = useRef(false);
 
   useEffect(() => {
     const input = query.trim();
@@ -94,7 +96,8 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
 
   async function pick(s: Suggestion) {
     const prediction = s.placePrediction;
-    if (!prediction || pending) return;
+    if (!prediction || pending || pickingRef.current) return;
+    pickingRef.current = true;
     setLoading(true);
     try {
       const place = prediction.toPlace();
@@ -111,6 +114,8 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
       setLoading(false);
+    } finally {
+      pickingRef.current = false;
     }
   }
 
