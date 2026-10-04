@@ -30,6 +30,20 @@ describe("고르기", () => {
     expect(chooseNew({ ...g, google_place_id: null }).key).toBe("name:센소지");
   });
 
+  it("구글 장소인 저장한 장소는 추천 결과와 같은 key — 두 탭에서 따로 골라 두 번 담기지 않는다", () => {
+    const saved = chooseSaved(place({ id: "a", name: "센소지", google_place_id: "g1" }));
+    const fromGoogle = chooseNew({
+      name: "센소지",
+      google_place_id: "g1",
+      lat: 1,
+      lng: 2,
+      address: null,
+    });
+    expect(saved.key).toBe(fromGoogle.key);
+    expect(saved.entry).toEqual({ place_id: "a" });
+    expect(toggleChosen([saved], fromGoogle)).toEqual([]);
+  });
+
   it("다시 고르면 빼고, 새로 고르면 끝에 더한다", () => {
     const a = chooseSaved(place({ id: "a" }));
     const b = chooseSaved(place({ id: "b" }));

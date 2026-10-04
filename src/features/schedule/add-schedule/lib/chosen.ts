@@ -8,13 +8,19 @@ import {
 
 /**
  * 하단 트레이에 고른 한 곳. `key` 로 같은 곳을 두 번 고르지 않게 한다 —
- * 저장한 장소는 장소 id, 구글은 구글 장소 id, 이름만 입력은 이름.
+ * 구글 장소면 구글 장소 id(저장한 장소여도), 아니면 저장한 장소는 장소 id, 이름만 입력은 이름.
+ * 저장한 장소와 추천(구글) 결과가 같은 곳이면 같은 key 라, 두 탭에서 따로 골라 두 번 담기지 않는다.
  */
 export type Chosen = { key: string; name: string; entry: ScheduleEntry };
 
-/** 저장한 장소를 트레이에 담을 모양으로 */
-export function chooseSaved(place: Pick<Place, "id" | "name">): Chosen {
-  return { key: `place:${place.id}`, name: place.name, entry: { place_id: place.id } };
+/** 저장한 장소의 고르기 key. 구글 장소면 추천 결과와 같은 key 를 쓴다 */
+export function savedKey(place: Pick<Place, "id" | "google_place_id">): string {
+  return place.google_place_id ? `google:${place.google_place_id}` : `place:${place.id}`;
+}
+
+/** 저장한 장소를 트레이에 담을 모양으로. 담을 때는 그 장소를 그대로 쓴다 */
+export function chooseSaved(place: Pick<Place, "id" | "name" | "google_place_id">): Chosen {
+  return { key: savedKey(place), name: place.name, entry: { place_id: place.id } };
 }
 
 /** 구글 검색 · 이름만 입력으로 고른 곳을 트레이에 담을 모양으로 */

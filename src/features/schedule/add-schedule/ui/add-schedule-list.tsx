@@ -4,7 +4,7 @@ import { Loader2, Plus } from "lucide-react";
 
 import { PLACE_CATEGORIES, type PlaceCategory } from "@/entities/schedule-item";
 
-import { savedMeta } from "../lib/chosen";
+import { savedKey, savedMeta } from "../lib/chosen";
 import type { AddScheduleState } from "../model/use-add-schedule";
 import { PlaceRow } from "./place-row";
 
@@ -107,7 +107,7 @@ function SavedRows({ state }: AddScheduleListProps) {
       rating={place.rating}
       description={place.description}
       inTrip={state.inTrip.placeIds.has(place.id)}
-      chosen={state.isChosen(`place:${place.id}`)}
+      chosen={state.isChosen(savedKey(place))}
       onToggle={() => state.toggleSaved(place)}
     />
   ));
