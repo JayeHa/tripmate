@@ -127,11 +127,15 @@ export function mondayToAll(week: PlaceFormValues["hoursWeek"]): PlaceFormValues
 }
 
 /**
- * 저장할 운영시간 칸. 매일 같음이면 hours 와 빈 요일별({} — 이미 있는 장소의 예전 요일별 값을 지운다),
- * 요일별이면 적은 요일 · 휴무만 담은 hours_week(안 적은 요일은 모름)와 빈 hours
+ * 저장할 운영시간 칸. 요일별이면 적은 요일 · 휴무만 담은 hours_week(안 적은 요일은 모름)와 빈 hours.
+ * 매일 같음이면 hours 와, 시간을 적었을 때만 빈 요일별({} — 이미 있는 장소의 예전 요일별 값을 지운다).
+ * 시간을 비워 두면 「모름」이라 요일별도 null(기존 값 유지)
  */
 function hoursFields(v: PlaceFormValues): Pick<NewPlaceFields, "hours" | "hours_week"> {
-  if (v.hoursMode === "same") return { hours: orNull(v.hours), hours_week: {} };
+  if (v.hoursMode === "same") {
+    const hours = orNull(v.hours);
+    return { hours, hours_week: hours ? {} : null };
+  }
   const week: WeekHours = {};
   for (const day of WEEK_DAYS) {
     const value = v.hoursWeek[day];

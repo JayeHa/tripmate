@@ -69,6 +69,13 @@ describe("운영시간", () => {
     });
   });
 
+  it("매일 같음인데 시간을 비우면 요일별은 null(기존 값 유지 — 모름이라 지울 근거가 없다)", () => {
+    expect(toNewPlace(form({ hours: " " }), NO_ADDRESS)).toMatchObject({
+      ok: true,
+      value: { hours: null, hours_week: null },
+    });
+  });
+
   it("월요일 값(휴무 포함)을 모든 요일에", () => {
     expect(mondayToAll(week).sun).toBe("11:00–22:00");
     expect(Object.values(mondayToAll({ ...week, mon: null }))).toEqual(Array(7).fill(null));
@@ -152,7 +159,7 @@ describe("toNewPlace", () => {
         address_detail: "3층",
         google_place_id: "g1",
         hours: null,
-        hours_week: {},
+        hours_week: null,
         rating: 4.3,
         review_count: 1355,
         wait: "20분",

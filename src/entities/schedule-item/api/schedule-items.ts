@@ -184,8 +184,8 @@ export type NewPlaceFields = {
   address_detail: string | null;
   google_place_id: string | null;
   hours: string | null;
-  /** 요일별 운영시간(null = 휴무, 키 없음 = 모름). {} 이면 이미 있는 장소의 요일별 값을 지운다 */
-  hours_week: WeekHours;
+  /** 요일별 운영시간(값 null = 휴무, 키 없음 = 모름). {} 이면 이미 있는 장소의 요일별 값을 지우고, null 이면 둔다 */
+  hours_week: WeekHours | null;
   rating: number | null;
   review_count: number | null;
   wait: string | null;
