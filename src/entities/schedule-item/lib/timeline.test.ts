@@ -62,6 +62,8 @@ function item(patch: ItemPatch): ScheduleItem {
       emoji: null,
       google_place_id: null,
       address: null,
+      address_local: null,
+      address_detail: null,
       lat,
       lng,
       category,

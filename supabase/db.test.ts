@@ -770,6 +770,51 @@ describe("copy_places_on_leave — 예상 대기 (0019)", () => {
   });
 });
 
+describe("장소 주소 칸 (0020)", () => {
+  it("현지어 주소 · 상세 위치를 저장하고, 이미 가진 장소를 다시 담을 때 빈 칸은 기존 값을 둔다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-08", "2027-08-08");
+    const place = {
+      name: "블루보틀 시부야",
+      google_place_id: "g-addr",
+      lat: 35.664,
+      lng: 139.6995,
+      address: "1-chōme-7-3 Jinnan, Shibuya, Tokyo",
+      address_local: "東京都渋谷区神南１丁目７−３",
+      address_detail: "공원 안 1층",
+    };
+    await db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
+      id,
+      JSON.stringify(place),
+    ]);
+    await db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
+      id,
+      JSON.stringify({ name: "블루보틀 시부야", google_place_id: "g-addr", address_detail: "" }),
+    ]);
+    const { rows } = await db.query<{ address_local: string; address_detail: string }>(
+      `select address_local, address_detail from public.places where created_by = '${A}' and google_place_id = 'g-addr'`,
+    );
+    expect(rows).toEqual([
+      { address_local: "東京都渋谷区神南１丁目７−３", address_detail: "공원 안 1층" },
+    ]);
+  });
+
+  it("나간 멤버의 장소를 소유자 사본으로 옮기는 함수가 places 의 칸을 모두 옮긴다", async () => {
+    // copy_places_on_leave 는 칸을 하나씩 나열한다. places 에 칸을 더하고 이 함수를 빠뜨리면 사본에서 값이 조용히 빠진다(0019)
+    const { rows: cols } = await db.query<{ column_name: string }>(
+      `select column_name from information_schema.columns where table_schema = 'public' and table_name = 'places'`,
+    );
+    const { rows: def } = await db.query<{ body: string }>(
+      `select pg_get_functiondef('public.copy_places_on_leave'::regproc) body`,
+    );
+    const generated = new Set(["id", "created_by", "created_at", "updated_at"]);
+    const missing = cols
+      .map((c) => c.column_name)
+      .filter((c) => !generated.has(c) && !def[0].body.includes(`r.${c}`));
+    expect(missing).toEqual([]);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
