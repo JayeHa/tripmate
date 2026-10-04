@@ -10,6 +10,7 @@ const EARTH_DIAMETER_KM = 12742;
 /** 이 거리 이하는 같은 장소로 보고 pill 을 숨긴다 */
 export const SAME_PLACE_KM = 0.05;
 
+/** 두 좌표 사이의 지표면 직선거리(km) */
 export function haversineKm(a: LatLng, b: LatLng): number {
   const rad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = rad(b.lat - a.lat);
@@ -34,6 +35,7 @@ export function etaLabel(km: number): string {
   return m ? `약 ${h}시간 ${m}분` : `약 ${h}시간`;
 }
 
+/** 구글맵 대중교통 길찾기 URL. 앱이 깔려 있으면 앱으로 열린다 */
 export function transitRouteUrl(from: LatLng, to: LatLng): string {
   const params = new URLSearchParams({
     api: "1",

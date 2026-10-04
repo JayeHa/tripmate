@@ -41,10 +41,15 @@ export type TimelineRow = {
 
 type Located = { lat: number; lng: number };
 
+/** 좌표가 둘 다 있으면 그 좌표, 아니면 null */
 function located(item: ScheduleItem): Located | null {
   return item.lat != null && item.lng != null ? { lat: item.lat, lng: item.lng } : null;
 }
 
+/**
+ * 제목 앞 이모지. 사용자가 고른 것이 먼저이고, 빈 문자열은 「이모지 없음」을 고른 것이다.
+ * 기본값(카테고리 이모지 · 📍)은 place 에만 붙는다.
+ */
 function emojiOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
   if (item.emoji != null) return item.emoji || null;
   if (kind !== "place") return null;
@@ -62,6 +67,7 @@ function metaOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | nu
   return parts.filter(Boolean).join(" · ") || null;
 }
 
+/** 링크 칩 목록. 구글맵이 맨 앞, 제목 없는 추가 링크는 「링크」 */
 function linksFor(item: ScheduleItem): TimelineLink[] {
   const gmap = item.gmap_url ? [{ title: "구글맵", url: item.gmap_url, gmap: true }] : [];
   return [
@@ -70,6 +76,7 @@ function linksFor(item: ScheduleItem): TimelineLink[] {
   ];
 }
 
+/** memo 를 줄 단위 노트로 나눈다. 빈 줄은 버린다 */
 function notesOf(memo: string | null): string[] {
   return (memo ?? "")
     .split("\n")

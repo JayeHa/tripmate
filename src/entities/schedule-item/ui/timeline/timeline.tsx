@@ -16,6 +16,7 @@ type TimelineProps = {
 export function Timeline({ rows, onOpen }: TimelineProps) {
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
 
+  /** 그 카드의 메모를 펼치거나 접는다 */
   function toggle(id: string) {
     setOpenIds((prev) => {
       const next = new Set(prev);

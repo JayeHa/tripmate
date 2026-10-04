@@ -50,10 +50,12 @@ export type Alternative = z.infer<typeof alternativeSchema>;
  * jsonb 는 배열이라는 것만 보장한다. 모양이 맞지 않는 원소는 화면을 깨뜨리지 않게 버린다.
  */
 
+/** 허용 목록에 있는 값이면 그 값, 아니면 null */
 function oneOf<T extends string>(values: readonly T[], value: string | null): T | null {
   return values.find((v) => v === value) ?? null;
 }
 
+/** 배열에서 스키마에 맞는 원소만 남긴다. 배열이 아니면 빈 배열 */
 function arrayOf<T>(schema: z.ZodType<T>, value: unknown): T[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((v) => {
@@ -62,22 +64,27 @@ function arrayOf<T>(schema: z.ZodType<T>, value: unknown): T[] {
   });
 }
 
+/** 일정 종류. 모르는 값이면 place 로 본다 */
 export function kindOf(item: ScheduleItem): ItemKind {
   return oneOf(ITEM_KINDS, item.kind) ?? "place";
 }
 
+/** 예약 상태. 없거나 모르는 값이면 null(「상태 없음」) */
 export function statusOf(item: ScheduleItem): ReservationStatus | null {
   return oneOf(RESERVATION_STATUSES, item.status);
 }
 
+/** 장소 카테고리. 없거나 모르는 값이면 null */
 export function categoryOf(item: ScheduleItem): PlaceCategory | null {
   return oneOf(PLACE_CATEGORIES, item.category);
 }
 
+/** 구글맵 외 추가 링크. 모양이 틀린 원소는 버린다 */
 export function linksOf(item: ScheduleItem): PlaceLink[] {
   return arrayOf(linkSchema, item.links);
 }
 
+/** 대체 장소. name · gmap 이 없는 원소는 버린다 */
 export function alternativesOf(item: ScheduleItem): Alternative[] {
   return arrayOf(alternativeSchema, item.alternatives);
 }

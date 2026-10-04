@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ScheduleItem } from "../model/types";
 import { buildTimeline } from "./timeline";
 
+/** 기본값이 채워진 일정 한 줄. 필요한 칸만 덮어쓴다 */
 function item(patch: Partial<ScheduleItem>): ScheduleItem {
   return {
     id: crypto.randomUUID(),
