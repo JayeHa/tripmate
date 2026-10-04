@@ -7,7 +7,7 @@ import type { SearchCity } from "@/shared/lib/google-places";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
-import { usePlaceForm } from "../model/use-place-form";
+import { type PlaceFormState, usePlaceForm } from "../model/use-place-form";
 import { InfoStep } from "./info-step";
 import { LocationStep } from "./location-step";
 
@@ -105,16 +105,47 @@ function PlaceFormBody({
             {dayLabel}에 담기
           </Button>
         ) : (
-          <Button
-            size="lg"
-            className="h-13 w-full text-base font-bold"
-            disabled={!form.canChooseLocation}
-            onClick={form.chooseLocation}
-          >
-            이 위치로 선택
-          </Button>
+          <LocationFooter form={form} dayLabel={dayLabel} />
         )}
       </div>
     </div>
+  );
+}
+
+type LocationFooterProps = { form: PlaceFormState; dayLabel: string };
+
+/** ① 하단: 보통은 「이 위치로 선택」, 고른 곳이 이미 있는 장소면 「이 장소로 담기」 + 「새로 등록할래요」 */
+function LocationFooter({ form, dayLabel }: LocationFooterProps) {
+  if (form.existing) {
+    return (
+      <>
+        <Button
+          size="lg"
+          className="h-13 w-full text-base font-bold"
+          disabled={form.saving}
+          onClick={form.attachExisting}
+        >
+          이 장소로 {dayLabel}에 담기
+        </Button>
+        <button
+          type="button"
+          onClick={form.registerNew}
+          disabled={form.saving}
+          className="h-9 text-sm font-semibold text-ink-500 disabled:opacity-40"
+        >
+          새로 등록할래요
+        </button>
+      </>
+    );
+  }
+  return (
+    <Button
+      size="lg"
+      className="h-13 w-full text-base font-bold"
+      disabled={!form.canChooseLocation}
+      onClick={form.chooseLocation}
+    >
+      이 위치로 선택
+    </Button>
   );
 }

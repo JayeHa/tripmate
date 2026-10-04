@@ -2,7 +2,14 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { addPlaceErrorMessage, useCreatePlaceSchedule } from "@/entities/schedule-item";
+import {
+  addPlaceErrorMessage,
+  findAttachablePlace,
+  type Place,
+  useAddPlacesToSchedule,
+  useCreatePlaceSchedule,
+} from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import {
   localLanguage,
   type SearchCity,
@@ -48,11 +55,17 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
   const [step, setStep] = useState<PlaceFormStep>("location");
   const [locationQuery, setLocationQuery] = useState(initialQuery);
   const [error, setError] = useState<string | null>(null);
+  // 위치 검색으로 고른 구글 장소가 이미 있는 장소(내 장소 · 이 여행이 쓰는 장소)면 그 장소. 쓸지 묻는다
+  const [existing, setExisting] = useState<Place | null>(null);
+  const { data: user } = useUser();
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const addressHit = useAddressSearch(locationQuery, city);
   const found = useReverseGeocode(values.at, city ? localLanguage(city.country_code) : null);
   const create = useCreatePlaceSchedule(tripId);
+  const attach = useAddPlacesToSchedule(tripId);
   const savingRef = useRef(false);
+  // 위치를 바꿀 때마다 올리는 순번. 이미 있는 장소 조회가 끝나기 전에 위치가 또 바뀌면 그 결과를 버린다
+  const locationSeq = useRef(0);
 
   /** 칸 하나를 고친다 */
   function set<K extends keyof PlaceFormValues>(key: K, value: PlaceFormValues[K]) {
@@ -72,21 +85,58 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
         googleId: picked.google_place_id,
       }));
       setLocationQuery("");
+      setExisting(null);
+      const seq = ++locationSeq.current;
+      const same = await existingFor(picked.google_place_id);
+      if (locationSeq.current === seq) setExisting(same);
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     }
+  }
+
+  /** 고른 구글 장소와 같은 이미 있는 장소. 못 찾으면(조회 실패 포함) null — 새로 등록하는 흐름으로 간다 */
+  async function existingFor(googleId: string | null): Promise<Place | null> {
+    if (!googleId || !user) return null;
+    try {
+      return await findAttachablePlace(tripId, user.id, googleId);
+    } catch {
+      return null;
+    }
+  }
+
+  /** 이미 있는 장소를 그대로 그날 끝에 담는다(새 장소를 만들지 않는다) */
+  function attachExisting() {
+    if (!existing || savingRef.current) return;
+    savingRef.current = true;
+    void attach
+      .mutateAsync({ dayIndex, entries: [{ place_id: existing.id }] })
+      .then(onSaved, () => undefined)
+      .finally(() => {
+        savingRef.current = false;
+      });
+  }
+
+  /** 이미 있는 장소를 쓰지 않고 새로 등록한다 — 그 구글 장소와의 연결을 끊고 같은 핀 위치에서 ② 로 */
+  function registerNew() {
+    locationSeq.current += 1;
+    setExisting(null);
+    setValues((v) => ({ ...v, googleId: null }));
   }
 
   /** 주소로 찾은 위치로 핀을 옮긴다. 가게가 아니라 지점이라 고른 구글 장소는 지우고 이름은 그대로 둔다 */
   function moveToAddress() {
     if (!addressHit) return;
     setValues((v) => ({ ...v, at: { lat: addressHit.lat, lng: addressHit.lng }, googleId: null }));
+    locationSeq.current += 1;
+    setExisting(null);
     setLocationQuery("");
   }
 
   /** 사용자가 지도를 끌어 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
   const moveTo = useCallback((at: LatLng) => {
+    locationSeq.current += 1;
     setValues((v) => ({ ...v, at, googleId: null }));
+    setExisting(null);
   }, []);
 
   /** 검증을 통과하면 장소를 만들어(이미 가진 구글 장소면 그것) 그날 끝에 담는다. 담는 동안 다시 누르지 못한다 */
@@ -124,17 +174,25 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     setLocationQuery,
     suggestions,
     pickLocation,
+    existing,
+    attachExisting,
+    registerNew,
     addressHit,
     moveToAddress,
     moveTo,
     found,
     save,
-    saving: create.isPending,
+    saving: create.isPending || attach.isPending,
     /** 저장 요청이 서버에 가 있는 동안은 창을 닫지 못한다. 오프라인으로 멈춘(paused) 동안은 닫을 수 있다 */
-    locked: create.isPending && !create.isPaused,
+    locked: (create.isPending && !create.isPaused) || (attach.isPending && !attach.isPaused),
     canSave: !!values.at && values.name.trim().length > 0,
-    error: error ?? (create.error ? addPlaceErrorMessage(create.error) : null),
+    error: error ?? errorOf(create.error ?? attach.error),
   };
+}
+
+/** 담기 실패 문구. 오류가 없으면 null */
+function errorOf(e: unknown): string | null {
+  return e ? addPlaceErrorMessage(e) : null;
 }
 
 export type PlaceFormState = ReturnType<typeof usePlaceForm>;

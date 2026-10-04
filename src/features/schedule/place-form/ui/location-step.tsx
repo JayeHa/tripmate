@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
 import { AddressCard } from "./address-card";
+import { ExistingPlaceCard } from "./existing-place-card";
 
 /** 지도를 처음 띄울 때와 위치를 고를 때 이만큼은 확대해 보인다 */
 const PICKED_ZOOM = 15;
@@ -103,7 +104,11 @@ export function LocationStep({ form }: LocationStepProps) {
         </p>
       )}
       <div className="shrink-0 px-5 pt-3.5 pb-1">
-        <AddressCard found={form.found} />
+        {form.existing ? (
+          <ExistingPlaceCard place={form.existing} />
+        ) : (
+          <AddressCard found={form.found} />
+        )}
       </div>
     </div>
   );

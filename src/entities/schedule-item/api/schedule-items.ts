@@ -131,6 +131,34 @@ export async function fetchSavedPlaces(userId: string, cityIds: string[]): Promi
   return data;
 }
 
+/**
+ * 이 여행에 붙일 수 있는 장소 중 같은 구글 장소 — 내가 만든 것, 없으면 이 여행 일정이 쓰는 것(can_attach_place 와 같은 범위).
+ * 없으면 null. 직접 추가에서 이미 있는 장소를 고르면 새로 만들지 않고 그 장소를 쓰게 묻는 데 쓴다
+ */
+export async function findAttachablePlace(
+  tripId: string,
+  userId: string,
+  googlePlaceId: string,
+): Promise<Place | null> {
+  const supabase = createClient();
+  const mine = await supabase
+    .from("places")
+    .select("*")
+    .eq("created_by", userId)
+    .eq("google_place_id", googlePlaceId)
+    .maybeSingle();
+  if (mine.error) throw mine.error;
+  if (mine.data) return mine.data;
+  const used = await supabase
+    .from("schedule_items")
+    .select("place:places!inner(*)")
+    .eq("trip_id", tripId)
+    .eq("place.google_place_id", googlePlaceId)
+    .limit(1);
+  if (used.error) throw used.error;
+  return used.data[0]?.place ?? null;
+}
+
 /** 장소 정보를 고친다. 만든 사람만 된다(RLS) — 남의 장소면 0행이 바뀌어 오류를 낸다 */
 export async function updatePlace(id: string, patch: TablesUpdate<"places">): Promise<void> {
   const supabase = createClient();
