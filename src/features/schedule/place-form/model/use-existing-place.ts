@@ -1,9 +1,12 @@
 "use client";
 
+import type { User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 
 import { findAttachablePlace, type Place } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
+import { queryKeys } from "@/shared/api/query-keys";
 
 /** 확인 결과 — 찾음 · 없음 · 확인하지 못함(사용자 정보를 아직 못 받았거나 조회 실패) */
 export type ExistingCheck = "found" | "none" | "failed";
@@ -14,7 +17,9 @@ export type ExistingCheck = "found" | "none" | "failed";
  * create_place_schedule 이 내 기존 장소를 고쳐 쓴다. 조회가 끝나기 전에 위치가 또 바뀌면(clear) 늦게 온 결과는 버린다.
  */
 export function useExistingPlace(tripId: string) {
-  const { data: user } = useUser();
+  // 사용자 쿼리를 구독해 둔다 — 확인할 때는 아래처럼 캐시에서 그 순간의 값을 읽는다
+  useUser();
+  const qc = useQueryClient();
   const [existing, setExisting] = useState<Place | null>(null);
   const [checking, setChecking] = useState(false);
   // 위치를 바꿀 때마다 올리는 순번
@@ -39,6 +44,8 @@ export function useExistingPlace(tripId: string) {
     try {
       const googleId = await pick();
       if (seqRef.current !== seq || !googleId) return "none";
+      // 고를 때 잡아 둔 값이 아니라 지금 값 — 상세 조회를 기다리는 사이 사용자 정보가 들어왔을 수 있다
+      const user = qc.getQueryData<User | null>(queryKeys.user);
       if (!user) return "failed";
       const found = await findAttachablePlace(tripId, user.id, googleId);
       if (seqRef.current !== seq) return "none";
