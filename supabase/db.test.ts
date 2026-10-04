@@ -439,7 +439,7 @@ describe("places (0013)", () => {
     await as(B);
     const own = await newTrip("2027-05-14", "2027-05-14");
     const inOwn = await addPlace(own, 0, { name: "요요기", google_place_id: "g-yoyogi" });
-    await addPlace(shared, 0, { name: "요요기", google_place_id: "g-yoyogi" });
+    const inShared = await addPlace(shared, 0, { name: "요요기", google_place_id: "g-yoyogi" });
     const original = (
       await db.query<{ p: string }>(
         `select place_id p from public.schedule_items where id = '${inOwn}'`,
@@ -453,6 +453,19 @@ describe("places (0013)", () => {
       `select place_id p from public.schedule_items where id = '${inOwn}'`,
     );
     expect(still.rows[0].p).toBe(original);
+
+    // 실제로 나갔고(0행 delete 가 아님), 공유 여행 일정은 A 소유 사본으로 바뀌었는지
+    await as(A);
+    const members = await db.query<{ user_id: string }>(
+      `select user_id from public.trip_members where trip_id = '${shared}'`,
+    );
+    expect(members.rows.map((r) => r.user_id)).toEqual([A]);
+    const copied = await db.query<{ p: string; owner: string }>(
+      `select si.place_id p, pl.created_by owner from public.schedule_items si
+       join public.places pl on pl.id = si.place_id where si.id = '${inShared}'`,
+    );
+    expect(copied.rows[0].p).not.toBe(original);
+    expect(copied.rows[0].owner).toBe(A);
 
     // 여행을 지우면 trip_members 도 cascade 로 지워지며 트리거가 돈다. 멤버의 장소가 있어도 삭제가 끝나야 한다
     // (지금은 일정이 먼저 지워져 옮길 것이 없다. 트리거의 「소유자 없음」 가드는 순서가 바뀔 때를 위한 방어)
