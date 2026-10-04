@@ -26,8 +26,9 @@ export function TripShell({ tripId, children }: TripShellProps) {
 
   return (
     <>
+      {/* PC 는 sticky PC 헤더(64) + 상단바(52) 아래에 붙어야 가려지지 않는다 */}
       {!online && (
-        <div className="sticky top-12 z-10 flex items-center justify-center gap-1.5 bg-amber-100 py-1 text-xs text-amber-900">
+        <div className="sticky top-12 z-10 flex items-center justify-center gap-1.5 bg-amber-100 py-1 text-xs text-amber-900 lg:top-29">
           <WifiOff className="size-3.5" /> 오프라인 · 마지막으로 본 일정을 표시 중
         </div>
       )}
