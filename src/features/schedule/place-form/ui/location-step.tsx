@@ -2,7 +2,7 @@
 
 import { Map, useMap } from "@vis.gl/react-google-maps";
 import { Search } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
@@ -23,6 +23,9 @@ type LocationStepProps = { form: PlaceFormState };
 export function LocationStep({ form }: LocationStepProps) {
   const { values } = form;
   const at = values.at;
+  // 검색 결과 목록은 지도 위에 뜬다. 처음엔(일정 추가의 검색어가 들어와 있어도) 닫아 두어 지도를 가리지 않고,
+  // 검색칸을 누르거나 입력하면 연다. 고르거나 지도를 만지면 닫는다
+  const [listOpen, setListOpen] = useState(false);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="relative z-10 shrink-0 px-5 pt-3.5 pb-2.5">
@@ -30,16 +33,30 @@ export function LocationStep({ form }: LocationStepProps) {
           <Search className="size-4.5 shrink-0 text-ink-400" />
           <input
             value={form.locationQuery}
-            onChange={(e) => form.setLocationQuery(e.target.value)}
+            onChange={(e) => {
+              form.setLocationQuery(e.target.value);
+              setListOpen(true);
+            }}
+            onFocus={() => setListOpen(true)}
+            onClick={() => setListOpen(true)}
+            onKeyDown={(e) => {
+              // 목록이 열려 있으면 Esc 는 목록만 닫는다 — 다이얼로그까지 닫혀 입력이 사라지지 않게
+              if (e.key !== "Escape" || !listOpen) return;
+              e.stopPropagation();
+              setListOpen(false);
+            }}
             placeholder="장소 · 지역 · 역 이름 검색 (예: 시부야)"
             aria-label="위치 검색"
             className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none"
           />
         </label>
-        <LocationSuggestions form={form} />
+        {listOpen && <LocationSuggestions form={form} onPicked={() => setListOpen(false)} />}
       </div>
       {at ? (
-        <div className="relative isolate min-h-40 flex-1 border-t border-divider bg-map-bg">
+        <div
+          className="relative isolate min-h-40 flex-1 border-t border-divider bg-map-bg"
+          onPointerDown={() => setListOpen(false)}
+        >
           <Map
             defaultCenter={at}
             defaultZoom={PICKED_ZOOM}
