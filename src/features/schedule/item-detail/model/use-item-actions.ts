@@ -42,6 +42,8 @@ export function useItemActions(
       remove.mutate(item.id, { onSuccess: onDone });
     },
     pending: remove.isPending || moveDay.isPending,
+    /** 이동 · 삭제 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 상세를 닫지 못하게 */
+    locked: [remove, moveDay].some((m) => m.isPending && !m.isPaused),
     error: remove.error || moveDay.error ? "처리하지 못했어요. 잠시 후 다시 시도해 주세요." : null,
   };
 }

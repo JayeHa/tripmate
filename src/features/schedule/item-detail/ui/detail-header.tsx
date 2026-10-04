@@ -12,11 +12,20 @@ type DetailHeaderProps = {
   startDate: string;
   totalDays: number;
   actions: ItemActions;
+  /** 요청이 서버에 가 있는 동안 — 닫기를 막는다 */
+  locked: boolean;
   onClose: () => void;
 };
 
 /** 상세 머리 — 번호 마커 · 제목(아이콘 + 이름) · 「day 3 · 11.2 (월) 16:40」 · ⋯ · 닫기. 연회색 바탕(장소 정보 띠와 이어진다) */
-export function DetailHeader({ row, startDate, totalDays, actions, onClose }: DetailHeaderProps) {
+export function DetailHeader({
+  row,
+  startDate,
+  totalDays,
+  actions,
+  locked,
+  onClose,
+}: DetailHeaderProps) {
   const item = row.item;
   const when = [`day ${item.day_index + 1} · ${dayLabel(startDate, item.day_index)}`, row.time]
     .filter(Boolean)
@@ -37,7 +46,13 @@ export function DetailHeader({ row, startDate, totalDays, actions, onClose }: De
         startDate={startDate}
         totalDays={totalDays}
       />
-      <button type="button" aria-label="닫기" onClick={onClose} className="flex text-ink-400">
+      <button
+        type="button"
+        aria-label="닫기"
+        onClick={onClose}
+        disabled={locked}
+        className="flex text-ink-400 disabled:opacity-40"
+      >
         <X className="size-5.5" strokeWidth={2} />
       </button>
     </div>

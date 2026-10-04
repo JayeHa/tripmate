@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import type { ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -34,8 +36,11 @@ type ItemDetailDialogProps = {
  * 장소 정보(공용) · 이번 일정(이 방문만) · 메모 · 대체 장소를 보이고, 이번 일정 · 메모는 그 자리에서 고친다.
  */
 export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetailDialogProps) {
+  // 저장 · 이동 · 삭제 요청이 서버에 가 있는 동안은 Esc · 바깥 클릭 · X 로 닫히지 않는다 — 닫히면 실패 문구가
+  // 함께 사라져 저장된 줄 안다. 잠금 여부는 본문의 훅들이 알아서 본문이 알려 준다
+  const [locked, setLocked] = useState(false);
   return (
-    <Dialog open={!!row} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!row} onOpenChange={(open) => !open && !locked && onClose()}>
       <DialogContent showCloseButton={false} className={isDesktop ? PC_CLASS : MOBILE_CLASS}>
         {row && (
           <DetailBody
@@ -43,6 +48,7 @@ export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetai
             row={row}
             isDesktop={isDesktop}
             onClose={onClose}
+            onLockChange={setLocked}
             {...rest}
           />
         )}
@@ -51,7 +57,10 @@ export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetai
   );
 }
 
-type DetailBodyProps = Omit<ItemDetailDialogProps, "row"> & { row: TimelineRow };
+type DetailBodyProps = Omit<ItemDetailDialogProps, "row"> & {
+  row: TimelineRow;
+  onLockChange: (locked: boolean) => void;
+};
 
 /** 상세 내용. 일정마다 새로 마운트돼(key) 수정 칸이 이전 일정 값을 들고 오지 않는다 */
 function DetailBody({
@@ -62,10 +71,13 @@ function DetailBody({
   dayItems,
   isDesktop,
   onClose,
+  onLockChange,
 }: DetailBodyProps) {
   const plan = usePlanEdit(tripId, row.item);
   const memo = useMemoEdit(tripId, row.item);
   const actions = useItemActions(tripId, row.item, dayItems, onClose);
+  const locked = plan.locked || memo.locked || actions.locked;
+  useEffect(() => onLockChange(locked), [locked, onLockChange]);
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
       <DetailContent tripId={tripId} startDate={startDate} row={row} plan={plan} memo={memo} />
@@ -78,6 +90,7 @@ function DetailBody({
       startDate={startDate}
       totalDays={totalDays}
       actions={actions}
+      locked={locked}
       onClose={onClose}
     />
   );
