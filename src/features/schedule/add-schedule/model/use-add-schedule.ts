@@ -11,6 +11,7 @@ import {
   useSavedPlaces,
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
+import { defaultCityId, usePlaceSuggestions } from "@/shared/lib/google-places";
 
 import {
   type CategoryFilter,
@@ -21,8 +22,6 @@ import {
   scheduledKeys,
   toggleChosen,
 } from "../lib/chosen";
-import { defaultCityId } from "../lib/search-area";
-import { usePlaceSuggestions } from "./use-place-suggestions";
 
 export type AddScheduleTab = "rec" | "saved";
 

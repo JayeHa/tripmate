@@ -3,12 +3,18 @@
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useEffect, useRef, useState } from "react";
 
-import type { City } from "@/entities/city";
-import type { PickedPlaceInput } from "@/entities/schedule-item";
-
-import { searchArea } from "../lib/search-area";
+import { searchArea, type SearchCity } from "./search-area";
 
 type Suggestion = google.maps.places.AutocompleteSuggestion;
+
+/** 고른 구글 장소의 이름 · 좌표 · 주소 */
+export type GooglePick = {
+  name: string;
+  google_place_id: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+};
 
 /** 입력이 이만큼 멈추면 찾는다 */
 const DEBOUNCE_MS = 250;
@@ -21,7 +27,7 @@ const DEBOUNCE_MS = 250;
  * 끝난 세션의 토큰을 다시 쓰면 그 세션이 무효가 되어 요청 전부가 토큰 없이 과금된다(구글 문서).
  * 그래서 같은 결과 목록에서 두 번째로 고를 때는 토큰 없이 장소 id 로 상세를 조회한다(docs/policies/place-search.md).
  */
-export function usePlaceSuggestions(query: string, city: City | null) {
+export function usePlaceSuggestions(query: string, city: SearchCity | null) {
   const places = useMapsLibrary("places");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +77,7 @@ export function usePlaceSuggestions(query: string, city: City | null) {
    * 고른 결과의 이름 · 좌표 · 주소를 받아 담을 모양으로. 이것이 세션을 끝내는 상세 조회다.
    * 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다).
    */
-  async function resolve(s: Suggestion): Promise<PickedPlaceInput | null> {
+  async function resolve(s: Suggestion): Promise<GooglePick | null> {
     const prediction = s.placePrediction;
     if (!prediction || !places) return null;
     // 첫 고르기는 세션 토큰이 붙은 toPlace 로(세션을 끝낸다), 그다음은 토큰 없는 새 Place 로

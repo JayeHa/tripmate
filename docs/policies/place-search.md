@@ -26,7 +26,7 @@
 | `includedRegionCodes` | 고른 도시의 나라(`cities.country_code`)                                                                                              | 다른 나라 결과를 아예 뺀다                                                                                                                                                                                    |
 | `locationRestriction` | 고른 도시 중심 사각형. 반폭은 도시 지도 줌(`cities.zoom`)으로 — 줌 11 이상 **±1°**(약 100km), 줌 10 ±2°, 줌 9 이하는 **걸지 않는다** | 도쿄면 하코네(약 80km)까지 들어오고 오사카는 빠진다. 나라 · 섬 무리 단위(하와이 · 오키나와 · 미얀마 · 「국내 어디론가」)는 ±몇 도로는 포함 지역이 빠져서, 사각형 대신 중심 쪽을 먼저 보이는 bias(50km)만 건다 |
 
-둘을 함께 걸면 둘 다 만족하는 결과만 온다. 계산은 `features/schedule/add-schedule/lib/search-area.ts` 의 `searchArea` 한 곳이고, 범위는 `searchHalfSpan` 에서 조정한다.
+둘을 함께 걸면 둘 다 만족하는 결과만 온다. 계산은 `shared/lib/google-places/search-area.ts` 의 `searchArea` 한 곳이고(일정 추가 · 장소 입력 폼이 같이 쓴다), 범위는 `searchHalfSpan` 에서 조정한다.
 
 **여러 도시 여행** — 검색창 아래 도시 칩(`[도쿄] [오사카]`)으로 한 도시를 고른다. 사각형 하나로 여러 도시를 덮으면 그 사이 지역(나고야 · 시즈오카 …)이 섞이기 때문이다.
 구글 자동완성은 요청 하나에 사각형 하나만 받는다. 도시마다 따로 요청해 합치는 방법은 요청 수만큼 비용이 늘어 택하지 않았다.
@@ -43,7 +43,7 @@
 구글 장소 API 는 호출마다 과금된다. 무료 한도 안에서 쓰는 방안은 #35 에서 정한다.
 
 - **세션 토큰**: 검색 여러 번 + 고르기(상세 조회) 1번이 세션 1회로 묶인다. 고르면 세션이 끝나고 다음 입력부터 새 세션이다
-- 한 검색에서 **여러 곳을 고르면** 두 번째부터는 토큰 없이 장소 id 로 상세를 조회한다(따로 과금). **끝난 세션의 토큰을 다시 쓰면 그 세션이 무효가 되어 앞선 자동완성 요청까지 토큰 없이 과금된다**(구글 문서 <https://developers.google.com/maps/documentation/javascript/place-autocomplete-data>, 2026-10-04 확인). 그래서 같은 결과 목록의 토큰을 두 번 쓰지 않는다(`use-place-suggestions.ts`). 무료 한도 관리는 #35
+- 한 검색에서 **여러 곳을 고르면** 두 번째부터는 토큰 없이 장소 id 로 상세를 조회한다(따로 과금). **끝난 세션의 토큰을 다시 쓰면 그 세션이 무효가 되어 앞선 자동완성 요청까지 토큰 없이 과금된다**(구글 문서 <https://developers.google.com/maps/documentation/javascript/place-autocomplete-data>, 2026-10-04 확인). 그래서 같은 결과 목록의 토큰을 두 번 쓰지 않는다(`shared/lib/google-places/use-place-suggestions.ts`). 무료 한도 관리는 #35
 - 상세 조회 필드는 `id · displayName · location · formattedAddress` 만 받는다(필드가 많을수록 비싸다)
 - 저장하는 것은 이름 · 좌표 · 주소 · 구글 장소 id 뿐이다. **구글 평점 · 리뷰 수는 약관상 저장할 수 없다** — 별점은 사용자가 직접 적는다(#34)
 - 일정 카드의 거리 · 시간은 Routes API 대신 직선거리로 계산한다(결정 기록: `library-policy.md`)

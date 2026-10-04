@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { City } from "@/entities/city";
-
-import { defaultCityId, searchArea } from "./search-area";
+import { defaultCityId, searchArea, type SearchCity } from "./search-area";
 
 const city = (id: string, lat: number, lng: number, zoom = 11, country_code = "JP") =>
-  ({ id, lat, lng, zoom, country_code }) as City;
+  ({ id, lat, lng, zoom, country_code }) satisfies SearchCity;
 const TOKYO = city("tokyo", 35.6812, 139.7671);
 const OSAKA = city("osaka", 34.6937, 135.5023);
 // 0006 시드의 값 그대로(나라 · 섬 무리 단위 도시 포함)
