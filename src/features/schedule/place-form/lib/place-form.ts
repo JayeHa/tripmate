@@ -12,6 +12,8 @@ export type LatLng = { lat: number; lng: number };
 export type PlaceFormValues = {
   emoji: string;
   name: string;
+  /** 마지막으로 화면이 채워 준 이름(처음엔 검색어, 장소를 고르면 그 이름). 이름이 이것과 같으면 사용자가 손대지 않은 것 */
+  autoName: string;
   /**
    * 고르지 않으면 null. 이미 가진 구글 장소를 다시 담을 때 기존 카테고리를 기본값으로 덮지 않게 비워 시작한다
    * (create_place_schedule 은 빈 칸을 기존 값으로 둔다). 새 장소면 카테고리 없이 저장된다
@@ -35,6 +37,7 @@ export function blankPlaceForm(name: string): PlaceFormValues {
   return {
     emoji: "",
     name,
+    autoName: name,
     category: null,
     at: null,
     google: null,
@@ -57,13 +60,17 @@ export function samePoint(a: LatLng, b: LatLng): boolean {
 }
 
 /**
- * 위치 검색으로 구글 장소를 고른 뒤의 이름. 비었거나 처음 값(일정 추가의 검색어) 그대로면 고른 장소 이름으로 바꾸고,
- * 사용자가 고쳐 쓴 이름은 둔다. 이미 가진 장소를 다시 담으면 이름을 덮어쓰므로(create_place_schedule),
- * 검색어 조각(「이치」)이 그 장소를 쓰는 모든 여행의 이름이 되지 않게 한다
+ * 위치 검색으로 구글 장소를 고른 뒤의 이름. 비었거나 화면이 채운 값(검색어 · 앞서 고른 장소 이름) 그대로면
+ * 고른 장소 이름으로 바꾸고, 사용자가 고쳐 쓴 이름은 둔다. 이미 가진 장소를 다시 담으면 이름을 덮어쓰므로
+ * (create_place_schedule), 검색어 조각이나 다른 지점 이름이 그 장소를 쓰는 모든 여행의 이름이 되지 않게 한다
  */
-export function nameAfterPick(current: string, initial: string, picked: string): string {
-  const name = current.trim();
-  return !name || name === initial.trim() ? picked : current;
+export function nameAfterPick(
+  v: Pick<PlaceFormValues, "name" | "autoName">,
+  picked: string,
+): Pick<PlaceFormValues, "name" | "autoName"> {
+  const name = v.name.trim();
+  if (name && name !== v.autoName.trim()) return v;
+  return { name: picked, autoName: picked };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */

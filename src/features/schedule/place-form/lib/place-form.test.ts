@@ -31,10 +31,21 @@ describe("입력 정리", () => {
 });
 
 describe("nameAfterPick", () => {
+  const pick = (name: string, autoName: string, picked: string) =>
+    nameAfterPick({ name, autoName }, picked).name;
+
   it("비었거나 검색어 그대로면 고른 장소 이름, 고쳐 쓴 이름은 둔다", () => {
-    expect(nameAfterPick("이치", "이치", "이치란 시부야")).toBe("이치란 시부야");
-    expect(nameAfterPick(" ", "이치", "이치란 시부야")).toBe("이치란 시부야");
-    expect(nameAfterPick("단골 라멘집", "이치", "이치란 시부야")).toBe("단골 라멘집");
+    expect(pick("이치", "이치", "이치란 시부야")).toBe("이치란 시부야");
+    expect(pick(" ", "이치", "이치란 시부야")).toBe("이치란 시부야");
+    expect(pick("단골 라멘집", "이치", "이치란 시부야")).toBe("단골 라멘집");
+  });
+
+  it("A 를 고른 뒤 B 를 다시 고르면 B 의 이름, A 이름을 고쳐 썼으면 그대로", () => {
+    const afterA = nameAfterPick({ name: "이치", autoName: "이치" }, "이치란 시부야");
+    expect(nameAfterPick(afterA, "이치란 신주쿠").name).toBe("이치란 신주쿠");
+    expect(nameAfterPick({ ...afterA, name: "이치란(본점)" }, "이치란 신주쿠").name).toBe(
+      "이치란(본점)",
+    );
   });
 });
 

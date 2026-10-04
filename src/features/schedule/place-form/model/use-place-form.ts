@@ -50,7 +50,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
       const at = { lat: picked.lat, lng: picked.lng };
       setValues((v) => ({
         ...v,
-        name: nameAfterPick(v.name, initialName, picked.name),
+        ...nameAfterPick(v, picked.name),
         at,
         google: picked.google_place_id
           ? { id: picked.google_place_id, address: picked.address }
