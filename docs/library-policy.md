@@ -212,19 +212,13 @@ provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에�
 - **근거**: 카드는 장소 쌍마다 그려지고 일행이 순서를 자주 바꾼다. 바꿀 때마다 유료 API 를 다시 부르고 캐시를 무효화해야 하는데, 카드에 필요한 건 대략의 거리감이고 정확한 경로는 구글맵이 더 잘 보여 준다.
 - **포기한 것 / 재평가 트리거**: 정확한 소요 시간을 포기한다. 사용자가 추정치가 틀린다고 느끼거나, 실제 경로가 필요한 기능(경로 지도 #14)에서 다시 판단한다. 별도 지도 화면(`views/trip-map`)은 지금도 Routes API 를 쓴다(`entities/schedule-item/api/compute-day-route.ts`).
 
-### 2026-10 · 지도 렌더링 → `@vis.gl/react-google-maps` (소급)
+### 2026-10 · DB 함수 · RLS 테스트 → `@electric-sql/pglite` (소급)
 
-- **문제**: 일정 화면과 지도 화면에 Google 지도 · 핀 · 점선 동선을 그려야 한다.
-- **후보**: 기록 없음. 도입은 프로젝트 초기 설정 때였다.
-- **선택**: `@vis.gl/react-google-maps` 1.10.1. MIT, 메인테이너 5명, 최신 1.10.1(2026-09-21), peer `react >=16.8 || ^19`, 타입 내장.
-- **근거**: `useMap()` 으로 원본 `google.maps.Map` 을 받을 수 있다(escape hatch). 실제로 이 경로로 핀 맞춤 줌을 직접 계산하고(`fitBounds` 가 비동기라 줌 상한을 걸 수 없었음), 점선 동선은 `google.maps.Polyline` 으로 그렸다.
-- **포기한 것 / 재평가 트리거**: 지금은 네 곳에서 직접 import 한다.
-  - `app/providers.tsx` (`APIProvider`) — STEP 4 의 provider 예외라 그대로 둔다
-  - `features/schedule/place-search/ui/place-search-sheet.tsx` (`useMapsLibrary`, Places)
-  - `entities/schedule-item/ui/schedule-map/schedule-map.tsx`
-  - `views/trip-map/ui/day-map.tsx`
-
-  provider 를 뺀 세 곳이 세 슬라이스에 흩어져 STEP 4 의 「한 슬라이스」 기준에 어긋난다. 경로 지도(#14)에서 지도 그리기와 Places 로딩을 어디로 모을지 정한다. 숨은 탭에서는 지도가 그려지지 않는다(rAF 가 돌지 않음, #56).
+- **문제**: 마이그레이션의 DB 함수와 RLS 를 손으로 확인하고 있었다. CI 에서 비밀값 없이 돌릴 테스트가 필요했다(#48).
+- **후보**: PGlite(WASM Postgres) / Supabase 로컬 스택(Docker) / 원격 테스트 프로젝트. 당시 비교 기록은 PR #48 본문에만 일부 있다.
+- **선택**: PGlite. Apache-2.0, 메인테이너 4명, 의존성 0, 타입 내장. 레포는 `~0.3.16`(설치 0.3.16), 최신은 0.5.8(2026-08-26).
+- **근거**: vitest 안에서 Docker 없이 실제 Postgres 로 마이그레이션을 순서대로 적용할 수 있다. `auth.uid()` · 역할 · storage 는 최소 대역으로 채운다(`supabase/db.test.ts`).
+- **포기한 것 / 재평가 트리거**: PostgREST 와 동시성은 확인하지 못한다. 0.4 · 0.5 로 올리는 것은 0.x 마이너라 메이저 업그레이드로 다룬다. Supabase 고유 기능(realtime · storage 정책)을 테스트해야 하면 로컬 스택을 다시 검토한다.
 
 ### 2026-10 · 한국 공휴일 데이터 → `@hyunbinseo/holidays-kr` (소급)
 
@@ -234,10 +228,16 @@ provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에�
 - **근거**: 정적 데이터라 런타임 요청이 없고, 사용처가 `shared/lib/holidays.ts` 한 파일이라 교체 비용이 그 파일 하나다.
 - **포기한 것 / 재평가 트리거**: 메인테이너가 1명이다(⚠️). 다음 해 데이터가 연말까지 올라오지 않으면 직접 표로 바꾼다. 데이터가 없는 해는 공휴일이 없는 것으로 처리한다.
 
-### 2026-10 · DB 함수 · RLS 테스트 → `@electric-sql/pglite` (소급)
+### 2026-09 · 지도 렌더링 → `@vis.gl/react-google-maps` (소급)
 
-- **문제**: 마이그레이션의 DB 함수와 RLS 를 손으로 확인하고 있었다. CI 에서 비밀값 없이 돌릴 테스트가 필요했다(#48).
-- **후보**: PGlite(WASM Postgres) / Supabase 로컬 스택(Docker) / 원격 테스트 프로젝트. 당시 비교 기록은 PR #48 본문에만 일부 있다.
-- **선택**: PGlite. Apache-2.0, 메인테이너 4명, 의존성 0, 타입 내장. 레포는 `~0.3.16`(설치 0.3.16), 최신은 0.5.8(2026-08-26).
-- **근거**: vitest 안에서 Docker 없이 실제 Postgres 로 마이그레이션을 순서대로 적용할 수 있다. `auth.uid()` · 역할 · storage 는 최소 대역으로 채운다(`supabase/db.test.ts`).
-- **포기한 것 / 재평가 트리거**: PostgREST 와 동시성은 확인하지 못한다. 0.4 · 0.5 로 올리는 것은 0.x 마이너라 메이저 업그레이드로 다룬다. Supabase 고유 기능(realtime · storage 정책)을 테스트해야 하면 로컬 스택을 다시 검토한다.
+- **문제**: 일정 화면과 지도 화면에 Google 지도 · 핀 · 점선 동선을 그려야 한다.
+- **후보**: 기록 없음. 도입은 프로젝트 초기 설정(2026-09-29) 때였다.
+- **선택**: `@vis.gl/react-google-maps` 1.10.1. MIT, 메인테이너 5명, 최신 1.10.1(2026-09-21), peer `react >=16.8 || ^19`, 타입 내장.
+- **근거**: `useMap()` 으로 원본 `google.maps.Map` 을 받을 수 있다(escape hatch). 실제로 이 경로로 핀 맞춤 줌을 직접 계산하고(`fitBounds` 가 비동기라 줌 상한을 걸 수 없었음), 점선 동선은 `google.maps.Polyline` 으로 그렸다.
+- **포기한 것 / 재평가 트리거**: 지금은 네 곳에서 직접 import 한다.
+  - `app/providers.tsx` (`APIProvider`) — STEP 4 의 provider 예외라 그대로 둔다
+  - `features/schedule/place-search/ui/place-search-sheet.tsx` (`useMapsLibrary`, Places)
+  - `entities/schedule-item/ui/schedule-map/schedule-map.tsx`
+  - `views/trip-map/ui/day-map.tsx`
+
+  provider 를 뺀 세 곳이 세 슬라이스에 흩어져 STEP 4 의 「한 슬라이스」 기준에 어긋난다. 경로 지도(#14)에서 지도 그리기와 Places 로딩을 어디로 모을지 정한다. 숨은 탭에서는 지도가 그려지지 않는다(rAF 가 돌지 않음, #56).
