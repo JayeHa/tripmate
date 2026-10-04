@@ -6,6 +6,7 @@ import {
   categoryOf,
   DEFAULT_PLACE_EMOJI,
   isHttpUrl,
+  isMappedPlace,
   type ItemKind,
   kindOf,
   linksOf,
@@ -85,7 +86,7 @@ function notesOf(memo: string | null): string[] {
  * 타임라인 마커 · 지도 핀 · 지도 칩이 모두 이 값을 써야 「3번 장소」가 어디서나 같다.
  */
 export function placeNumbers(items: ScheduleItem[]): Map<string, number> {
-  const numbered = items.filter((item) => kindOf(item) === "place" && located(item));
+  const numbered = items.filter(isMappedPlace);
   return new Map(numbered.map((item, i) => [item.id, i + 1]));
 }
 

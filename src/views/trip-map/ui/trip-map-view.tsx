@@ -32,7 +32,8 @@ export function TripMapView({ tripId }: TripMapViewProps) {
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
   const numbers = useMemo(() => placeNumbers(dayItems), [dayItems]);
-  const locatedCount = dayItems.filter((it) => it.lat != null).length;
+  // 경로 · 「표시할 장소가 없어요」도 핀과 같은 기준(번호가 붙는 장소)으로 센다
+  const locatedCount = numbers.size;
   const route = useDayRoute(tripId, day, mode, locatedCount >= 2);
   const legByFrom = new Map((route.data?.legs ?? []).map((l) => [l.fromId, l]));
   const ModeIcon = mode === "TRANSIT" ? TrainFront : Footprints;

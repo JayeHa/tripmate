@@ -74,8 +74,16 @@ function arrayOf<T>(schema: z.ZodType<T>, value: unknown): T[] {
 }
 
 /** 일정 종류. 모르는 값이면 place 로 본다 */
-export function kindOf(item: ScheduleItem): ItemKind {
+export function kindOf(item: Pick<ScheduleItem, "kind">): ItemKind {
   return oneOf(ITEM_KINDS, item.kind) ?? "place";
+}
+
+/**
+ * 번호 · 지도 핀 · 경로 경유점이 되는 일정인지. 좌표가 있는 place 만 해당한다.
+ * 세 곳이 같은 기준을 써야 선이 핀 없는 곳에서 꺾이지 않는다. 서버 경로 API 도 이것을 쓴다.
+ */
+export function isMappedPlace(item: Pick<ScheduleItem, "kind" | "lat" | "lng">): boolean {
+  return kindOf(item) === "place" && item.lat != null && item.lng != null;
 }
 
 /** 예약 상태. 없거나 모르는 값이면 null(「상태 없음」) */
