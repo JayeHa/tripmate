@@ -26,6 +26,9 @@ jobs:
       HUSKY: 0
     steps:
       - uses: actions/checkout@v4
+        with:
+          # lint:changed 가 PR base 와의 merge-base 를 구하려면 이력이 필요하다
+          fetch-depth: 0
 
       # packageManager(pnpm@11.1.0)를 그대로 쓴다. 서드파티 action 이라 태그 대신 커밋 SHA 로 고정한다
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -43,6 +46,13 @@ jobs:
 
       - name: 린트
         run: pnpm lint
+
+      # 바뀐 파일은 경고도 0 이어야 한다. pre-push 와 같은 검사 (scripts/lint-changed.mjs)
+      - name: 바뀐 파일 경고 0
+        if: github.event_name == 'pull_request'
+        run: pnpm lint:changed
+        env:
+          LINT_BASE: origin/${{ github.base_ref }}
 
       - name: 테스트 (DB 함수 · RLS 는 PGlite 로)
         run: pnpm test

@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:changed": "node scripts/lint-changed.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check": "pnpm typecheck && pnpm lint && pnpm lint:changed && pnpm test && pnpm format:check && pnpm build",
     "cities:images": "node scripts/city-images.mjs && prettier --write src/shared/config/city-images.ts --log-level warn",
     "db:types": "supabase gen types typescript --linked > src/shared/api/supabase/database.types.ts",
     "prepare": "husky"

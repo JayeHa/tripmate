@@ -22,7 +22,8 @@ type Props = {
 export function AppHeader({ title, subtitle, back, right, dot }: Props) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-20 flex h-13 shrink-0 items-center gap-3.5 bg-background px-4.5">
+    // PC 에서는 sticky PC 헤더(64px) 아래에 붙는다. 화면별 PC 작업에서 PC 상단바를 정리하면 빠진다
+    <header className="sticky top-0 z-20 flex h-13 shrink-0 items-center gap-3.5 bg-background px-4.5 lg:top-16">
       {back && (
         <button
           type="button"

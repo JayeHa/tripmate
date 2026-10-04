@@ -1,0 +1,27 @@
+# PR 을 올리려면 푸시해야 하므로, CI 와 같은 검사를 푸시 전에 돌린다 (AGENTS.md 「커밋 전 검사와 CI」)
+# 급할 때만 git push --no-verify. CI 가 같은 검사를 다시 한다
+
+# 검사는 디스크의 파일을 읽는다. 푸시하는 커밋과 디스크가 다르면 결과를 믿을 수 없어서 멈춘다
+# (커밋은 깨끗한데 작업 중인 파일 때문에 막히거나, 반대로 로컬 수정이 깨진 커밋을 덮는 경우)
+if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  echo "pre-push: 커밋하지 않은 변경이 있어 검사가 푸시할 커밋과 다른 파일을 봅니다."
+  echo "          커밋하거나 stash 한 뒤 다시 푸시하세요. (급하면 --no-verify, CI 가 다시 검사합니다)"
+  git status --short
+  exit 1
+fi
+
+head=$(git rev-parse HEAD)
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # 원격 브랜치 삭제는 검사할 코드가 없다
+  [ "$local_sha" = "$zero" ] && continue
+  # 태그는 이미 브랜치로 푸시되며 검사된 커밋에 붙는다. 디스크를 검사하는 이 훅으로는 확인할 것이 없다
+  case "$local_ref" in refs/tags/*) continue ;; esac
+  if [ "$local_sha" != "$head" ]; then
+    echo "pre-push: HEAD 가 아닌 커밋($local_ref)을 푸시합니다. 그 브랜치를 체크아웃한 뒤 푸시하세요."
+    exit 1
+  fi
+done
+
+git fetch origin main --quiet || true
+pnpm check
