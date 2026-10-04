@@ -27,7 +27,8 @@ export type MovePair = {
 
 type MoveDialogProps = {
   tripId: string;
-  /** null 이면 닫혀 있다 */
+  open: boolean;
+  /** 닫히는 동안에도 내용이 남아 있도록 닫은 뒤에도 마지막 쌍을 넘긴다 */
   pair: MovePair | null;
   onClose: () => void;
 };
@@ -36,9 +37,9 @@ type MoveDialogProps = {
  * 「이동 방법」 창 (README §19). 모바일 · PC 모두 가운데 400px.
  * 수단 칩은 하나만, 다시 누르면 해제. 상세는 60자. 둘 다 비우고 저장하면 지운다.
  */
-export function MoveDialog({ tripId, pair, onClose }: MoveDialogProps) {
+export function MoveDialog({ tripId, open, pair, onClose }: MoveDialogProps) {
   return (
-    <Dialog open={!!pair} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open && !!pair} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="grid-cols-[minmax(0,1fr)] gap-3.5 rounded-2xl px-5 pt-5.5 pb-4.5 sm:max-w-100">
         {pair && (
           <MoveFields

@@ -49,6 +49,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: moves } = useMoves(tripId);
   const rows = useMemo(() => buildTimeline(dayItems, moves), [dayItems, moves]);
   const [movePair, setMovePair] = useState<MovePair | null>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
 
   const editIndex = editing ? dayItems.findIndex((it) => it.id === editing.id) : -1;
   const canReorder = editIndex >= 0 && !swap.isPending;
@@ -85,8 +86,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         <Timeline
           rows={rows}
           onOpen={(row) => setEditing(row.item)}
-          onEditMove={({ leg, item }) =>
-            leg &&
+          onEditMove={({ leg, item }) => {
+            if (!leg) return;
+            setMoveOpen(true);
             setMovePair({
               fromItemId: leg.fromItemId,
               fromName: leg.fromName,
@@ -95,8 +97,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
               mode: leg.mode,
               detail: leg.detail,
               hasMove: leg.hasMove,
-            })
-          }
+            });
+          }}
         />
       </main>
 
@@ -106,7 +108,12 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         </Button>
       </div>
 
-      <MoveDialog tripId={tripId} pair={movePair} onClose={() => setMovePair(null)} />
+      <MoveDialog
+        tripId={tripId}
+        open={moveOpen}
+        pair={movePair}
+        onClose={() => setMoveOpen(false)}
+      />
 
       <PlaceSearchSheet
         open={searchOpen}
