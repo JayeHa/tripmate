@@ -1,10 +1,9 @@
 "use client";
 
-import { Ellipsis, Plus } from "lucide-react";
-import Link from "next/link";
+import { Ellipsis } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { initialOfName, useMyProfile, useUser } from "@/entities/session";
+import { useMyProfile, useUser } from "@/entities/session";
 import {
   groupTrips,
   type Trip,
@@ -14,21 +13,21 @@ import {
   useDeleteTrip,
   useTrips,
 } from "@/entities/trip";
-import { AccountMenu, AccountSheet } from "@/features/account-menu";
+import { AccountSheet } from "@/features/account-menu";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { todayISO } from "@/shared/lib/days";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { DialogTitle } from "@/shared/ui/dialog";
 import { FlowDialog } from "@/shared/ui/flow-dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { Wordmark } from "@/shared/ui/wordmark";
 
+import { CreateTripCard, CreateTripTile } from "./create-trip-card";
 import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
+import { TripListHeader } from "./trip-list-header";
 
 /**
  * 내 여행 목록. 1024px 을 경계로 모바일(5a)과 PC(6a) 배치를 가른다.
@@ -72,19 +71,7 @@ export function TripListView() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex h-13 shrink-0 items-center justify-between px-5 lg:hidden">
-        <Wordmark className="text-[22px]" />
-        {/* 시안 5a: 워드마크 + Avatar 32. 누르면 내 정보 · 로그아웃 */}
-        <button type="button" aria-label="내 계정" onClick={() => setAccountOpen(true)}>
-          <Avatar>
-            <AvatarFallback>{initialOfName(profile?.display_name)}</AvatarFallback>
-          </Avatar>
-        </button>
-      </header>
-      <header className="hidden h-16 shrink-0 items-center justify-between border-b border-divider px-7 lg:flex">
-        <Wordmark className="text-[22px]" />
-        <AccountMenu profile={profile} />
-      </header>
+      <TripListHeader profile={profile} onOpenAccount={() => setAccountOpen(true)} />
 
       <div className="flex flex-1 flex-col pb-[calc(34px+env(safe-area-inset-bottom))] lg:mx-auto lg:w-full lg:max-w-272 lg:gap-9 lg:px-8 lg:pt-9 lg:pb-14">
         <div className="flex items-baseline gap-2 px-5 pt-2.5 lg:items-center lg:gap-2.5 lg:p-0">
@@ -101,20 +88,7 @@ export function TripListView() {
           </Button>
         </div>
 
-        <div className="px-5 pt-5 pb-1 lg:hidden">
-          <Link
-            href="/trips/new"
-            className="flex items-center gap-3.5 rounded-card bg-surface-sunken p-4.5"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary">
-              <Plus className="size-6 text-white" strokeWidth={2.4} />
-            </span>
-            <span className="flex flex-col gap-0.75">
-              <span className="text-base font-bold text-ink-900">여행 일정 만들기</span>
-              <span className="text-[13px] text-ink-400">도시와 날짜만 고르면 바로 시작돼요</span>
-            </span>
-          </Link>
-        </div>
+        <CreateTripCard />
 
         {isPending && (
           <div className="flex flex-col gap-3 px-5 pt-6 lg:p-0">
@@ -173,20 +147,7 @@ export function TripListView() {
                     actions={pcActions(trip)}
                   />
                 ))}
-                {/* 시안 6a: 다가오는 여행 그리드의 마지막 칸 */}
-                <button
-                  type="button"
-                  onClick={openCreate}
-                  className="flex min-h-59 flex-col items-center justify-center gap-2.5 rounded-card border-[1.5px] border-dashed border-line-strong bg-surface-sunken"
-                >
-                  <span className="flex size-12 items-center justify-center rounded-full bg-primary">
-                    <Plus className="size-6.5 text-white" strokeWidth={2.4} />
-                  </span>
-                  <span className="text-base font-bold text-ink-900">여행 일정 만들기</span>
-                  <span className="text-[13px] text-ink-400">
-                    도시와 날짜만 고르면 바로 시작돼요
-                  </span>
-                </button>
+                <CreateTripTile onClick={openCreate} />
               </div>
             ) : (
               <div className="hidden grid-cols-2 gap-x-8 lg:grid">
