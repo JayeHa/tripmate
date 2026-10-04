@@ -135,7 +135,7 @@ describe("withoutGooglePick", () => {
 });
 
 describe("toNewPlace", () => {
-  it("장소 칸으로 바꾸고 빈 칸은 null, 빈 링크 줄은 버린다", () => {
+  it("장소 칸으로 바꾸고 빈 칸은 null, 빈 링크 줄은 버린다. 아이콘은 일정 칸이라 넣지 않는다", () => {
     const r = toNewPlace(
       form({
         name: "  유야 온천 ",
@@ -157,7 +157,6 @@ describe("toNewPlace", () => {
       ok: true,
       value: {
         name: "유야 온천",
-        emoji: "♨️",
         category: "rest",
         lat: 35.7,
         lng: 139.7,

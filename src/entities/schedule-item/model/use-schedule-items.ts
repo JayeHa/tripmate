@@ -57,8 +57,8 @@ export function useCreatePlaceSchedule(tripId: string) {
   const qc = useQueryClient();
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: (v: { dayIndex: number; place: NewPlaceFields }) =>
-      createPlaceSchedule(tripId, v.dayIndex, v.place),
+    mutationFn: (v: { dayIndex: number; place: NewPlaceFields; emoji: string | null }) =>
+      createPlaceSchedule(tripId, v.dayIndex, v.place, v.emoji),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });

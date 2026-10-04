@@ -141,7 +141,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
     // mutate 의 호출 단위 콜백은 저장 중에 창이 닫혀(언마운트) 버리면 실행되지 않는다 — 오프라인으로 멈춘 동안은 닫을 수 있다.
     // mutateAsync 의 Promise 는 언마운트와 관계없이 끝나므로 여기서 완료를 알린다. 실패 문구는 create.error 가 보인다
     void create
-      .mutateAsync({ dayIndex, place: result.value })
+      .mutateAsync({ dayIndex, place: result.value, emoji: values.emoji.trim() || null })
       .then(onSaved, () => undefined)
       .finally(() => {
         savingRef.current = false;

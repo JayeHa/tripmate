@@ -573,7 +573,6 @@ describe("create_place_schedule (0017)", () => {
         id,
         JSON.stringify({
           name: "  유야 온천  ",
-          emoji: "♨️",
           category: "rest",
           lat: 35.7,
           lng: 139.7,
@@ -595,7 +594,7 @@ describe("create_place_schedule (0017)", () => {
     );
     const { rows: got } = await db.query<Record<string, unknown>>(
       `select si.position, si.status, si.start_time::text t, si.memo, si.links item_links,
-              p.name, p.emoji, p.category, p.wait, p.review_count, p.city_id, p.links place_links
+              p.name, p.category, p.wait, p.review_count, p.city_id, p.links place_links
        from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
     );
     expect(got[0]).toMatchObject({
@@ -604,7 +603,6 @@ describe("create_place_schedule (0017)", () => {
       t: "19:30:00",
       memo: "수건 챙기기",
       name: "유야 온천",
-      emoji: "♨️",
       category: "rest",
       wait: "20분",
       review_count: 812,
@@ -853,6 +851,33 @@ describe("요일별 운영시간 (0022)", () => {
         `select public.create_place_schedule('${id}', 0, '{"name":"x","hours_week":[]}', '{}')`,
       ),
     ).toMatch(/check constraint/);
+  });
+});
+
+describe("아이콘은 일정에 (0023)", () => {
+  it("p_item.emoji 를 일정에 넣고 장소 아이콘은 쓰지 않는다 — 다시 담아도 기존 장소 아이콘을 두고 일정마다 따로", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-10", "2027-08-10");
+    const put = (place: Record<string, unknown>, item: Record<string, unknown>) =>
+      db.query<{ id: string }>(`select public.create_place_schedule($1, 0, $2, $3) id`, [
+        id,
+        JSON.stringify({ name: "유야 온천", google_place_id: "g-emoji", ...place }),
+        JSON.stringify(item),
+      ]);
+    const read = async (itemId: string) =>
+      (
+        await db.query<{ item: string | null; place: string | null }>(
+          `select si.emoji item, p.emoji place
+           from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${itemId}'`,
+        )
+      ).rows[0];
+
+    const first = await put({ emoji: "🏯" }, { emoji: " ♨️ " });
+    expect(await read(first.rows[0].id)).toEqual({ item: "♨️", place: null });
+    await db.query(`update public.places set emoji = '🛁' where google_place_id = 'g-emoji'`);
+    const second = await put({ emoji: "🏯" }, { emoji: "" });
+    expect(await read(second.rows[0].id)).toEqual({ item: null, place: "🛁" });
+    expect((await read(first.rows[0].id)).item).toBe("♨️");
   });
 });
 
