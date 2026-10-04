@@ -65,8 +65,10 @@ export function usePlaceFields({
   const same = useExistingPlace(tripId, findExisting);
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const addressHit = useAddressSearch(locationQuery, city);
-  // 저장돼 있던 위치 그대로면 저장된 주소를 쓴다 — 열 때마다 역지오코딩을 다시 부르지 않고, 손대지 않은 주소가 바뀌지 않게
-  const keep = !!stored?.at && !!values.at && samePoint(values.at, stored.at);
+  // 저장돼 있던 위치 그대로면 저장된 주소를 쓴다 — 열 때마다 역지오코딩을 다시 부르지 않고, 손대지 않은 주소가 바뀌지 않게.
+  // 저장된 주소가 없으면(예전 데이터) 그 위치의 주소를 불러와 저장할 때 채운다
+  const keep =
+    !!stored?.at && !!stored.found.address && !!values.at && samePoint(values.at, stored.at);
   const geocoded = useReverseGeocode(
     keep ? null : values.at,
     city ? localLanguage(city.country_code) : null,
