@@ -13,8 +13,11 @@ import { DayRail } from "./day-rail";
 import { SplitHandle } from "./split-handle";
 import { SplitPresets } from "./split-presets";
 
-/** 스크롤 강조 기준선 = 목록 칸 위에서 이만큼 */
-const FOCUS_LINE_OFFSET = 120;
+/**
+ * 스크롤 강조 기준선 = 목록 칸 높이의 40% 지점(가운데보다 조금 위).
+ * PC 는 목록이 길게 보여서, 맨 위보다 눈이 머무는 가운데 근처의 장소를 지도에 보인다
+ */
+const FOCUS_LINE_RATIO = 0.4;
 
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
@@ -29,7 +32,10 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
   const focus = useScrollFocus({
     scroller: listRef,
     list: listRef,
-    line: () => (listRef.current?.getBoundingClientRect().top ?? 0) + FOCUS_LINE_OFFSET,
+    line: () => {
+      const rect = listRef.current?.getBoundingClientRect();
+      return rect ? rect.top + rect.height * FOCUS_LINE_RATIO : 0;
+    },
     enabled: true,
     resetKey: day,
   });
@@ -53,8 +59,8 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
           focusId={focus.focusId}
           {...body}
         />
-        {/* 마지막 장소도 기준선까지 올라오게 하는 여백. 기본 420px, 목록 칸이 높으면 「칸 높이 − 기준선」 까지 늘린다 */}
-        <div aria-hidden="true" className="h-[max(420px,calc(100%-120px))]" />
+        {/* 마지막 장소도 기준선까지 올라오게 하는 여백. 기본 420px, 목록 칸이 높으면 「칸 높이 − 기준선」(60%) 까지 늘린다 */}
+        <div aria-hidden="true" className="h-[max(420px,60%)]" />
       </div>
       <SplitHandle
         dragging={split.dragging}

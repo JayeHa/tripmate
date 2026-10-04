@@ -12,8 +12,11 @@ import { DayBody } from "./day-body";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
 
-/** 스크롤 강조 기준선 = sticky 영역(상단바 + 지도 + 날짜 칩) 아래로 이만큼 */
-const FOCUS_LINE_OFFSET = 24;
+/**
+ * 스크롤 강조 기준선 = sticky 영역(상단바 + 지도 + 날짜 칩) 아래로 이만큼.
+ * 목록 맨 위에 온 장소가 강조되되, 핀으로 고르면 sticky 아래 36px(48 − 12)에 놓여 지도에 붙어 보이지 않는다
+ */
+const FOCUS_LINE_OFFSET = 48;
 
 /**
  * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 하루치 본문.
