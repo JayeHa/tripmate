@@ -119,7 +119,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           tripId={tripId}
           dayIndex={direct.dayIndex}
           city={direct.city}
-          initialName={direct.name}
+          initialQuery={direct.name}
           open
           onOpenChange={(open) => !open && setDirect(null)}
           onSaved={() => finishDirect(direct)}

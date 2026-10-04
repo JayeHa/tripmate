@@ -147,6 +147,10 @@ export type NewPlaceFields = {
   lat: number | null;
   lng: number | null;
   address: string | null;
+  /** 현지어 주소(일본이면 일본어) */
+  address_local: string | null;
+  /** 사용자가 적는 상세 위치(「파르코 본관 8F」) */
+  address_detail: string | null;
   google_place_id: string | null;
   hours: string | null;
   rating: number | null;

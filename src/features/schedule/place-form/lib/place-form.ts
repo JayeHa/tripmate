@@ -8,21 +8,27 @@ export type LatLng = { lat: number; lng: number };
 /**
  * 장소 입력 폼의 값. 입력 칸이 다루는 문자열 그대로 들고, 저장할 때 toNewPlace 로 바꾼다.
  * 장소 정보만 받는다 — 이번 일정(예약 상태 · 시간 · 일정 링크 · 메모)은 담은 뒤 일정 상세에서 고친다.
+ * 주소는 핀 위치에서 불러오므로(useReverseGeocode) 여기 두지 않고 저장할 때 함께 받는다.
  */
 export type PlaceFormValues = {
   emoji: string;
   name: string;
-  /** 마지막으로 화면이 채워 준 이름(처음엔 검색어, 장소를 고르면 그 이름). 이름이 이것과 같으면 사용자가 손대지 않은 것 */
+  /** 마지막으로 화면이 채워 준 이름(처음엔 빈 값, 장소를 고르면 그 이름). 이름이 이것과 같으면 사용자가 손대지 않은 것 */
   autoName: string;
   /**
    * 고르지 않으면 null. 이미 가진 구글 장소를 다시 담을 때 기존 카테고리를 기본값으로 덮지 않게 비워 시작한다
    * (create_place_schedule 은 빈 칸을 기존 값으로 둔다). 새 장소면 카테고리 없이 저장된다
    */
   category: PlaceCategory | null;
-  /** 저장할 위치(지도 중앙 핀). 처음엔 비어 있고, 검색으로 고르거나 지도를 움직이면 채운다 — 이름만 적고 담으면 위치 없는 장소 */
+  /**
+   * 저장할 위치(지도 중앙 핀). 처음엔 도시 중심, 검색으로 고르거나 지도를 끌면 바뀐다. 위치는 반드시 정한다.
+   * 도시가 없는 여행은 검색으로 고르기 전까지 null 이다
+   */
   at: LatLng | null;
-  /** 위치 검색으로 고른 구글 장소(지도를 움직이면 지운다 — 고른 곳과 핀이 달라져서) */
-  google: { id: string; address: string | null } | null;
+  /** 위치 검색으로 고른 구글 장소 id(지도를 끌면 지운다 — 고른 곳과 핀이 달라져서) */
+  googleId: string | null;
+  /** 상세 위치(선택). 「파르코 본관 8F」 */
+  addressDetail: string;
   hours: string;
   rating: string;
   reviews: string;
@@ -32,15 +38,16 @@ export type PlaceFormValues = {
   links: LinkDraft[];
 };
 
-/** 새 폼. 이름은 일정 추가 화면의 검색어, 위치는 비어 있다 */
-export function blankPlaceForm(name: string): PlaceFormValues {
+/** 새 폼. 이름은 비어 있고(장소를 고르면 채운다), 위치는 도시 중심에서 시작한다 */
+export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
   return {
     emoji: "",
-    name,
-    autoName: name,
+    name: "",
+    autoName: "",
     category: null,
-    at: null,
-    google: null,
+    at: center,
+    googleId: null,
+    addressDetail: "",
     hours: "",
     rating: "",
     reviews: "",
@@ -87,6 +94,9 @@ export function normalizeReviews(input: string): string {
 
 export type PlaceFormResult = { ok: true; value: NewPlaceFields } | { ok: false; error: string };
 
+/** 핀 위치에서 불러온 주소 두 줄(useReverseGeocode). 못 불러왔으면 null */
+export type FoundAddress = { address: string | null; addressLocal: string | null };
+
 /** 빈 줄(주소 없음)은 버리고, 주소가 http(s) 가 아니면 그 줄을 짚어 오류 */
 function linksOf(drafts: LinkDraft[], label: string): LinkDraft[] | string {
   const filled = drafts
@@ -110,6 +120,7 @@ function numberOf(input: string, digits = 0): number | null {
 
 /** 저장 전에 사용자가 고칠 수 있는 첫 문제. 없으면 null */
 function problemOf(v: PlaceFormValues): string | null {
+  if (!v.at) return "위치를 정해 주세요";
   if (!v.name.trim()) return "장소 이름을 입력해 주세요";
   const gmap = v.gmap.trim();
   if (gmap && !isHttpUrl(gmap)) return "구글맵 링크는 https:// 로 시작해야 해요";
@@ -120,7 +131,7 @@ function problemOf(v: PlaceFormValues): string | null {
  * 폼 값을 저장할 장소 모양으로(create_place_schedule 의 p_place). 사용자가 고칠 수 있는 문제면 첫 오류 문구를 돌려준다.
  * 칸 범위(카테고리 · 대기 길이)는 DB 제약이 다시 지킨다 — 여기서는 입력 중 알 수 있는 것만 본다.
  */
-export function toNewPlace(v: PlaceFormValues): PlaceFormResult {
+export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormResult {
   const problem = problemOf(v);
   if (problem) return { ok: false, error: problem };
   const links = linksOf(v.links, "장소 링크");
@@ -133,8 +144,10 @@ export function toNewPlace(v: PlaceFormValues): PlaceFormResult {
       category: v.category,
       lat: v.at?.lat ?? null,
       lng: v.at?.lng ?? null,
-      address: v.google?.address ?? null,
-      google_place_id: v.google?.id ?? null,
+      address: found.address,
+      address_local: found.addressLocal,
+      address_detail: orNull(v.addressDetail)?.slice(0, 100) ?? null,
+      google_place_id: v.googleId,
       hours: orNull(v.hours),
       rating: numberOf(v.rating, 1),
       review_count: numberOf(v.reviews),

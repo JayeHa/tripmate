@@ -11,10 +11,13 @@ import {
 } from "./place-form";
 
 const form = (patch: Partial<PlaceFormValues>) => ({
-  ...blankPlaceForm("유야 온천"),
-  at: { lat: 35.7, lng: 139.7 },
+  ...blankPlaceForm({ lat: 35.7, lng: 139.7 }),
+  name: "유야 온천",
   ...patch,
 });
+
+/** 주소를 못 불러온 경우 */
+const NO_ADDRESS = { address: null, addressLocal: null };
 
 describe("입력 정리", () => {
   it("별점은 숫자 · 점만 세 글자까지, 5 를 넘으면 5", () => {
@@ -70,8 +73,10 @@ describe("toNewPlace", () => {
           { title: "예약", url: " https://example.com " },
           { title: "", url: "" },
         ],
-        google: { id: "g1", address: "도쿄도 …" },
+        googleId: "g1",
+        addressDetail: " 3층 ",
       }),
+      { address: "Shibuya, Tokyo", addressLocal: "東京都渋谷区" },
     );
     expect(r).toEqual({
       ok: true,
@@ -81,7 +86,9 @@ describe("toNewPlace", () => {
         category: "rest",
         lat: 35.7,
         lng: 139.7,
-        address: "도쿄도 …",
+        address: "Shibuya, Tokyo",
+        address_local: "東京都渋谷区",
+        address_detail: "3층",
         google_place_id: "g1",
         hours: null,
         rating: 4.3,
@@ -94,18 +101,28 @@ describe("toNewPlace", () => {
     });
   });
 
-  it("카테고리는 비어 시작하고, 고르지 않으면 null 로 보낸다(기존 장소의 값을 덮지 않게)", () => {
-    expect(blankPlaceForm("x").category).toBeNull();
-    expect(toNewPlace(form({}))).toMatchObject({ ok: true, value: { category: null } });
+  it("이름 · 카테고리는 비어 시작하고, 카테고리를 고르지 않으면 null 로 보낸다(기존 장소의 값을 덮지 않게)", () => {
+    const blank = blankPlaceForm({ lat: 35.7, lng: 139.7 });
+    expect(blank.name).toBe("");
+    expect(blank.category).toBeNull();
+    expect(toNewPlace(form({}), NO_ADDRESS)).toMatchObject({ ok: true, value: { category: null } });
   });
 
-  it("이름이 없거나 링크 주소가 http(s) 가 아니면 사용자가 고칠 수 있는 문구를 돌려준다", () => {
-    expect(toNewPlace(form({ name: " " }))).toEqual({
+  it("위치 · 이름이 없거나 링크 주소가 http(s) 가 아니면 사용자가 고칠 수 있는 문구를 돌려준다", () => {
+    expect(toNewPlace(form({ at: null }), NO_ADDRESS)).toEqual({
+      ok: false,
+      error: "위치를 정해 주세요",
+    });
+    expect(toNewPlace(form({ name: " " }), NO_ADDRESS)).toEqual({
       ok: false,
       error: "장소 이름을 입력해 주세요",
     });
-    expect(toNewPlace(form({ gmap: "maps.app.goo.gl/x" }))).toMatchObject({ ok: false });
-    expect(toNewPlace(form({ links: [{ title: "공식", url: "javascript:alert(1)" }] }))).toEqual({
+    expect(toNewPlace(form({ gmap: "maps.app.goo.gl/x" }), NO_ADDRESS)).toMatchObject({
+      ok: false,
+    });
+    expect(
+      toNewPlace(form({ links: [{ title: "공식", url: "javascript:alert(1)" }] }), NO_ADDRESS),
+    ).toEqual({
       ok: false,
       error: "장소 링크 주소는 http:// 나 https:// 로 시작해야 해요",
     });
