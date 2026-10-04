@@ -430,6 +430,44 @@ describe("places (0013)", () => {
     expect(renamed.rows).toEqual([{ name: "아사쿠사 센소지" }]);
   });
 
+  it("나간 사람의 다른 여행은 원본을 그대로 쓰고, 멤버가 있는 여행도 소유자가 지울 수 있다", async () => {
+    await as(A);
+    const shared = await newTrip("2027-05-13", "2027-05-13");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${shared}', '${B}', 'member');`,
+    );
+    await as(B);
+    const own = await newTrip("2027-05-14", "2027-05-14");
+    const inOwn = await addPlace(own, 0, { name: "요요기", google_place_id: "g-yoyogi" });
+    await addPlace(shared, 0, { name: "요요기", google_place_id: "g-yoyogi" });
+    const original = (
+      await db.query<{ p: string }>(
+        `select place_id p from public.schedule_items where id = '${inOwn}'`,
+      )
+    ).rows[0].p;
+
+    await db.query(
+      `delete from public.trip_members where trip_id = '${shared}' and user_id = '${B}'`,
+    );
+    const still = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${inOwn}'`,
+    );
+    expect(still.rows[0].p).toBe(original);
+
+    // 여행을 지우면 trip_members 도 cascade 로 지워지며 트리거가 돈다. 멤버의 장소가 있어도 삭제가 끝나야 한다
+    // (지금은 일정이 먼저 지워져 옮길 것이 없다. 트리거의 「소유자 없음」 가드는 순서가 바뀔 때를 위한 방어)
+    await as(A);
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${shared}', '${B}', 'member');`,
+    );
+    await as(B);
+    await addPlace(shared, 0, { name: "하라주쿠" });
+    await as(A);
+    await db.query(`delete from public.trips where id = '${shared}'`);
+    const gone = await db.query(`select id from public.trips where id = '${shared}'`);
+    expect(gone.rows).toEqual([]);
+  });
+
   it("일정이 쓰는 장소는 지울 수 없다", async () => {
     await as(A);
     const id = await newTrip("2027-05-09", "2027-05-09");
