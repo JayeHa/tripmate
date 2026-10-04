@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { ScheduleMap } from "@/entities/schedule-item";
 import { DayChips } from "@/features/schedule/day-selector";
+import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
 
 import { useScrollFocus } from "../model/use-scroll-focus";
@@ -28,6 +29,7 @@ export function MobileSchedule({
   const [mapOpen, setMapOpen] = useState(true);
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLElement>(null);
+  const stickyHeight = useElementHeight(stickyRef);
   const focus = useScrollFocus({
     list: listRef,
     line: () => (stickyRef.current?.getBoundingClientRect().bottom ?? 0) + FOCUS_LINE_OFFSET,
@@ -58,8 +60,17 @@ export function MobileSchedule({
       </div>
       <main ref={listRef} className="flex flex-1 flex-col">
         <DayBody startDate={trip?.start_date ?? null} day={day} focusId={focus.focusId} {...body} />
-        {/* 마지막 장소도 기준선까지 올라오게 하는 여백 */}
-        <div aria-hidden="true" className="h-85 shrink-0" />
+        {/*
+          마지막 장소도 기준선까지 올라오게 하는 여백. 기본 340px, 화면이 길면 「화면 높이 − 기준선」 까지 늘린다.
+          기준선 = 상단바(3.25rem) + sticky 영역 + 24px. sticky 높이는 지도를 접고 펼 때 바뀌어 재서 쓴다
+        */}
+        <div
+          aria-hidden="true"
+          className="shrink-0"
+          style={{
+            height: `max(340px, calc(100dvh - var(--shell-top) - 3.25rem - ${stickyHeight + FOCUS_LINE_OFFSET}px))`,
+          }}
+        />
       </main>
     </>
   );
