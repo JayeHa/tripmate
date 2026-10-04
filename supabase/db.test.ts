@@ -819,7 +819,8 @@ describe("장소 주소 칸 (0020 · 0021)", () => {
     const generated = new Set(["id", "created_by", "created_at", "updated_at"]);
     const missing = cols
       .map((c) => c.column_name)
-      .filter((c) => !generated.has(c) && !def[0].body.includes(`r.${c}`));
+      // 단어 경계까지 본다 — 그냥 포함이면 r.address 가 빠져도 r.address_local 에 걸려 통과한다
+      .filter((c) => !generated.has(c) && !new RegExp(`\\br\\.${c}\\b`).test(def[0].body));
     expect(missing).toEqual([]);
   });
 });
