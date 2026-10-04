@@ -14,6 +14,8 @@ const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 };
 /** 날을 바꿀 때 핀이 모두 보이게 맞춘다. 가까운 핀 몇 개로 너무 확대되지 않게 15 에서 멈춘다 */
 const FIT_PADDING = 36;
 const MAX_ZOOM = 15;
+/** 맞춤이 끝나기를 기다리는 시간. 이 뒤의 idle 은 사용자 조작으로 본다 */
+const FIT_SETTLE_MS = 1000;
 
 type LatLng = { lat: number; lng: number };
 type Pin = { id: string; num: number; at: LatLng; row: TimelineRow };
@@ -93,11 +95,21 @@ function FitPins({ points }: PointsProps) {
     points.forEach((p) => bounds.extend(p));
     map.fitBounds(bounds, FIT_PADDING);
     // fitBounds 는 뷰를 비동기로 바꾼다. 바로 getZoom() 하면 이전 줌이 나와서, 적용이 끝난 idle 에서 상한을 건다.
-    // 같은 호텔에서 나가고 돌아오는 날처럼 핀이 한 점에 모이면 fitBounds 가 최대 줌까지 들어가기 때문이다
+    // 같은 호텔에서 나가고 돌아오는 날처럼 핀이 한 점에 모이면 fitBounds 가 최대 줌까지 들어가기 때문이다.
+    // 단, 맞춤 직후에만 기다린다. 뷰가 이미 맞아 카메라가 안 움직이면 idle 이 오지 않아서, 남은 리스너가
+    // 나중에 사용자가 직접 확대한 것을 15 로 되돌린다. idle · 드래그 시작 · 1초 중 먼저 오는 것에서 그만둔다
+    const stop = () => {
+      clearTimeout(timer);
+      idle.remove();
+      drag.remove();
+    };
     const idle = google.maps.event.addListenerOnce(map, "idle", () => {
+      stop();
       if ((map.getZoom() ?? 0) > MAX_ZOOM) map.setZoom(MAX_ZOOM);
     });
-    return () => idle.remove();
+    const drag = google.maps.event.addListenerOnce(map, "dragstart", stop);
+    const timer = setTimeout(stop, FIT_SETTLE_MS);
+    return stop;
     // points 배열은 렌더마다 새로 만들어져 내용(key)으로 비교한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key]);
