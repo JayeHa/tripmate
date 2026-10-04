@@ -73,7 +73,8 @@ export function PcHeader({ tripId }: PcHeaderProps) {
           + 일행초대
         </Button>
       </div>
-      {trip && <InviteDialog trip={trip} open={inviteOpen} onOpenChange={setInviteOpen} />}
+      {/* 열 때만 마운트한다. 닫혀 있어도 마운트되면 멤버 목록을 미리 불러온다 */}
+      {trip && inviteOpen && <InviteDialog trip={trip} open onOpenChange={setInviteOpen} />}
     </header>
   );
 }
