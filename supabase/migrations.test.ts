@@ -132,13 +132,19 @@ describe("assert_not_anonymous 헬퍼", () => {
 });
 
 /**
- * public 스키마에 만든 테이블 이름. `if not exists` · `unlogged` · `temp` 를 건너뛰고, 다른 스키마(storage 등)는 뺀다.
- * 스키마를 안 쓰면 public 으로 본다.
+ * public 스키마에 만든 테이블 이름. `if not exists` · `unlogged` 를 건너뛰고, 다른 스키마(storage 등)는 뺀다.
+ * 스키마를 안 쓰면 public 으로 본다. 따옴표 없는 이름은 Postgres 가 소문자로 바꾸므로 `PUBLIC.foo` 도 public 이다.
+ * temp 테이블은 public 이 아니라 세션 전용 스키마(pg_temp)에 생겨서 뺀다.
  */
 function tableNames(sql: string): string[] {
   const re =
-    /create\s+(?:(?:unlogged|temp|temporary)\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:"?(\w+)"?\.)?"?(\w+)"?/gi;
-  return [...sql.matchAll(re)].filter((m) => !m[1] || m[1] === "public").map((m) => m[2]);
+    /create\s+(?:(unlogged|temp|temporary)\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:"?(\w+)"?\.)?"?(\w+)"?/gi;
+  return [...sql.matchAll(re)]
+    .filter(
+      ([, kind, schema]) =>
+        !/^temp/i.test(kind ?? "") && (schema ?? "public").toLowerCase() === "public",
+    )
+    .map((m) => m[3]);
 }
 
 describe("tableNames", () => {
@@ -146,7 +152,8 @@ describe("tableNames", () => {
     ["create table public.places (", ["places"]],
     ["create table if not exists public.foo (", ["foo"]],
     ["create unlogged table public.bar (", ["bar"]],
-    ["create temporary table baz (", ["baz"]],
+    ["create temporary table baz (", []],
+    ["create TABLE PUBLIC.upper (", ["upper"]],
     ['create table "public"."quoted" (', ["quoted"]],
     ["create table storage.objects (", []],
   ])("%s → %j", (sql, expected) => {
