@@ -93,35 +93,53 @@ export function LocationField({ form }: LocationFieldProps) {
 type CenterSyncProps = {
   /** 폼의 핀 위치. 지도 중심과 다르면 지도를 그곳으로 옮긴다(검색으로 고를 때 — 같은 곳을 다시 골라도) */
   at: LatLng | null;
-  /** 사용자가 지도를 움직이면(끌기 · 휠 · 핀치 · 더블클릭 확대) 새 중앙으로 부른다 */
+  /** 사용자가 지도를 끌어 옮기면 새 중앙으로 부른다 */
   onMove: (at: LatLng) => void;
 };
 
+/** 위치를 고르면 이만큼은 확대해 보인다 */
+const PICKED_ZOOM = 15;
+
 /**
  * 지도와 폼의 핀 위치를 맞춘다. 지도가 멈출 때(idle)만 중앙을 읽어 이동 중에 폼을 흔들지 않는다.
- * idle 은 코드가 옮긴 뒤에도 오므로, 중앙이 폼 위치와 같으면 사용자 이동이 아니라고 본다.
- * 처음 그려질 때의 idle 은 직전 중앙이 없어 기록만 한다 — 위치가 비어 있을 때 지도를 띄운 것만으로 좌표가 채워지지 않게.
+ * - 끌기(dragstart 뒤 idle)만 위치를 바꾼다. 휠 · 핀치 · 더블클릭 확대는 커서 쪽으로 중심을 옮기는데,
+ *   그걸 위치 변경으로 받으면 확대만 해도 고른 구글 장소가 지워진다. 그래서 확대 · 축소로 중심이 밀리면 핀 위치로 되돌린다
+ * - 위치가 비어 있으면 되돌릴 곳이 없어 그대로 둔다(첫 idle 로 좌표가 채워지지 않는다)
  */
 function CenterSync({ at, onMove }: CenterSyncProps) {
   const map = useMap();
   const atRef = useRef(at);
   useEffect(() => {
     atRef.current = at;
-    const c = map?.getCenter();
-    if (map && at && !(c && samePoint({ lat: c.lat(), lng: c.lng() }, at))) map.panTo(at);
+    if (!map || !at) return;
+    const c = map.getCenter();
+    // 끌어서 바뀐 위치는 이미 지도 중심이라 건너뛴다 — 검색으로 고른 곳으로 옮길 때만 확대도 맞춘다
+    if (c && samePoint({ lat: c.lat(), lng: c.lng() }, at)) return;
+    map.panTo(at);
+    if ((map.getZoom() ?? 0) < PICKED_ZOOM) map.setZoom(PICKED_ZOOM);
   }, [map, at]);
   useEffect(() => {
     if (!map) return;
-    let last: LatLng | null = null;
-    const listener = map.addListener("idle", () => {
+    let dragged = false;
+    const drag = map.addListener("dragstart", () => {
+      dragged = true;
+    });
+    const idle = map.addListener("idle", () => {
       const c = map.getCenter();
       if (!c) return;
       const now = { lat: c.lat(), lng: c.lng() };
-      const moved = last !== null && !samePoint(now, last);
-      last = now;
-      if (moved && !(atRef.current && samePoint(now, atRef.current))) onMove(now);
+      const pin = atRef.current;
+      if (dragged) {
+        dragged = false;
+        if (!(pin && samePoint(now, pin))) onMove(now);
+      } else if (pin && !samePoint(now, pin)) {
+        map.panTo(pin);
+      }
     });
-    return () => listener.remove();
+    return () => {
+      drag.remove();
+      idle.remove();
+    };
   }, [map, onMove]);
   return null;
 }

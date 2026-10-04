@@ -60,7 +60,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     }
   }
 
-  /** 사용자가 지도를 움직여(끌기 · 확대) 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
+  /** 사용자가 지도를 끌어 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
   const moveTo = useCallback((at: { lat: number; lng: number }) => {
     setValues((v) => ({ ...v, at, google: null }));
   }, []);
