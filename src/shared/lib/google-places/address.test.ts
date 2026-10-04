@@ -42,6 +42,18 @@ describe("pickGeocode", () => {
 });
 
 describe("cleanAddress", () => {
+  it("나라 이름은 맨 앞 · 맨 끝에서만 뺀다(도시 이름 안의 나라 이름은 둔다)", () => {
+    const mexico = result(
+      "06600 Ciudad de México, CDMX, México",
+      ["street_address"],
+      [
+        ["México", "country,political", "MX"],
+        ["06600", "postal_code"],
+      ],
+    );
+    expect(cleanAddress(mexico)).toBe("Ciudad de México, CDMX");
+  });
+
   it("나라 이름 · 우편번호 · 〒 를 빼고 구분자를 다듬는다", () => {
     expect(cleanAddress(shibuya("1-chōme-7-3 Jinnan, Shibuya, Tokyo 150-0041 일본", "일본"))).toBe(
       "1-chōme-7-3 Jinnan, Shibuya, Tokyo",

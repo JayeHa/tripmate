@@ -73,16 +73,23 @@ export function pickGeocode(results: GeocodeResult[]): GeocodeResult | null {
  * 「日本、〒150-0041 東京都渋谷区神南１丁目７−３」 → 「東京都渋谷区神南１丁目７−３」
  */
 export function cleanAddress(result: GeocodeResult): string {
-  const drop = result.address_components
-    .filter((c) => c.types.includes("country") || c.types.includes("postal_code"))
-    .map((c) => c.long_name);
-  let text = result.formatted_address;
-  for (const part of drop) text = text.split(part).join(" ");
-  return text
-    .replace(/〒/g, " ")
-    .replace(/\s+([,、])/g, "$1")
-    .replace(/\s{2,}/g, " ")
-    .replace(/^[\s,、]+|[\s,、]+$/g, "");
+  const names = (type: string) =>
+    result.address_components.filter((c) => c.types.includes(type)).map((c) => c.long_name);
+  let text = ` ${result.formatted_address} `;
+  for (const postal of names("postal_code")) text = text.split(postal).join(" ");
+  text = text.replace(/〒/g, " ");
+  // 나라 이름은 맨 앞 · 맨 끝에 있을 때만 뺀다 — 「Ciudad de México, CDMX, México」 의 도시 이름 안 México 는 둔다
+  for (const country of names("country")) {
+    text = trimSeparators(text);
+    if (text.startsWith(country)) text = text.slice(country.length);
+    if (text.endsWith(country)) text = text.slice(0, -country.length);
+  }
+  return trimSeparators(text.replace(/\s+([,、])/g, "$1").replace(/\s{2,}/g, " "));
+}
+
+/** 앞뒤 공백 · 쉼표 · 「、」 를 뗀다 */
+function trimSeparators(text: string): string {
+  return text.replace(/^[\s,、]+|[\s,、]+$/g, "");
 }
 
 /** 한글이 들어 있는지 */
