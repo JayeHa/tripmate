@@ -73,7 +73,7 @@ export function MobileSchedule({
         </div>
         {/*
           마지막 장소도 기준선까지 올라오게 하는 여백. 기본 340px, 화면이 길면 「화면 높이 − 기준선」 까지 늘린다.
-          기준선 = 상단바(3.25rem) + sticky 영역 + 24px. sticky 높이는 지도를 접고 펼 때 바뀌어 재서 쓴다
+          기준선 = 상단바(3.25rem) + sticky 영역 + FOCUS_LINE_OFFSET. sticky 높이는 지도를 접고 펼 때 바뀌어 재서 쓴다
         */}
         <div
           aria-hidden="true"
