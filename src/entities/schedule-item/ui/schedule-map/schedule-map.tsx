@@ -87,8 +87,12 @@ function FitPins({ points }: PointsProps) {
     const bounds = new google.maps.LatLngBounds();
     points.forEach((p) => bounds.extend(p));
     map.fitBounds(bounds, FIT_PADDING);
-    const zoom = map.getZoom();
-    if (zoom != null && zoom > MAX_ZOOM) map.setZoom(MAX_ZOOM);
+    // fitBounds 는 뷰를 비동기로 바꾼다. 바로 getZoom() 하면 이전 줌이 나와서, 적용이 끝난 idle 에서 상한을 건다.
+    // 같은 호텔에서 나가고 돌아오는 날처럼 핀이 한 점에 모이면 fitBounds 가 최대 줌까지 들어가기 때문이다
+    const idle = google.maps.event.addListenerOnce(map, "idle", () => {
+      if ((map.getZoom() ?? 0) > MAX_ZOOM) map.setZoom(MAX_ZOOM);
+    });
+    return () => idle.remove();
     // points 배열은 렌더마다 새로 만들어져 내용(key)으로 비교한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key]);
