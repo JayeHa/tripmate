@@ -215,6 +215,7 @@ export type Database = {
           lng: number | null;
           address: string | null;
           address_local: string | null;
+          address_ko: string | null;
           address_detail: string | null;
           category: string | null;
           emoji: string | null;
@@ -238,6 +239,7 @@ export type Database = {
           lng?: number | null;
           address?: string | null;
           address_local?: string | null;
+          address_ko?: string | null;
           address_detail?: string | null;
           category?: string | null;
           emoji?: string | null;
@@ -261,6 +263,7 @@ export type Database = {
           lng?: number | null;
           address?: string | null;
           address_local?: string | null;
+          address_ko?: string | null;
           address_detail?: string | null;
           category?: string | null;
           emoji?: string | null;

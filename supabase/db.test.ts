@@ -770,7 +770,7 @@ describe("copy_places_on_leave — 예상 대기 (0019)", () => {
   });
 });
 
-describe("장소 주소 칸 (0020)", () => {
+describe("장소 주소 칸 (0020 · 0021)", () => {
   it("현지어 주소 · 상세 위치를 저장하고, 이미 가진 장소를 다시 담을 때 빈 칸은 기존 값을 둔다", async () => {
     await as(A);
     const id = await newTrip("2027-08-08", "2027-08-08");
@@ -781,6 +781,7 @@ describe("장소 주소 칸 (0020)", () => {
       lng: 139.6995,
       address: "1-chōme-7-3 Jinnan, Shibuya, Tokyo",
       address_local: "東京都渋谷区神南１丁目７−３",
+      address_ko: "도쿄도 시부야구 진난 1 조메 7-3",
       address_detail: "공원 안 1층",
     };
     await db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
@@ -791,11 +792,19 @@ describe("장소 주소 칸 (0020)", () => {
       id,
       JSON.stringify({ name: "블루보틀 시부야", google_place_id: "g-addr", address_detail: "" }),
     ]);
-    const { rows } = await db.query<{ address_local: string; address_detail: string }>(
-      `select address_local, address_detail from public.places where created_by = '${A}' and google_place_id = 'g-addr'`,
+    const { rows } = await db.query<{
+      address_local: string;
+      address_ko: string;
+      address_detail: string;
+    }>(
+      `select address_local, address_ko, address_detail from public.places where created_by = '${A}' and google_place_id = 'g-addr'`,
     );
     expect(rows).toEqual([
-      { address_local: "東京都渋谷区神南１丁目７−３", address_detail: "공원 안 1층" },
+      {
+        address_local: "東京都渋谷区神南１丁目７−３",
+        address_ko: "도쿄도 시부야구 진난 1 조메 7-3",
+        address_detail: "공원 안 1층",
+      },
     ]);
   });
 
