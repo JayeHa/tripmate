@@ -6,8 +6,9 @@ import type { ScheduleItem } from "./types";
 /**
  * 일정 한 줄의 종류. 번호 마커와 지도 핀은 place 에만 붙는다.
  * flight 는 (e) 항공편 단계에서 자동으로 생기고, 지금은 샘플에만 있다.
+ * 이동(move)은 일정이 아니라 장소 쌍에 붙는 기록이다(model/move.ts, 0011).
  */
-export const ITEM_KINDS = ["place", "flight", "note", "move"] as const;
+export const ITEM_KINDS = ["place", "flight", "note"] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
 
 export const PLACE_CATEGORIES = ["sight", "food", "cafe", "shop", "stay", "air"] as const;

@@ -9,6 +9,8 @@ export const queryKeys = {
     members: (tripId: string) => ["trips", tripId, "members"] as const,
   },
   scheduleItems: (tripId: string) => ["trips", tripId, "schedule-items"] as const,
+  /** 장소 쌍 사이의 이동 방법 (0011 moves) */
+  moves: (tripId: string) => ["trips", tripId, "moves"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   /** 한 여행의 모든 날짜·이동수단 경로. 일정이 바뀌면 이 prefix 로 한꺼번에 무효화한다. */
   dayRoutes: (tripId: string) => ["trips", tripId, "route"] as const,
