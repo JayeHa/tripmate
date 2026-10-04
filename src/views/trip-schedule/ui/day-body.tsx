@@ -12,6 +12,8 @@ type DayBodyProps = {
   memos: ReturnType<typeof useOpenMemos>;
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 을 함께 보인다 */
   showCounts?: boolean;
+  /** 지도에 강조된 장소. 그 행에 배경을 깐다 */
+  focusId?: string | null;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: () => void;
@@ -25,6 +27,7 @@ export function DayBody({
   isPending,
   memos,
   showCounts,
+  focusId,
   onOpen,
   onEditMove,
   onAddPlace,
@@ -59,6 +62,7 @@ export function DayBody({
         onToggleMemo={memos.toggle}
         onOpen={onOpen}
         onEditMove={onEditMove}
+        focusId={focusId}
       />
       {/* 메모 추가는 메모 단계에서 이 옆에 붙는다 */}
       <div className="flex gap-2.5 px-5 pt-1 pb-8">

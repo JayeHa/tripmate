@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/utils";
 
 import { fitZoom } from "../../lib/map-fit";
 import type { TimelineRow } from "../../lib/timeline";
-import { MapPin, type MapPinSize } from "./map-pin";
+import { MapPin, type MapPinSize, pinAnchor } from "./map-pin";
 
 /** 핀이 하나도 없는 날의 중심. 여행 도시 좌표를 아직 받지 않아 도쿄역으로 둔다 */
 const DEFAULT_CENTER = { lat: 35.6812, lng: 139.7671 };
@@ -34,7 +34,8 @@ type ScheduleMapProps = {
   pinSize?: MapPinSize;
   /** 바뀌면 핀을 다시 맞춘다. PC 에서 지도 폭이 바뀌었을 때(경계선 · 프리셋) 넘긴다 */
   fitKey?: string | number;
-  selectedId?: string | null;
+  /** 지금 보고 있는 장소. 강조 핀으로 그리고 줌은 그대로 두고 그쪽으로 지도를 옮긴다 */
+  focusId?: string | null;
   onSelect?: (row: TimelineRow) => void;
   className?: string;
 };
@@ -49,7 +50,7 @@ export function ScheduleMap({
   rows,
   pinSize = "md",
   fitKey,
-  selectedId,
+  focusId,
   onSelect,
   className,
 }: ScheduleMapProps) {
@@ -71,19 +72,21 @@ export function ScheduleMap({
             position={pin.at}
             title={pin.row.item.name}
             onClick={() => onSelect?.(pin.row)}
-            zIndex={selectedId === pin.id ? 10 : 1}
+            zIndex={focusId === pin.id ? 10 : 1}
+            {...pinAnchor(focusId === pin.id)}
           >
             <MapPin
               num={pin.num}
               size={pinSize}
               status={pin.row.status}
               category={pin.row.category}
-              selected={selectedId === pin.id}
+              focus={focusId === pin.id}
             />
           </AdvancedMarker>
         ))}
         <FitPins points={pins.map((p) => p.at)} fitKey={fitKey} />
         <DashedPath points={pins.map((p) => p.at)} />
+        <PanToFocus at={pins.find((p) => p.id === focusId)?.at ?? null} />
       </Map>
     </div>
   );
@@ -114,6 +117,22 @@ function FitPins({ points, fitKey }: FitPinsProps) {
     // points 배열은 렌더마다 새로 만들어져 내용(key)으로 비교한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key, fitKey]);
+  return null;
+}
+
+type PanToFocusProps = { at: LatLng | null };
+
+/**
+ * 강조 장소가 바뀌면 줌은 그대로 두고 그 핀으로 지도를 옮긴다(panTo 는 가까우면 부드럽게 움직인다).
+ * 좌표 값으로 비교해서, 같은 장소인데 rows 가 새로 만들어진 것만으로는 움직이지 않는다.
+ */
+function PanToFocus({ at }: PanToFocusProps) {
+  const map = useMap();
+  const key = at ? `${at.lat},${at.lng}` : null;
+  useEffect(() => {
+    if (map && at) map.panTo(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, key]);
   return null;
 }
 

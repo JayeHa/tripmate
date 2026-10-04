@@ -95,6 +95,8 @@
   --color-pin-opt: #8b929b;
   /* 지도 타일이 오기 전 바탕 */
   --color-map-bg: #e8eef2;
+  /* 일정 목록에서 지금 지도에 강조된 장소의 행 */
+  --color-row-focus: #f2f7ff;
 
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
