@@ -491,6 +491,10 @@ export type Database = {
         Args: { p_trip: string; p_day: number; p_place: Json };
         Returns: string;
       };
+      add_schedule_places: {
+        Args: { p_trip: string; p_day: number; p_places: Json };
+        Returns: string[];
+      };
       can_attach_place: {
         Args: { p_place: string; p_trip: string };
         Returns: boolean;

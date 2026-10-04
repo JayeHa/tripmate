@@ -1,7 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
-import type { ScheduleItem } from "../model/types";
+import type { Place, ScheduleItem } from "../model/types";
 
 /** 일정과 그 일정이 쓰는 장소를 함께 읽는 select */
 const WITH_PLACE = "*, place:places(*)";
@@ -83,6 +83,7 @@ export async function countScheduleItemsFrom(tripId: string, dayIndex: number): 
 }
 
 /** 장소 검색에서 고른 곳. 0013 add_schedule_place 가 받는 모양 */
+/** 구글 검색 · 이름만 입력으로 고른 곳. 0015 add_schedule_place 가 받는 모양 */
 export type PickedPlaceInput = {
   name: string;
   google_place_id: string | null;
@@ -91,21 +92,41 @@ export type PickedPlaceInput = {
   address: string | null;
 };
 
+/** 일정에 담을 한 곳: 저장한 장소(이미 있는 places 행) 또는 새로 고른 곳 */
+export type ScheduleEntry = { place_id: string } | PickedPlaceInput;
+
 /**
- * 장소를 그날 끝에 담는다. 장소와 일정을 서버에서 한 번에 만든다(0013 add_schedule_place).
- * 같은 구글 장소를 이미 내 보관함에 담았으면 그 장소를 다시 쓴다. 새 일정 id 를 돌려준다.
+ * 여러 곳을 고른 순서대로 그날 끝에 담는다(0016 add_schedule_places). 한 트랜잭션이라 하나가 실패하면 아무것도 안 남는다.
+ * 새로 고른 곳은 같은 구글 장소를 이미 담았으면 그 장소를 다시 쓴다. 담은 일정 id 를 순서대로 돌려준다.
  */
-export async function addPlaceToSchedule(
+export async function addPlacesToSchedule(
   tripId: string,
   dayIndex: number,
-  place: PickedPlaceInput,
-): Promise<string> {
+  entries: ScheduleEntry[],
+): Promise<string[]> {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("add_schedule_place", {
+  const { data, error } = await supabase.rpc("add_schedule_places", {
     p_trip: tripId,
     p_day: dayIndex,
-    p_place: place,
+    p_places: entries,
   });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * 「저장한 장소」 — 내가 만든 장소 중 이 도시들에 있는 것. 이름순.
+ * 일정에 쓰지 않는 장소도 나온다(보관함). 도시가 없으면 빈 목록.
+ */
+export async function fetchSavedPlaces(userId: string, cityIds: string[]): Promise<Place[]> {
+  if (cityIds.length === 0) return [];
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("places")
+    .select("*")
+    .eq("created_by", userId)
+    .in("city_id", cityIds)
+    .order("name");
   if (error) throw error;
   return data;
 }

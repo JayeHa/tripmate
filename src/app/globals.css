@@ -95,6 +95,8 @@
   --color-pin-opt: #8b929b;
   /* 지도 타일이 오기 전 바탕 */
   --color-map-bg: #e8eef2;
+  /* 별점 ★ (장소 목록). 쇼핑 카테고리색과 값이 같지만 뜻이 달라 따로 둔다 */
+  --color-star: #f59e0b;
   /* 일정 목록에서 지금 지도에 강조된 장소의 행 */
   --color-row-focus: #f2f7ff;
 
