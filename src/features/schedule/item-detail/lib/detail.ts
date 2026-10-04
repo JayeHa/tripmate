@@ -71,6 +71,8 @@ export function placeInfoRows(place: Place, dow: number | null): InfoRow[] {
 
 /** 「이번 일정」 수정 칸의 값 — 입력 칸이 다루는 문자열 그대로 */
 export type PlanDraft = {
+  /** 이 일정의 아이콘(장소가 아니라 일정에 붙는다). 비우면 장소의 예전 아이콘이 있으면 그것이 보인다 */
+  emoji: string;
   /** note · flight 의 제목(place 는 장소 이름이라 여기서 고치지 않는다) */
   name: string;
   status: ReservationStatus | null;
@@ -82,6 +84,7 @@ export type PlanDraft = {
 /** 일정에서 수정 칸의 처음 값 */
 export function planDraftOf(item: ScheduleItem): PlanDraft {
   return {
+    emoji: item.emoji ?? "",
     name: item.name ?? "",
     status: statusOf(item),
     time: item.start_time?.slice(0, 5) ?? "",
@@ -94,16 +97,17 @@ export type PlanPatchResult =
 
 /**
  * 수정 칸 값을 저장할 일정 칸으로. 빈 링크 줄은 버리고, 주소가 http(s) 가 아니면 그 줄을 짚어 오류.
- * place 는 상태 · 시간 · 링크만, note · flight 는 제목 · 시간(상태 · 링크는 장소 일정에만 쓴다)
+ * 아이콘 · 시간은 모두, place 는 상태 · 링크를 더하고 note · flight 는 제목을 더한다(상태 · 링크는 장소 일정에만 쓴다)
  */
 function fullPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResult {
   const start_time = draft.time || null;
+  const emoji = draft.emoji.trim().slice(0, 8) || null;
   if (start_time && !/^\d{2}:\d{2}$/.test(start_time))
     return { ok: false, error: "시간을 확인해 주세요" };
   if (item.kind !== "place") {
     const name = draft.name.trim();
     if (!name) return { ok: false, error: "제목을 입력해 주세요" };
-    return { ok: true, patch: { name: name.slice(0, 100), start_time } };
+    return { ok: true, patch: { emoji, name: name.slice(0, 100), start_time } };
   }
   const links = draft.links
     .map((l) => ({ title: l.title.trim(), url: l.url.trim() }))
@@ -111,7 +115,7 @@ function fullPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResult {
   if (links.some((l) => !isHttpUrl(l.url))) {
     return { ok: false, error: "일정 링크 주소는 http:// 나 https:// 로 시작해야 해요" };
   }
-  return { ok: true, patch: { status: draft.status, start_time, links } };
+  return { ok: true, patch: { emoji, status: draft.status, start_time, links } };
 }
 
 /**

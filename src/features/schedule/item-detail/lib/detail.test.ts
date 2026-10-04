@@ -104,6 +104,7 @@ describe("toPlanPatch", () => {
     });
     const draft = planDraftOf(it0);
     expect(draft).toEqual({
+      emoji: "",
       name: "",
       status: "ok",
       time: "16:40",
@@ -135,6 +136,19 @@ describe("toPlanPatch", () => {
       patch: { start_time: "10:00" },
     });
     expect(toPlanPatch(it0, opened, opened)).toEqual({ ok: true, patch: {} });
+  });
+
+  it("아이콘은 앞뒤 공백을 떼고, 비우면 null", () => {
+    const it0 = item({ emoji: "🍜" });
+    const opened = planDraftOf(it0);
+    expect(toPlanPatch(it0, { ...opened, emoji: " ♨️ " }, opened)).toEqual({
+      ok: true,
+      patch: { emoji: "♨️" },
+    });
+    expect(toPlanPatch(it0, { ...opened, emoji: "" }, opened)).toEqual({
+      ok: true,
+      patch: { emoji: null },
+    });
   });
 
   it("링크 주소가 http(s) 가 아니면 오류", () => {

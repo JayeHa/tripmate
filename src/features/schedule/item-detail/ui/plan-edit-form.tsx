@@ -12,7 +12,14 @@ import type { PlanEditState } from "../model/use-plan-edit";
 
 type PlanEditFormProps = { item: ScheduleItem; edit: PlanEditState };
 
-/** 그 자리 수정 칸: (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장 */
+/** 수정 칸 입력 상자 — 높이 44 · 둥글기 10 */
+const inputClass =
+  "h-11 rounded-memo border border-line text-sm text-ink-900 outline-none focus:border-primary";
+
+/**
+ * 그 자리 수정 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
+ * 아이콘을 비우면 장소의 예전 아이콘이 있으면 그것이 보여 자리 표시로 알려 준다
+ */
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   const draft = edit.draft;
   if (!draft) return null;
@@ -20,17 +27,32 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   const options: (ReservationStatus | null)[] = [null, ...RESERVATION_STATUSES];
   return (
     <div className="flex flex-col gap-3 rounded-card border border-primary p-3.5">
-      {!isPlace && (
-        <EditField label="제목">
+      <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
+        <div
+          className={cn(
+            "grid gap-2",
+            isPlace ? "grid-cols-[52px]" : "grid-cols-[52px_minmax(0,1fr)]",
+          )}
+        >
           <input
-            value={draft.name}
-            onChange={(e) => edit.set("name", e.target.value)}
-            maxLength={100}
-            aria-label="제목"
-            className="h-11 rounded-memo border border-line px-3 text-sm text-ink-900 outline-none focus:border-primary"
+            value={draft.emoji}
+            onChange={(e) => edit.set("emoji", e.target.value.trim())}
+            maxLength={8}
+            placeholder={item.place?.emoji || "🙂"}
+            aria-label="아이콘"
+            className={`${inputClass} px-0 text-center text-xl`}
           />
-        </EditField>
-      )}
+          {!isPlace && (
+            <input
+              value={draft.name}
+              onChange={(e) => edit.set("name", e.target.value)}
+              maxLength={100}
+              aria-label="제목"
+              className={`${inputClass} px-3`}
+            />
+          )}
+        </div>
+      </EditField>
       {isPlace && (
         <EditField label="예약 상태">
           <div className="grid grid-cols-4 gap-1.5">
@@ -57,7 +79,7 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
           value={draft.time}
           onChange={(e) => edit.set("time", e.target.value)}
           aria-label="방문 예상 시간"
-          className="h-11 rounded-memo border border-line px-3 text-sm text-ink-900 outline-none focus:border-primary"
+          className={`${inputClass} px-3`}
         />
       </EditField>
       {isPlace && (
