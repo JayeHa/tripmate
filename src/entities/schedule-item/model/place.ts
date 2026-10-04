@@ -107,7 +107,17 @@ export function categoryOf(item: ScheduleItem): PlaceCategory | null {
  * 일정 링크가 이 일정에만 해당해 더 구체적이라 앞에 둔다.
  */
 export function linksOf(item: ScheduleItem): PlaceLink[] {
-  return [...arrayOf(linkSchema, item.links), ...arrayOf(linkSchema, item.place?.links)];
+  return [...planLinksOf(item), ...placeLinksOf(item)];
+}
+
+/** 일정 링크(이번 방문의 예약 · 티켓 — schedule_items.links). 모양이 틀린 원소는 버린다 */
+export function planLinksOf(item: Pick<ScheduleItem, "links">): PlaceLink[] {
+  return arrayOf(linkSchema, item.links);
+}
+
+/** 장소 링크(공식 홈페이지 · 메뉴판 — places.links). 장소가 없거나 모양이 틀린 원소는 버린다 */
+export function placeLinksOf(item: Pick<ScheduleItem, "place">): PlaceLink[] {
+  return arrayOf(linkSchema, item.place?.links);
 }
 
 /** 대체 장소. name · gmap 이 없는 원소는 버린다 */
