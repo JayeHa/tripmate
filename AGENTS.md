@@ -190,6 +190,7 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 
 테이블마다 누가 읽고 고치는지, 지켜야 하는 규칙과 그것을 지키는 곳, 동작별로 바뀌는 데이터는
 [`docs/policies/data-model.md`](docs/policies/data-model.md) 에 있다. 권한을 다루는 기능을 만들거나 리뷰할 때 먼저 읽는다.
+장소 검색 범위 · 구글 지도 · 장소 API 결정은 [`docs/policies/place-search.md`](docs/policies/place-search.md) 에 쌓는다.
 **마이그레이션(테이블 · 정책 · 함수 · 트리거)을 바꾸면 같은 PR 에서 이 문서도 고친다.** 테이블 · 함수 이름이 빠지면 `migrations.test.ts` 가 막는다.
 
 ## 클라이언트 가드는 가드가 아니다
