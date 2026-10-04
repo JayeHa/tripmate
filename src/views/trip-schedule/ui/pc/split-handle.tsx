@@ -1,5 +1,6 @@
-import type { KeyboardEventHandler, PointerEventHandler } from "react";
+import type { KeyboardEventHandler } from "react";
 
+import type { PointerDragHandlers } from "@/shared/lib/use-pointer-drag";
 import { cn } from "@/shared/lib/utils";
 
 type SplitHandleProps = {
@@ -9,14 +10,8 @@ type SplitHandleProps = {
   maxWidth: number;
   onKeyDown: KeyboardEventHandler;
   dragging: boolean;
-  /** useSplitWidth 의 dragHandlers. pointer capture 로 드래그 시작부터 끝까지 이 요소가 받는다 */
-  dragHandlers: {
-    onPointerDown: PointerEventHandler;
-    onPointerMove: PointerEventHandler;
-    onPointerUp: PointerEventHandler;
-    onPointerCancel: PointerEventHandler;
-    onLostPointerCapture: PointerEventHandler;
-  };
+  /** usePointerDrag 의 핸들러. pointer capture 로 드래그 시작부터 끝까지 이 요소가 받는다 */
+  dragHandlers: PointerDragHandlers;
   /** 더블클릭하면 기본 너비(440)로 */
   onReset: () => void;
 };

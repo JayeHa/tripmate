@@ -1,7 +1,8 @@
 "use client";
 
-import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 
+import { usePointerDrag } from "@/shared/lib/use-pointer-drag";
 import { useWindowWidth } from "@/shared/lib/use-window-width";
 
 import {
@@ -23,9 +24,6 @@ const KEY_STEP = 16;
 export function useSplitWidth() {
   const viewport = useWindowWidth();
   const [wanted, setWanted] = useState(LIST_DEFAULT_WIDTH);
-  // 드래그를 시작할 때의 너비. 드래그 중이 아니면 null
-  const [dragStart, setDragStart] = useState<number | null>(null);
-  const dragging = dragStart !== null;
   const width = clampListWidth(wanted, viewport);
 
   /** 범위 안으로 잘라서 정한다 */
@@ -33,35 +31,11 @@ export function useSplitWidth() {
     setWanted(clampListWidth(next, viewport));
   }
 
-  // 드래그 시작점. 끝나면 null
-  const origin = useRef<{ x: number; width: number } | null>(null);
-
-  /**
-   * 경계선 드래그 핸들러 — 경계선 요소에 그대로 펼쳐 붙인다.
-   * pointer capture 로 포인터가 지도(캔버스) 위나 창 밖으로 나가도 이벤트가 경계선으로 온다.
-   * 창 밖에서 버튼을 놓거나 alt-tab 처럼 pointerup 이 오지 않는 경우는 cancel · lostpointercapture ·
-   * 「버튼이 이미 떼어짐(buttons === 0)」 에서 끝낸다. window 리스너가 없어 언마운트돼도 남는 것이 없다.
-   */
-  const end = () => {
-    origin.current = null;
-    setDragStart(null);
-  };
-  const dragHandlers = {
-    onPointerDown(e: PointerEvent) {
-      e.preventDefault();
-      e.currentTarget.setPointerCapture(e.pointerId);
-      origin.current = { x: e.clientX, width };
-      setDragStart(width);
-    },
-    onPointerMove(e: PointerEvent) {
-      if (!origin.current) return;
-      if (e.buttons === 0) return end();
-      setWidth(origin.current.width + e.clientX - origin.current.x);
-    },
-    onPointerUp: end,
-    onPointerCancel: end,
-    onLostPointerCapture: end,
-  };
+  /** 경계선 드래그 — 누른 순간의 화면 너비에서 가로 이동량만큼 */
+  const drag = usePointerDrag({
+    start: () => width,
+    move: (startWidth, { dx }) => setWidth(startWidth + dx),
+  });
 
   /** 키보드로 조절 — ←/→ 16px, Home/End 최소 · 최대, Enter 기본 너비 (WAI-ARIA window splitter) */
   function onKeyDown(e: KeyboardEvent) {
@@ -82,15 +56,15 @@ export function useSplitWidth() {
     minWidth: LIST_MIN_WIDTH,
     maxWidth: listMaxWidth(viewport),
     onKeyDown,
-    dragging,
+    dragging: drag.active !== null,
     /**
      * 자리 잡은 너비 — 드래그 중에는 시작 너비를 유지한다. 지도는 이 값이 바뀔 때 핀을 다시 맞춘다
      * (드래그하는 동안 계속 맞추면 지도가 흔들린다)
      */
-    settledWidth: dragStart ?? width,
+    settledWidth: drag.active ?? width,
     presets: splitPresets(viewport),
     setWidth,
-    dragHandlers,
+    dragHandlers: drag.handlers,
     reset: () => setWidth(LIST_DEFAULT_WIDTH),
   };
 }
