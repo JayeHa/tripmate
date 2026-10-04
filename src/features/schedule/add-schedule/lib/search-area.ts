@@ -1,26 +1,46 @@
 import type { City } from "@/entities/city";
 
-/**
- * 검색 영역의 반폭(도). 도시 중심에서 위아래 · 좌우로 이만큼(약 100km)인 사각형 안만 찾는다.
- * 도쿄면 하코네(도쿄역에서 약 80km)까지 들어온다. 써 보고 좁거나 넓으면 이 값만 바꾼다(docs/policies/place-search.md).
- */
-export const SEARCH_HALF_SPAN_DEG = 1;
-
 type LatLng = { lat: number; lng: number };
 
 /**
- * 구글 장소 자동완성을 이 도시 근처로 「제한」하는 조건. bias(먼저 보여 줌)가 아니라 restriction(그 밖은 빼기)이다.
- * 나라(`includedRegionCodes`)와 사각형(`locationRestriction`)을 함께 걸면 둘 다 만족하는 결과만 온다.
+ * 도시 지도 줌(`cities.zoom`)에 따른 검색 사각형의 반폭(도). 도시 중심에서 위아래 · 좌우로 이만큼 안만 찾는다.
+ * - 줌 11 이상(도시): 1° — 약 100km. 도쿄면 하코네(약 80km)까지 들어오고 오사카는 빠진다
+ * - 줌 10(넓은 도시권): 2°
+ * - 줌 9 이하(나라 · 섬 무리 — 하와이 · 오키나와 · 미얀마 · 「국내 어디론가」): null — 사각형을 걸지 않는다.
+ *   중심에서 ±몇 도로는 포함 지역(마우이 · 이시가키 · 바간 · 부산 · 제주)이 빠진다
+ * 써 보고 좁거나 넓으면 이 값만 바꾼다(docs/policies/place-search.md).
+ */
+export function searchHalfSpan(zoom: number): number | null {
+  if (zoom >= 11) return 1;
+  if (zoom === 10) return 2;
+  return null;
+}
+
+/** 사각형을 걸지 않는 도시에서 중심 쪽 결과를 먼저 보이는 반경(m) — 제한이 아니라 우선순위 */
+const WIDE_BIAS_RADIUS_M = 50_000;
+
+/**
+ * 구글 장소 자동완성을 이 도시 근처로 「제한」하는 조건. 나라(`includedRegionCodes`)는 늘 걸고,
+ * 사각형(`locationRestriction`, bias 가 아니라 그 밖은 빼기)은 도시 단위일 때만 건다. 둘 다 만족하는 결과만 온다.
+ * 나라 · 섬 무리 단위 도시는 사각형 대신 중심 쪽을 먼저 보이는 bias 만 건다.
  * 여러 도시 여행이어도 사각형 하나로 여러 도시를 덮지 않는다 — 사이 지역이 섞인다. 도시 칩으로 하나를 고른다.
  */
-export function searchArea(city: Pick<City, "lat" | "lng" | "country_code">) {
+export function searchArea(city: Pick<City, "lat" | "lng" | "country_code" | "zoom">) {
+  const includedRegionCodes = [city.country_code.toLowerCase()];
+  const half = searchHalfSpan(city.zoom);
+  if (half === null) {
+    return {
+      includedRegionCodes,
+      locationBias: { center: { lat: city.lat, lng: city.lng }, radius: WIDE_BIAS_RADIUS_M },
+    };
+  }
   return {
-    includedRegionCodes: [city.country_code.toLowerCase()],
+    includedRegionCodes,
     locationRestriction: {
-      north: city.lat + SEARCH_HALF_SPAN_DEG,
-      south: city.lat - SEARCH_HALF_SPAN_DEG,
-      east: city.lng + SEARCH_HALF_SPAN_DEG,
-      west: city.lng - SEARCH_HALF_SPAN_DEG,
+      north: city.lat + half,
+      south: city.lat - half,
+      east: city.lng + half,
+      west: city.lng - half,
     },
   };
 }
