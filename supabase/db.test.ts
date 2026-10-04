@@ -66,18 +66,39 @@ async function newTrip(start: string, end: string) {
   return rows[0].id;
 }
 
+/** 마이그레이션 파일 이름(정렬 순) */
+const MIGRATIONS = readdirSync(DIR)
+  .filter((f) => f.endsWith(".sql"))
+  .sort();
+
+/** 대역 · 기본 권한을 깔고 `files` 마이그레이션을 순서대로 적용한 새 DB */
+async function migratedDb(files: string[]) {
+  const pg = new PGlite();
+  await pg.exec(STUBS);
+  await pg.exec(GRANTS);
+  for (const file of files) await applyMigration(pg, file);
+  return pg;
+}
+
+/** 마이그레이션 하나를 적용한다. PGlite 에 없는 확장 설치 구문은 뺀다 */
+async function applyMigration(pg: PGlite, file: string) {
+  const sql = readFileSync(path.join(DIR, file), "utf8").replace(/create extension[^;]*;/gi, "");
+  await pg.exec(sql);
+}
+
 beforeAll(async () => {
-  db = new PGlite();
-  await db.exec(STUBS);
-  await db.exec(GRANTS);
-  for (const file of readdirSync(DIR)
-    .filter((f) => f.endsWith(".sql"))
-    .sort()) {
-    const sql = readFileSync(path.join(DIR, file), "utf8").replace(/create extension[^;]*;/gi, "");
-    await db.exec(sql);
-  }
+  db = await migratedDb(MIGRATIONS);
   await db.exec(`insert into auth.users (id, email) values ('${A}', 'a@x'), ('${B}', 'b@x');`);
 }, 30_000);
+
+/** 장소 검색에서 고른 것처럼 장소를 그날 끝에 담고 일정 id 를 돌려준다 (0013) */
+async function addPlace(trip: string, day: number, place: Record<string, unknown>) {
+  const { rows } = await db.query<{ id: string }>(
+    `select public.add_schedule_place($1, $2, $3) as id`,
+    [trip, day, JSON.stringify(place)],
+  );
+  return rows[0].id;
+}
 
 describe("create_trip", () => {
   it("여행 · 도시 순서 · 소유자 멤버를 한 번에 만든다", async () => {
@@ -115,8 +136,9 @@ describe("update_trip_dates", () => {
     await as(A);
     const id = await newTrip("2026-11-01", "2026-11-05");
     await db.exec(`
-      insert into public.schedule_items (trip_id, day_index, position, name) values
-        ('${id}',0,0,'a'),('${id}',2,0,'c'),('${id}',3,0,'d'),('${id}',3,1,'e'),('${id}',4,0,'f');
+      insert into public.schedule_items (trip_id, day_index, position, kind, name) values
+        ('${id}',0,0,'note','a'),('${id}',2,0,'note','c'),('${id}',3,0,'note','d'),
+        ('${id}',3,1,'note','e'),('${id}',4,0,'note','f');
       insert into public.expenses (trip_id, payer_id, amount, currency, spent_on) values
         ('${id}','${A}',1,'KRW','2026-11-02'),('${id}','${A}',2,'KRW','2026-11-04');
       insert into public.day_routes (trip_id, day_index, items_hash, polyline, legs) values
@@ -162,34 +184,241 @@ describe("update_trip_dates", () => {
   });
 });
 
-describe("schedule_items 장소 정보 (0010)", () => {
-  it("기존 방식으로 넣으면 place · 빈 링크 · 빈 대체 장소가 된다", async () => {
+describe("schedule_items · places 칸 (0010 · 0013)", () => {
+  it("note 는 장소 없이 제목만으로, 상태 없음 · 빈 대체 장소가 된다", async () => {
     await as(A);
     const id = await newTrip("2027-03-01", "2027-03-01");
     const { rows } = await db.query(
-      `insert into public.schedule_items (trip_id, day_index, position, name)
-       values ('${id}', 0, 0, '도쿄역') returning kind, status, links, alternatives`,
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name)
+       values ('${id}', 0, 0, 'note', '공항 집합') returning status, alternatives`,
     );
-    expect(rows).toEqual([{ kind: "place", status: null, links: [], alternatives: [] }]);
+    expect(rows).toEqual([{ status: null, alternatives: [] }]);
+  });
+
+  it("place 는 장소가 있어야 하고, note · flight 는 장소 없이 제목이 있어야 한다", async () => {
+    await as(A);
+    const id = await newTrip("2027-03-03", "2027-03-03");
+    const item = await addPlace(id, 0, { name: "도쿄역" });
+    const place = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${item}'`,
+    );
+    const p = place.rows[0].p;
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, name) values ('${id}', 0, 1, '도쿄역')`,
+      ),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, name, place_id)
+         values ('${id}', 0, 1, 'note', 'x', '${p}')`,
+      ),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind) values ('${id}', 0, 1, 'flight')`,
+      ),
+    ).toMatch(/check constraint/);
   });
 
   it.each([
-    ["kind", "'hotel'"],
-    ["status", "'done'"],
-    ["category", "'bar'"],
-    ["rating", "5.5"],
-    ["review_count", "-1"],
-    ["links", `'{"url":"x"}'`],
-    ["alternatives", "'\"x\"'"],
-  ])("%s = %s 는 거부한다", async (column, value) => {
+    ["kind = hotel", "kind, name", "'hotel', 'x'"],
+    ["status = done", "kind, name, status", "'note', 'x', 'done'"],
+    ["alternatives 가 배열이 아님", "kind, name, alternatives", `'note', 'x', '"x"'`],
+  ])("일정 %s 는 거부한다", async (_label, columns, values) => {
     await as(A);
     const id = await newTrip("2027-03-02", "2027-03-02");
     expect(
       await rejects(
-        `insert into public.schedule_items (trip_id, day_index, position, name, ${column})
-         values ('${id}', 0, 0, 'x', ${value})`,
+        `insert into public.schedule_items (trip_id, day_index, position, ${columns})
+         values ('${id}', 0, 0, ${values})`,
       ),
     ).toMatch(/check constraint/);
+  });
+
+  it.each([
+    ["category", "'bar'"],
+    ["rating", "5.5"],
+    ["review_count", "-1"],
+    ["links", `'{"url":"x"}'`],
+    ["name", "''"],
+  ])("장소 %s = %s 는 거부한다", async (column, value) => {
+    await as(A);
+    const cols = column === "name" ? "city_id, name" : `city_id, name, ${column}`;
+    const vals = column === "name" ? `'tokyo', ${value}` : `'tokyo', 'x', ${value}`;
+    expect(await rejects(`insert into public.places (${cols}) values (${vals})`)).toMatch(
+      /check constraint/,
+    );
+  });
+});
+
+describe("places (0013)", () => {
+  it("장소를 그날 끝에 담고, 같은 구글 장소를 다시 담으면 장소는 하나 · 일정은 둘이다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-01", "2027-05-02");
+    await db.query(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name) values ('${id}', 1, 0, 'note', 'n')`,
+    );
+    const first = await addPlace(id, 1, {
+      name: "센소지",
+      google_place_id: "g-sensoji",
+      lat: 35.71,
+      lng: 139.79,
+    });
+    const again = await addPlace(id, 1, { name: "센소지(다시)", google_place_id: "g-sensoji" });
+    const rows = await db.query<{ position: number; place_id: string; name: string }>(
+      `select si.position, si.place_id, p.name from public.schedule_items si
+       join public.places p on p.id = si.place_id where si.id in ('${first}', '${again}') order by si.position`,
+    );
+    expect(rows.rows.map((r) => r.position)).toEqual([1, 2]);
+    expect(rows.rows[0].place_id).toBe(rows.rows[1].place_id);
+    expect(rows.rows.map((r) => r.name)).toEqual(["센소지", "센소지"]);
+  });
+
+  it("장소의 도시는 여행 도시 중 좌표가 가장 가까운 곳, 좌표가 없으면 첫 도시", async () => {
+    await as(A);
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_trip('t', '2027-05-03', '2027-05-04', array['tokyo','osaka']) as id`,
+    );
+    const id = rows[0].id;
+    const near = await addPlace(id, 0, { name: "도톤보리", lat: 34.6687, lng: 135.5013 });
+    const none = await addPlace(id, 0, { name: "어딘가" });
+    const cities = await db.query<{ city_id: string }>(
+      `select p.city_id from public.schedule_items si join public.places p on p.id = si.place_id
+       where si.id in ('${near}', '${none}') order by si.position`,
+    );
+    expect(cities.rows.map((r) => r.city_id)).toEqual(["osaka", "tokyo"]);
+  });
+
+  it("멤버가 아니면 담지 못하고 장소도 남기지 않는다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-05", "2027-05-05");
+    await as(B);
+    expect(await rejects(`select public.add_schedule_place('${id}', 0, '{"name":"x"}')`)).toMatch(
+      /no city|row-level security/,
+    );
+    const mine = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${B}' and name = 'x'`,
+    );
+    expect(mine.rows[0].n).toBe(0);
+  });
+
+  it("장소는 만든 사람 + 그 장소를 쓰는 여행의 멤버만 읽고, 고치기 · 지우기는 만든 사람만", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-06", "2027-05-06");
+    const item = await addPlace(id, 0, { name: "츠키지" });
+    const { rows } = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${item}'`,
+    );
+    const place = rows[0].p;
+
+    await as(B);
+    const hidden = await db.query(`select id from public.places where id = '${place}'`);
+    expect(hidden.rows).toEqual([]);
+
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${id}', '${B}', 'member');`,
+    );
+    await as(B);
+    const shown = await db.query(`select name from public.places where id = '${place}'`);
+    expect(shown.rows).toEqual([{ name: "츠키지" }]);
+    await db.query(`update public.places set name = '바꿈' where id = '${place}'`);
+    await db.query(`delete from public.places where id = '${place}'`);
+    await as(A);
+    const after = await db.query(`select name from public.places where id = '${place}'`);
+    expect(after.rows).toEqual([{ name: "츠키지" }]);
+  });
+
+  it("일행은 이 여행이 쓰는 장소를 한 번 더 담을 수 있지만, 남의 보관함 장소를 내 여행에 끌어오지 못한다", async () => {
+    await as(A);
+    const shared = await newTrip("2027-05-07", "2027-05-07");
+    const item = await addPlace(shared, 0, { name: "시부야 스카이" });
+    const { rows } = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${item}'`,
+    );
+    const place = rows[0].p;
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${shared}', '${B}', 'member');`,
+    );
+
+    await as(B);
+    await db.query(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, place_id)
+       values ('${shared}', 0, 1, 'place', '${place}')`,
+    );
+    const own = await newTrip("2027-05-08", "2027-05-08");
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, place_id)
+         values ('${own}', 0, 0, 'place', '${place}')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+
+  it("일정이 쓰는 장소는 지울 수 없다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-09", "2027-05-09");
+    const item = await addPlace(id, 0, { name: "우에노" });
+    const { rows } = await db.query<{ p: string }>(
+      `select place_id p from public.schedule_items where id = '${item}'`,
+    );
+    expect(await rejects(`delete from public.places where id = '${rows[0].p}'`)).toMatch(
+      /foreign key/,
+    );
+  });
+});
+
+describe("0013 데이터 이전", () => {
+  it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
+    const before = MIGRATIONS.filter((f) => f < "0013");
+    const pg = await migratedDb(before);
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('33333333-3333-3333-3333-333333333333', '${A}', 't', '2027-06-01', '2027-06-02');
+      insert into public.trip_cities (trip_id, city_id) values ('33333333-3333-3333-3333-333333333333', 'tokyo');
+      insert into public.schedule_items
+        (trip_id, day_index, position, kind, name, place_id, lat, lng, category, rating, links, status, memo)
+      values
+        ('33333333-3333-3333-3333-333333333333', 0, 0, 'place', '호텔', 'g-hotel', 35.6, 139.7, 'stay', 4.5, '[{"title":"예약","url":"https://x"}]', 'ok', '체크인 15시'),
+        ('33333333-3333-3333-3333-333333333333', 1, 0, 'place', '호텔', 'g-hotel', 35.6, 139.7, 'stay', 4.5, '[]', null, null),
+        ('33333333-3333-3333-3333-333333333333', 1, 1, 'place', '직접 적은 곳', null, null, null, null, null, '[]', 'wait', null),
+        ('33333333-3333-3333-3333-333333333333', 1, 2, 'note', '메모 한 줄', null, null, null, null, null, '[]', null, null);
+    `);
+    await applyMigration(pg, "0013_places.sql");
+
+    const items = await pg.query<{
+      kind: string;
+      name: string | null;
+      status: string | null;
+      memo: string | null;
+      place: string | null;
+    }>(
+      `select si.kind, si.name, si.status, si.memo, p.name || '/' || p.city_id || '/' || coalesce(p.category, '-') || '/' || p.links::text as place
+       from public.schedule_items si left join public.places p on p.id = si.place_id
+       order by si.day_index, si.position`,
+    );
+    expect(items.rows).toEqual([
+      {
+        kind: "place",
+        name: null,
+        status: "ok",
+        memo: "체크인 15시",
+        place: '호텔/tokyo/stay/[{"url": "https://x", "title": "예약"}]',
+      },
+      {
+        kind: "place",
+        name: null,
+        status: null,
+        memo: null,
+        place: '호텔/tokyo/stay/[{"url": "https://x", "title": "예약"}]',
+      },
+      { kind: "place", name: null, status: "wait", memo: null, place: "직접 적은 곳/tokyo/-/[]" },
+      { kind: "note", name: "메모 한 줄", status: null, memo: null, place: null },
+    ]);
+    const places = await pg.query<{ n: number }>(`select count(*)::int n from public.places`);
+    expect(places.rows[0].n).toBe(2);
+    await pg.close();
   });
 });
 
@@ -197,11 +426,7 @@ describe("moves (0011)", () => {
   /** 여행 하나와 그 안의 장소 두 곳을 만든다 */
   async function tripWithTwoPlaces(day: string) {
     const id = await newTrip(day, day);
-    const { rows } = await db.query<{ id: string }>(
-      `insert into public.schedule_items (trip_id, day_index, position, name)
-       values ('${id}', 0, 0, 'A'), ('${id}', 0, 1, 'B') returning id`,
-    );
-    return { id, a: rows[0].id, b: rows[1].id };
+    return { id, a: await addPlace(id, 0, { name: "A" }), b: await addPlace(id, 0, { name: "B" }) };
   }
 
   it("이동 일정(kind = move)은 더 만들 수 없다", async () => {
