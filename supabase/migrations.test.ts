@@ -130,3 +130,21 @@ describe("assert_not_anonymous 헬퍼", () => {
     expect(sqlFiles().join("\n")).toMatch(REJECTS_ANONYMOUS);
   });
 });
+
+describe("데이터 정책 문서(docs/policies/data-model.md)", () => {
+  /**
+   * 마이그레이션이 만든 테이블 · 함수가 문서에 모두 적혀 있는지. 새로 만들고 문서를 안 고치면 여기서 막힌다.
+   * 이름이 `백틱` 으로 한 번이라도 나오면 된다 — 권한 · 동작을 제대로 적었는지는 리뷰가 본다.
+   */
+  it("마이그레이션의 테이블 · 함수를 모두 적는다", () => {
+    const doc = readFileSync(path.resolve(__dirname, "../docs/policies/data-model.md"), "utf8");
+    const names = new Set<string>();
+    for (const sql of sqlFiles()) {
+      for (const m of sql.matchAll(/create\s+table\s+(?:"?public"?\.)?"?(\w+)"?/gi))
+        names.add(m[1]);
+      for (const m of sql.matchAll(HEAD)) names.add(m[1]);
+    }
+    expect(names.size).toBeGreaterThan(10);
+    expect([...names].filter((name) => !doc.includes(`\`${name}\``))).toEqual([]);
+  });
+});
