@@ -317,17 +317,23 @@ describe("places (0013)", () => {
     );
   });
 
-  it("멤버가 아니면 담지 못하고 장소도 남기지 않는다", async () => {
+  it("멤버가 아니면 담지 못하고, 먼저 만든 장소도 롤백돼 남지 않는다", async () => {
     await as(A);
     const id = await newTrip("2027-05-05", "2027-05-05");
     await as(B);
-    expect(await rejects(`select public.add_schedule_place('${id}', 0, '{"name":"x"}')`)).toMatch(
-      /no city|row-level security/,
+    const before = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${B}'`,
     );
-    const mine = await db.query<{ n: number }>(
-      `select count(*)::int n from public.places where created_by = '${B}' and name = 'x'`,
+    // 좌표가 있으면 여행 도시를 못 읽어도 가장 가까운 도시를 찾아 장소를 먼저 넣는다. 일정 insert 가 RLS 에 막혀 함께 롤백돼야 한다
+    expect(
+      await rejects(
+        `select public.add_schedule_place('${id}', 0, '{"name":"롤백","lat":35.7,"lng":139.7}')`,
+      ),
+    ).toMatch(/row-level security/);
+    const after = await db.query<{ n: number }>(
+      `select count(*)::int n from public.places where created_by = '${B}'`,
     );
-    expect(mine.rows[0].n).toBe(0);
+    expect(after.rows[0].n).toBe(before.rows[0].n);
   });
 
   it("장소는 만든 사람 + 그 장소를 쓰는 여행의 멤버만 읽고, 고치기 · 지우기는 만든 사람만", async () => {
