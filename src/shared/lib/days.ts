@@ -17,6 +17,12 @@ export function dateToDayIndex(startDate: string, endDate: string, date: string)
   return Math.min(Math.max(idx, 0), dayCount(startDate, endDate) - 1);
 }
 
+/** day 칩 · day 헤더용 날짜 조각: { date: "10.31", dow: "토" } */
+export function dayParts(startDate: string, dayIndex: number): { date: string; dow: string } {
+  const d = addDays(parseISO(startDate), dayIndex);
+  return { date: format(d, "M.d"), dow: format(d, "EEE", { locale: ko }) };
+}
+
 /** "10.29 (수)" */
 export function dayLabel(startDate: string, dayIndex: number): string {
   return format(addDays(parseISO(startDate), dayIndex), "M.d (EEE)", { locale: ko });

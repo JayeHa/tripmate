@@ -6,6 +6,7 @@ import {
   dayCount,
   dayIndexToDate,
   dayLabel,
+  dayParts,
   ddayLabel,
   shortRangeLabel,
 } from "./days";
@@ -31,6 +32,11 @@ describe("days", () => {
     expect(dayLabel("2026-10-29", 0)).toBe("10.29 (목)");
     expect(dateRangeLabel("2026-10-29", "2026-11-02")).toBe("2026.10.29 - 11.2");
     expect(dateRangeLabel("2026-12-30", "2027-01-02")).toBe("2026.12.30 - 2027.1.2");
+  });
+
+  it("dayParts: 날짜와 요일 조각", () => {
+    expect(dayParts("2026-10-31", 0)).toEqual({ date: "10.31", dow: "토" });
+    expect(dayParts("2026-10-31", 1)).toEqual({ date: "11.1", dow: "일" });
   });
 
   it("shortRangeLabel: 같은 해면 연도 없이, 해가 바뀌면 양쪽 모두 연도", () => {
