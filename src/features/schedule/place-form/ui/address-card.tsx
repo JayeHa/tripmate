@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react";
 
-import type { PlaceFormState } from "../model/use-place-form";
+import type { PlaceFormState } from "../model/use-place-fields";
 
 type AddressCardProps = {
   found: PlaceFormState["found"];

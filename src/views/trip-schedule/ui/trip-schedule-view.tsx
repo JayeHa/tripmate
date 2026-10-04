@@ -119,12 +119,15 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
       {direct && (
         <PlaceFormDialog
           tripId={tripId}
-          dayIndex={direct.dayIndex}
           city={direct.city}
-          initialQuery={direct.name}
+          mode={{
+            kind: "add",
+            dayIndex: direct.dayIndex,
+            initialQuery: direct.name,
+            onSaved: () => finishDirect(direct),
+          }}
           open
           onOpenChange={(open) => !open && setDirect(null)}
-          onSaved={() => finishDirect(direct)}
         />
       )}
 

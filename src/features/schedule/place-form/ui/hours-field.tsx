@@ -2,7 +2,7 @@ import { WEEK_DAY_LABEL, WEEK_DAYS, type WeekDay } from "@/entities/schedule-ite
 import { cn } from "@/shared/lib/utils";
 
 import { mondayToAll, type PlaceFormValues } from "../lib/place-form";
-import type { PlaceFormState } from "../model/use-place-form";
+import type { PlaceFormState } from "../model/use-place-fields";
 import { Field, inputClass } from "./form-parts";
 
 const MODES = [

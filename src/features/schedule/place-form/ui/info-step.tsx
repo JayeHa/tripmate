@@ -2,7 +2,7 @@ import { Info, MapPin } from "lucide-react";
 
 import { CATEGORY_LABEL, PLACE_CATEGORIES } from "@/entities/schedule-item";
 
-import type { PlaceFormState } from "../model/use-place-form";
+import type { PlaceFormState } from "../model/use-place-fields";
 import { AddressCard } from "./address-card";
 import { ChipButton, Field, inputClass, LinkListField } from "./form-parts";
 import { HoursField } from "./hours-field";
@@ -14,16 +14,27 @@ type InfoStepProps = {
   form: PlaceFormState;
   /** 「도쿄 장소 · 모든 도쿄 여행에서 같이 보여요」 의 도시 이름. 없으면 안내를 줄인다 */
   cityName: string | null;
+  /**
+   * 장소 정보 수정이면 true — 맨 위 주황 안내(모든 일정에 반영), 아이콘 칸 · 아래 담기 안내를 뺀다.
+   * 아이콘은 일정마다 따로라 「이번 일정 · 수정」 에서 바꾼다
+   */
+  editing?: boolean;
 };
 
 /**
- * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 아이콘 · 카테고리 ·
- * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크.
+ * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 카테고리 ·
+ * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크. 새로 담을 때는 이름 옆에 담을 일정의 아이콘도 받는다.
  */
-export function InfoStep({ form, cityName }: InfoStepProps) {
+export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
   const { values: v, set } = form;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-4.5 pb-6">
+      {editing && (
+        <p className="flex items-start gap-2 rounded-card bg-status-wait-bg px-3.5 py-3 text-[13px]/relaxed font-semibold text-status-wait">
+          <Info className="mt-0.5 size-4 shrink-0" />이 장소를 쓰는 모든 일정과 홈 가이드에 같이
+          반영돼요.
+        </p>
+      )}
       <div className="flex flex-col gap-1">
         <span className="text-[17px] font-extrabold text-ink-900">장소 정보</span>
         <span className="text-[13px]/normal text-ink-400">
@@ -47,15 +58,17 @@ export function InfoStep({ form, cityName }: InfoStepProps) {
         />
       </Field>
       <Field label="장소 이름">
-        <div className="grid grid-cols-[52px_minmax(0,1fr)] gap-2">
-          <input
-            value={v.emoji}
-            onChange={(e) => set("emoji", e.target.value.trim())}
-            maxLength={8}
-            placeholder="🙂"
-            aria-label="아이콘"
-            className={`${inputClass} px-0 text-center text-[22px]`}
-          />
+        <div className={editing ? "grid" : "grid grid-cols-[52px_minmax(0,1fr)] gap-2"}>
+          {!editing && (
+            <input
+              value={v.emoji}
+              onChange={(e) => set("emoji", e.target.value.trim())}
+              maxLength={8}
+              placeholder="🙂"
+              aria-label="아이콘"
+              className={`${inputClass} px-0 text-center text-[22px]`}
+            />
+          )}
           <input
             value={v.name}
             onChange={(e) => set("name", e.target.value)}
@@ -143,10 +156,12 @@ export function InfoStep({ form, cityName }: InfoStepProps) {
         links={v.links}
         onChange={(links) => set("links", links)}
       />
-      <p className="flex items-start gap-2 rounded-card bg-surface-memo px-3.5 py-3 text-[13px]/relaxed text-status-ok">
-        <Info className="mt-0.5 size-4 shrink-0" />
-        장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.
-      </p>
+      {!editing && (
+        <p className="flex items-start gap-2 rounded-card bg-surface-memo px-3.5 py-3 text-[13px]/relaxed text-status-ok">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.
+        </p>
+      )}
     </div>
   );
 }
