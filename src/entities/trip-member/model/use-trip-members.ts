@@ -6,10 +6,12 @@ import { queryKeys } from "@/shared/api/query-keys";
 
 import { fetchMembers, removeMember } from "../api/members";
 
-export function useTripMembers(tripId: string) {
+/** 여행 멤버 목록. enabled=false 면 요청하지 않는다(닫혀 있는 초대 창처럼 아직 안 보이는 곳) */
+export function useTripMembers(tripId: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.trips.members(tripId),
     queryFn: () => fetchMembers(tripId),
+    enabled,
   });
 }
 

@@ -18,7 +18,8 @@ type InviteDialogProps = {
  */
 export function InviteDialog({ trip, open, onOpenChange }: InviteDialogProps) {
   const { data: user } = useUser();
-  const { data: members } = useTripMembers(trip.id);
+  // 창은 닫힘 애니메이션을 위해 마운트해 두고, 멤버는 열었을 때만 불러온다
+  const { data: members } = useTripMembers(trip.id, { enabled: open });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* 링크가 한 줄로 길어 그리드 칸이 넓어지지 않게 열 최소폭을 0 으로 */}
