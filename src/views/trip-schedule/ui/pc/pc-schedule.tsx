@@ -15,9 +15,12 @@ import { SplitPresets } from "./split-presets";
 
 /**
  * 스크롤 강조 기준선 = 목록 칸 높이의 40% 지점(가운데보다 조금 위).
- * PC 는 목록이 길게 보여서, 맨 위보다 눈이 머무는 가운데 근처의 장소를 지도에 보인다
+ * PC 는 목록이 길게 보여서, 맨 위보다 눈이 머무는 가운데 근처의 장소를 지도에 보인다.
+ * 다만 맨 위에서는 120px 에서 시작해 스크롤한 만큼 내려간다 — 처음부터 40% 면 그 위의 첫 행들은
+ * 기준선을 지나지 않은 적이 없어서 강조될 수 없다
  */
 const FOCUS_LINE_RATIO = 0.4;
+const FOCUS_LINE_TOP = 120;
 
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
@@ -32,9 +35,10 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
   const focus = useScrollFocus({
     scroller: listRef,
     list: listRef,
-    line: () => {
+    line: (scrollTop) => {
       const rect = listRef.current?.getBoundingClientRect();
-      return rect ? rect.top + rect.height * FOCUS_LINE_RATIO : 0;
+      if (!rect) return 0;
+      return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
     },
     enabled: true,
     resetKey: day,

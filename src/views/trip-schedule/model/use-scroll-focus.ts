@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { pickFocus } from "../lib/focus";
+import { pickFocus, pinScrollTarget } from "../lib/focus";
 
 /** 핀으로 고른 행을 기준선보다 이만큼 위로 스크롤한다. 기준선을 지난 마지막 행이 그 행이 되게 */
 const PIN_SCROLL_MARGIN = 12;
@@ -13,8 +13,11 @@ type ScrollFocusOptions = {
   scroller?: RefObject<HTMLElement | null>;
   /** 강조 후보 행(`data-focus-id`)을 찾을 범위 */
   list: RefObject<HTMLElement | null>;
-  /** 기준선의 화면 y. 스크롤할 때마다 부른다 — 모바일은 지도를 접고 펴면 바뀐다 */
-  line: () => number;
+  /**
+   * 스크롤 위치 → 기준선의 화면 y. 고를 때마다 부른다 — 모바일은 지도를 접고 펴면 바뀐다.
+   * 스크롤에 따라 움직여도 되지만, 스크롤이 내려갈수록 같거나 아래로만 가야 한다(핀 스크롤 계산의 전제)
+   */
+  line: (scrollTop: number) => number;
   /** false 면 강조하지 않고 스크롤도 무시한다(모바일 지도가 접혔을 때) */
   enabled: boolean;
   /** 바뀌면 강조를 지운다(날짜 변경) */
@@ -26,6 +29,12 @@ function scrollTargetOf(scroller: RefObject<HTMLElement | null> | undefined): HT
   return scroller?.current ?? window;
 }
 
+/** 지금 스크롤 위치와 최대 스크롤 위치 */
+function scrollMetricsOf(target: HTMLElement | Window) {
+  const el = target instanceof Window ? document.documentElement : target;
+  return { top: el.scrollTop, max: el.scrollHeight - el.clientHeight };
+}
+
 type FocusState = { key: unknown; id: string | null };
 
 /**
@@ -35,7 +44,8 @@ type FocusState = { key: unknown; id: string | null };
  *
  * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고 그 행을 기준선 바로 위로 smooth 스크롤한다.
  * 스크롤이 끝날 때까지 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다.
- * 끝나면 한 번 다시 고른다. 행을 기준선 위에 두므로 다시 골라도 같은 행이다(목록 끝 여백이 충분할 때).
+ * 끝나면 한 번 다시 고른다. 행을 기준선 바로 위에 두므로 다시 골라도 같은 행이다(목록 끝 여백이 충분할 때).
+ * 기준선이 스크롤에 따라 움직이면 스크롤 뒤의 기준선에 맞춘다(pinScrollTarget).
  */
 export function useScrollFocus({ scroller, list, line, enabled, resetKey }: ScrollFocusOptions) {
   const [state, setState] = useState<FocusState>({ key: resetKey, id: null });
@@ -55,14 +65,21 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scan = useCallback(() => {
-    const { list: listRef, line: lineOf, enabled: on, resetKey: key } = latest.current;
+    const {
+      list: listRef,
+      scroller: scrollerRef,
+      line: lineOf,
+      enabled: on,
+      resetKey: key,
+    } = latest.current;
     const root = listRef.current;
     if (!on || !root) return;
+    const line = lineOf(scrollMetricsOf(scrollTargetOf(scrollerRef)).top);
     const candidates = Array.from(root.querySelectorAll<HTMLElement>("[data-focus-id]"), (el) => ({
       id: el.dataset.focusId ?? "",
       top: el.getBoundingClientRect().top,
     }));
-    const id = pickFocus(candidates, lineOf());
+    const id = pickFocus(candidates, line);
     setState((s) => (s.key === key && s.id === id ? s : { key, id }));
   }, []);
 
@@ -120,8 +137,16 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
       const { list: listRef, scroller: scrollerRef, line: lineOf } = latest.current;
       const row = listRef.current?.querySelector(`[data-focus-id="${id}"]`);
       if (!row) return;
-      const by = row.getBoundingClientRect().top - (lineOf() - PIN_SCROLL_MARGIN);
-      scrollTargetOf(scrollerRef).scrollBy({ top: by, behavior: "smooth" });
+      const target = scrollTargetOf(scrollerRef);
+      const { top, max } = scrollMetricsOf(target);
+      const to = pinScrollTarget(
+        row.getBoundingClientRect().top,
+        top,
+        max,
+        lineOf,
+        PIN_SCROLL_MARGIN,
+      );
+      target.scrollTo({ top: to, behavior: "smooth" });
     },
     [holdScan],
   );
