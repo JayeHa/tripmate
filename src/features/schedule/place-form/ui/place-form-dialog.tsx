@@ -18,8 +18,8 @@ type PlaceFormDialogProps = {
   initialName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** 담기에 성공하면 담은 장소 이름으로 부른다(폼은 부른 쪽이 닫는다) */
-  onSaved: (name: string) => void;
+  /** 담기에 성공하면 부른다(폼은 부른 쪽이 닫는다) */
+  onSaved: () => void;
 };
 
 /**

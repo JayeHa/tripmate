@@ -19,8 +19,8 @@ type PlaceFormOptions = {
   /** 검색 범위와 처음 지도 중심을 정하는 도시. 없으면 제한 없이 찾고, 위치를 고르기 전엔 지도도 없다 */
   city: SearchCity | null;
   initialName: string;
-  /** 담기에 성공하면 담은 장소 이름으로 부른다 */
-  onSaved: (name: string) => void;
+  /** 담기에 성공하면 부른다 */
+  onSaved: () => void;
 };
 
 /**
@@ -78,7 +78,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     create.mutate(
       { dayIndex, place: result.value },
       {
-        onSuccess: () => onSaved(result.value.name),
+        onSuccess: onSaved,
         onSettled: () => {
           savingRef.current = false;
         },

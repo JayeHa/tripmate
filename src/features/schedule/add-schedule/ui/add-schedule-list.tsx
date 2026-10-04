@@ -35,7 +35,9 @@ export function AddScheduleList({ state }: AddScheduleListProps) {
           </span>
           <span className="flex min-w-0 flex-col gap-0.75">
             <span className="truncate text-[15px] font-bold text-primary">‘{q}’ 직접 추가</span>
-            <span className="text-[13px] text-ink-400">위치·시간·예약 상태를 직접 입력해요</span>
+            <span className="text-[13px] text-ink-400">
+              위치·운영시간 같은 장소 정보를 직접 입력해요
+            </span>
           </span>
         </button>
       )}

@@ -36,9 +36,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [addOpen, setAddOpen] = useState(false);
-  // 일정 추가의 「직접 추가」로 연 장소 입력 폼. 담으면 일정 추가 화면으로 돌아와 한 줄 알린다
+  // 일정 추가의 「직접 추가」로 연 장소 입력 폼. 담으면 두 창을 모두 닫고 담은 날을 보인다
   const [direct, setDirect] = useState<DirectAddRequest | null>(null);
-  const [addNotice, setAddNotice] = useState<string | null>(null);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
@@ -64,10 +63,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           memos={memos}
           onOpen={(row) => setEditing(row.item)}
           onEditMove={moveDialog.openFor}
-          onAddPlace={() => {
-            setAddNotice(null);
-            setAddOpen(true);
-          }}
+          onAddPlace={() => setAddOpen(true)}
         />
       )}
 
@@ -88,7 +84,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           open={addOpen}
           onOpenChange={setAddOpen}
           onDirectAdd={setDirect}
-          notice={addNotice}
         />
       )}
 
@@ -100,9 +95,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           initialName={direct.name}
           open
           onOpenChange={(open) => !open && setDirect(null)}
-          onSaved={(name) => {
-            setAddNotice(`‘${name}’을(를) day ${direct.dayIndex + 1}에 담았어요`);
+          onSaved={() => {
             setDirect(null);
+            setAddOpen(false);
+            setDay(direct.dayIndex);
           }}
         />
       )}
