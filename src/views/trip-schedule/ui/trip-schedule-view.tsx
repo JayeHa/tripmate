@@ -53,6 +53,11 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
 
+  // 열린 일정의 줄. 다른 멤버가 옮기거나 지워 그날 줄이 없어지면 id 도 지운다 — 남겨 두면 나중에
+  // 그날로 가는 순간 상세가 저절로 열린다(언마운트된 뒤 끝난 이동 · 삭제는 onDone 을 부르지 못한다)
+  const openRow = rows.find((r) => r.item.id === openId) ?? null;
+  if (openId && !openRow) setOpenId(null);
+
   /**
    * 직접 추가 요청 하나의 담기가 끝났다. 폼은 저장 중에 닫히지 않지만 오프라인으로 멈춘 동안은 닫을 수 있어서,
    * 그 폼이 이미 닫혔으면(다른 요청이 열렸거나 아무것도 없으면) 창 닫기 · 날짜 이동을 하지 않는다
@@ -128,7 +133,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           tripId={tripId}
           startDate={trip.start_date}
           totalDays={totalDays}
-          row={rows.find((r) => r.item.id === openId) ?? null}
+          row={openRow}
           dayItems={dayItems}
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
