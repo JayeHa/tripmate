@@ -34,7 +34,8 @@ export function useExistingPlace(tripId: string) {
 
   /**
    * 위치 검색 결과를 고른다. 고르는 순간부터(상세 조회 중에도) checking 이라 그사이 다음 단계로 못 간다.
-   * 1) `resolve` 로 구글 상세를 받는다 — 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다)
+   * 1) `resolve` 로 구글 상세를 받는다 — 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다). 그사이 위치가 바뀌어
+   *    낡은 고르기면 던지지 않고 "none" — 이미 다른 곳을 골랐는데 지난 실패 문구가 뜨지 않게
    * 2) 그사이 위치가 바뀌지 않았을 때만(순번이 그대로) `apply` 로 폼에 쓴다 — 낡은 상세가 옮긴 핀 · 다음에 고른 곳을 덮지 않게.
    *    `apply` 는 쓴 구글 장소 id 를 돌려준다
    * 3) 그 id 로 이미 있는 장소를 찾는다. 찾지 못하면(사용자 정보 없음 · 조회 실패) "failed"
@@ -49,7 +50,10 @@ export function useExistingPlace(tripId: string) {
     const live = () => seqRef.current === seq;
     setChecking(true);
     try {
-      const picked = await resolve();
+      const picked = await resolve().catch((e: unknown) => {
+        if (live()) throw e;
+        return null;
+      });
       if (!live() || !picked) return "none";
       const googleId = apply(picked);
       if (!googleId) return "none";
