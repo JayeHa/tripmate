@@ -129,6 +129,7 @@ function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           placeholder="예: 센소지, 시부야 스카이"
+          maxLength={100}
           className="h-11 pl-9"
           enterKeyHint="search"
         />

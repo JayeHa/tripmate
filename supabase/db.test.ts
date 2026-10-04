@@ -304,6 +304,19 @@ describe("places (0013)", () => {
     ).toMatch(/has no city/);
   });
 
+  it("이름은 앞뒤 공백을 떼고 100자로 자르고, 비면 거부한다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-12", "2027-05-12");
+    const item = await addPlace(id, 0, { name: `  ${"가".repeat(120)}  ` });
+    const name = await db.query<{ n: number }>(
+      `select char_length(p.name)::int n from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${item}'`,
+    );
+    expect(name.rows).toEqual([{ n: 100 }]);
+    expect(await rejects(`select public.add_schedule_place('${id}', 0, '{"name":"   "}')`)).toMatch(
+      /name is required/,
+    );
+  });
+
   it("멤버가 아니면 담지 못하고 장소도 남기지 않는다", async () => {
     await as(A);
     const id = await newTrip("2027-05-05", "2027-05-05");
