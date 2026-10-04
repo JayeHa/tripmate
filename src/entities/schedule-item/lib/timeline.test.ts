@@ -72,6 +72,7 @@ function item(patch: ItemPatch): ScheduleItem {
       review_count,
       wait: null,
       hours,
+      hours_week: null,
       gmap_url,
       links,
       created_at: "",

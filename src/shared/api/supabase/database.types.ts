@@ -224,6 +224,7 @@ export type Database = {
           wait: string | null;
           description: string | null;
           hours: string | null;
+          hours_week: Json | null;
           gmap_url: string | null;
           links: Json;
           created_at: string;
@@ -248,6 +249,7 @@ export type Database = {
           wait?: string | null;
           description?: string | null;
           hours?: string | null;
+          hours_week?: Json | null;
           gmap_url?: string | null;
           links?: Json;
           created_at?: string;
@@ -272,6 +274,7 @@ export type Database = {
           wait?: string | null;
           description?: string | null;
           hours?: string | null;
+          hours_week?: Json | null;
           gmap_url?: string | null;
           links?: Json;
           created_at?: string;

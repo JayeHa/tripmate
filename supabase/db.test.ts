@@ -825,6 +825,37 @@ describe("장소 주소 칸 (0020 · 0021)", () => {
   });
 });
 
+describe("요일별 운영시간 (0022)", () => {
+  it("요일별을 저장하고, 다시 담을 때 보내지 않으면 두고 {} 를 보내면 비운다", async () => {
+    await as(A);
+    const id = await newTrip("2027-08-09", "2027-08-09");
+    const week = { mon: "11:00–22:00", sat: "10:00–23:00", sun: null };
+    const put = (place: Record<string, unknown>) =>
+      db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
+        id,
+        JSON.stringify({ name: "히로키야", google_place_id: "g-week", ...place }),
+      ]);
+    const read = async () =>
+      (
+        await db.query<{ hours: string | null; hours_week: unknown }>(
+          `select hours, hours_week from public.places where created_by = '${A}' and google_place_id = 'g-week'`,
+        )
+      ).rows[0];
+
+    await put({ hours_week: week });
+    expect(await read()).toEqual({ hours: null, hours_week: week });
+    await put({ hours_week: null });
+    expect((await read()).hours_week).toEqual(week);
+    await put({ hours: "10:00–20:00", hours_week: {} });
+    expect(await read()).toEqual({ hours: "10:00–20:00", hours_week: {} });
+    expect(
+      await rejects(
+        `select public.create_place_schedule('${id}', 0, '{"name":"x","hours_week":[]}', '{}')`,
+      ),
+    ).toMatch(/check constraint/);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
