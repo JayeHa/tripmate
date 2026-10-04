@@ -25,10 +25,15 @@ export function formatKm(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
 }
 
-/** 1.2km 이하는 도보(13분/km), 그 외는 대중교통 추정치를 5분 단위로 */
+/**
+ * 1.2km 이하는 도보(13분/km), 그 외는 대중교통 추정치를 5분 단위로.
+ * 시안 식은 20km 초과에 기울기 1.15 를 처음부터 곱해 20km 에서 60분 → 31분으로 끊긴다.
+ * 20km 까지는 2.6, 넘는 만큼만 1.15 로 이어 붙여 거리가 늘면 시간도 늘게 한다.
+ */
 export function etaLabel(km: number): string {
   if (km <= 1.2) return `도보 ${Math.max(1, Math.round(km * 13))}분`;
-  const min = Math.round((8 + km * (km > 20 ? 1.15 : 2.6)) / 5) * 5;
+  const raw = km <= 20 ? 8 + km * 2.6 : 8 + 20 * 2.6 + (km - 20) * 1.15;
+  const min = Math.round(raw / 5) * 5;
   if (min < 60) return `약 ${min}분`;
   const h = Math.floor(min / 60);
   const m = min % 60;
