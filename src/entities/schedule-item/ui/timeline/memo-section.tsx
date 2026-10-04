@@ -12,6 +12,7 @@ type MemoSectionProps = {
  * 일행이 남긴 메모(작성자 · 태그)와 「+ 메모」는 메모 추가 화면과 함께 붙인다.
  */
 export function MemoSection({ notes, hours, open, onToggle }: MemoSectionProps) {
+  // useOpenMemos 의 hasMemo 와 같은 기준이어야 「모두 펼치기」가 이 카드를 센다
   if (notes.length === 0 && !hours) return null;
   return (
     <>

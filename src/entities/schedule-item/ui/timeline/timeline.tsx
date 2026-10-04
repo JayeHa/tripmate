@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import type { TimelineRow } from "../../lib/timeline";
 import { ItemCard } from "./item-card";
 import { LegLine } from "./leg-line";
@@ -9,6 +5,9 @@ import { NumberMarker } from "./number-marker";
 
 type TimelineProps = {
   rows: TimelineRow[];
+  /** 메모를 펼친 카드. 「메모 모두 펼치기」 때문에 화면이 쥔다(useOpenMemos) */
+  openIds: ReadonlySet<string>;
+  onToggleMemo: (id: string) => void;
   onOpen: (row: TimelineRow) => void;
   /**
    * 직전 장소 → 이 장소의 이동 방법 창을 연다. 넘기지 않으면 「+ 이동 방법」을 그리지 않는다.
@@ -18,18 +17,7 @@ type TimelineProps = {
 };
 
 /** 하루치 일정. 왼쪽 72px 거터에 표식과 시각, x=35 에 세로선 */
-export function Timeline({ rows, onOpen, onEditMove }: TimelineProps) {
-  const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
-
-  /** 그 카드의 메모를 펼치거나 접는다 */
-  function toggle(id: string) {
-    setOpenIds((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
-  }
-
+export function Timeline({ rows, openIds, onToggleMemo, onOpen, onEditMove }: TimelineProps) {
   return (
     <ol className="relative pb-6">
       <span aria-hidden="true" className="absolute inset-y-0 left-8.75 w-0.5 bg-divider" />
@@ -48,7 +36,7 @@ export function Timeline({ rows, onOpen, onEditMove }: TimelineProps) {
             <ItemCard
               row={row}
               open={openIds.has(row.item.id)}
-              onToggle={() => toggle(row.item.id)}
+              onToggle={() => onToggleMemo(row.item.id)}
               onOpen={() => onOpen(row)}
             />
           </div>
