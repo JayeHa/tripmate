@@ -48,7 +48,7 @@ export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
           <DropdownMenuItem
             variant="destructive"
             onClick={() => onDelete(trip)}
-            className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-[#FDE8EA]"
+            className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-destructive-soft"
           >
             <Trash2 className="size-4.5" />
             여행 삭제
