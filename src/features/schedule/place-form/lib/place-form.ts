@@ -1,7 +1,13 @@
 import { isHttpUrl, type NewPlaceFields, type PlaceCategory } from "@/entities/schedule-item";
 import type { GooglePick } from "@/shared/lib/google-places";
 
-import { type Autofill, categoryFromGoogle, fillFromPick, googleMapsUrl } from "./google-autofill";
+import {
+  type Autofill,
+  categoryFromGoogle,
+  dropPickedLink,
+  fillFromPick,
+  googleMapsUrl,
+} from "./google-autofill";
 
 /** 링크 한 줄(입력 중) */
 export type LinkDraft = { title: string; url: string };
@@ -92,6 +98,14 @@ export function withGooglePick(
     at,
     googleId: id,
   };
+}
+
+/**
+ * 고른 구글 장소와의 연결을 끊는다 — 구글 장소 id 와 자동으로 채운 구글맵 링크를 지운다(사용자가 적은 링크 · 이름 · 카테고리는 둔다).
+ * 고르기를 시작할 때 먼저 끊고 성공했을 때만 다시 붙여서, 실패 · 낡은 결과 경로가 모두 「연결 없음」으로 끝나게 한다
+ */
+export function withoutGooglePick(v: PlaceFormValues): PlaceFormValues {
+  return { ...v, ...dropPickedLink(v), googleId: null };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */

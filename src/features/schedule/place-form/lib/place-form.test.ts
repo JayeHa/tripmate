@@ -8,6 +8,7 @@ import {
   samePoint,
   toNewPlace,
   withGooglePick,
+  withoutGooglePick,
 } from "./place-form";
 
 const form = (patch: Partial<PlaceFormValues>) => ({
@@ -60,6 +61,26 @@ describe("withGooglePick", () => {
       name: "아후리",
       category: "food",
       gmap: "https://www.google.com/maps/search/?api=1&query=%EC%95%84%ED%9B%84%EB%A6%AC&query_place_id=ChIJ1",
+    });
+  });
+});
+
+describe("withoutGooglePick", () => {
+  it("구글 장소 id 와 자동으로 채운 링크를 지우고, 사용자가 적은 링크 · 이름 · 카테고리는 둔다", () => {
+    const picked = withGooglePick(
+      blankPlaceForm(null),
+      { name: "아후리", google_place_id: "ChIJ1", lat: 1, lng: 2, address: null, types: ["cafe"] },
+      { lat: 1, lng: 2 },
+    );
+    expect(withoutGooglePick(picked)).toMatchObject({
+      googleId: null,
+      gmap: "",
+      name: "아후리",
+      category: "cafe",
+    });
+    expect(withoutGooglePick({ ...picked, gmap: "https://my" })).toMatchObject({
+      googleId: null,
+      gmap: "https://my",
     });
   });
 });

@@ -15,7 +15,6 @@ import {
   useReverseGeocode,
 } from "@/shared/lib/google-places";
 
-import { dropPickedLink } from "../lib/google-autofill";
 import {
   blankPlaceForm,
   type LatLng,
@@ -24,6 +23,7 @@ import {
   type PlaceFormValues,
   toNewPlace,
   withGooglePick,
+  withoutGooglePick,
 } from "../lib/place-form";
 import { useExistingPlace } from "./use-existing-place";
 
@@ -69,6 +69,9 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
 
   /** 위치 검색 결과를 고른다. 핀을 그곳으로 옮기고 구글 장소로 기억한다. 이름이 비었거나 자동으로 채운 값이면 그 장소 이름으로 */
   async function pickLocation(s: google.maps.places.AutocompleteSuggestion) {
+    // 먼저 끊고 성공했을 때만(apply) 다시 붙인다 — 상세 실패 · 빈 결과 · 좌표 없음 · 낡은 결과가 모두 「연결 없음」으로 끝난다
+    setValues(withoutGooglePick);
+    setError(null);
     try {
       const result = await same.check(
         () => suggestions.resolve(s),
@@ -80,7 +83,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
           return picked.google_place_id;
         },
       );
-      if (result === "failed") setValues((v) => ({ ...v, googleId: null }));
+      if (result === "failed") setValues(withoutGooglePick);
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     }
@@ -102,17 +105,15 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
   function registerNew() {
     attach.reset();
     same.clear();
-    setValues((v) => ({ ...v, ...dropPickedLink(v), googleId: null }));
+    setValues(withoutGooglePick);
   }
 
   /** 주소로 찾은 위치로 핀을 옮긴다. 가게가 아니라 지점이라 고른 구글 장소는 지우고 이름은 그대로 둔다 */
   function moveToAddress() {
     if (!addressHit) return;
     setValues((v) => ({
-      ...v,
-      ...dropPickedLink(v),
+      ...withoutGooglePick(v),
       at: { lat: addressHit.lat, lng: addressHit.lng },
-      googleId: null,
     }));
     same.clear();
     setLocationQuery("");
@@ -122,7 +123,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
   const { clear: clearSame } = same;
   const moveTo = useCallback(
     (at: LatLng) => {
-      setValues((v) => ({ ...v, ...dropPickedLink(v), at, googleId: null }));
+      setValues((v) => ({ ...withoutGooglePick(v), at }));
       clearSame();
     },
     [clearSame],
