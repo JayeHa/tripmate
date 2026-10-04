@@ -28,7 +28,7 @@ export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85dvh] rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>장소 추가</SheetTitle>
+          <SheetTitle>일정 추가</SheetTitle>
           <SheetDescription>장소명이나 주소를 검색하세요</SheetDescription>
         </SheetHeader>
         {/* 열릴 때마다 마운트되어 검색 상태·세션 토큰이 초기화됨 */}
