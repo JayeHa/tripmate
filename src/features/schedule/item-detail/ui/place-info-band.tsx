@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp, Link as LinkIcon, MapPin } from "lucide-react";
 import { useState } from "react";
 
 import { isHttpUrl, type Place, placeLinksOf } from "@/entities/schedule-item";
+import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
 
 import { type InfoRow, placeInfoRows } from "../lib/detail";
@@ -38,9 +39,9 @@ export function PlaceInfoBand({ place, cityName, dow }: PlaceInfoBandProps) {
       )}
       {links.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {links.map((l) => (
+          {withKeys(links, (l) => `${l.title}:${l.url}`).map(({ key, value: l }) => (
             <a
-              key={`${l.title}-${l.url}`}
+              key={key}
               href={l.url}
               target="_blank"
               rel="noopener noreferrer"

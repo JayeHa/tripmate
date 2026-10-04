@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 
 import type { Alternative } from "@/entities/schedule-item";
+import { withKeys } from "@/shared/lib/keys";
 
 type AlternativesBlockProps = { alternatives: Alternative[] };
 
@@ -13,9 +14,9 @@ export function AlternativesBlock({ alternatives }: AlternativesBlockProps) {
   return (
     <section className="flex flex-col gap-2">
       <span className="text-[13px] font-bold text-ink-400">대체 장소 {alternatives.length}</span>
-      {alternatives.map((a) => (
+      {withKeys(alternatives, (a) => `${a.name}:${a.gmap}`).map(({ key, value: a }) => (
         <div
-          key={`${a.name}-${a.gmap}`}
+          key={key}
           className="flex flex-col gap-0.5 rounded-card border border-line-card px-3.5 py-3"
         >
           <a

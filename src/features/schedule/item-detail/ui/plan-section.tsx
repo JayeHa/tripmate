@@ -6,6 +6,7 @@ import {
   type ScheduleItem,
   statusOf,
 } from "@/entities/schedule-item";
+import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
 
 import type { PlanEditState } from "../model/use-plan-edit";
@@ -75,9 +76,9 @@ function PlanView({ item }: PlanViewProps) {
         <Line label="링크">
           {links.length > 0 ? (
             <span className="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1">
-              {links.map((l) => (
+              {withKeys(links, (l) => `${l.title}:${l.url}`).map(({ key, value: l }) => (
                 <a
-                  key={`${l.title}-${l.url}`}
+                  key={key}
                   href={l.url}
                   target="_blank"
                   rel="noopener noreferrer"
