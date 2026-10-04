@@ -41,15 +41,10 @@ export type TimelineRow = {
 
 type Located = { lat: number; lng: number };
 
-/** 좌표가 둘 다 있으면 그 좌표, 아니면 null */
 function located(item: ScheduleItem): Located | null {
   return item.lat != null && item.lng != null ? { lat: item.lat, lng: item.lng } : null;
 }
 
-/**
- * 제목 앞 이모지. 사용자가 고른 것이 먼저이고, 빈 문자열은 「이모지 없음」을 고른 것이다.
- * 기본값(카테고리 이모지 · 📍)은 place 에만 붙는다.
- */
 function emojiOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
   if (item.emoji != null) return item.emoji || null;
   if (kind !== "place") return null;
@@ -67,7 +62,6 @@ function metaOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | nu
   return parts.filter(Boolean).join(" · ") || null;
 }
 
-/** 링크 칩 목록. 구글맵이 맨 앞, 제목 없는 추가 링크는 「링크」 */
 function linksFor(item: ScheduleItem): TimelineLink[] {
   const gmap = item.gmap_url ? [{ title: "구글맵", url: item.gmap_url, gmap: true }] : [];
   return [
@@ -76,7 +70,6 @@ function linksFor(item: ScheduleItem): TimelineLink[] {
   ];
 }
 
-/** memo 를 줄 단위 노트로 나눈다. 빈 줄은 버린다 */
 function notesOf(memo: string | null): string[] {
   return (memo ?? "")
     .split("\n")
@@ -84,20 +77,28 @@ function notesOf(memo: string | null): string[] {
     .filter(Boolean);
 }
 
+/**
+ * 하루치 일정(position 순)의 장소 번호. 좌표가 있는 place 에만 1부터 붙는다.
+ * 타임라인 마커 · 지도 핀 · 지도 칩이 모두 이 값을 써야 「3번 장소」가 어디서나 같다.
+ */
+export function placeNumbers(items: ScheduleItem[]): Map<string, number> {
+  const numbered = items.filter((item) => kindOf(item) === "place" && located(item));
+  return new Map(numbered.map((item, i) => [item.id, i + 1]));
+}
+
 /** 하루치 일정(position 순)을 타임라인 줄로 바꾼다 */
 export function buildTimeline(items: ScheduleItem[]): TimelineRow[] {
-  let num = 0;
+  const numbers = placeNumbers(items);
   let prev: Located | null = null;
 
   return items.map((item) => {
     const kind = kindOf(item);
     const category = categoryOf(item);
-    const here = kind === "place" ? located(item) : null;
+    const rowNum = numbers.get(item.id) ?? null;
+    const here = rowNum ? located(item) : null;
 
-    let rowNum: number | null = null;
     let leg: TimelineRow["leg"] = null;
     if (here) {
-      rowNum = ++num;
       const km = prev ? haversineKm(prev, here) : 0;
       if (prev && km > SAME_PLACE_KM) {
         leg = { label: `${formatKm(km)} · ${etaLabel(km)}`, url: transitRouteUrl(prev, here) };

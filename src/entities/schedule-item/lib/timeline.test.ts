@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ScheduleItem } from "../model/types";
-import { buildTimeline } from "./timeline";
+import { buildTimeline, placeNumbers } from "./timeline";
 
 /** 기본값이 채워진 일정 한 줄. 필요한 칸만 덮어쓴다 */
 function item(patch: Partial<ScheduleItem>): ScheduleItem {
@@ -37,6 +37,22 @@ function item(patch: Partial<ScheduleItem>): ScheduleItem {
 
 const TOKYO_STATION = { lat: 35.6812, lng: 139.7671 };
 const SKYTREE = { lat: 35.7101, lng: 139.8107 };
+
+describe("placeNumbers", () => {
+  it("note · flight · move · 좌표 없는 place 는 건너뛴다 (지도 핀과 같은 번호)", () => {
+    const items = [
+      item({ kind: "note", id: "n" }),
+      item({ kind: "flight", id: "f", ...TOKYO_STATION }),
+      item({ id: "a", ...TOKYO_STATION }),
+      item({ id: "x" }),
+      item({ id: "b", ...SKYTREE }),
+    ];
+    expect([...placeNumbers(items)]).toEqual([
+      ["a", 1],
+      ["b", 2],
+    ]);
+  });
+});
 
 describe("buildTimeline", () => {
   it("번호는 좌표 있는 place 에만, 길찾기는 직전 번호 장소에서", () => {

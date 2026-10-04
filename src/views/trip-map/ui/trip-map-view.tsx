@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import {
   formatDistance,
   formatDuration,
+  placeNumbers,
   type TravelMode,
   useDayRoute,
   useScheduleItems,
@@ -30,6 +31,7 @@ export function TripMapView({ tripId }: TripMapViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
+  const numbers = useMemo(() => placeNumbers(dayItems), [dayItems]);
   const locatedCount = dayItems.filter((it) => it.lat != null).length;
   const route = useDayRoute(tripId, day, mode, locatedCount >= 2);
   const legByFrom = new Map((route.data?.legs ?? []).map((l) => [l.fromId, l]));
@@ -90,7 +92,7 @@ export function TripMapView({ tripId }: TripMapViewProps) {
 
       {dayItems.length > 0 && (
         <div className="flex scrollbar-none gap-2 overflow-x-auto border-t bg-background px-4 py-3 [&::-webkit-scrollbar]:hidden">
-          {dayItems.map((it, i) => {
+          {dayItems.map((it) => {
             const leg = legByFrom.get(it.id);
             return (
               <div key={it.id} className="flex items-center gap-2">
@@ -104,8 +106,7 @@ export function TripMapView({ tripId }: TripMapViewProps) {
                   )}
                 >
                   <span className="text-xs text-muted-foreground">
-                    {i + 1}
-                    {it.start_time && ` · ${it.start_time.slice(0, 5)}`}
+                    {[numbers.get(it.id), it.start_time?.slice(0, 5)].filter(Boolean).join(" · ")}
                   </span>
                   <span className="truncate text-sm font-medium">{it.name}</span>
                 </button>
