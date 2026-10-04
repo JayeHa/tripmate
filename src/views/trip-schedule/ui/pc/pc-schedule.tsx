@@ -32,9 +32,10 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
   // 지도 폭이 200ms 동안 그대로일 때만 핀을 다시 맞춘다. 키보드 연타 · 창 크기 조절마다 맞추면 지도가 흔들린다
   const fitKey = useDebouncedValue(split.settledWidth, 200);
   const listRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const focus = useScrollFocus({
     scroller: listRef,
-    list: listRef,
+    list: contentRef,
     line: (scrollTop) => {
       const rect = listRef.current?.getBoundingClientRect();
       if (!rect) return 0;
@@ -56,13 +57,16 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
         />
       )}
       <div ref={listRef} className="shrink-0 overflow-y-auto" style={{ width: split.width }}>
-        <DayBody
-          startDate={trip?.start_date ?? null}
-          day={day}
-          showCounts
-          focusId={focus.focusId}
-          {...body}
-        />
+        {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
+        <div ref={contentRef}>
+          <DayBody
+            startDate={trip?.start_date ?? null}
+            day={day}
+            showCounts
+            focusId={focus.focusId}
+            {...body}
+          />
+        </div>
         {/* 마지막 장소도 기준선까지 올라오게 하는 여백. 기본 420px, 목록 칸이 높으면 「칸 높이 − 기준선」(60%) 까지 늘린다 */}
         <div aria-hidden="true" className="h-[max(420px,60%)]" />
       </div>

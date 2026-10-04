@@ -11,7 +11,10 @@ const HOLD_MS = 150;
 type ScrollFocusOptions = {
   /** 스크롤을 듣는 칸. 없으면 window — 모바일은 페이지가 스크롤된다 */
   scroller?: RefObject<HTMLElement | null>;
-  /** 강조 후보 행(`data-focus-id`)을 찾을 범위 */
+  /**
+   * 강조 후보 행(`data-focus-id`)을 감싼 요소. 높이가 내용을 따라 변해야 한다 — 이 요소의 크기 변화로
+   * 스크롤 없이 행이 움직인 것을 안다. 높이가 고정된 스크롤 칸 자체를 넘기면 그 변화를 못 본다
+   */
   list: RefObject<HTMLElement | null>;
   /**
    * 스크롤 위치 → 기준선의 화면 y. 고를 때마다 부른다 — 모바일은 지도를 접고 펴면 바뀐다.
@@ -103,8 +106,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(scan);
     };
-    // 스크롤 없이 행이 움직일 때(메모 펼치기 · 추가 · 삭제 · 회전). 범위 안 자식들의 크기를 본다 —
-    // PC 는 범위가 높이 고정인 스크롤 칸이라 범위 자체는 크기가 변하지 않는다.
+    // 스크롤 없이 행이 움직일 때(메모 펼치기 · 추가 · 삭제 · day 헤더 등장 · 회전). 감싼 요소의 크기로 안다.
     // 강조가 있을 때만 다시 고른다 — 날짜를 막 바꾼 뒤엔 지도가 핀 전체를 보이고 있어 첫 장소로 옮기지 않는다
     const onLayout = () => {
       if (hold.current || !latest.current.focused) return;
@@ -112,7 +114,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
       frame = requestAnimationFrame(scan);
     };
     const observer = new ResizeObserver(onLayout);
-    for (const child of list.current?.children ?? []) observer.observe(child);
+    if (list.current) observer.observe(list.current);
     target.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onLayout);
     return () => {
