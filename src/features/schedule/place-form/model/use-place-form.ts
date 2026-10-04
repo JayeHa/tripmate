@@ -15,12 +15,7 @@ import {
   useReverseGeocode,
 } from "@/shared/lib/google-places";
 
-import {
-  categoryFromGoogle,
-  dropPickedLink,
-  fillFromPick,
-  googleMapsUrl,
-} from "../lib/google-autofill";
+import { dropPickedLink } from "../lib/google-autofill";
 import {
   blankPlaceForm,
   type LatLng,
@@ -28,6 +23,7 @@ import {
   normalizeReviews,
   type PlaceFormValues,
   toNewPlace,
+  withGooglePick,
 } from "../lib/place-form";
 import { useExistingPlace } from "./use-existing-place";
 
@@ -74,24 +70,16 @@ export function usePlaceForm({ tripId, dayIndex, city, initialQuery, onSaved }: 
   /** 위치 검색 결과를 고른다. 핀을 그곳으로 옮기고 구글 장소로 기억한다. 이름이 비었거나 자동으로 채운 값이면 그 장소 이름으로 */
   async function pickLocation(s: google.maps.places.AutocompleteSuggestion) {
     try {
-      const result = await same.check(async () => {
-        const picked = await suggestions.resolve(s);
-        if (!picked?.lat || !picked.lng) return null;
-        const at = { lat: picked.lat, lng: picked.lng };
-        setValues((v) => ({
-          ...v,
-          ...fillFromPick(v, {
-            name: picked.name,
-            category: categoryFromGoogle(picked.types),
-            gmap: picked.google_place_id ? googleMapsUrl(picked.name, picked.google_place_id) : "",
-          }),
-          at,
-          googleId: picked.google_place_id,
-        }));
-        setLocationQuery("");
-        return picked.google_place_id;
-      });
-      // 이미 있는 장소인지 확인하지 못했으면 구글 장소 연결을 끊는다 — 붙은 채 저장하면 그 장소를 모른 채 고쳐 쓸 수 있다
+      const result = await same.check(
+        () => suggestions.resolve(s),
+        (picked) => {
+          if (!picked.lat || !picked.lng) return null;
+          const at = { lat: picked.lat, lng: picked.lng };
+          setValues((v) => withGooglePick(v, picked, at));
+          setLocationQuery("");
+          return picked.google_place_id;
+        },
+      );
       if (result === "failed") setValues((v) => ({ ...v, googleId: null }));
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");

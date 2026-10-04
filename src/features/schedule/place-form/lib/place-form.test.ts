@@ -7,6 +7,7 @@ import {
   type PlaceFormValues,
   samePoint,
   toNewPlace,
+  withGooglePick,
 } from "./place-form";
 
 const form = (patch: Partial<PlaceFormValues>) => ({
@@ -36,6 +37,30 @@ describe("samePoint", () => {
   it("1e-6° 안이면 같은 지점, 넘으면 다른 지점", () => {
     expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.7000004, lng: 139.6999996 })).toBe(true);
     expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.70001, lng: 139.7 })).toBe(false);
+  });
+});
+
+describe("withGooglePick", () => {
+  it("핀 · 구글 장소 id 를 옮기고 이름 · 카테고리 · 구글맵 링크를 채운다", () => {
+    const next = withGooglePick(
+      blankPlaceForm({ lat: 35.68, lng: 139.76 }),
+      {
+        name: "아후리",
+        google_place_id: "ChIJ1",
+        lat: 35.64,
+        lng: 139.71,
+        address: null,
+        types: ["ramen_restaurant"],
+      },
+      { lat: 35.64, lng: 139.71 },
+    );
+    expect(next).toMatchObject({
+      at: { lat: 35.64, lng: 139.71 },
+      googleId: "ChIJ1",
+      name: "아후리",
+      category: "food",
+      gmap: "https://www.google.com/maps/search/?api=1&query=%EC%95%84%ED%9B%84%EB%A6%AC&query_place_id=ChIJ1",
+    });
   });
 });
 

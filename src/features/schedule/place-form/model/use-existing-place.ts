@@ -33,28 +33,36 @@ export function useExistingPlace(tripId: string) {
   }, []);
 
   /**
-   * 위치 검색 결과를 고른다 — `pick` 이 구글 상세를 받아 폼에 반영하고 그 장소 id 를 돌려주면, 그 id 로 이미 있는 장소를 찾는다.
-   * 고르는 순간부터(상세 조회 중에도) checking 이라 그사이 다음 단계로 못 간다. 그사이 위치가 바뀌었으면 "none".
-   * 상세 조회가 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다)
+   * 위치 검색 결과를 고른다. 고르는 순간부터(상세 조회 중에도) checking 이라 그사이 다음 단계로 못 간다.
+   * 1) `resolve` 로 구글 상세를 받는다 — 실패하면 예외를 그대로 던진다(부른 쪽이 문구를 보인다)
+   * 2) 그사이 위치가 바뀌지 않았을 때만(순번이 그대로) `apply` 로 폼에 쓴다 — 낡은 상세가 옮긴 핀 · 다음에 고른 곳을 덮지 않게.
+   *    `apply` 는 쓴 구글 장소 id 를 돌려준다
+   * 3) 그 id 로 이미 있는 장소를 찾는다. 찾지 못하면(사용자 정보 없음 · 조회 실패) "failed"
+   * 위치가 바뀌어 버린 결과는 "none" — 부른 쪽이 할 일이 없다
    */
-  async function check(pick: () => Promise<string | null>): Promise<ExistingCheck> {
+  async function check<T>(
+    resolve: () => Promise<T | null>,
+    apply: (picked: T) => string | null,
+  ): Promise<ExistingCheck> {
     clear();
     const seq = seqRef.current;
+    const live = () => seqRef.current === seq;
     setChecking(true);
     try {
-      const googleId = await pick();
-      if (seqRef.current !== seq || !googleId) return "none";
+      const picked = await resolve();
+      if (!live() || !picked) return "none";
+      const googleId = apply(picked);
+      if (!googleId) return "none";
       // 고를 때 잡아 둔 값이 아니라 지금 값 — 상세 조회를 기다리는 사이 사용자 정보가 들어왔을 수 있다
       const user = qc.getQueryData<User | null>(queryKeys.user);
       if (!user) return "failed";
-      const found = await findAttachablePlace(tripId, user.id, googleId);
-      if (seqRef.current !== seq) return "none";
+      const found = await findAttachablePlace(tripId, user.id, googleId).catch(() => undefined);
+      if (!live()) return "none";
+      if (found === undefined) return "failed";
       setExisting(found);
       return found ? "found" : "none";
-    } catch {
-      return seqRef.current === seq ? "failed" : "none";
     } finally {
-      if (seqRef.current === seq) setChecking(false);
+      if (live()) setChecking(false);
     }
   }
 

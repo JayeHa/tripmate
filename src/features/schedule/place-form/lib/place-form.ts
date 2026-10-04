@@ -1,6 +1,7 @@
 import { isHttpUrl, type NewPlaceFields, type PlaceCategory } from "@/entities/schedule-item";
+import type { GooglePick } from "@/shared/lib/google-places";
 
-import type { Autofill } from "./google-autofill";
+import { type Autofill, categoryFromGoogle, fillFromPick, googleMapsUrl } from "./google-autofill";
 
 /** 링크 한 줄(입력 중) */
 export type LinkDraft = { title: string; url: string };
@@ -69,6 +70,28 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
  */
 export function samePoint(a: LatLng, b: LatLng): boolean {
   return Math.abs(a.lat - b.lat) < 1e-6 && Math.abs(a.lng - b.lng) < 1e-6;
+}
+
+/**
+ * 위치 검색으로 고른 구글 장소를 폼 값에 반영한다 — 핀(at) · 구글 장소 id · 자동 채움(이름 · 카테고리 · 구글맵 링크).
+ * 사용자가 고친 칸은 둔다(fillFromPick)
+ */
+export function withGooglePick(
+  v: PlaceFormValues,
+  picked: GooglePick,
+  at: LatLng,
+): PlaceFormValues {
+  const id = picked.google_place_id;
+  return {
+    ...v,
+    ...fillFromPick(v, {
+      name: picked.name,
+      category: categoryFromGoogle(picked.types),
+      gmap: id ? googleMapsUrl(picked.name, id) : "",
+    }),
+    at,
+    googleId: id,
+  };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */
