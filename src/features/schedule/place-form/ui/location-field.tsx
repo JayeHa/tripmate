@@ -2,8 +2,9 @@
 
 import { Map, useMap } from "@vis.gl/react-google-maps";
 import { Search } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
 import { Field } from "./form-parts";
 
@@ -61,7 +62,7 @@ export function LocationField({ form }: LocationFieldProps) {
             clickableIcons={false}
             className="size-full"
           >
-            <CenterSync target={form.mapTarget} onMove={form.moveTo} />
+            <CenterSync at={at} onMove={form.moveTo} />
           </Map>
           {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울 */}
           <span
@@ -85,26 +86,35 @@ export function LocationField({ form }: LocationFieldProps) {
 }
 
 type CenterSyncProps = {
-  /** 바뀌면 지도를 그곳으로 옮긴다(검색으로 고를 때) */
-  target: { lat: number; lng: number } | null;
-  /** 사용자가 지도를 끌어 놓으면 새 중앙으로 부른다 */
-  onMove: (at: { lat: number; lng: number }) => void;
+  /** 폼의 핀 위치. 지도 중심과 다르면 지도를 그곳으로 옮긴다(검색으로 고를 때 — 같은 곳을 다시 골라도) */
+  at: LatLng | null;
+  /** 사용자가 지도를 움직이면(끌기 · 휠 · 핀치 · 더블클릭 확대) 새 중앙으로 부른다 */
+  onMove: (at: LatLng) => void;
 };
 
-/** 지도와 폼의 핀 위치를 맞춘다. 끌기가 끝났을 때만 중앙을 읽어 렌더마다 폼을 흔들지 않는다 */
-function CenterSync({ target, onMove }: CenterSyncProps) {
+/**
+ * 지도와 폼의 핀 위치를 맞춘다. 지도가 멈출 때(idle)만 중앙을 읽어 이동 중에 폼을 흔들지 않는다.
+ * idle 은 코드가 옮긴 뒤에도 오므로, 중앙이 폼 위치와 같으면 사용자 이동이 아니라고 본다.
+ * 처음 그려질 때의 idle 은 직전 중앙이 없어 기록만 한다 — 위치가 비어 있을 때 지도를 띄운 것만으로 좌표가 채워지지 않게.
+ */
+function CenterSync({ at, onMove }: CenterSyncProps) {
   const map = useMap();
-  const key = target ? `${target.lat},${target.lng}` : null;
+  const atRef = useRef(at);
   useEffect(() => {
-    if (map && target) map.panTo(target);
-    // 좌표 값으로 비교한다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, key]);
+    atRef.current = at;
+    const c = map?.getCenter();
+    if (map && at && !(c && samePoint({ lat: c.lat(), lng: c.lng() }, at))) map.panTo(at);
+  }, [map, at]);
   useEffect(() => {
     if (!map) return;
-    const listener = map.addListener("dragend", () => {
+    let last: LatLng | null = null;
+    const listener = map.addListener("idle", () => {
       const c = map.getCenter();
-      if (c) onMove({ lat: c.lat(), lng: c.lng() });
+      if (!c) return;
+      const now = { lat: c.lat(), lng: c.lng() };
+      const moved = last !== null && !samePoint(now, last);
+      last = now;
+      if (moved && !(atRef.current && samePoint(now, atRef.current))) onMove(now);
     });
     return () => listener.remove();
   }, [map, onMove]);

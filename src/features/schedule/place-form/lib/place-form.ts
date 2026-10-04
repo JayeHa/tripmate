@@ -9,7 +9,7 @@ import {
 /** 링크 한 줄(입력 중) */
 export type LinkDraft = { title: string; url: string };
 
-type LatLng = { lat: number; lng: number };
+export type LatLng = { lat: number; lng: number };
 
 /** 장소 입력 폼의 값. 입력 칸이 다루는 문자열 그대로 들고, 저장할 때 toPlaceSchedule 로 바꾼다 */
 export type PlaceFormValues = {
@@ -53,6 +53,14 @@ export function blankPlaceForm(name: string, center: LatLng | null): PlaceFormVa
     planLinks: [],
     memo: "",
   };
+}
+
+/**
+ * 두 좌표가 같은 지점인지. 지도 중심은 부동소수 오차가 있어 1e-6°(약 10cm) 안이면 같다고 본다.
+ * 지도 이동이 코드가 옮긴 것(검색으로 고름)인지 사용자가 옮긴 것인지 가를 때 쓴다.
+ */
+export function samePoint(a: LatLng, b: LatLng): boolean {
+  return Math.abs(a.lat - b.lat) < 1e-6 && Math.abs(a.lng - b.lng) < 1e-6;
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */

@@ -5,6 +5,7 @@ import {
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
+  samePoint,
   toPlaceSchedule,
 } from "./place-form";
 
@@ -24,6 +25,13 @@ describe("입력 정리", () => {
     expect(normalizeReviews("1355")).toBe("1,355");
     expect(normalizeReviews("12a3")).toBe("123");
     expect(normalizeReviews("")).toBe("");
+  });
+});
+
+describe("samePoint", () => {
+  it("1e-6° 안이면 같은 지점, 넘으면 다른 지점", () => {
+    expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.7000004, lng: 139.6999996 })).toBe(true);
+    expect(samePoint({ lat: 35.7, lng: 139.7 }, { lat: 35.70001, lng: 139.7 })).toBe(false);
   });
 });
 

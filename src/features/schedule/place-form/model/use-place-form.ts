@@ -34,8 +34,6 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
   );
   const [locationQuery, setLocationQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
-  // 지도를 그 위치로 옮기라는 신호. 검색으로 고를 때만 바뀐다(지도를 끌 때는 지도가 이미 거기 있다)
-  const [mapTarget, setMapTarget] = useState(values.at);
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const create = useCreatePlaceSchedule(tripId);
   const savingRef = useRef(false);
@@ -58,14 +56,13 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
           ? { id: picked.google_place_id, address: picked.address }
           : null,
       }));
-      setMapTarget(at);
       setLocationQuery("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     }
   }
 
-  /** 지도를 끌어 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
+  /** 사용자가 지도를 움직여(끌기 · 확대) 중앙 핀이 옮겨졌다. 지도 리스너가 들고 있으므로 같은 함수를 유지한다 */
   const moveTo = useCallback((at: { lat: number; lng: number }) => {
     setValues((v) => ({ ...v, at, google: null }));
   }, []);
@@ -100,7 +97,6 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     setLocationQuery,
     suggestions,
     pickLocation,
-    mapTarget,
     moveTo,
     save,
     saving: create.isPending,
