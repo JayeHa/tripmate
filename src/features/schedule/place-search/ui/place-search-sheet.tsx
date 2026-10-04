@@ -20,10 +20,16 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** 검색 편향 중심 (예: 해당 날 첫 장소) */
   bias?: { lat: number; lng: number } | null;
+  /** 고른 장소를 담는다. 시트는 담기에 성공하면 부른 쪽이 닫는다 — 실패하면 열어 둔 채 error 를 보인다 */
   onPick: (place: PickedPlace) => void;
+  /** 담는 중이면 다시 고르지 못하게 막는다 */
+  pending?: boolean;
+  /** 담기 실패 문구 */
+  error?: string | null;
 };
 
-export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
+/** 장소 검색 시트. 검색어로 구글 장소를 찾거나 이름만으로 고른다 */
+export function PlaceSearchSheet({ open, onOpenChange, bias, onPick, pending, error }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85dvh] rounded-t-2xl">
@@ -32,15 +38,7 @@ export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
           <SheetDescription>장소명이나 주소를 검색하세요</SheetDescription>
         </SheetHeader>
         {/* 열릴 때마다 마운트되어 검색 상태·세션 토큰이 초기화됨 */}
-        {open && (
-          <SearchBody
-            bias={bias}
-            onPick={(p) => {
-              onPick(p);
-              onOpenChange(false);
-            }}
-          />
-        )}
+        {open && <SearchBody bias={bias} onPick={onPick} pending={pending} addError={error} />}
       </SheetContent>
     </Sheet>
   );
@@ -48,7 +46,10 @@ export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
 
 type Suggestion = google.maps.places.AutocompleteSuggestion;
 
-function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
+type SearchBodyProps = Pick<Props, "bias" | "onPick" | "pending"> & { addError?: string | null };
+
+/** 검색 입력과 결과 목록. 열릴 때마다 새로 마운트돼 검색어 · 세션 토큰이 초기화된다 */
+function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
   const places = useMapsLibrary("places");
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -93,12 +94,13 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
 
   async function pick(s: Suggestion) {
     const prediction = s.placePrediction;
-    if (!prediction) return;
+    if (!prediction || pending) return;
     setLoading(true);
     try {
       const place = prediction.toPlace();
       await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
       sessionRef.current = null;
+      setLoading(false);
       onPick({
         name: place.displayName ?? prediction.mainText?.text ?? query,
         place_id: place.id ?? null,
@@ -114,7 +116,7 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
 
   function pickCustom() {
     const name = query.trim();
-    if (!name) return;
+    if (!name || pending) return;
     onPick({ name, place_id: null, lat: null, lng: null, address: null });
   }
 
@@ -130,11 +132,11 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
           className="h-11 pl-9"
           enterKeyHint="search"
         />
-        {loading && (
+        {(loading || pending) && (
           <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {(error ?? addError) && <p className="text-sm text-destructive">{error ?? addError}</p>}
       {!places && <p className="text-sm text-muted-foreground">지도 라이브러리를 불러오는 중...</p>}
       <ul className="flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
         {suggestions.map((s, i) => {

@@ -290,6 +290,20 @@ describe("places (0013)", () => {
     expect(cities.rows.map((r) => r.city_id)).toEqual(["osaka", "tokyo"]);
   });
 
+  it("여행에 도시가 없으면 좌표가 가장 가까운 도시, 좌표도 없으면 거부한다", async () => {
+    await as(A);
+    const id = await newTrip("2027-05-11", "2027-05-11");
+    await db.query(`delete from public.trip_cities where trip_id = '${id}'`);
+    const item = await addPlace(id, 0, { name: "도톤보리", lat: 34.6687, lng: 135.5013 });
+    const city = await db.query<{ city_id: string }>(
+      `select p.city_id from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${item}'`,
+    );
+    expect(city.rows).toEqual([{ city_id: "osaka" }]);
+    expect(
+      await rejects(`select public.add_schedule_place('${id}', 0, '{"name":"이름만"}')`),
+    ).toMatch(/has no city/);
+  });
+
   it("멤버가 아니면 담지 못하고 장소도 남기지 않는다", async () => {
     await as(A);
     const id = await newTrip("2027-05-05", "2027-05-05");

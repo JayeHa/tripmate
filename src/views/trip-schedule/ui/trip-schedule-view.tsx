@@ -53,9 +53,21 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     [dayItems],
   );
 
-  /** 장소 검색에서 고른 곳을 그날 끝에 붙인다. 장소와 일정을 서버에서 한 번에 만든다 */
+  /**
+   * 장소 검색에서 고른 곳을 그날 끝에 붙인다. 장소와 일정을 서버에서 한 번에 만든다.
+   * 담기에 성공해야 시트를 닫는다 — 실패하면 시트에 이유를 보이고 다시 고를 수 있게 둔다.
+   */
   function addPlace({ place_id, ...place }: PickedPlace) {
-    addToSchedule.mutate({ dayIndex: day, place: { ...place, google_place_id: place_id } });
+    addToSchedule.mutate(
+      { dayIndex: day, place: { ...place, google_place_id: place_id } },
+      { onSuccess: () => setSearchOpen(false) },
+    );
+  }
+
+  /** 검색 시트를 열고 닫는다. 지난 실패 문구는 지운다 */
+  function toggleSearch(open: boolean) {
+    addToSchedule.reset();
+    setSearchOpen(open);
   }
 
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
@@ -73,7 +85,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           memos={memos}
           onOpen={(row) => setEditing(row.item)}
           onEditMove={moveDialog.openFor}
-          onAddPlace={() => setSearchOpen(true)}
+          onAddPlace={() => toggleSearch(true)}
         />
       )}
 
@@ -86,9 +98,11 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
       <PlaceSearchSheet
         open={searchOpen}
-        onOpenChange={setSearchOpen}
+        onOpenChange={toggleSearch}
         bias={bias}
         onPick={addPlace}
+        pending={addToSchedule.isPending}
+        error={addToSchedule.error && "일정에 담지 못했어요. 잠시 후 다시 시도해 주세요."}
       />
 
       {trip && (
