@@ -102,6 +102,8 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
     save,
     saving: create.isPending,
+    /** 저장 요청이 서버에 가 있는 동안은 창을 닫지 못한다. 오프라인으로 멈춘(paused) 동안은 닫을 수 있다 */
+    locked: create.isPending && !create.isPaused,
     canSave: values.name.trim().length > 0,
     error: error ?? (create.error ? addPlaceErrorMessage(create.error) : null),
   };

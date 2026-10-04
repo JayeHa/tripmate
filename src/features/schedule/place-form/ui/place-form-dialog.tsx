@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import type { SearchCity } from "@/shared/lib/google-places";
 import { Button } from "@/shared/ui/button";
@@ -28,13 +29,18 @@ type PlaceFormDialogProps = {
  * 가이드 모드(장소만 저장)와 수정은 홈 가이드(#17) · 일정 상세(#13 ③)에서 붙인다.
  */
 export function PlaceFormDialog({ open, onOpenChange, ...rest }: PlaceFormDialogProps) {
+  // 저장 중에는 Esc · 바깥 클릭 · X 로 닫히지 않는다 — 닫힌 뒤 늦게 끝난 저장이 다른 창 · 날짜를 건드리지 않게.
+  // 잠금 여부는 본문의 usePlaceForm 이 알아서 본문이 알려 준다
+  const [locked, setLocked] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => (next || !locked) && onOpenChange(next)}>
       <DialogContent
         showCloseButton={false}
         className="inset-0 flex h-dvh w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none bg-white p-0 ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(760px,calc(100dvh-2rem))] lg:w-140 lg:max-w-140 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
       >
-        {open && <PlaceFormBody {...rest} onClose={() => onOpenChange(false)} />}
+        {open && (
+          <PlaceFormBody {...rest} onClose={() => onOpenChange(false)} onLockChange={setLocked} />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -42,6 +48,7 @@ export function PlaceFormDialog({ open, onOpenChange, ...rest }: PlaceFormDialog
 
 type PlaceFormBodyProps = Omit<PlaceFormDialogProps, "open" | "onOpenChange"> & {
   onClose: () => void;
+  onLockChange: (locked: boolean) => void;
 };
 
 /** 폼 내용. 상태는 usePlaceForm 이 쥐고 칸 묶음은 그리기만 한다 */
@@ -52,13 +59,21 @@ function PlaceFormBody({
   initialName,
   onSaved,
   onClose,
+  onLockChange,
 }: PlaceFormBodyProps) {
   const form = usePlaceForm({ tripId, dayIndex, city, initialName, onSaved });
+  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
   const dayLabel = `day ${dayIndex + 1}`;
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       <div className="flex h-13 shrink-0 items-center gap-3 px-4.5">
-        <button type="button" aria-label="닫기" onClick={onClose} className="flex text-ink-900">
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={onClose}
+          disabled={form.locked}
+          className="flex text-ink-900 disabled:opacity-40"
+        >
           <X className="size-6" strokeWidth={2} />
         </button>
         <DialogTitle className="flex-1 text-center text-[17px] font-extrabold text-ink-900">

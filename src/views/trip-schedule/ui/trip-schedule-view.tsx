@@ -57,12 +57,11 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const Layout = isDesktop ? PcSchedule : MobileSchedule;
 
   /**
-   * 직접 추가 요청 하나의 담기가 끝났다. 저장은 폼을 닫아도 끝까지 돌아서, 그 사이 다른 직접 추가를 열었으면
-   * 새 폼과 일정 추가 창은 건드리지 않는다(입력 중인 폼이 닫히면 안 된다)
+   * 직접 추가 요청 하나의 담기가 끝났다. 폼은 저장 중에 닫히지 않지만 오프라인으로 멈춘 동안은 닫을 수 있어서,
+   * 그 폼이 이미 닫혔으면(다른 요청이 열렸거나 아무것도 없으면) 창 닫기 · 날짜 이동을 하지 않는다
    */
   function finishDirect(req: DirectAddRequest) {
-    const current = directRef.current;
-    if (current && current !== req) return;
+    if (directRef.current !== req) return;
     setDirect(null);
     if (req.pendingCount > 0) {
       setAddNotice(
