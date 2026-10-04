@@ -61,7 +61,12 @@ export function ScheduleMap({ rows, selectedId, onSelect, className }: ScheduleM
             onClick={() => onSelect?.(pin.row)}
             zIndex={selectedId === pin.id ? 10 : 1}
           >
-            <MapPin num={pin.num} status={pin.row.status} selected={selectedId === pin.id} />
+            <MapPin
+              num={pin.num}
+              status={pin.row.status}
+              category={pin.row.category}
+              selected={selectedId === pin.id}
+            />
           </AdvancedMarker>
         ))}
         <FitPins points={pins.map((p) => p.at)} />
