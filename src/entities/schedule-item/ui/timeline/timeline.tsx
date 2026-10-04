@@ -10,8 +10,11 @@ import { NumberMarker } from "./number-marker";
 type TimelineProps = {
   rows: TimelineRow[];
   onOpen: (row: TimelineRow) => void;
-  /** 직전 장소 → 이 장소의 이동 방법 창을 연다 */
-  onEditMove: (row: TimelineRow) => void;
+  /**
+   * 직전 장소 → 이 장소의 이동 방법 창을 연다. 넘기지 않으면 「+ 이동 방법」을 그리지 않는다.
+   * 이동 기록을 아직 못 불러왔을 때가 그렇다. 빈 창에서 저장하면 같은 쌍의 기존 기록을 덮어쓴다.
+   */
+  onEditMove?: (row: TimelineRow) => void;
 };
 
 /** 하루치 일정. 왼쪽 72px 거터에 표식과 시각, x=35 에 세로선 */
@@ -32,7 +35,7 @@ export function Timeline({ rows, onOpen, onEditMove }: TimelineProps) {
       <span aria-hidden="true" className="absolute inset-y-0 left-8.75 w-0.5 bg-divider" />
       {rows.map((row) => (
         <li key={row.item.id} id={`item-${row.item.id}`} className="relative">
-          {row.leg && <LegLine leg={row.leg} onEditMove={() => onEditMove(row)} />}
+          {row.leg && <LegLine leg={row.leg} onEditMove={onEditMove && (() => onEditMove(row))} />}
           <div className="flex pr-5 pb-3">
             <div className="flex w-18 shrink-0 flex-col items-center gap-1.5 pt-4.5">
               <NumberMarker kind={row.kind} num={row.num} status={row.status} />

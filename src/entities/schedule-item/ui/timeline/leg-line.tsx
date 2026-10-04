@@ -3,8 +3,8 @@ import { DistancePill } from "./distance-pill";
 
 type LegLineProps = {
   leg: TimelineLeg;
-  /** 「+ 이동 방법」 · 적어 둔 수단 · 상세를 누르면 이동 방법 창을 연다 */
-  onEditMove: () => void;
+  /** 「+ 이동 방법」 · 적어 둔 수단 · 상세를 누르면 이동 방법 창을 연다. 없으면 거리 pill 만 그린다 */
+  onEditMove?: () => void;
 };
 
 /**
@@ -19,20 +19,22 @@ export function LegLine({ leg, onEditMove }: LegLineProps) {
     <div className="flex flex-col gap-1 pr-5 pb-2.5 pl-2">
       <div className="flex min-w-0 items-center gap-2">
         <DistancePill label={leg.label} url={leg.url} />
-        <button
-          type="button"
-          onClick={onEditMove}
-          title={leg.hasMove ? "이동 방법 수정" : "이동 방법 적기"}
-          className={
-            note
-              ? "min-w-0 truncate text-[13px] font-semibold text-ink-700"
-              : "text-xs font-bold whitespace-nowrap text-ink-350"
-          }
-        >
-          {note ?? "+ 이동 방법"}
-        </button>
+        {onEditMove && (
+          <button
+            type="button"
+            onClick={onEditMove}
+            title={leg.hasMove ? "이동 방법 수정" : "이동 방법 적기"}
+            className={
+              note
+                ? "min-w-0 truncate text-[13px] font-semibold text-ink-700"
+                : "text-xs font-bold whitespace-nowrap text-ink-350"
+            }
+          >
+            {note ?? "+ 이동 방법"}
+          </button>
+        )}
       </div>
-      {secondLine && (
+      {onEditMove && secondLine && (
         <button
           type="button"
           onClick={onEditMove}
