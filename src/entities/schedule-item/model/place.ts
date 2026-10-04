@@ -24,19 +24,6 @@ export const CATEGORY_LABEL = {
   air: "공항·교통",
 } satisfies Record<PlaceCategory, string>;
 
-/** 제목 앞 이모지 기본값. 사용자가 고른 이모지가 있으면 그쪽이 먼저다 */
-export const CATEGORY_EMOJI = {
-  sight: "🏯",
-  food: "🍜",
-  cafe: "☕",
-  shop: "🛍️",
-  rest: "♨️",
-  stay: "🏨",
-  air: "✈️",
-} satisfies Record<PlaceCategory, string>;
-
-export const DEFAULT_PLACE_EMOJI = "📍";
-
 /**
  * href 로 그릴 수 있는 링크인지. http(s) 만 허용한다.
  * React 가 `javascript:` 를 막아 주지만, 사용자가 적은 값이라 `data:` 등도 화면에 닿기 전에 거른다.

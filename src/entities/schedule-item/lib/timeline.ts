@@ -3,10 +3,8 @@ import { type Move, MOVE_MODE_LABEL, moveKey, type MoveMode, moveModeOf } from "
 import {
   type Alternative,
   alternativesOf,
-  CATEGORY_EMOJI,
   CATEGORY_LABEL,
   categoryOf,
-  DEFAULT_PLACE_EMOJI,
   isHttpUrl,
   isMappedPlace,
   itemCoords,
@@ -65,14 +63,11 @@ export type TimelineRow = {
 type Located = { lat: number; lng: number };
 
 /**
- * 제목 앞 이모지. 이 일정에서 바꾼 아이콘 → 장소의 기본 아이콘 → 카테고리 기본값 순.
- * 빈 문자열로 바꿔 두면 이모지를 숨긴다.
+ * 제목 앞 이모지. 이 일정에서 바꾼 아이콘 → 장소의 아이콘 순이고, 둘 다 없으면 두지 않는다
+ * (카테고리 기본 아이콘으로 채우지 않는다 — 고른 사람만 아이콘을 단다). 빈 문자열로 바꿔 두면 숨긴다.
  */
-function emojiOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
-  const chosen = item.emoji ?? item.place?.emoji;
-  if (chosen != null) return chosen || null;
-  if (kind !== "place") return null;
-  return category ? CATEGORY_EMOJI[category] : DEFAULT_PLACE_EMOJI;
+function emojiOf(item: ScheduleItem) {
+  return (item.emoji ?? item.place?.emoji) || null;
 }
 
 /** place 는 「음식점 · ★ 4.7 (1,355) · 설명」(장소 정보), 나머지는 일정의 설명만 */
@@ -174,7 +169,7 @@ export function buildTimeline(
       time: item.start_time?.slice(0, 5) ?? null,
       status: statusOf(item),
       category,
-      emoji: emojiOf(item, kind, category),
+      emoji: emojiOf(item),
       meta: metaOf(item, kind, category),
       isMeal: kind === "place" && category === "food",
       leg,
