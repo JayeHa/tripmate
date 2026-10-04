@@ -20,27 +20,28 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** 검색 편향 중심 (예: 해당 날 첫 장소) */
   bias?: { lat: number; lng: number } | null;
-  onPick: (place: PickedPlace) => void;
+  /**
+   * 고른 장소를 담는다. 시트는 담기에 성공하면 부른 쪽이 닫는다 — 실패하면 열어 둔 채 error 를 보인다.
+   * 담기가 끝나면(성공 · 실패) `settled` 를 불러 다시 고를 수 있게 한다.
+   */
+  onPick: (place: PickedPlace, settled: () => void) => void;
+  /** 담는 중이면 다시 고르지 못하게 막는다 */
+  pending?: boolean;
+  /** 담기 실패 문구 */
+  error?: string | null;
 };
 
-export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
+/** 장소 검색 시트. 검색어로 구글 장소를 찾거나 이름만으로 고른다 */
+export function PlaceSearchSheet({ open, onOpenChange, bias, onPick, pending, error }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85dvh] rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>장소 추가</SheetTitle>
+          <SheetTitle>일정 추가</SheetTitle>
           <SheetDescription>장소명이나 주소를 검색하세요</SheetDescription>
         </SheetHeader>
         {/* 열릴 때마다 마운트되어 검색 상태·세션 토큰이 초기화됨 */}
-        {open && (
-          <SearchBody
-            bias={bias}
-            onPick={(p) => {
-              onPick(p);
-              onOpenChange(false);
-            }}
-          />
-        )}
+        {open && <SearchBody bias={bias} onPick={onPick} pending={pending} addError={error} />}
       </SheetContent>
     </Sheet>
   );
@@ -48,7 +49,10 @@ export function PlaceSearchSheet({ open, onOpenChange, bias, onPick }: Props) {
 
 type Suggestion = google.maps.places.AutocompleteSuggestion;
 
-function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
+type SearchBodyProps = Pick<Props, "bias" | "onPick" | "pending"> & { addError?: string | null };
+
+/** 검색 입력과 결과 목록. 열릴 때마다 새로 마운트돼 검색어 · 세션 토큰이 초기화된다 */
+function SearchBody({ bias, onPick, pending, addError }: SearchBodyProps) {
   const places = useMapsLibrary("places");
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -56,6 +60,13 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
   const [error, setError] = useState<string | null>(null);
   // 검색 여러 번 + 선택 1번 = 세션 1회 과금
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  // 누른 순간부터 담기가 끝날 때까지 다시 고르지 못하게. 렌더를 기다리지 않고 바로 막는다.
+  // 장소 정보 받기에 실패하면 바로 풀고, 담기 요청을 보냈으면 그 요청이 끝날 때(onPick 의 settled) 푼다.
+  // pending 렌더에 기대지 않는다 — 요청이 렌더보다 먼저 실패하면 pending 이 true 인 렌더가 없다
+  const pickingRef = useRef(false);
+  const release = () => {
+    pickingRef.current = false;
+  };
 
   useEffect(() => {
     const input = query.trim();
@@ -93,29 +104,36 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
 
   async function pick(s: Suggestion) {
     const prediction = s.placePrediction;
-    if (!prediction) return;
+    if (!prediction || pending || pickingRef.current) return;
+    pickingRef.current = true;
     setLoading(true);
     try {
       const place = prediction.toPlace();
       await place.fetchFields({ fields: ["id", "displayName", "location", "formattedAddress"] });
       sessionRef.current = null;
-      onPick({
-        name: place.displayName ?? prediction.mainText?.text ?? query,
-        place_id: place.id ?? null,
-        lat: place.location?.lat() ?? null,
-        lng: place.location?.lng() ?? null,
-        address: place.formattedAddress ?? null,
-      });
+      setLoading(false);
+      onPick(
+        {
+          name: place.displayName ?? prediction.mainText?.text ?? query,
+          place_id: place.id ?? null,
+          lat: place.location?.lat() ?? null,
+          lng: place.location?.lng() ?? null,
+          address: place.formattedAddress ?? null,
+        },
+        release,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
       setLoading(false);
+      release();
     }
   }
 
   function pickCustom() {
     const name = query.trim();
-    if (!name) return;
-    onPick({ name, place_id: null, lat: null, lng: null, address: null });
+    if (!name || pending || pickingRef.current) return;
+    pickingRef.current = true;
+    onPick({ name, place_id: null, lat: null, lng: null, address: null }, release);
   }
 
   return (
@@ -127,14 +145,15 @@ function SearchBody({ bias, onPick }: Pick<Props, "bias" | "onPick">) {
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           placeholder="예: 센소지, 시부야 스카이"
+          maxLength={100}
           className="h-11 pl-9"
           enterKeyHint="search"
         />
-        {loading && (
+        {(loading || pending) && (
           <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {(error ?? addError) && <p className="text-sm text-destructive">{error ?? addError}</p>}
       {!places && <p className="text-sm text-muted-foreground">지도 라이브러리를 불러오는 중...</p>}
       <ul className="flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
         {suggestions.map((s, i) => {

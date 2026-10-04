@@ -16,6 +16,10 @@ const ANONYMOUS_ALLOWED: Record<string, string> = {
   get_trip_preview: "읽기 전용 미리보기. 남기는 흔적이 없다",
   rotate_invite_token: "is_trip_member 로 걸러진다",
   is_trip_member: "판정 함수 자체",
+  copy_places_on_leave:
+    "trip_members 삭제 트리거. 나간 사람의 장소를 소유자 사본으로 바꿔 남의 여행에 흔적이 남지 않게 한다",
+  can_attach_place:
+    "판정 함수. 읽기만 한다. 익명도 자기 장소를 자기 여행에 붙여야 둘러보기가 동작한다",
   handle_new_user: "auth.users 트리거. 익명 가입도 profiles 가 필요하다",
   handle_new_trip: "trips 트리거. 소유자를 멤버로 넣는다. 둘러보기가 이것 없이는 동작하지 않는다",
 };

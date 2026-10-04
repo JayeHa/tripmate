@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { TimelineRow } from "@/entities/schedule-item";
+import { itemName, type TimelineRow } from "@/entities/schedule-item";
 
 import type { MovePair } from "../ui/move-dialog";
 
@@ -22,7 +22,7 @@ export function useMoveDialog(ready: boolean) {
       fromItemId: leg.fromItemId,
       fromName: leg.fromName,
       toItemId: item.id,
-      toName: item.name,
+      toName: itemName(item),
       mode: leg.mode,
       detail: leg.detail,
       hasMove: leg.hasMove,

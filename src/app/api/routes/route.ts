@@ -7,7 +7,7 @@ import type { DayRoute, RouteLeg, TravelMode } from "@/entities/schedule-item";
 import { computeDayRoute, type RoutePoint } from "@/entities/schedule-item/api/compute-day-route";
 // 배럴은 클라이언트 UI 까지 끌고 와서, 순수 판정 함수만 full path 로 가져온다
 // eslint-disable-next-line no-restricted-imports
-import { isMappedPlace } from "@/entities/schedule-item/model/place";
+import { isMappedPlace, itemCoords } from "@/entities/schedule-item/model/place";
 import { createClient } from "@/shared/api/supabase/server";
 
 type Body = { tripId?: string; dayIndex?: number; travelMode?: TravelMode };
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // RLS 덕분에 멤버가 아니면 빈 배열
   const { data: items, error } = await supabase
     .from("schedule_items")
-    .select("id, kind, lat, lng")
+    .select("id, kind, place:places(lat, lng)")
     .eq("trip_id", tripId)
     .eq("day_index", dayIndex)
     .order("position");
@@ -37,8 +37,10 @@ export async function POST(request: NextRequest) {
 
   const points: RoutePoint[] = (items ?? [])
     // 지도 핀과 같은 기준. 좌표가 있어도 flight · move 는 경유점이 아니다
-    .filter(isMappedPlace)
-    .map((it) => ({ id: it.id, lat: it.lat!, lng: it.lng! }));
+    .flatMap((it) => {
+      const at = isMappedPlace(it) ? itemCoords(it) : null;
+      return at ? [{ id: it.id, ...at }] : [];
+    });
 
   if (points.length < 2) {
     return NextResponse.json({ polyline: null, legs: [] } satisfies DayRoute);

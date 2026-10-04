@@ -8,7 +8,9 @@ import {
   DEFAULT_PLACE_EMOJI,
   isHttpUrl,
   isMappedPlace,
+  itemCoords,
   type ItemKind,
+  itemName,
   kindOf,
   linksOf,
   type PlaceCategory,
@@ -58,31 +60,33 @@ export type TimelineRow = {
 
 type Located = { lat: number; lng: number };
 
-function located(item: ScheduleItem): Located | null {
-  return item.lat != null && item.lng != null ? { lat: item.lat, lng: item.lng } : null;
-}
-
+/**
+ * 제목 앞 이모지. 이 일정에서 바꾼 아이콘 → 장소의 기본 아이콘 → 카테고리 기본값 순.
+ * 빈 문자열로 바꿔 두면 이모지를 숨긴다.
+ */
 function emojiOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
-  if (item.emoji != null) return item.emoji || null;
+  const chosen = item.emoji ?? item.place?.emoji;
+  if (chosen != null) return chosen || null;
   if (kind !== "place") return null;
   return category ? CATEGORY_EMOJI[category] : DEFAULT_PLACE_EMOJI;
 }
 
-/** place 는 「음식점 · ★ 4.7 (1,355) · 설명」, 나머지는 설명만 */
+/** place 는 「음식점 · ★ 4.7 (1,355) · 설명」(장소 정보), 나머지는 일정의 설명만 */
 function metaOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
-  if (kind !== "place") return item.description || null;
+  const place = item.place;
+  if (kind !== "place" || !place) return item.description || null;
   const rating =
-    item.rating != null
-      ? `★ ${item.rating.toFixed(1)}${item.review_count ? ` (${item.review_count.toLocaleString("ko-KR")})` : ""}`
+    place.rating != null
+      ? `★ ${place.rating.toFixed(1)}${place.review_count ? ` (${place.review_count.toLocaleString("ko-KR")})` : ""}`
       : null;
-  const parts = [category && CATEGORY_LABEL[category], rating, item.description];
+  const parts = [category && CATEGORY_LABEL[category], rating, place.description];
   return parts.filter(Boolean).join(" · ") || null;
 }
 
+/** 링크 칩: 장소의 구글맵 + 장소 링크 */
 function linksFor(item: ScheduleItem): TimelineLink[] {
-  const gmap = isHttpUrl(item.gmap_url)
-    ? [{ title: "구글맵", url: item.gmap_url, gmap: true }]
-    : [];
+  const gmapUrl = item.place?.gmap_url;
+  const gmap = isHttpUrl(gmapUrl) ? [{ title: "구글맵", url: gmapUrl, gmap: true }] : [];
   return [
     ...gmap,
     ...linksOf(item).map((l) => ({ title: l.title || "링크", url: l.url, gmap: false })),
@@ -120,7 +124,7 @@ function legOf(
     label: `${formatKm(km)} · ${etaLabel(km)}`,
     url: transitRouteUrl(prev.at, here),
     fromItemId: prev.item.id,
-    fromName: prev.item.name,
+    fromName: itemName(prev.item),
     mode,
     modeLabel: mode ? MOVE_MODE_LABEL[mode] : null,
     detail: move?.detail || null,
@@ -138,7 +142,7 @@ export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): Timeli
     const kind = kindOf(item);
     const category = categoryOf(item);
     const rowNum = numbers.get(item.id) ?? null;
-    const here = rowNum ? located(item) : null;
+    const here = rowNum ? itemCoords(item) : null;
 
     let leg: TimelineLeg | null = null;
     if (here) {
@@ -158,7 +162,7 @@ export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): Timeli
       isMeal: kind === "place" && category === "food",
       leg,
       notes: notesOf(item.memo),
-      hours: item.hours,
+      hours: item.place?.hours ?? null,
       links: linksFor(item),
       alternatives: alternativesOf(item),
     };

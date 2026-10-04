@@ -185,12 +185,14 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 `security definer` 는 호출자 권한을 무시하므로 **RLS 가 걸리지 않는다.** 함수 안의 검사가
 유일한 경계다. 새로 만들 때마다 익명 허용 여부를 정한다.
 
-| 함수                  | 익명                               |
-| --------------------- | ---------------------------------- |
-| `join_trip_by_token`  | **거부** (0004 에서 claim 검사)    |
-| `get_trip_preview`    | 허용. 읽기 전용 미리보기다         |
-| `rotate_invite_token` | 멤버만. `is_trip_member` 로 걸린다 |
-| `is_trip_member`      | 판정 함수 자체                     |
+| 함수                   | 익명                                       |
+| ---------------------- | ------------------------------------------ |
+| `join_trip_by_token`   | **거부** (0004 에서 claim 검사)            |
+| `get_trip_preview`     | 허용. 읽기 전용 미리보기다                 |
+| `rotate_invite_token`  | 멤버만. `is_trip_member` 로 걸린다         |
+| `is_trip_member`       | 판정 함수 자체                             |
+| `can_attach_place`     | 허용. 판정만 한다(장소 → 일정 RLS)         |
+| `copy_places_on_leave` | 트리거. 나가는 동작(members_delete)이 경계 |
 
 ## 클라이언트 가드는 가드가 아니다
 

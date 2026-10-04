@@ -19,7 +19,7 @@ type DayBodyProps = {
   onAddPlace: () => void;
 };
 
-/** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「장소 추가」. 모바일과 PC 목록이 같이 쓴다 */
+/** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「일정 추가」. 모바일과 PC 목록이 같이 쓴다 */
 export function DayBody({
   startDate,
   day,
@@ -53,7 +53,7 @@ export function DayBody({
       {!isPending && rows.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
           <p className="font-medium">아직 일정이 없어요</p>
-          <p className="text-sm text-muted-foreground">아래 버튼으로 장소를 추가해보세요.</p>
+          <p className="text-sm text-muted-foreground">아래 버튼으로 일정을 추가해보세요.</p>
         </div>
       )}
       <Timeline
@@ -67,7 +67,7 @@ export function DayBody({
       {/* 메모 추가는 메모 단계에서 이 옆에 붙는다 */}
       <div className="flex gap-2.5 px-5 pt-1 pb-8">
         <Button variant="outline" size="form" className="flex-1" onClick={onAddPlace}>
-          장소 추가
+          일정 추가
         </Button>
       </div>
     </>

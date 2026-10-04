@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import {
   formatDistance,
   formatDuration,
+  itemName,
   placeNumbers,
   type TravelMode,
   useDayRoute,
@@ -110,7 +111,7 @@ export function TripMapView({ tripId }: TripMapViewProps) {
                   <span className="text-xs text-muted-foreground">
                     {[numbers.get(it.id), it.start_time?.slice(0, 5)].filter(Boolean).join(" · ")}
                   </span>
-                  <span className="truncate text-sm font-medium">{it.name}</span>
+                  <span className="truncate text-sm font-medium">{itemName(it)}</span>
                 </button>
                 {leg && (
                   <span className="flex shrink-0 flex-col items-center text-[10px] text-muted-foreground">
