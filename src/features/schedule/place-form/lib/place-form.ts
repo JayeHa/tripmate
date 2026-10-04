@@ -1,4 +1,11 @@
-import { isHttpUrl, type NewPlaceFields, type PlaceCategory } from "@/entities/schedule-item";
+import {
+  isHttpUrl,
+  type NewPlaceFields,
+  type PlaceCategory,
+  WEEK_DAYS,
+  type WeekDay,
+  type WeekHours,
+} from "@/entities/schedule-item";
 import type { GooglePick } from "@/shared/lib/google-places";
 
 import {
@@ -33,15 +40,19 @@ export type PlaceFormValues = {
    */
   category: PlaceCategory | null;
   /**
-   * 저장할 위치(지도 중앙 핀). 처음엔 도시 중심, 검색으로 고르거나 지도를 끌면 바뀐다. 위치는 반드시 정한다.
-   * 도시가 없는 여행은 검색으로 고르기 전까지 null 이다
+   * 저장할 위치(지도 중앙 핀). 처음엔 비어 있고(지도만 도시 중심을 보인다) 검색으로 고르거나 지도를 끌면 정해진다.
+   * 위치는 반드시 정한다 — 열자마자 도시 중심(도쿄역)이 그대로 저장되지 않게
    */
   at: LatLng | null;
   /** 위치 검색으로 고른 구글 장소 id(지도를 끌면 지운다 — 고른 곳과 핀이 달라져서) */
   googleId: string | null;
   /** 상세 위치(선택). 「파르코 본관 8F」 */
   addressDetail: string;
+  /** 운영시간 입력 방식 — 매일 같음(hours) · 요일별(hoursWeek) */
+  hoursMode: "same" | "week";
   hours: string;
+  /** 요일별 운영시간. null 이면 휴무, 빈 문자열이면 아직 안 적음 */
+  hoursWeek: Record<WeekDay, string | null>;
   rating: string;
   reviews: string;
   wait: string;
@@ -50,7 +61,7 @@ export type PlaceFormValues = {
   links: LinkDraft[];
 };
 
-/** 새 폼. 이름은 비어 있고(장소를 고르면 채운다), 위치는 도시 중심에서 시작한다 */
+/** 새 폼. 이름은 비어 있고(장소를 고르면 채운다), 위치는 받은 값 — 장소 입력은 null 로 시작해 고르거나 지도를 끌어 정한다 */
 export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
   return {
     emoji: "",
@@ -60,7 +71,9 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
     at: center,
     googleId: null,
     addressDetail: "",
+    hoursMode: "same",
     hours: "",
+    hoursWeek: { mon: "", tue: "", wed: "", thu: "", fri: "", sat: "", sun: "" },
     rating: "",
     reviews: "",
     wait: "",
@@ -106,6 +119,30 @@ export function withGooglePick(
  */
 export function withoutGooglePick(v: PlaceFormValues): PlaceFormValues {
   return { ...v, ...dropPickedLink(v), googleId: null };
+}
+
+/** 월요일 칸의 값(시간 · 휴무)을 모든 요일에 적용한다 */
+export function mondayToAll(week: PlaceFormValues["hoursWeek"]): PlaceFormValues["hoursWeek"] {
+  return Object.fromEntries(WEEK_DAYS.map((d) => [d, week.mon])) as PlaceFormValues["hoursWeek"];
+}
+
+/**
+ * 저장할 운영시간 칸. 요일별이면 적은 요일 · 휴무만 담은 hours_week(안 적은 요일은 모름)와 빈 hours.
+ * 매일 같음이면 hours 와, 시간을 적었을 때만 빈 요일별({} — 이미 있는 장소의 예전 요일별 값을 지운다).
+ * 시간을 비워 두면 「모름」이라 요일별도 null(기존 값 유지)
+ */
+function hoursFields(v: PlaceFormValues): Pick<NewPlaceFields, "hours" | "hours_week"> {
+  if (v.hoursMode === "same") {
+    const hours = orNull(v.hours);
+    return { hours, hours_week: hours ? {} : null };
+  }
+  const week: WeekHours = {};
+  for (const day of WEEK_DAYS) {
+    const value = v.hoursWeek[day];
+    if (value === null || value.trim()) week[day] = value === null ? null : value.trim();
+  }
+  // 요일별인데 아무것도 적지 않았으면 「모름」 — 매일 같음의 빈칸처럼 null 로 기존 값을 둔다
+  return { hours: null, hours_week: Object.keys(week).length > 0 ? week : null };
 }
 
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */
@@ -181,7 +218,7 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
       address_ko: found.addressKo,
       address_detail: orNull(v.addressDetail)?.slice(0, 100) ?? null,
       google_place_id: v.googleId,
-      hours: orNull(v.hours),
+      ...hoursFields(v),
       rating: numberOf(v.rating, 1),
       review_count: numberOf(v.reviews),
       wait: orNull(v.wait),

@@ -4,6 +4,8 @@ import { Map, useMap } from "@vis.gl/react-google-maps";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { cn } from "@/shared/lib/utils";
+
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-form";
 import { AddressCard } from "./address-card";
@@ -23,11 +25,16 @@ type LocationStepProps = { form: PlaceFormState };
 export function LocationStep({ form }: LocationStepProps) {
   const { values } = form;
   const at = values.at;
-  // 검색 결과 목록은 지도 위에 뜬다. 처음엔(일정 추가의 검색어가 들어와 있어도) 닫아 두어 지도를 가리지 않고,
-  // 검색칸을 누르거나 입력하거나 ↓ 를 누르면 연다(포커스로는 열지 않는다 — Esc 로 닫고 검색칸에 포커스를 돌려줄 때 다시 열리지 않게).
-  // 고르거나 지도를 만지면 닫는다
-  const [listOpen, setListOpen] = useState(false);
+  // 검색 결과 목록은 지도 위에 뜬다. 위치를 아직 정하지 않았으면(직접 추가로 막 열었으면) 검색칸에 포커스를 주고
+  // 일정 추가의 검색어 결과를 펼쳐 둔다 — 바로 골라 위치를 정하게. 그 뒤엔 검색칸을 누르거나 입력하거나 ↓ 로 연다
+  // (포커스로는 열지 않는다 — Esc 로 닫고 검색칸에 포커스를 돌려줄 때 다시 열리지 않게). 고르거나 지도를 만지면 닫는다
+  const [listOpen, setListOpen] = useState(() => !at && form.locationQuery.trim().length > 0);
   const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!at) inputRef.current?.focus();
+    // 처음 열 때만 — 위치를 정한 뒤 「위치 변경」으로 돌아오면 키보드를 띄우지 않는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const searchRef = useRef<HTMLDivElement>(null);
   // ↓ 로 연 경우 목록이 그려진 뒤 첫 항목으로 포커스를 옮긴다
   const focusFirstRef = useRef(false);
@@ -76,13 +83,13 @@ export function LocationStep({ form }: LocationStepProps) {
         </label>
         {listOpen && <LocationSuggestions form={form} onPicked={() => setListOpen(false)} />}
       </div>
-      {at ? (
+      {form.mapCenter ? (
         <div
           className="relative isolate min-h-40 flex-1 border-t border-divider bg-map-bg"
           onPointerDown={() => setListOpen(false)}
         >
           <Map
-            defaultCenter={at}
+            defaultCenter={form.mapCenter}
             defaultZoom={PICKED_ZOOM}
             gestureHandling="greedy"
             // 화살표 키 이동은 끌기(dragstart)로 잡히지 않아 핀으로 되돌아간다. 키보드로는 위 검색으로 위치를 정한다
@@ -93,15 +100,20 @@ export function LocationStep({ form }: LocationStepProps) {
           >
             <CenterSync at={at} onMove={form.moveTo} />
           </Map>
-          {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울 */}
+          {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울. 위치를 정하기 전엔 흐리게 */}
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full"
+            className={cn(
+              "pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full",
+              !at && "opacity-40",
+            )}
           >
             <span className="block size-7.5 -rotate-45 rounded-[50%_50%_50%_0] border-2 border-white bg-primary shadow-[0_2px_6px_rgba(0,0,0,.3)]" />
           </span>
           <span className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex h-7.5 items-center justify-center rounded-button bg-white/95 text-xs font-semibold text-ink-700">
-            지도를 움직여 핀 위치를 맞춰 주세요
+            {at
+              ? "지도를 움직여 핀 위치를 맞춰 주세요"
+              : "장소를 검색하거나 지도를 움직여 위치를 정해 주세요"}
           </span>
         </div>
       ) : (

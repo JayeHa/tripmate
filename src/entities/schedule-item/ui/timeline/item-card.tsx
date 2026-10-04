@@ -1,3 +1,5 @@
+import { CircleAlert } from "lucide-react";
+
 import { cn } from "@/shared/lib/utils";
 
 import type { TimelineRow } from "../../lib/timeline";
@@ -59,7 +61,19 @@ export function ItemCard({ row, open, onToggle, onOpen }: ItemCardProps) {
       {row.meta && <p className={cn("text-sm text-ink-400", row.isMeal && "pr-19")}>{row.meta}</p>}
       <AlternativesLine alternatives={row.alternatives} />
       <LinkChips links={row.links} />
-      <MemoSection notes={row.notes} hours={row.hours} open={open} onToggle={onToggle} />
+      {/* 그날 휴무는 메모를 접어도 보이게 칩으로 — 펼친 메모 칸의 「운영 …」 은 영업하는 날만 */}
+      {row.hoursOff && (
+        <p className="relative inline-flex h-6 items-center gap-1 self-start rounded-pill-sm bg-destructive-soft px-2 text-xs font-extrabold text-destructive">
+          <CircleAlert className="size-3.25" strokeWidth={2.4} />
+          {row.hours}
+        </p>
+      )}
+      <MemoSection
+        notes={row.notes}
+        hours={row.hoursOff ? null : row.hours}
+        open={open}
+        onToggle={onToggle}
+      />
     </div>
   );
 }

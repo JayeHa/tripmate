@@ -14,7 +14,7 @@ import { LocationStep } from "./location-step";
 type PlaceFormDialogProps = {
   tripId: string;
   dayIndex: number;
-  /** 검색 범위 · 처음 핀 위치 · 현지어 주소 · 「도쿄 장소」 안내의 도시. 없으면 제한 없이 찾고 고르기 전엔 지도가 없다 */
+  /** 검색 범위 · 처음 지도 중심 · 현지어 주소 · 「도쿄 장소」 안내의 도시. 없으면 제한 없이 찾고 고르기 전엔 지도가 없다 */
   city: (SearchCity & { name: string }) | null;
   /** 위치 검색칸의 처음 값(일정 추가 화면의 검색어) */
   initialQuery: string;

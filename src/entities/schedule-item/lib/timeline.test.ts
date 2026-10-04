@@ -72,6 +72,7 @@ function item(patch: ItemPatch): ScheduleItem {
       review_count,
       wait: null,
       hours,
+      hours_week: null,
       gmap_url,
       links,
       created_at: "",
@@ -153,17 +154,18 @@ describe("buildTimeline", () => {
     ]);
     expect(row.meta).toBe("음식점 · ★ 4.2 (1,355) · 에도마에 텐동");
     expect(row.isMeal).toBe(true);
-    expect(row.emoji).toBe("🍜");
+    // 아이콘을 고르지 않았으면 카테고리 기본 아이콘을 두지 않는다
+    expect(row.emoji).toBeNull();
   });
 
-  it("이모지는 사용자 입력이 먼저, 빈 문자열이면 숨긴다. place 가 아니면 기본값이 없다", () => {
+  it("이모지는 사용자가 고른 것만, 빈 문자열이면 숨긴다. 카테고리 기본 아이콘으로 채우지 않는다", () => {
     const rows = buildTimeline([
       item({ category: "food", emoji: "🍣" }),
       item({ category: "food", emoji: "" }),
       item({}),
       item({ kind: "note" }),
     ]);
-    expect(rows.map((r) => r.emoji)).toEqual(["🍣", null, "📍", null]);
+    expect(rows.map((r) => r.emoji)).toEqual(["🍣", null, null, null]);
   });
 
   it("잘못된 값은 버린다: 모르는 상태·카테고리, 모양이 틀린 링크·대체 장소", () => {
@@ -203,6 +205,23 @@ describe("buildTimeline", () => {
       { ...base, links: [{ title: "티켓", url: "https://t.example" }] },
     ]);
     expect(row.links.map((l) => l.title)).toEqual(["구글맵", "티켓", "공식"]);
+  });
+
+  it("요일별 운영시간은 그날 요일 값만, 휴무면 hoursOff", () => {
+    const base = item({ hours: "10:00–20:00" });
+    const week = {
+      ...base,
+      place: { ...base.place!, hours_week: { mon: "11:00–22:00", sun: null } },
+    };
+    expect(buildTimeline([week], [], 1)[0]).toMatchObject({
+      hours: "월 11:00–22:00",
+      hoursOff: false,
+    });
+    expect(buildTimeline([week], [], 0)[0]).toMatchObject({ hours: "일요일 휴무", hoursOff: true });
+    expect(buildTimeline([base], [], 0)[0]).toMatchObject({
+      hours: "10:00–20:00",
+      hoursOff: false,
+    });
   });
 
   it("메모는 줄 단위 노트, 시각은 HH:mm", () => {

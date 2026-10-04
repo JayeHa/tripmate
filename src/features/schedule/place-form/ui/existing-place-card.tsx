@@ -1,10 +1,4 @@
-import {
-  CATEGORY_EMOJI,
-  CATEGORY_LABEL,
-  DEFAULT_PLACE_EMOJI,
-  type Place,
-  PLACE_CATEGORIES,
-} from "@/entities/schedule-item";
+import { CATEGORY_LABEL, type Place, PLACE_CATEGORIES } from "@/entities/schedule-item";
 
 type ExistingPlaceCardProps = { place: Place };
 
@@ -27,9 +21,11 @@ export function ExistingPlaceCard({ place }: ExistingPlaceCardProps) {
         이미 저장된 장소예요. 이 장소를 쓸까요?
       </span>
       <div className="flex items-center gap-2.5">
-        <span className="text-[22px]/none" aria-hidden="true">
-          {place.emoji ?? (category ? CATEGORY_EMOJI[category] : DEFAULT_PLACE_EMOJI)}
-        </span>
+        {place.emoji && (
+          <span className="text-[22px]/none" aria-hidden="true">
+            {place.emoji}
+          </span>
+        )}
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="truncate text-[15px] font-bold text-ink-900">{place.name}</span>
           {meta && <span className="truncate text-xs text-ink-400">{meta}</span>}

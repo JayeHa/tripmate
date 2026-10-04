@@ -1,11 +1,10 @@
+import { hoursOnDay } from "../model/hours";
 import { type Move, MOVE_MODE_LABEL, moveKey, type MoveMode, moveModeOf } from "../model/move";
 import {
   type Alternative,
   alternativesOf,
-  CATEGORY_EMOJI,
   CATEGORY_LABEL,
   categoryOf,
-  DEFAULT_PLACE_EMOJI,
   isHttpUrl,
   isMappedPlace,
   itemCoords,
@@ -53,7 +52,10 @@ export type TimelineRow = {
   leg: TimelineLeg | null;
   /** memo 의 줄들. 펼치면 `·` 목록으로 보인다 */
   notes: string[];
+  /** 그날의 운영시간(요일별이면 그 요일 값, 「일 10:00–22:00」). 펼친 메모 칸에 「운영 …」 으로 */
   hours: string | null;
+  /** 그날 휴무 — 카드에 경고 칩으로(메모를 접어도 보인다) */
+  hoursOff: boolean;
   links: TimelineLink[];
   alternatives: Alternative[];
 };
@@ -61,14 +63,11 @@ export type TimelineRow = {
 type Located = { lat: number; lng: number };
 
 /**
- * 제목 앞 이모지. 이 일정에서 바꾼 아이콘 → 장소의 기본 아이콘 → 카테고리 기본값 순.
- * 빈 문자열로 바꿔 두면 이모지를 숨긴다.
+ * 제목 앞 이모지. 이 일정에서 바꾼 아이콘 → 장소의 아이콘 순이고, 둘 다 없으면 두지 않는다
+ * (카테고리 기본 아이콘으로 채우지 않는다 — 고른 사람만 아이콘을 단다). 빈 문자열로 바꿔 두면 숨긴다.
  */
-function emojiOf(item: ScheduleItem, kind: ItemKind, category: PlaceCategory | null) {
-  const chosen = item.emoji ?? item.place?.emoji;
-  if (chosen != null) return chosen || null;
-  if (kind !== "place") return null;
-  return category ? CATEGORY_EMOJI[category] : DEFAULT_PLACE_EMOJI;
+function emojiOf(item: ScheduleItem) {
+  return (item.emoji ?? item.place?.emoji) || null;
 }
 
 /** place 는 「음식점 · ★ 4.7 (1,355) · 설명」(장소 정보), 나머지는 일정의 설명만 */
@@ -132,8 +131,21 @@ function legOf(
   };
 }
 
-/** 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다 */
-export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): TimelineRow[] {
+/** 그날의 운영시간 칸(hours · hoursOff). 장소가 없거나 그날 값을 모르면 비어 있다 */
+function hoursOf(item: ScheduleItem, dow: number | null): Pick<TimelineRow, "hours" | "hoursOff"> {
+  const day = item.place ? hoursOnDay(item.place, dow) : null;
+  return { hours: day?.text ?? null, hoursOff: day?.off ?? false };
+}
+
+/**
+ * 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다.
+ * dow 는 그날의 요일(Date.getDay(), 0 = 일요일) — 요일별 운영시간에서 그날 값을 고른다. 모르면 null
+ */
+export function buildTimeline(
+  items: ScheduleItem[],
+  moves: Move[] = [],
+  dow: number | null = null,
+): TimelineRow[] {
   const numbers = placeNumbers(items);
   const moveByPair = new Map(moves.map((m) => [moveKey(m.from_item_id, m.to_item_id), m]));
   let prev: { item: ScheduleItem; at: Located } | null = null;
@@ -157,12 +169,12 @@ export function buildTimeline(items: ScheduleItem[], moves: Move[] = []): Timeli
       time: item.start_time?.slice(0, 5) ?? null,
       status: statusOf(item),
       category,
-      emoji: emojiOf(item, kind, category),
+      emoji: emojiOf(item),
       meta: metaOf(item, kind, category),
       isMeal: kind === "place" && category === "food",
       leg,
       notes: notesOf(item.memo),
-      hours: item.place?.hours ?? null,
+      ...hoursOf(item, dow),
       links: linksFor(item),
       alternatives: alternativesOf(item),
     };
