@@ -31,7 +31,7 @@ export function AddScheduleFooter({ state }: AddScheduleFooterProps) {
       <Button
         size="lg"
         className="h-13 w-full text-base font-bold"
-        disabled={count === 0 || state.submitting}
+        disabled={count === 0 || state.submitting || state.resolving}
         onClick={state.submit}
       >
         {count ? `day ${state.dayIndex + 1}에 ${count}곳 추가` : "장소를 선택하세요"}

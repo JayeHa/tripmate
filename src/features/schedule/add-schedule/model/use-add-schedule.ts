@@ -56,8 +56,10 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
   const [chosenCityId, setCityId] = useState<string | null>(null);
   const [chosen, setChosen] = useState<Chosen[]>([]);
   const [resolveError, setResolveError] = useState<string | null>(null);
-  // 구글 결과의 상세를 받는 중인 키. 받는 동안 같은 결과를 다시 눌러도 한 번만 받는다
+  // 구글 결과의 상세를 받는 중인 구글 id. ref 는 같은 결과를 다시 눌러도 한 번만 받게(렌더 전에도),
+  // state 는 그 줄의 로딩 표시 · CTA 비활성에 쓴다 — 받는 동안 담으면 방금 고른 곳이 빠진다
   const resolving = useRef(new Set<string>());
+  const [resolvingIds, setResolvingIds] = useState<ReadonlySet<string>>(new Set());
 
   // 고르지 않았으면 그날 첫 장소에서 가까운 도시
   const dayAnchor =
@@ -87,6 +89,7 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
       return;
     }
     resolving.current.add(googleId);
+    setResolvingIds(new Set(resolving.current));
     setResolveError(null);
     try {
       const picked = await suggestions.resolve(s);
@@ -95,6 +98,7 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
       setResolveError(e instanceof Error ? e.message : "장소 정보를 가져오지 못했어요");
     } finally {
       resolving.current.delete(googleId);
+      setResolvingIds(new Set(resolving.current));
     }
   }
 
@@ -112,7 +116,7 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
 
   /** 고른 곳을 그날 끝에 한 번에 담는다 */
   function submit() {
-    if (chosen.length === 0 || add.isPending) return;
+    if (chosen.length === 0 || add.isPending || resolving.current.size > 0) return;
     add.mutate({ dayIndex, entries: chosen.map((c) => c.entry) }, { onSuccess: onDone });
   }
 
@@ -135,6 +139,10 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
     inTrip,
     chosen,
     isChosen: (key: string) => chosen.some((c) => c.key === key),
+    /** 이 구글 결과의 상세를 받는 중인지 */
+    isResolving: (googleId: string) => resolvingIds.has(googleId),
+    /** 상세를 받는 중인 결과가 있는지. 그동안은 담지 않는다 */
+    resolving: resolvingIds.size > 0,
     toggleSaved,
     toggleSuggestion,
     chooseName,

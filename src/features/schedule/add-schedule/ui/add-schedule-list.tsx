@@ -79,6 +79,7 @@ function SuggestionRows({ state }: AddScheduleListProps) {
         meta={p.secondaryText?.text ?? null}
         inTrip={state.inTrip.googleIds.has(p.placeId)}
         chosen={state.isChosen(`google:${p.placeId}`)}
+        busy={state.isResolving(p.placeId)}
         onToggle={() => void state.toggleSuggestion(sug)}
       />
     );

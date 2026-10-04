@@ -3,6 +3,7 @@ import {
   Check,
   Coffee,
   Landmark,
+  Loader2,
   type LucideIcon,
   MapPin,
   Plane,
@@ -35,6 +36,8 @@ type PlaceRowProps = {
   /** 여행 일정에 이미 있는 장소(날짜 무관) */
   inTrip: boolean;
   chosen: boolean;
+  /** 고르는 중(상세를 받는 중). 오른쪽에 로딩 표시 */
+  busy?: boolean;
   onToggle: () => void;
 };
 
@@ -50,6 +53,7 @@ export function PlaceRow({
   description,
   inTrip,
   chosen,
+  busy,
   onToggle,
 }: PlaceRowProps) {
   const thumb = category ? CATEGORY_THUMB[category] : UNKNOWN_THUMB;
@@ -90,11 +94,17 @@ export function PlaceRow({
           </span>
         )}
       </span>
-      {chosen ? (
+      {busy && (
+        <span className="flex size-8 shrink-0 items-center justify-center text-ink-400">
+          <Loader2 className="size-4.5 animate-spin" aria-label="불러오는 중" />
+        </span>
+      )}
+      {!busy && chosen && (
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
           <Check className="size-4.5" strokeWidth={3} />
         </span>
-      ) : (
+      )}
+      {!busy && !chosen && (
         <span className="flex h-8 shrink-0 items-center rounded-full border border-line-strong px-3 text-[13px] font-bold text-ink-700">
           선택
         </span>
