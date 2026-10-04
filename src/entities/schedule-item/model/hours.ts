@@ -19,18 +19,25 @@ export const WEEK_DAY_LABEL = {
 /** 요일별 운영시간. 값이 null 이면 그 요일 휴무, 키가 없으면 모름(places.hours_week) */
 export type WeekHours = Partial<Record<WeekDay, string | null>>;
 
-const weekHoursSchema = z.partialRecord(z.enum(WEEK_DAYS), z.string().nullable());
+const dayValueSchema = z.string().nullable();
 
 /** Date.getDay()(0 = 일요일) → 요일 키 */
 export function weekDayOf(dow: number): WeekDay {
   return WEEK_DAYS[(dow + 6) % 7];
 }
 
-/** DB 의 요일별 운영시간. 모양이 틀렸거나 요일 값이 하나도 없으면 null(「매일 같음」 을 본다) */
+/**
+ * DB 의 요일별 운영시간. 아는 요일 키(mon~sun)의 값(문자열 · null)만 골라 담고 나머지 키 · 틀린 값은 버린다 —
+ * 하나가 틀렸다고 요일별 전체가 조용히 사라지지 않게(DB check 는 객체인지만 본다). 남은 요일이 없으면 null(「매일 같음」 을 본다)
+ */
 export function weekHoursOf(value: Json | null | undefined): WeekHours | null {
-  const parsed = weekHoursSchema.safeParse(value);
-  if (!parsed.success || Object.keys(parsed.data).length === 0) return null;
-  return parsed.data;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const week: WeekHours = {};
+  for (const day of WEEK_DAYS) {
+    const parsed = dayValueSchema.safeParse(value[day]);
+    if (day in value && parsed.success) week[day] = parsed.data;
+  }
+  return Object.keys(week).length > 0 ? week : null;
 }
 
 /** 그날의 운영시간 한 줄. off 면 휴무(카드에 경고 칩) */

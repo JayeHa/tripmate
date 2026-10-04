@@ -15,6 +15,13 @@ describe("weekDayOf", () => {
 });
 
 describe("weekHoursOf", () => {
+  it("모르는 키 · 틀린 값은 버리고 아는 요일만 남긴다", () => {
+    expect(weekHoursOf({ mon: "11:00–22:00", Mon: "x", holiday: "y", tue: 3, sun: null })).toEqual({
+      mon: "11:00–22:00",
+      sun: null,
+    });
+  });
+
   it("요일 값이 하나도 없거나 모양이 틀리면 null", () => {
     expect(weekHoursOf({})).toBeNull();
     expect(weekHoursOf(null)).toBeNull();
