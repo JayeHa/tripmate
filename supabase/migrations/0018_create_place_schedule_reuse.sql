@@ -2,7 +2,7 @@
 --
 -- 위치 검색으로 고른 구글 장소를 내가 이미 갖고 있으면 그 장소를 쓴다.
 -- 0017 은 늘 새로 insert 해서 places_owner_google_key(created_by, google_place_id) 에 걸려 담기가 실패했다.
--- 폼에 적은 칸은 그 장소에 덮어쓴다 — 빈 칸(null · 빈 링크 목록)은 기존 값을 둔다. 이름 · 카테고리는 폼에 늘 값이 있어 늘 덮어쓴다.
+-- 폼에 적은 칸은 그 장소에 덮어쓴다 — 빈 칸(null · 빈 링크 목록)은 기존 값을 둔다. 이름은 늘 있어 늘 덮어쓰고, 카테고리는 폼이 비워 시작해 고를 때만 덮어쓴다.
 -- 장소는 만든 사람만 고치므로(places_update_owner) 내 장소를 고치는 것이고, 그 장소를 쓰는 다른 일정에도 같이 보인다.
 
 create or replace function public.create_place_schedule(p_trip uuid, p_day int, p_place jsonb, p_item jsonb)

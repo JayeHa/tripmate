@@ -74,6 +74,11 @@ describe("toNewPlace", () => {
     });
   });
 
+  it("카테고리는 비어 시작하고, 고르지 않으면 null 로 보낸다(기존 장소의 값을 덮지 않게)", () => {
+    expect(blankPlaceForm("x").category).toBeNull();
+    expect(toNewPlace(form({}))).toMatchObject({ ok: true, value: { category: null } });
+  });
+
   it("이름이 없거나 링크 주소가 http(s) 가 아니면 사용자가 고칠 수 있는 문구를 돌려준다", () => {
     expect(toNewPlace(form({ name: " " }))).toEqual({
       ok: false,

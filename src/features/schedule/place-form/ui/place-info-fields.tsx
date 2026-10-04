@@ -51,10 +51,14 @@ export function PlaceInfoFields({ form, cityName }: PlaceInfoFieldsProps) {
           />
         </div>
       </Field>
-      <Field label="카테고리">
+      <Field label="카테고리" optional>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
-            <ChipButton key={c} on={v.category === c} onClick={() => set("category", c)}>
+            <ChipButton
+              key={c}
+              on={v.category === c}
+              onClick={() => set("category", v.category === c ? null : c)}
+            >
               {CATEGORY_LABEL[c]}
             </ChipButton>
           ))}

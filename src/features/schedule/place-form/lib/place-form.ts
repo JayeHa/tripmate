@@ -12,7 +12,11 @@ export type LatLng = { lat: number; lng: number };
 export type PlaceFormValues = {
   emoji: string;
   name: string;
-  category: PlaceCategory;
+  /**
+   * 고르지 않으면 null. 이미 가진 구글 장소를 다시 담을 때 기존 카테고리를 기본값으로 덮지 않게 비워 시작한다
+   * (create_place_schedule 은 빈 칸을 기존 값으로 둔다). 새 장소면 카테고리 없이 저장된다
+   */
+  category: PlaceCategory | null;
   /** 저장할 위치(지도 중앙 핀). 처음엔 비어 있고, 검색으로 고르거나 지도를 움직이면 채운다 — 이름만 적고 담으면 위치 없는 장소 */
   at: LatLng | null;
   /** 위치 검색으로 고른 구글 장소(지도를 움직이면 지운다 — 고른 곳과 핀이 달라져서) */
@@ -31,7 +35,7 @@ export function blankPlaceForm(name: string): PlaceFormValues {
   return {
     emoji: "",
     name,
-    category: "sight",
+    category: null,
     at: null,
     google: null,
     hours: "",

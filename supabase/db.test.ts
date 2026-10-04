@@ -706,6 +706,16 @@ describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
       `select count(*)::int n from public.places where created_by = '${A}' and google_place_id = 'g-ichiran'`,
     );
     expect(count.rows[0].n).toBe(1);
+
+    // 카테고리를 고르지 않고 다시 담으면(폼 기본값 null) 기존 카테고리를 둔다
+    await db.query(`select public.create_place_schedule($1, 0, $2, '{}')`, [
+      id,
+      JSON.stringify({ name: "이치란", category: null, google_place_id: "g-ichiran" }),
+    ]);
+    const kept = await db.query<{ category: string }>(
+      `select category from public.places where created_by = '${A}' and google_place_id = 'g-ichiran'`,
+    );
+    expect(kept.rows[0].category).toBe("food");
   });
 });
 
