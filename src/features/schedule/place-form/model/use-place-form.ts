@@ -7,6 +7,7 @@ import { type SearchCity, usePlaceSuggestions } from "@/shared/lib/google-places
 
 import {
   blankPlaceForm,
+  nameAfterPick,
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
@@ -41,7 +42,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
     setValues((v) => ({ ...v, [key]: value }));
   }
 
-  /** 위치 검색 결과를 고른다. 핀을 그곳으로 옮기고 구글 장소로 기억한다 */
+  /** 위치 검색 결과를 고른다. 핀을 그곳으로 옮기고 구글 장소로 기억한다. 이름이 검색어 그대로면 그 장소 이름으로 */
   async function pickLocation(s: google.maps.places.AutocompleteSuggestion) {
     try {
       const picked = await suggestions.resolve(s);
@@ -49,6 +50,7 @@ export function usePlaceForm({ tripId, dayIndex, city, initialName, onSaved }: P
       const at = { lat: picked.lat, lng: picked.lng };
       setValues((v) => ({
         ...v,
+        name: nameAfterPick(v.name, initialName, picked.name),
         at,
         google: picked.google_place_id
           ? { id: picked.google_place_id, address: picked.address }

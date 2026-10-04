@@ -56,6 +56,16 @@ export function samePoint(a: LatLng, b: LatLng): boolean {
   return Math.abs(a.lat - b.lat) < 1e-6 && Math.abs(a.lng - b.lng) < 1e-6;
 }
 
+/**
+ * 위치 검색으로 구글 장소를 고른 뒤의 이름. 비었거나 처음 값(일정 추가의 검색어) 그대로면 고른 장소 이름으로 바꾸고,
+ * 사용자가 고쳐 쓴 이름은 둔다. 이미 가진 장소를 다시 담으면 이름을 덮어쓰므로(create_place_schedule),
+ * 검색어 조각(「이치」)이 그 장소를 쓰는 모든 여행의 이름이 되지 않게 한다
+ */
+export function nameAfterPick(current: string, initial: string, picked: string): string {
+  const name = current.trim();
+  return !name || name === initial.trim() ? picked : current;
+}
+
 /** 별점 입력: 숫자와 점만, 세 글자까지, 5 를 넘으면 5 */
 export function normalizeRating(input: string): string {
   const v = input.replace(/[^\d.]/g, "").slice(0, 3);

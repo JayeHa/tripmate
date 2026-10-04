@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   blankPlaceForm,
+  nameAfterPick,
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
@@ -26,6 +27,14 @@ describe("입력 정리", () => {
     expect(normalizeReviews("1355")).toBe("1,355");
     expect(normalizeReviews("12a3")).toBe("123");
     expect(normalizeReviews("")).toBe("");
+  });
+});
+
+describe("nameAfterPick", () => {
+  it("비었거나 검색어 그대로면 고른 장소 이름, 고쳐 쓴 이름은 둔다", () => {
+    expect(nameAfterPick("이치", "이치", "이치란 시부야")).toBe("이치란 시부야");
+    expect(nameAfterPick(" ", "이치", "이치란 시부야")).toBe("이치란 시부야");
+    expect(nameAfterPick("단골 라멘집", "이치", "이치란 시부야")).toBe("단골 라멘집");
   });
 });
 
