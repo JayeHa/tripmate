@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   blankPlaceForm,
-  nameAfterPick,
   normalizeRating,
   normalizeReviews,
   type PlaceFormValues,
@@ -30,25 +29,6 @@ describe("입력 정리", () => {
     expect(normalizeReviews("1355")).toBe("1,355");
     expect(normalizeReviews("12a3")).toBe("123");
     expect(normalizeReviews("")).toBe("");
-  });
-});
-
-describe("nameAfterPick", () => {
-  const pick = (name: string, autoName: string, picked: string) =>
-    nameAfterPick({ name, autoName }, picked).name;
-
-  it("비었거나 검색어 그대로면 고른 장소 이름, 고쳐 쓴 이름은 둔다", () => {
-    expect(pick("이치", "이치", "이치란 시부야")).toBe("이치란 시부야");
-    expect(pick(" ", "이치", "이치란 시부야")).toBe("이치란 시부야");
-    expect(pick("단골 라멘집", "이치", "이치란 시부야")).toBe("단골 라멘집");
-  });
-
-  it("A 를 고른 뒤 B 를 다시 고르면 B 의 이름, A 이름을 고쳐 썼으면 그대로", () => {
-    const afterA = nameAfterPick({ name: "이치", autoName: "이치" }, "이치란 시부야");
-    expect(nameAfterPick(afterA, "이치란 신주쿠").name).toBe("이치란 신주쿠");
-    expect(nameAfterPick({ ...afterA, name: "이치란(본점)" }, "이치란 신주쿠").name).toBe(
-      "이치란(본점)",
-    );
   });
 });
 

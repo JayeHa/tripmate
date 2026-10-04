@@ -62,7 +62,8 @@
 
 - **세션 토큰**: 검색 여러 번 + 고르기(상세 조회) 1번이 세션 1회로 묶인다. 고르면 세션이 끝나고 다음 입력부터 새 세션이다
 - 한 검색에서 **여러 곳을 고르면** 두 번째부터는 토큰 없이 장소 id 로 상세를 조회한다(따로 과금). **끝난 세션의 토큰을 다시 쓰면 그 세션이 무효가 되어 앞선 자동완성 요청까지 토큰 없이 과금된다**(구글 문서 <https://developers.google.com/maps/documentation/javascript/place-autocomplete-data>, 2026-10-04 확인). 그래서 같은 결과 목록의 토큰을 두 번 쓰지 않는다(`shared/lib/google-places/use-place-suggestions.ts`). 무료 한도 관리는 #35
-- 상세 조회 필드는 `id · displayName · location · formattedAddress` 만 받는다(필드가 많을수록 비싸다)
+- 상세 조회 필드는 `id · displayName · location · formattedAddress · primaryType · types` 만 받는다(필드가 많을수록 비싸다). 이름(`displayName`)이 Place Details Pro 등급이라 같은 등급의 `primaryType`, 더 낮은 `types` 는 값이 그대로다(구글 문서 <https://developers.google.com/maps/documentation/javascript/place-class-data-fields>, 2026-10-05 확인). 운영시간 · 웹사이트 · 별점은 Enterprise 등급이라 받지 않는다
+- **장소 입력 ② 자동 채움** — 위치 검색으로 구글 장소를 고르면 이름 · 카테고리(구글 장소 종류 → 우리 카테고리, `categoryFromGoogle`) · 구글맵 링크를 채운다. 구글맵 링크는 장소 id 로 지도 URL 을 직접 만든다(호출 · 과금 없음, 장소 id 는 저장 가능). 칸이 비었거나 화면이 채운 값 그대로일 때만 바꾸고, 지도를 끌어 구글 장소 연결이 끊기면 자동으로 채운 링크는 지운다(`lib/google-autofill.ts`)
 - 저장하는 것은 이름 · 좌표 · 주소 · 구글 장소 id 뿐이다. **구글 평점 · 리뷰 수는 약관상 저장할 수 없다** — 별점은 사용자가 직접 적는다(#34)
 - 일정 카드의 거리 · 시간은 Routes API 대신 직선거리로 계산한다(결정 기록: `library-policy.md`)
 - **역지오코딩**: 지도가 멈출 때마다 최대 2회(한국어 · 현지어). 끌기 · 확대 중에는 묻지 않고, 같은 좌표(약 10cm 안)는 다시 묻지 않는다. 한국 · 목록 밖 나라는 1회
