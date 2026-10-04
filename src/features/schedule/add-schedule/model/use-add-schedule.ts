@@ -60,6 +60,8 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
   // state 는 그 줄의 로딩 표시 · CTA 비활성에 쓴다 — 받는 동안 담으면 방금 고른 곳이 빠진다
   const resolving = useRef(new Set<string>());
   const [resolvingIds, setResolvingIds] = useState<ReadonlySet<string>>(new Set());
+  // 담기 요청을 보낸 순간부터 끝날 때까지 다시 못 보내게. isPending 은 다음 렌더에야 true 라 빠른 두 번 탭을 못 막는다
+  const submittingRef = useRef(false);
 
   // 고르지 않았으면 그날 첫 장소에서 가까운 도시
   const dayAnchor =
@@ -116,8 +118,17 @@ export function useAddSchedule({ tripId, initialDay, items, onDone }: AddSchedul
 
   /** 고른 곳을 그날 끝에 한 번에 담는다 */
   function submit() {
-    if (chosen.length === 0 || add.isPending || resolving.current.size > 0) return;
-    add.mutate({ dayIndex, entries: chosen.map((c) => c.entry) }, { onSuccess: onDone });
+    if (chosen.length === 0 || submittingRef.current || resolving.current.size > 0) return;
+    submittingRef.current = true;
+    add.mutate(
+      { dayIndex, entries: chosen.map((c) => c.entry) },
+      {
+        onSuccess: onDone,
+        onSettled: () => {
+          submittingRef.current = false;
+        },
+      },
+    );
   }
 
   return {
