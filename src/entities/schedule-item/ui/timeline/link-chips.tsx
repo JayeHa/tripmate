@@ -1,5 +1,7 @@
 import { Link as LinkIcon, MapPin } from "lucide-react";
 
+import { withKeys } from "@/shared/lib/keys";
+
 import type { TimelineLink } from "../../lib/timeline";
 
 type LinkChipsProps = { links: TimelineLink[] };
@@ -9,9 +11,9 @@ export function LinkChips({ links }: LinkChipsProps) {
   if (links.length === 0) return null;
   return (
     <div className="mt-0.5 flex flex-wrap gap-1.5">
-      {links.map((link) => (
+      {withKeys(links, (l) => `${l.title}:${l.url}`).map(({ key, value: link }) => (
         <a
-          key={`${link.title}:${link.url}`}
+          key={key}
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"

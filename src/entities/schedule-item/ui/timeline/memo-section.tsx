@@ -1,3 +1,5 @@
+import { withKeys } from "@/shared/lib/keys";
+
 type MemoSectionProps = {
   notes: string[];
   hours: string | null;
@@ -15,8 +17,8 @@ export function MemoSection({ notes, hours, open, onToggle }: MemoSectionProps) 
     <>
       {open && (
         <div className="mt-1.5 flex flex-col gap-1.5 border-t border-divider pt-3">
-          {notes.map((note) => (
-            <p key={note} className="flex gap-1.5 text-sm/normal text-ink-600">
+          {withKeys(notes, (note) => note).map(({ key, value: note }) => (
+            <p key={key} className="flex gap-1.5 text-sm/normal text-ink-600">
               <span className="text-[#bbb]">·</span>
               <span className="text-pretty">{note}</span>
             </p>
