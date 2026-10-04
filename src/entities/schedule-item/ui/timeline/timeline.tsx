@@ -34,7 +34,8 @@ export function Timeline({
 }: TimelineProps) {
   return (
     // isolate: 강조 배경(-z-10)을 이 목록 안에 가둬 세로선 아래 · 페이지 배경 위에 깐다
-    <ol className="relative isolate pb-6">
+    // pt-2: 강조 배경이 행 위로 8px 더 나오므로, 첫 행의 배경이 위 day 헤더에 닿지 않게 비운다
+    <ol className="relative isolate pt-2 pb-6">
       <span aria-hidden="true" className="absolute inset-y-0 left-8.75 w-0.5 bg-divider" />
       {rows.map((row) => {
         const focused = focusId === row.item.id;
@@ -47,10 +48,11 @@ export function Timeline({
               data-focus-id={row.num != null ? row.item.id : undefined}
               className="relative flex pr-5 pb-3"
             >
+              {/* 강조 배경. 카드 위에 붙지 않게 행보다 8px 위에서 시작한다(아래는 행의 pb-3 이 비운다) */}
               <span
                 aria-hidden="true"
                 className={cn(
-                  "absolute inset-0 -z-10 bg-row-focus transition-opacity duration-250",
+                  "absolute inset-x-0 -top-2 bottom-0 -z-10 bg-row-focus transition-opacity duration-250",
                   !focused && "opacity-0",
                 )}
               />
