@@ -2,7 +2,7 @@ import { CalendarDays, House, NotebookPen, Receipt, Settings } from "lucide-reac
 
 /**
  * 여행 안 5개 탭. 모바일 하단 탭과 PC 헤더가 같은 목록을 쓴다.
- * 지도는 일정 하위, 정산은 가계부 하위라 탭에 없다. (design_handoff_tripmate/README.md · 앱 흐름 · 17)
+ * 지도는 일정 하위, 정산은 가계부 하위라 탭에 없다.
  */
 export const TRIP_TABS = [
   { key: "home", label: "홈", icon: House },

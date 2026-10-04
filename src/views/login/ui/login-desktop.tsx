@@ -5,7 +5,7 @@ import { Wordmark } from "@/shared/ui/wordmark";
 import { LoginIntro } from "./login-intro";
 import { TermsNotice } from "./terms-notice";
 
-/** 시안 7b. 상단 64 바와 회색 배경 위 420px 카드. */
+/** PC 로그인. 상단 64 바와 회색 배경 위 420px 카드. */
 export function LoginDesktop() {
   return (
     <div className="hidden flex-1 flex-col lg:flex">

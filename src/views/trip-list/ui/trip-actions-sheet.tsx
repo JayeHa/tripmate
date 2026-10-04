@@ -16,7 +16,7 @@ type Props = {
   onDelete: (trip: Trip) => void;
 };
 
-/** 여행 행의 `···` 메뉴 (시안 5a). */
+/** 여행 행의 `···` 메뉴. */
 export function TripActionsSheet({ trip, canDelete, onClose, onEdit, onDelete }: Props) {
   return (
     <Sheet open={Boolean(trip)} onOpenChange={(open) => !open && onClose()}>

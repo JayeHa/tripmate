@@ -23,7 +23,7 @@ export function CreateTripCard() {
 
 type CreateTripTileProps = { onClick: () => void };
 
-/** PC 다가오는 여행 그리드의 마지막 칸 (시안 6a). 누르면 이 화면 위에 만들기 모달을 연다 */
+/** PC 다가오는 여행 그리드의 마지막 칸. 누르면 이 화면 위에 만들기 모달을 연다 */
 export function CreateTripTile({ onClick }: CreateTripTileProps) {
   return (
     <button

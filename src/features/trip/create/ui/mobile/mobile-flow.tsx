@@ -9,7 +9,7 @@ type MobileFlowProps = {
   Title: TitleComponent;
 };
 
-/** 모바일 전체 화면 (시안 5b · 5c) */
+/** 모바일 전체 화면 */
 export function MobileFlow({ state, onClose, Title }: MobileFlowProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-white">

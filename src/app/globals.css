@@ -56,7 +56,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* ---- Tripmate design tokens (design_handoff_tripmate/design-system.md) ---- */
+  /* ---- Tripmate design tokens ---- */
   /* Ink: 디자인 시스템의 gray 스케일과 같은 이름을 쓴다 */
   --color-ink-900: #222222;
   --color-ink-800: #333333;

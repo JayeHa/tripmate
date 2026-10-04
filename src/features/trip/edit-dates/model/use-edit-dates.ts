@@ -13,7 +13,7 @@ import { type Shrink, shrinkOf } from "../lib/shrink";
 export type PendingMove = Shrink & { items: number; expenses: number };
 
 /**
- * 여행 기간 수정 (시안 5c 수정 모드). 기존 기간을 미리 골라 두고, 줄여서 사라지는 날에
+ * 여행 기간 수정. 기존 기간을 미리 골라 두고, 줄여서 사라지는 날에
  * 일정·지출이 있으면 마지막 날로 옮긴다고 확인받은 뒤 저장한다(update_trip_dates, 0009).
  */
 export function useEditDates(trip: Trip, onDone: () => void) {

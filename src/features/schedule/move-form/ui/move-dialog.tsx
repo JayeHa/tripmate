@@ -34,7 +34,7 @@ type MoveDialogProps = {
 };
 
 /**
- * 「이동 방법」 창 (README §19). 모바일 · PC 모두 가운데 400px.
+ * 「이동 방법」 창. 모바일 · PC 모두 가운데 400px.
  * 수단 칩은 하나만, 다시 누르면 해제. 상세는 60자. 둘 다 비우고 저장하면 지운다.
  */
 export function MoveDialog({ tripId, open, pair, onClose }: MoveDialogProps) {

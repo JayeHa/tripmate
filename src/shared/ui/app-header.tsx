@@ -17,7 +17,6 @@ type Props = {
 
 /**
  * 모바일 상단바. 높이 52, 좌우 18, 액션 간격 22.
- * (design_handoff_tripmate/design-system.md · components/navigation TopBar)
  */
 export function AppHeader({ title, subtitle, back, right, dot }: Props) {
   const router = useRouter();

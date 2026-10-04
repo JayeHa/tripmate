@@ -7,7 +7,7 @@ import { PcPickedChips } from "./pc-picked-chips";
 
 type PcFooterProps = { state: TripCreateState };
 
-/** PC 모달 바닥. 고른 도시 칩 + 단계별 CTA (시안 6b · 6c) */
+/** PC 모달 바닥. 고른 도시 칩 + 단계별 CTA */
 export function PcFooter({ state }: PcFooterProps) {
   const cityStep = state.step === "city";
   return (

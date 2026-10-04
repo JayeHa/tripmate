@@ -38,7 +38,7 @@ export function Weekdays({ className }: WeekdaysProps) {
   );
 }
 
-/** 모바일: 요일 머리 + 달을 세로로 잇고 기준 달로 스크롤해 둔다 (시안 5c) */
+/** 모바일: 요일 머리 + 달을 세로로 잇고 기준 달로 스크롤해 둔다 */
 export function MobileRangeCalendar({ months, cellsOf, onPick, focusIndex }: RangeCalendarProps) {
   const focusRef = useScrollIntoViewWhenVisible();
   return (
@@ -64,7 +64,7 @@ export function MobileRangeCalendar({ months, cellsOf, onPick, focusIndex }: Ran
 
 const NAV_BUTTON = "size-8 rounded-full border border-line text-ink-700 disabled:opacity-35";
 
-/** PC: 두 달 나란히, ◀▶ 로 넘기고 처음엔 기준 달부터 (시안 6c) */
+/** PC: 두 달 나란히, ◀▶ 로 넘기고 처음엔 기준 달부터 */
 export function PcRangeCalendar({ months, cellsOf, onPick, focusIndex }: RangeCalendarProps) {
   const last = months.length - 2;
   const [offset, setOffset] = useState(Math.min(focusIndex, last));

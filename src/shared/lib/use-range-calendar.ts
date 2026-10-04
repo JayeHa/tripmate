@@ -7,7 +7,7 @@ import { todayISO } from "./days";
 import { isHoliday } from "./holidays";
 
 /**
- * 고를 수 있는 달. 지난 여행도 기록할 수 있게 3년 전부터 1년 뒤까지 연다(시안 수정 모드와 같은 범위).
+ * 고를 수 있는 달. 지난 여행도 기록할 수 있게 3년 전부터 1년 뒤까지 연다.
  * 기준 달과 오늘이 멀어도(오래전 여행을 오늘 이후로 옮길 때) 둘 다 담는다.
  */
 const RANGE_PAST_MONTHS = 36;

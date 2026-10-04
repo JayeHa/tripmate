@@ -8,7 +8,7 @@ type LegLineProps = {
 };
 
 /**
- * 카드 사이의 길 (README §19). 1줄 `[거리 pill] 🚇 지하철`, 2줄 상세(최대 2줄, 수단 글자 아래 정렬).
+ * 카드 사이의 길. 1줄 `[거리 pill] 🚇 지하철`, 2줄 상세(최대 2줄, 수단 글자 아래 정렬).
  * 아무것도 적지 않았으면 pill 옆에 회색 「+ 이동 방법」.
  */
 export function LegLine({ leg, onEditMove }: LegLineProps) {

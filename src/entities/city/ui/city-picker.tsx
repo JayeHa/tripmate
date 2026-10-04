@@ -35,7 +35,7 @@ const CHIP_OFF: Record<Layout, string> = {
 };
 
 /**
- * 도시 다중 선택 (시안 5b · 6b). 해외/국내 탭 + 권역 칩 + 도시 목록.
+ * 도시 다중 선택. 해외/국내 탭 + 권역 칩 + 도시 목록.
  * 검색어가 있으면 탭·권역과 상관없이 전체에서 찾는다.
  */
 export function CityPicker({ catalog, query, selected, onToggle, layout }: Props) {
@@ -95,7 +95,7 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
     <div className="flex min-h-0 flex-1 flex-col">
       {!searching &&
         (pc ? (
-          // 탭 줄과 지역 칩 줄을 나눈다. 지역이 늘어도 잘리지 않게 칩은 줄바꿈한다 (시안 6b 갱신)
+          // 탭 줄과 지역 칩 줄을 나눈다. 지역이 늘어도 잘리지 않게 칩은 줄바꿈한다
           <>
             <div className="flex shrink-0 items-center gap-5 border-b border-surface-muted px-7 pt-3.5">
               {tabs}

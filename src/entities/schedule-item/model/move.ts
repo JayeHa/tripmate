@@ -1,6 +1,6 @@
 import type { Tables } from "@/shared/api/supabase/database.types";
 
-/** 장소 두 곳 사이의 이동 방법 (README §19). 이동은 일정 한 줄이 아니라 쌍에 붙는 기록이다 */
+/** 장소 두 곳 사이의 이동 방법. 이동은 일정 한 줄이 아니라 쌍에 붙는 기록이다 */
 export type Move = Tables<"moves">;
 
 export const MOVE_MODES = ["subway", "bus", "train", "taxi", "walk", "flight"] as const;

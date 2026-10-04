@@ -6,7 +6,7 @@ import { type Trip, useTrips } from "@/entities/trip";
 import type { DateRange, DateSelection } from "@/shared/lib/calendar";
 import { useRangeCalendar } from "@/shared/lib/use-range-calendar";
 
-/** 수정 달력. 자기 자신은 「다른 일정」에서 빼고, 이 여행의 출발 달부터 보인다 (시안 5c 수정 모드) */
+/** 수정 달력. 자기 자신은 「다른 일정」에서 빼고, 이 여행의 출발 달부터 보인다 */
 export function useEditCalendar(trip: Trip, selection: DateSelection) {
   const { data: trips } = useTrips();
   const others = useMemo<DateRange[]>(

@@ -18,7 +18,7 @@ type MobileDateStepProps = {
   Title: TitleComponent;
 };
 
-/** 모바일 날짜 단계 (시안 5c). 달력은 이번 달로 스크롤해 둔다 */
+/** 모바일 날짜 단계. 달력은 이번 달로 스크롤해 둔다 */
 export function MobileDateStep({ state, Title }: MobileDateStepProps) {
   const calendar = useCreateCalendar(state.selection);
   const names = state.picked.map((c) => c.name).join("·");

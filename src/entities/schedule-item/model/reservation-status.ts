@@ -1,6 +1,5 @@
 /**
  * 일정 아이템의 예약 상태. 세 가지뿐이고, 지정하지 않으면 「상태 없음」이다.
- * (design-system.md · 확정 이후 변경)
  */
 export const RESERVATION_STATUSES = ["ok", "wait", "opt"] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];

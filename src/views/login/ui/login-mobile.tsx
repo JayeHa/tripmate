@@ -4,7 +4,7 @@ import { GoogleSignInButton } from "@/features/auth/google-login";
 import { LoginIntro } from "./login-intro";
 import { TermsNotice } from "./terms-notice";
 
-/** 시안 7a. 세로 중앙에 카피, 하단에 버튼을 고정한다. */
+/** 모바일 로그인. 세로 중앙에 카피, 하단에 버튼을 고정한다. */
 export function LoginMobile() {
   return (
     <div className="flex flex-1 flex-col lg:hidden">

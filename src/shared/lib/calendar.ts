@@ -135,7 +135,7 @@ export function monthsFrom(from: string, count: number): [number, number][] {
 
 /**
  * 기간 선택 CTA. 무엇을 눌러야 하는지 알려 주다가, 다 고르면 기간과 완료 동작을 보인다
- * (시안 5c · 6c: 「2026.11.6 - 11.8 / 등록 완료」, 수정 모드는 「… / 수정 완료」).
+ * (예: 「2026.11.6 - 11.8 / 등록 완료」, 수정 모드는 「… / 수정 완료」).
  */
 export function rangeCtaLabel(selection: DateSelection, done: string) {
   if (!selection) return "출발일을 선택해 주세요";

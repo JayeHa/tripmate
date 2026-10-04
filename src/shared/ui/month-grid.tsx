@@ -2,7 +2,7 @@ import type { CalendarCell, CalendarDay } from "@/shared/lib/calendar";
 import { cn } from "@/shared/lib/utils";
 
 const SIZE = {
-  // 모바일 세로 스크롤 달력 (시안 5c)
+  // 모바일 세로 스크롤 달력
   lg: {
     cell: "h-[62px]",
     band: "top-1 h-[42px]",
@@ -11,7 +11,7 @@ const SIZE = {
     circle: "mt-1 size-[42px] text-[17px]",
     sub: "text-[11px]",
   },
-  // PC 두 달 나란히 (시안 6c)
+  // PC 두 달 나란히
   md: {
     cell: "h-[54px]",
     band: "top-[3px] h-[38px]",

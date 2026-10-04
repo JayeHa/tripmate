@@ -19,7 +19,7 @@ type MobileCityStepProps = {
   Title: TitleComponent;
 };
 
-/** 모바일 도시 단계 (시안 5b). 헤더에 검색, 아래에 트레이와 CTA */
+/** 모바일 도시 단계. 헤더에 검색, 아래에 트레이와 CTA */
 export function MobileCityStep({ state, onClose, Title }: MobileCityStepProps) {
   return (
     <>

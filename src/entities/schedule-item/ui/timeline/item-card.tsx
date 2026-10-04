@@ -20,7 +20,7 @@ type ItemCardProps = {
 };
 
 /**
- * place · flight · note 의 카드 (README §19).
+ * place · flight · note 의 카드.
  * 카드 어디를 눌러도 상세가 열린다. 제목 버튼을 카드 전체로 늘리고(after:inset-0), 링크 · 메모 토글처럼
  * 따로 동작하는 것과 펼친 메모 본문(무반응)은 relative 로 그 위에 올린다.
  * 식사(food)는 배경 대신 오른쪽 위 64px 사진 칸(지금은 🍽️ 자리표시)을 두고 제목 · 설명이 그 자리를 비운다.

@@ -5,7 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { useGoogleSignIn } from "../model/use-google-sign-in";
 import { GoogleLogo } from "./google-logo";
 
-/** 높이 52, radius 8, 흰 배경에 1px 테두리 (design-system.md · 로그인). */
+/** 높이 52, radius 8, 흰 배경에 1px 테두리. */
 export function GoogleSignInButton() {
   const { signIn, loading, error } = useGoogleSignIn();
 
