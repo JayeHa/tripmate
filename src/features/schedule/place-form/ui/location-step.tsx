@@ -43,6 +43,8 @@ export function LocationStep({ form }: LocationStepProps) {
         ref={searchRef}
         className="relative z-10 shrink-0 px-5 pt-3.5 pb-2.5"
         onKeyDown={(e) => {
+          // 한글 조합 중의 ↓ · Esc 는 입력기 몫이다 — 조합이 확정되며 목록이 바뀌어 포커스가 떨어지거나, 조합 취소가 목록을 닫지 않게
+          if (e.nativeEvent.isComposing || e.keyCode === 229) return;
           if (e.key === "ArrowDown" && e.target === inputRef.current) {
             // 키보드로 목록을 연다 — 열고 나서 첫 항목으로(위 effect)
             e.preventDefault();
