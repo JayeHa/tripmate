@@ -7,6 +7,7 @@ import {
   type WeekHours,
 } from "@/entities/schedule-item";
 import type { GooglePick } from "@/shared/lib/google-places";
+import type { LinkDraft } from "@/shared/ui/link-rows";
 
 import {
   type Autofill,
@@ -15,9 +16,6 @@ import {
   fillFromPick,
   googleMapsUrl,
 } from "./google-autofill";
-
-/** 링크 한 줄(입력 중) */
-export type LinkDraft = { title: string; url: string };
 
 export type LatLng = { lat: number; lng: number };
 
