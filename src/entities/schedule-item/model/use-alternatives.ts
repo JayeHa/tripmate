@@ -28,6 +28,8 @@ function useRefetchItems(tripId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) }),
       // 바꾸기는 앞뒤 이동 기록을 새로 그 자리에 들어온 줄로 옮긴다 — 옛 기록으로 이동 창을 열면 덮어쓴다
       qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
+      // 바꾸기는 지출의 합계 포함 여부도 바꾼다(0033) — 실시간을 기다리지 않고 가계부를 맞춘다
+      qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
     ]);
 }
 
