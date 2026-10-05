@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react";
 
 import { initialOfName, type MyProfile } from "@/entities/session";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/shared/ui/popover";
 
 import { AccountPanel } from "./account-panel";
@@ -20,6 +20,7 @@ export function AccountMenu({ profile, showName = true }: AccountMenuProps) {
     <Popover>
       <PopoverTrigger className="flex items-center gap-2.5" aria-label="내 계정">
         <Avatar className="size-9">
+          <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
           <AvatarFallback>{initialOfName(profile?.display_name)}</AvatarFallback>
         </Avatar>
         {showName && (

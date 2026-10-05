@@ -28,9 +28,6 @@ import { IconButton } from "@/shared/ui/icon-button";
 
 import type { ItemActions } from "../model/use-item-actions";
 
-const ITEM_CLASS =
-  "h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted";
-
 type ItemMenuProps = {
   actions: ItemActions;
   /** 지금 날(0-base) — 「다른 날로」 목록에서 뺀다 */
@@ -66,23 +63,16 @@ export function ItemMenu({
         >
           <Ellipsis className="size-5.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-44 rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
-        >
+        <DropdownMenuContent align="end" className="w-44">
           {days.length > 0 && (
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className={ITEM_CLASS}>
+              <DropdownMenuSubTrigger>
                 <CalendarDays className="size-4.5 text-ink-700" />
                 다른 날로
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="rounded-card border border-line-card bg-white p-1.5 ring-0">
+              <DropdownMenuSubContent>
                 {days.map((d) => (
-                  <DropdownMenuItem
-                    key={d}
-                    onClick={() => actions.moveTo(d)}
-                    className={ITEM_CLASS}
-                  >
+                  <DropdownMenuItem key={d} onClick={() => actions.moveTo(d)}>
                     day {d + 1} · {dayLabel(startDate, d)}
                   </DropdownMenuItem>
                 ))}
@@ -90,11 +80,7 @@ export function ItemMenu({
             </DropdownMenuSub>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setConfirming(true)}
-            className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-destructive-soft"
-          >
+          <DropdownMenuItem variant="destructive" onClick={() => setConfirming(true)}>
             <Trash2 className="size-4.5" />
             일정 삭제
           </DropdownMenuItem>

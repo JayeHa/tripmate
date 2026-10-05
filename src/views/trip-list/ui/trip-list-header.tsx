@@ -1,6 +1,6 @@
 import { initialOfName, type MyProfile } from "@/entities/session";
 import { AccountMenu } from "@/features/account-menu";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Wordmark } from "@/shared/ui/wordmark";
 
 type TripListHeaderProps = {
@@ -17,6 +17,7 @@ export function TripListHeader({ profile, onOpenAccount }: TripListHeaderProps) 
         <Wordmark className="text-[22px]" />
         <button type="button" aria-label="내 계정" onClick={onOpenAccount}>
           <Avatar>
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
             <AvatarFallback>{initialOfName(profile?.display_name)}</AvatarFallback>
           </Avatar>
         </button>

@@ -106,10 +106,10 @@ export function TimePickerPanel({ picker: p, step }: TimePickerPanelProps) {
         </div>
       </div>
       <div className="flex gap-2 pt-0.5">
-        <Button variant="secondary" className="h-10 flex-1" onClick={p.clear}>
+        <Button variant="chip" size="form" className="h-10 flex-1" onClick={p.clear}>
           시간 없음
         </Button>
-        <Button className="h-10 flex-1" disabled={!p.canConfirm} onClick={p.confirm}>
+        <Button size="form" className="h-10 flex-1" disabled={!p.canConfirm} onClick={p.confirm}>
           확인
         </Button>
       </div>

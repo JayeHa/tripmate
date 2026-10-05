@@ -12,7 +12,7 @@ import {
   useUpdateDisplayName,
 } from "@/entities/session";
 import { cn } from "@/shared/lib/utils";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
@@ -60,9 +60,8 @@ function MainMenu({ profile, Title, onEditProfile }: MainMenuProps) {
     <>
       <div className="flex items-center gap-3 border-b border-surface-muted px-5 pt-5 pb-4">
         <Avatar className="size-11">
-          <AvatarFallback className="text-[15px]">
-            {initialOfName(profile?.display_name)}
-          </AvatarFallback>
+          <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+          <AvatarFallback>{initialOfName(profile?.display_name)}</AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <Title className="truncate text-[17px] font-extrabold text-ink-900">
@@ -126,9 +125,8 @@ function ProfileEditor({ profile, Title, onBack }: ProfileEditorProps) {
       </div>
       <div className="flex flex-col items-center gap-4.5 px-5 pt-2 pb-6">
         <Avatar className="size-18">
-          <AvatarFallback className="text-[25px]">
-            {initialOfName(trimmed || current)}
-          </AvatarFallback>
+          <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+          <AvatarFallback>{initialOfName(trimmed || current)}</AvatarFallback>
         </Avatar>
 
         <label className="flex w-full flex-col gap-1.5">

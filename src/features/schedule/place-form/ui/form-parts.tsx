@@ -26,9 +26,9 @@ export function Field({ label, optional, aside, children }: FieldProps) {
   );
 }
 
-/** 입력 칸 공통 모양(46 높이, 12 둥글기, 회색 테두리) */
+/** 입력 칸 공통 모양 — 44 · r10 · 1px #E3E5E8, 포커스 1.5px 블루(공용 Input 과 같은 값) */
 export const inputClass =
-  "h-11.5 w-full min-w-0 rounded-card border border-line bg-white px-3.5 text-[15px] text-ink-900 outline-none focus:border-primary";
+  "h-11 w-full min-w-0 rounded-memo border border-line bg-white px-3 text-[15px] text-ink-900 outline-none focus:border-primary focus:shadow-[0_0_0_0.5px_var(--color-primary)]";
 
 type ChipButtonProps = { on: boolean; onClick: () => void; children: React.ReactNode };
 

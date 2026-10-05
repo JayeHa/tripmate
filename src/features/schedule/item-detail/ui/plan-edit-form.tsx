@@ -110,14 +110,15 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
       <div className="flex gap-2">
         {/* 저장 중에는 창의 ✕ · 바깥 누르기처럼 「취소」 도 막는다 — 닫히면 실패 문구가 함께 사라져 저장된 줄 안다 */}
         <Button
-          variant="secondary"
-          className="h-11 flex-1"
+          variant="chip"
+          size="form"
+          className="flex-1"
           disabled={edit.locked}
           onClick={edit.cancel}
         >
           취소
         </Button>
-        <Button className="h-11 flex-2" disabled={edit.saving} onClick={edit.save}>
+        <Button size="form" className="flex-2" disabled={edit.saving} onClick={edit.save}>
           저장
         </Button>
       </div>

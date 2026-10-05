@@ -39,7 +39,7 @@ export function MobileFloatingAdd(props: FloatingAddProps) {
           side="top"
           align="end"
           sideOffset={12}
-          className="flex w-auto min-w-0 flex-col items-end gap-2.5 overflow-visible bg-transparent p-0 shadow-none ring-0"
+          className="flex w-auto min-w-0 flex-col items-end gap-2.5 overflow-visible border-0 bg-transparent p-0 shadow-none"
         >
           {floatingActions(props).map(({ key, label, Icon, tone, run }) => (
             <DropdownMenuItem

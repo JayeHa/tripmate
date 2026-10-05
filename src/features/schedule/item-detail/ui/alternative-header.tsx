@@ -18,9 +18,6 @@ import type { AlternativeActions } from "../model/use-alternative-actions";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
 import { SwapAlternativeDialog } from "./swap-alternative-dialog";
 
-const ITEM_CLASS =
-  "h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted";
-
 type AlternativeHeaderProps = {
   main: ScheduleItem;
   alt: ScheduleItem;
@@ -82,15 +79,8 @@ export function AlternativeHeader({
         >
           <Ellipsis className="size-5.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-48 rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
-        >
-          <DropdownMenuItem
-            disabled={actions.pending}
-            onClick={() => setSwapping(true)}
-            className={ITEM_CLASS}
-          >
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem disabled={actions.pending} onClick={() => setSwapping(true)}>
             <ArrowLeftRight className="size-4.5 text-ink-700" />이 장소로 바꾸기
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -99,7 +89,6 @@ export function AlternativeHeader({
             onClick={() =>
               hasOwnRecord(alt, memoCount) ? setConfirming(true) : actions.remove(alt)
             }
-            className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-destructive-soft"
           >
             <Trash2 className="size-4.5" />
             대체 장소에서 빼기
