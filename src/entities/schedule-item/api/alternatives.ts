@@ -2,7 +2,10 @@ import { createClient } from "@/shared/api/supabase/client";
 
 import type { ScheduleItem } from "../model/types";
 
-/** 여행의 대체 장소 줄(장소 포함). 붙은 일정(alternative_of)마다 모아 쓴다 — 넣은 순서 */
+/**
+ * 여행의 대체 장소 줄(장소 포함). 붙은 일정(alternative_of)마다 모아 쓴다 — 줄을 만든 순서(created_at).
+ * position 은 넣는 경로마다 다르게 들어가(고르기 0 · 직접 추가 그날 max+1 · 바꾸기로 밀려난 줄은 물려받음) 보지 않는다
+ */
 export async function fetchAlternatives(tripId: string): Promise<ScheduleItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -10,7 +13,6 @@ export async function fetchAlternatives(tripId: string): Promise<ScheduleItem[]>
     .select("*, place:places(*)")
     .eq("trip_id", tripId)
     .not("alternative_of", "is", null)
-    .order("position")
     .order("created_at");
   if (error) throw error;
   return data;
@@ -25,7 +27,7 @@ export async function addAlternative(main: ScheduleItem, placeId: string): Promi
   const { error } = await supabase.from("schedule_items").insert({
     trip_id: main.trip_id,
     day_index: main.day_index,
-    // 대체 장소끼리의 순서는 넣은 시각(created_at)으로 본다
+    // 대체 장소끼리의 순서는 만든 시각(created_at)으로 본다 — position 은 칸이 필수라 채울 뿐이다
     position: 0,
     kind: "place",
     place_id: placeId,

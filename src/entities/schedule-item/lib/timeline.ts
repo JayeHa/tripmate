@@ -55,7 +55,7 @@ export type TimelineRow = {
   /** 그날 휴무 — 카드에 경고 칩으로(메모를 접어도 보인다) */
   hoursOff: boolean;
   links: TimelineLink[];
-  /** 이 일정의 대체 장소(일정 줄, 장소 포함 — 0024). 넣은 순서 */
+  /** 이 일정의 대체 장소(일정 줄, 장소 포함 — 0024). 만든 순서 */
   alternatives: ScheduleItem[];
 };
 
