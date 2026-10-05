@@ -95,7 +95,7 @@ export function PcSchedule({
     enabled: !edit.editing && !one,
     onChange: onDayChange,
   });
-  useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump });
+  useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump, enabled: !one });
   useDayViewScroll({ one, day, list: listRef, scrollToDay });
 
   /** 레일 · 목록 끝에서 날짜를 골랐다 — 편집 중이면 편집할 날, 하루씩이면 그 날을 그리고, 이어서면 그 날로 스크롤 */
