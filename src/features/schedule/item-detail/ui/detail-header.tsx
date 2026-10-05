@@ -40,13 +40,16 @@ export function DetailHeader({
         </DialogTitle>
         <span className="text-[13px] text-ink-400">{when}</span>
       </div>
-      <ItemMenu
-        actions={actions}
-        dayIndex={item.day_index}
-        alternativeCount={row.alternatives.length}
-        startDate={startDate}
-        totalDays={totalDays}
-      />
+      {/* 항공편은 항공편 화면에서 옮기고 지운다 */}
+      {row.kind !== "flight" && (
+        <ItemMenu
+          actions={actions}
+          dayIndex={item.day_index}
+          alternativeCount={row.alternatives.length}
+          startDate={startDate}
+          totalDays={totalDays}
+        />
+      )}
       <button
         type="button"
         aria-label="닫기"
