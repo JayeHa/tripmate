@@ -11,6 +11,7 @@ import {
   weekHoursOf,
 } from "@/entities/schedule-item";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
+import { isTimeValue } from "@/shared/lib/time-input";
 import type { LinkDraft } from "@/shared/ui/link-rows";
 
 /** 장소 정보 표의 한 줄 */
@@ -102,8 +103,7 @@ export type PlanPatchResult =
 function fullPatch(item: ScheduleItem, draft: PlanDraft): PlanPatchResult {
   const start_time = draft.time || null;
   const emoji = draft.emoji.trim().slice(0, 8) || null;
-  if (start_time && !/^\d{2}:\d{2}$/.test(start_time))
-    return { ok: false, error: "시간을 확인해 주세요" };
+  if (start_time && !isTimeValue(start_time)) return { ok: false, error: "시간을 확인해 주세요" };
   if (item.kind !== "place") {
     const name = draft.name.trim();
     if (!name) return { ok: false, error: "제목을 입력해 주세요" };

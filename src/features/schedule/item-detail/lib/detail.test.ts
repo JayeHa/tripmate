@@ -137,6 +137,19 @@ describe("toPlanPatch", () => {
     expect(toPlanPatch(it0, opened, opened)).toEqual({ ok: true, patch: {} });
   });
 
+  it("시간 칸이 틀린 채(친 그대로 「25:00」 · 「:30」) 넘어오면 거부한다", () => {
+    const it0 = item({ start_time: "10:30:00" });
+    const opened = planDraftOf(it0);
+    expect(toPlanPatch(it0, { ...opened, time: "25:00" }, opened)).toEqual({
+      ok: false,
+      error: "시간을 확인해 주세요",
+    });
+    expect(toPlanPatch(it0, { ...opened, time: ":30" }, opened)).toEqual({
+      ok: false,
+      error: "시간을 확인해 주세요",
+    });
+  });
+
   it("아이콘은 앞뒤 공백을 떼고, 비우면 null", () => {
     const it0 = item({ emoji: "🍜" });
     const opened = planDraftOf(it0);

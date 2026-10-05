@@ -52,6 +52,15 @@ export function commitTime(hour: string, minute: string): TimeCommit {
   return { value: `${pad2(Number(hour))}:${pad2(Number(minute || 0))}` };
 }
 
+/**
+ * 저장할 수 있는 시간인지 — 「HH:MM」 이고 시 00–23 · 분 00–59. 시간 칸은 확정이 틀리면 친 그대로(「:30」 · 「25:00」)를
+ * 넘기므로, 폼은 저장 전에 이걸로 거른다
+ */
+export function isTimeValue(value: string): boolean {
+  const m = /^(\d{2}):(\d{2})$/.exec(value);
+  return !!m && Number(m[1]) <= 23 && Number(m[2]) <= 59;
+}
+
 /** 칸 오류 문구 — 시가 비었으면 시를 치라고, 아니면 범위 */
 export function timeErrorText(error: "hour" | "minute", hour: string): string {
   if (error === "minute") return "00–59 사이로 입력해 주세요";

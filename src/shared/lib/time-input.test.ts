@@ -4,6 +4,7 @@ import {
   acceptHour,
   acceptMinute,
   commitTime,
+  isTimeValue,
   splitTime,
   splitValue,
   stepPart,
@@ -49,6 +50,10 @@ describe("확정", () => {
     expect(timeErrorText("hour", "")).toBe("시를 입력해 주세요");
     expect(timeErrorText("hour", "25")).toBe("00–23 사이로 입력해 주세요");
     expect(timeErrorText("minute", "14")).toBe("00–59 사이로 입력해 주세요");
+    expect(isTimeValue("09:05")).toBe(true);
+    expect(isTimeValue("25:00")).toBe(false);
+    expect(isTimeValue(":30")).toBe(false);
+    expect(isTimeValue("12:99")).toBe(false);
   });
 });
 

@@ -41,11 +41,17 @@ export function useTimeInput(
     setError(null);
   }
 
-  /** 지금 칸 값으로 확정한다 — 맞으면 두 자리로 채우고 저장, 틀리면 그 칸 오류만 */
+  /**
+   * 지금 칸 값으로 확정한다 — 맞으면 두 자리로 채우고 저장한다. 틀리면 그 칸 오류를 띄우고 친 그대로(「:30」 · 「25:00」)를
+   * 넘긴다 — 폼이 옛 시간을 그대로 저장하지 않고 저장 때 isTimeValue 로 거부하게
+   */
   function commit(h = hour, m = minute) {
     const result = commitTime(h, m);
     if ("error" in result) {
+      const raw = `${h}:${m}`;
       setError(result.error);
+      setShown(raw);
+      if (raw !== value) onChange(raw);
       return;
     }
     setError(null);
@@ -61,7 +67,9 @@ export function useTimeInput(
     if (!parts) return false;
     setHour(parts.hour);
     setMinute(parts.minute);
-    setError(null);
+    // 붙여넣은 값이 범위를 벗어나면(「25:00」) 바로 알린다
+    const result = commitTime(parts.hour, parts.minute);
+    setError("error" in result ? result.error : null);
     minuteRef.current?.focus();
     return true;
   }
