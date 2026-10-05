@@ -48,6 +48,7 @@ type FocusState = { key: unknown; id: string | null };
  * `focusOn(id)` 은 핀을 눌렀을 때 쓴다. 그 장소를 바로 강조하고 그 행을 기준선 바로 위로 smooth 스크롤한다.
  * 스크롤이 끝날 때까지 다시 고르지 않는다 — 그러지 않으면 지나가는 행마다 강조와 지도가 따라 움직인다.
  * 끝나면 한 번 다시 고른다. 행을 기준선 바로 위에 두므로 다시 골라도 같은 행이다(목록 끝 여백이 충분할 때).
+ * 끝 여백이 모자라 끝까지 내려도 기준선에 닿지 않으면(하루씩 보기) 다시 고르지 않고 그 행을 둔다.
  * 기준선이 스크롤에 따라 움직이면 스크롤 뒤의 기준선에 맞춘다(pinScrollTarget).
  */
 export function useScrollFocus({ scroller, list, line, enabled, resetKey }: ScrollFocusOptions) {
@@ -66,6 +67,8 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     latest.current = { list, scroller, line, enabled, resetKey, focused: focusId !== null };
   });
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 핀으로 고른 행이 목록 끝에 막혀 기준선까지 못 올라왔다 — 스크롤이 멈춰도 다시 고르지 않고 그 행을 둔다
+  const pinnedAtEnd = useRef(false);
 
   const scan = useCallback(() => {
     const {
@@ -86,12 +89,19 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
     setState((s) => (s.key === key && s.id === id ? s : { key, id }));
   }, []);
 
-  /** 스크롤이 HOLD_MS 동안 멈출 때까지 다시 고르지 않다가, 멈추면 한 번 고른다 */
+  /**
+   * 스크롤이 HOLD_MS 동안 멈출 때까지 다시 고르지 않다가, 멈추면 한 번 고른다.
+   * 핀으로 고른 행이 목록 끝에 막혔고 아직 끝에 있으면 다시 고르지 않는다 — 고르면 기준선을 지난 앞 장소로 바뀐다.
+   * 멈추기 전에 사용자가 위로 스크롤했으면 끝이 아니라서 평소처럼 고른다
+   */
   const holdScan = useCallback(() => {
     if (hold.current) clearTimeout(hold.current);
     hold.current = setTimeout(() => {
       hold.current = null;
-      scan();
+      const { top, max } = scrollMetricsOf(scrollTargetOf(latest.current.scroller));
+      const keepPinned = pinnedAtEnd.current && top >= max - 1;
+      pinnedAtEnd.current = false;
+      if (!keepPinned) scan();
     }, HOLD_MS);
   }, [scan]);
 
@@ -135,6 +145,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
   const focusOn = useCallback(
     (id: string) => {
       setState({ key: latest.current.resetKey, id });
+      pinnedAtEnd.current = false;
       holdScan();
       const { list: listRef, scroller: scrollerRef, line: lineOf } = latest.current;
       const row = listRef.current?.querySelector(`[data-focus-id="${id}"]`);
@@ -148,6 +159,9 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
         lineOf,
         PIN_SCROLL_MARGIN,
       );
+      // 끝까지 내려도 기준선에 닿지 않는 행(하루씩 보기의 마지막 장소들 — 끝 여백이 없다)
+      pinnedAtEnd.current =
+        to >= max && row.getBoundingClientRect().top - (max - top) > lineOf(max);
       target.scrollTo({ top: to, behavior: "smooth" });
     },
     [holdScan],

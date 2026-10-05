@@ -18,7 +18,7 @@ import { useScheduleSections } from "../model/use-schedule-sections";
 import { DetailOverlays } from "./detail-overlays";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
-import type { DayJump } from "./schedule-layout";
+import type { DayJump, ScheduleLayoutProps } from "./schedule-layout";
 
 type TripScheduleViewProps = { tripId: string };
 
@@ -74,8 +74,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   });
   const moveDialog = useMoveDialog(movesReady);
 
-  const Layout = isDesktop ? PcSchedule : MobileSchedule;
-
   // 열린 일정의 줄. 다른 멤버가 지워 줄이 없어지면 id 도 지운다 — 남겨 두면 나중에
   // 같은 줄이 다시 그려지는 순간 상세가 저절로 열린다(언마운트된 뒤 끝난 이동 · 삭제는 onDone 을 부르지 못한다)
   const allRows = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
@@ -99,32 +97,31 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     showDay(req.dayIndex);
   }
 
+  const layout: ScheduleLayoutProps = {
+    trip,
+    totalDays,
+    day,
+    onDayChange: setDay,
+    sections,
+    isPending,
+    jump,
+    // 날짜 메모 줄은 일정 상세 대신 시간 · 메모만 고치는 창
+    onOpen: (row) => (row.kind === "note" ? overlays.openNote(row.item) : setOpenId(row.item.id)),
+    onEditMove: moveDialog.openFor,
+    onAddPlace: (d) => {
+      setAddNotice(null);
+      setAddDay(d);
+    },
+    authorOf,
+    onAddDayMemo: overlays.openDayMemo,
+    edit,
+    startEditAt: edit.opener,
+  };
+
   return (
     <>
-      {isDesktop !== null && (
-        <Layout
-          trip={trip}
-          totalDays={totalDays}
-          day={day}
-          onDayChange={setDay}
-          sections={sections}
-          isPending={isPending}
-          jump={jump}
-          // 날짜 메모 줄은 일정 상세 대신 시간 · 메모만 고치는 창
-          onOpen={(row) =>
-            row.kind === "note" ? overlays.openNote(row.item) : setOpenId(row.item.id)
-          }
-          onEditMove={moveDialog.openFor}
-          onAddPlace={(d) => {
-            setAddNotice(null);
-            setAddDay(d);
-          }}
-          authorOf={authorOf}
-          onAddDayMemo={overlays.openDayMemo}
-          edit={edit}
-          startEditAt={edit.opener}
-        />
-      )}
+      {isDesktop === true && <PcSchedule {...layout} onGuide={overlays.showToast} />}
+      {isDesktop === false && <MobileSchedule {...layout} />}
 
       <MoveDialog
         tripId={tripId}

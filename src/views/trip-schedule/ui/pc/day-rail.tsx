@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { dateRangeLabel, dayCount, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 
@@ -9,13 +11,23 @@ type DayRailProps = {
   onChange: (day: number) => void;
   /** 날마다 하루 요약(빈 날은 null) */
   summaries: readonly (string | null)[];
+  /** 제목 아래에 두는 것 — 「이어서 / 하루씩」 전환 */
+  children?: ReactNode;
 };
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
  * 날마다 「day 2 11.1/일」 아래 하루 요약 2줄. 아래 도구(항공편 · 숙소)는 그 단계에서 붙인다.
  */
-export function DayRail({ title, startDate, endDate, day, onChange, summaries }: DayRailProps) {
+export function DayRail({
+  title,
+  startDate,
+  endDate,
+  day,
+  onChange,
+  summaries,
+  children,
+}: DayRailProps) {
   const total = dayCount(startDate, endDate);
   return (
     <aside className="flex w-58 shrink-0 flex-col border-r border-divider">
@@ -26,6 +38,7 @@ export function DayRail({ title, startDate, endDate, day, onChange, summaries }:
         <span className="text-[13px] text-ink-400">
           {dateRangeLabel(startDate, endDate)} · {total - 1}박 {total}일
         </span>
+        {children}
       </div>
       <nav
         className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2"
