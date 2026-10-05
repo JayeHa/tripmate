@@ -66,8 +66,8 @@ export function useTimePicker(value: string, onChange: (value: string) => void) 
     },
     /** 분 칸에 보일 글자 */
     minuteInput: minuteText ?? (draft.m === null || draft.h === null ? "" : padTime(draft.m)),
-    /** 미리보기 「16:00」. 고르기 전 「--:--」, 분이 범위 밖이면 「16:--」 */
-    preview: result || (outOfRange && draft.h !== null ? `${padTime(draft.h)}:--` : "--:--"),
+    /** 미리보기 「16:00」. 고르기 전 「--:--」, 분 칸이 비었거나 범위 밖이면 「16:--」 */
+    preview: result || (draft.h !== null ? `${padTime(draft.h)}:--` : "--:--"),
     hint: draft.h === null ? "시를 먼저 골라 주세요" : null,
     outOfRange,
     canConfirm: result !== "",

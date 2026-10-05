@@ -37,9 +37,12 @@ export function minuteOutOfRange(text: string | null): boolean {
   return text !== null && text !== "" && Number(text) > 59;
 }
 
-/** 확인하면 저장할 「HH:mm」. 시를 안 골랐거나 분이 범위를 벗어났으면 ""(확인 불가) */
+/**
+ * 확인하면 저장할 「HH:mm」. 시를 안 골랐거나, 분 칸을 비웠거나(다시 치는 중), 분이 범위를 벗어났으면 ""(확인 불가).
+ * 분 칸을 손대지 않았으면(text null) 고른 분, 분을 안 골랐으면 00분
+ */
 export function draftValue(d: TimeDraft, text: string | null): string {
-  if (d.h === null || minuteOutOfRange(text)) return "";
+  if (d.h === null || text === "" || minuteOutOfRange(text)) return "";
   return `${pad(d.h)}:${pad(d.m ?? 0)}`;
 }
 

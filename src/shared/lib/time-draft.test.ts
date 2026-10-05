@@ -42,6 +42,8 @@ describe("draftValue · minuteOutOfRange · minuteSteps", () => {
     expect(draftValue({ h: 16, m: null }, null)).toBe("16:00");
     expect(draftValue({ h: null, m: 5 }, null)).toBe("");
     expect(draftValue({ h: 16, m: null }, "75")).toBe("");
+    // 분 칸을 지운 채면(다시 치는 중) 고르지 않은 00분이 저장되지 않게 막는다
+    expect(draftValue({ h: 16, m: null }, "")).toBe("");
     expect(minuteOutOfRange("75")).toBe(true);
     expect(minuteOutOfRange("")).toBe(false);
     expect(minuteSteps(5)).toHaveLength(12);
