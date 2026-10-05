@@ -18,6 +18,11 @@ export type MemoPayload = { body: string; starred: boolean; links: LinkDraft[] }
 
 export type MemoDraftResult = { ok: true; value: MemoPayload } | { ok: false; error: string };
 
+/** 두 저장 값이 같은지 — 고치기에서 바뀐 게 없으면 보내지 않는다(그사이 일행이 고친 글을 연 때 글로 덮지 않게) */
+export function samePayload(a: MemoPayload, b: MemoPayload): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 /**
  * 저장할 메모 칸으로. 본문은 앞뒤 공백을 떼고 1~500자(DB check 와 같다), 빈 링크 줄은 버리고
  * 주소가 http(s) 가 아니면 오류

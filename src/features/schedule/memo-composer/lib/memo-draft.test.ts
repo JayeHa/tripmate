@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Memo } from "@/entities/schedule-item";
 
-import { memoDraftOf, toMemoPayload } from "./memo-draft";
+import { memoDraftOf, samePayload, toMemoPayload } from "./memo-draft";
 
 describe("memoDraftOf", () => {
   it("새 메모는 빈 칸, 고치는 메모는 그 값(모양이 틀린 링크는 버린다)", () => {
@@ -45,5 +45,14 @@ describe("toMemoPayload", () => {
     expect(
       toMemoPayload({ body: "x", starred: false, links: [{ title: "", url: "javascript:x" }] }),
     ).toMatchObject({ ok: false });
+  });
+});
+
+describe("samePayload", () => {
+  it("본문 · 중요 · 링크가 모두 같을 때만 같다", () => {
+    const a = { body: "x", starred: false, links: [{ title: "", url: "https://a" }] };
+    expect(samePayload(a, { ...a, links: [{ title: "", url: "https://a" }] })).toBe(true);
+    expect(samePayload(a, { ...a, starred: true })).toBe(false);
+    expect(samePayload(a, { ...a, links: [] })).toBe(false);
   });
 });

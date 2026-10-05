@@ -22,11 +22,15 @@ export async function createMemo(memo: TablesInsert<"memos">): Promise<void> {
   if (error) throw error;
 }
 
-/** 메모를 고친다(멤버 누구나). 작성자는 바뀌지 않는다 */
+/** 그 사이 일행이 지워 고칠 메모가 없다 — 부른 쪽이 이 문구를 그대로 보인다 */
+export const MEMO_GONE = "이미 지워진 메모예요";
+
+/** 메모를 고친다(멤버 누구나). 작성자는 바뀌지 않는다. 0행이면(그사이 지워짐) MEMO_GONE 오류 */
 export async function updateMemo(id: string, patch: TablesUpdate<"memos">): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("memos").update(patch).eq("id", id);
+  const { data, error } = await supabase.from("memos").update(patch).eq("id", id).select("id");
   if (error) throw error;
+  if (data.length === 0) throw new Error(MEMO_GONE);
 }
 
 /** 메모를 지운다(멤버 누구나) */

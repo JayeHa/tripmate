@@ -4,13 +4,14 @@ import { useState } from "react";
 
 import {
   type Memo,
+  MEMO_GONE,
   type ScheduleItem,
   useCreateMemo,
   useDeleteMemo,
   useUpdateMemo,
 } from "@/entities/schedule-item";
 
-import { type MemoDraft, memoDraftOf, toMemoPayload } from "../lib/memo-draft";
+import { type MemoDraft, memoDraftOf, samePayload, toMemoPayload } from "../lib/memo-draft";
 
 type MemoComposerOptions = {
   tripId: string;
@@ -50,6 +51,12 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
       return;
     }
     setError(null);
+    // 고치기에서 연 때와 같으면 보내지 않는다 — 보기만 하고 「저장」 해도 그사이 일행이 고친 글을 덮지 않게
+    const opened = memo && toMemoPayload(memoDraftOf(memo));
+    if (opened?.ok && samePayload(opened.value, result.value)) {
+      onDone();
+      return;
+    }
     const done = memo
       ? update.mutateAsync({ id: memo.id, patch: result.value })
       : create.mutateAsync({ trip_id: tripId, schedule_item_id: item.id, ...result.value });
@@ -74,10 +81,15 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
     canSave: draft.body.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: mutations.some((m) => m.isPending && !m.isPaused),
-    error:
-      error ??
-      (mutations.some((m) => m.error) ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null),
+    error: error ?? errorOf(mutations.map((m) => m.error).find(Boolean)),
   };
+}
+
+/** 요청 실패 문구 — 그사이 지워진 메모면 그대로 알리고, 그 밖은 다시 시도 */
+function errorOf(e: unknown): string | null {
+  if (!e) return null;
+  if (e instanceof Error && e.message === MEMO_GONE) return MEMO_GONE;
+  return "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
 }
 
 export type MemoComposerState = ReturnType<typeof useMemoComposer>;
