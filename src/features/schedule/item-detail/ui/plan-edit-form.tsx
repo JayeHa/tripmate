@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   RESERVATION_STATUS_LABEL,
   RESERVATION_STATUSES,
@@ -26,7 +28,11 @@ const inputClass =
  * 아이콘을 비우면 장소의 예전 아이콘이 있으면 그것이 보여 자리 표시로 알려 준다
  */
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
-  const draft = edit.draft;
+  // 마지막으로 그린 칸 값. 닫힐 때(취소 · 저장) draft 가 먼저 비어도 창이 사라지는 동안은 이 값으로 그린다 —
+  // 그러지 않으면 본문이 먼저 빠져 머리만 남은 시트가 줄어들며 사라진다
+  const [shown, setShown] = useState(edit.draft);
+  if (edit.draft && edit.draft !== shown) setShown(edit.draft);
+  const draft = edit.draft ?? shown;
   if (!draft) return null;
   const isPlace = item.kind === "place";
   const options: (ReservationStatus | null)[] = [null, ...RESERVATION_STATUSES];
