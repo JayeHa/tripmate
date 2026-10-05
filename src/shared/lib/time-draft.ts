@@ -32,6 +32,15 @@ export function typeHour(d: TimeDraft, raw: string): { draft: TimeDraft; text: s
   return { draft: pickHour(d, Number(text)), text };
 }
 
+/**
+ * 시를 다 쳤는지 — 분 칸으로 넘어갈 때. 두 자리를 쳤거나, 3–9 로 시작해 더 칠 수 없을 때(「5」 = 05시).
+ * 범위 밖(24 이상)이면 넘어가지 않는다 — 안내를 보며 고치게
+ */
+export function hourComplete(text: string): boolean {
+  if (text.length === 2) return Number(text) <= 23;
+  return text.length === 1 && Number(text) >= 3;
+}
+
 /** 시 칸에 친 글자가 범위(00–23)를 벗어났는지 */
 export function hourOutOfRange(text: string | null): boolean {
   return text !== null && text !== "" && Number(text) > 23;
@@ -64,11 +73,6 @@ export function draftValue(
   if (d.h === null || text === "" || minuteOutOfRange(text)) return "";
   if (hourText === "" || hourOutOfRange(hourText)) return "";
   return `${pad(d.h)}:${pad(d.m ?? 0)}`;
-}
-
-/** 0 부터 step 분 간격의 분 목록(5 면 00 · 05 · … · 55) */
-export function minuteSteps(step: number): number[] {
-  return Array.from({ length: Math.ceil(60 / step) }, (_, i) => i * step);
 }
 
 /** 두 자리로(시 · 분 표시) */

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   draftValue,
+  hourComplete,
   hourOutOfRange,
   minuteOutOfRange,
-  minuteSteps,
   parseTime,
   pickHour,
   pickMinute,
@@ -45,7 +45,7 @@ describe("고르기", () => {
   });
 });
 
-describe("draftValue · minuteOutOfRange · minuteSteps", () => {
+describe("draftValue · 범위 밖", () => {
   it("시가 없거나 분이 범위 밖이면 빈 값", () => {
     expect(draftValue({ h: 16, m: 5 }, null)).toBe("16:05");
     expect(draftValue({ h: 16, m: null }, null)).toBe("16:00");
@@ -60,7 +60,16 @@ describe("draftValue · minuteOutOfRange · minuteSteps", () => {
     expect(hourOutOfRange("23")).toBe(false);
     expect(minuteOutOfRange("75")).toBe(true);
     expect(minuteOutOfRange("")).toBe(false);
-    expect(minuteSteps(5)).toHaveLength(12);
-    expect(minuteSteps(15)).toEqual([0, 15, 30, 45]);
+  });
+});
+
+describe("hourComplete", () => {
+  it("두 자리(23 이하)거나 3–9 한 자리면 다 친 것", () => {
+    expect(hourComplete("12")).toBe(true);
+    expect(hourComplete("5")).toBe(true);
+    expect(hourComplete("1")).toBe(false);
+    expect(hourComplete("2")).toBe(false);
+    expect(hourComplete("24")).toBe(false);
+    expect(hourComplete("")).toBe(false);
   });
 });
