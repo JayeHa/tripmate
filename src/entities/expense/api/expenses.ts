@@ -87,6 +87,16 @@ export async function deleteExpense(expenseId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** 결제 예정인 지출을 결제 완료로 — 예정일도 비운다. 다른 칸은 건드리지 않는다 */
+export async function markExpensePaid(expenseId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("expenses")
+    .update({ paid: true, due_date: null })
+    .eq("id", expenseId);
+  if (error) throw error;
+}
+
 /** date 이후(포함)의 지출 수. 기간을 줄일 때 마지막 날로 모일 지출을 미리 센다. 여행준비(날짜 없음)는 세지 않는다 */
 export async function countExpensesFrom(tripId: string, date: string): Promise<number> {
   const supabase = createClient();

@@ -4,7 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { createExpense, deleteExpense, fetchExpenses, updateExpense } from "../api/expenses";
+import {
+  createExpense,
+  deleteExpense,
+  fetchExpenses,
+  markExpensePaid,
+  updateExpense,
+} from "../api/expenses";
 import type { ExpenseFormValues } from "./schema";
 
 export function useExpenses(tripId: string) {
@@ -35,6 +41,15 @@ export function useUpdateExpense(tripId: string) {
       values: ExpenseFormValues;
       previousCurrency: string;
     }) => updateExpense(expenseId, values, previousCurrency),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
+  });
+}
+
+/** 결제 예정을 결제 완료로(목록의 「예정일 지남 · 결제 완료로」) */
+export function useMarkExpensePaid(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: markExpensePaid,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
   });
 }

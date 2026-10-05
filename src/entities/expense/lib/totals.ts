@@ -3,13 +3,15 @@ import { decimalsOf, type ExchangeRates, MissingRateError, roundTo } from "@/sha
 import type { Expense } from "../model/types";
 import { expenseHome } from "./amounts";
 
-type Summed = Pick<Expense, "amount" | "currency" | "rate" | "counted">;
+type Summed = Pick<Expense, "amount" | "currency" | "rate" | "counted" | "paid">;
 
 export type ExpenseTotals = {
   /** 기준 화폐 합계. 환율을 모르는 지출은 빠져 있다 */
   home: number;
   /** 쓴 통화별 합계(원래 금액) */
   byCurrency: Record<string, number>;
+  /** 그중 결제 예정(기준 화폐) — 「이 중 결제 예정 N원」 */
+  planned: number;
   /** 환율이 없어 home 에 못 넣은 통화 */
   missing: string[];
 };
@@ -22,15 +24,24 @@ export function sumExpenses(expenses: Summed[], home: string, rates: ExchangeRat
   const byCurrency: Record<string, number> = {};
   const missing = new Set<string>();
   let total = 0;
+  let planned = 0;
   for (const e of expenses) {
     if (!e.counted) continue;
     byCurrency[e.currency] = (byCurrency[e.currency] ?? 0) + Number(e.amount);
     try {
-      total += expenseHome(e, home, rates);
+      const amount = expenseHome(e, home, rates);
+      total += amount;
+      if (!e.paid) planned += amount;
     } catch (err) {
       if (!(err instanceof MissingRateError)) throw err;
       missing.add(e.currency);
     }
   }
-  return { home: roundTo(total, decimalsOf(home)), byCurrency, missing: [...missing] };
+  const d = decimalsOf(home);
+  return {
+    home: roundTo(total, d),
+    byCurrency,
+    planned: roundTo(planned, d),
+    missing: [...missing],
+  };
 }
