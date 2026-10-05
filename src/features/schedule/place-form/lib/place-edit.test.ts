@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { Place } from "@/entities/schedule-item";
 
+import { googleMapsUrl } from "./google-autofill";
 import { placeEditErrorMessage, placeFormOf, storedAddressOf, toPlacePatch } from "./place-edit";
+import { withoutGooglePick } from "./place-form";
 
 /** 기본값이 채워진 장소. 필요한 칸만 덮어쓴다 */
 function place(patch: Partial<Place> = {}): Place {
@@ -70,6 +72,21 @@ describe("placeFormOf", () => {
     });
     expect(v.category).toBeNull();
     expect(v.at).toBeNull();
+  });
+});
+
+describe("placeFormOf — 구글맵 링크", () => {
+  it("그 장소 구글 id 로 만든 링크면 자동 채움으로 — 위치를 옮기면(연결 해제) 함께 지워진다", () => {
+    const url = googleMapsUrl("옛 이름", "g1");
+    const v = placeFormOf(place({ gmap_url: url }));
+    expect(v.auto.gmap).toBe(url);
+    expect(withoutGooglePick(v)).toMatchObject({ gmap: "", googleId: null });
+  });
+
+  it("사용자가 적은 링크 · 다른 장소 id 링크는 그대로 둔다", () => {
+    expect(placeFormOf(place()).auto.gmap).toBe("");
+    const other = placeFormOf(place({ gmap_url: googleMapsUrl("x", "g2") }));
+    expect(withoutGooglePick(other).gmap).toBe(googleMapsUrl("x", "g2"));
   });
 });
 

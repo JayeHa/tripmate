@@ -43,6 +43,24 @@ export function googleMapsUrl(name: string, placeId: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(placeId)}`;
 }
 
+/**
+ * 링크가 그 구글 장소로 화면이 만든 구글맵 링크(googleMapsUrl)인지. 장소 이름은 나중에 바뀔 수 있어 장소 id 만 본다.
+ * 저장된 장소를 고칠 때 이 링크를 자동으로 채운 값으로 여겨, 위치 · 고른 장소가 바뀌면 함께 지우거나 바꾸게 한다
+ */
+export function isPickedMapsUrl(url: string | null, placeId: string | null): url is string {
+  if (!url || !placeId) return false;
+  try {
+    const u = new URL(url);
+    return (
+      u.origin === "https://www.google.com" &&
+      u.pathname === "/maps/search/" &&
+      u.searchParams.get("query_place_id") === placeId
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** 구글 장소 종류(정확히 같은 이름) → 장소 폼 카테고리 */
 const GOOGLE_TYPE_CATEGORY: Partial<Record<string, PlaceCategory>> = {
   cafe: "cafe",

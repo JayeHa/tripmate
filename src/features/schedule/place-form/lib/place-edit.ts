@@ -8,6 +8,7 @@ import {
 } from "@/entities/schedule-item";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
+import { isPickedMapsUrl } from "./google-autofill";
 import {
   blankPlaceForm,
   type FoundAddress,
@@ -24,7 +25,9 @@ function categoryOf(value: string | null): PlaceCategory | null {
 /**
  * 저장된 장소를 장소 입력 폼 값으로 — 「장소 정보 수정」 의 처음 값.
  * 요일별 운영시간이 하나라도 있으면 요일별(안 적힌 요일은 빈칸), 아니면 매일 같음.
- * 아이콘은 일정 칸이라 비운다(수정 모드는 아이콘 칸을 보이지 않는다)
+ * 아이콘은 일정 칸이라 비운다(수정 모드는 아이콘 칸을 보이지 않는다).
+ * 구글맵 링크가 그 장소의 구글 id 로 만든 링크면 자동으로 채운 값(auto.gmap)으로 둔다 — 핀을 옮기거나 다른 곳을 고르면
+ * 새로 담을 때처럼 지우거나 바꿔서, 옛 장소를 가리키는 링크가 남지 않게
  */
 export function placeFormOf(place: Place): PlaceFormValues {
   const week = weekHoursOf(place.hours_week);
@@ -33,6 +36,10 @@ export function placeFormOf(place: Place): PlaceFormValues {
   );
   return {
     ...blank,
+    auto: {
+      ...blank.auto,
+      gmap: isPickedMapsUrl(place.gmap_url, place.google_place_id) ? place.gmap_url : "",
+    },
     name: place.name,
     category: categoryOf(place.category),
     googleId: place.google_place_id,
