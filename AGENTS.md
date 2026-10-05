@@ -133,8 +133,8 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 `package.json` 의 `browserslist` — **Chrome · Edge 111+, Safari · iOS 16.4+, Firefox 128+.** Tailwind v4 의 바닥선과 같다
 (`@property` · `color-mix()` 를 써서 이보다 낮으면 화면이 이미 깨진다). Next 는 이 범위로 JS 를 변환한다.
 
-- 이 범위에 없는 API 는 **기능 감지 후 대체 경로**로 쓴다. 모듈 최상위에서 만들지 않는다 — 없는 브라우저에서 그 파일을 쓰는 화면 전체가 깨진다
-  (예: `shared/lib/emoji.ts` 의 `Intl.Segmenter`)
+- 범위 안인지는 MDN 의 「Browser compatibility」 표에서 위 버전과 비교해 확인한다
+- 범위에 없는 API 는 **기능 감지 후 대체 경로**로 쓴다. 모듈 최상위에서 만들지 않는다 — 없는 브라우저에서 그 파일을 쓰는 화면 전체가 깨진다
 - 범위를 바꾸면 `docs/engineering/library-policy.md` 결정 기록에 남긴다
 
 ## 왜 airbnb 규칙을 안 쓰나
