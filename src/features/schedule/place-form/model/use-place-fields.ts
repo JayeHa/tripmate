@@ -168,9 +168,14 @@ export function usePlaceFields({
     mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
     /**
      * 이름이 있고 위치를 정했고, 그 위치의 주소를 기다리는 중이 아닐 때. 위치 변경을 취소해 핀이 돌아오면 그 위치 주소를
-     * 다시 불러오는데, 그사이 저장하면 좌표만 바뀌고 주소가 빈 채로 저장된다
+     * 다시 불러오는데, 그사이 저장하면 좌표만 바뀌고 주소가 빈 채로 저장된다.
+     * 다만 고치는 장소의 처음 위치 그대로면 기다리지 않는다 — 저장된 주소가 비어 불러오는 중이어도 좌표는 바뀌지 않고,
+     * 지도 라이브러리를 못 불러오면 busy 가 끝나지 않아(useMapsLibrary 가 계속 null) 이름만 고쳐도 저장하지 못하게 된다
      */
-    canSave: !!values.at && !found.busy && values.name.trim().length > 0,
+    canSave:
+      !!values.at &&
+      (!found.busy || (!!stored?.at && samePoint(values.at, stored.at))) &&
+      values.name.trim().length > 0,
     /** 입력 · 검증 오류(저장 요청의 실패 문구는 부른 쪽이 더한다) */
     error,
     setError,
