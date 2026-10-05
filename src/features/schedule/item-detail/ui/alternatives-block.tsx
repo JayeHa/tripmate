@@ -4,11 +4,10 @@ import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
-import { SheetDialog } from "@/shared/ui/sheet-dialog";
+import { CircleAddButton } from "@/shared/ui/add-controls";
 
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
-import { AlternativePicker } from "./alternative-picker";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
 import { SwapAlternativeDialog } from "./swap-alternative-dialog";
 
@@ -17,15 +16,15 @@ type AlternativesBlockProps = {
   main: ScheduleItem;
   alternatives: ScheduleItem[];
   actions: AlternativeActions;
-  /** 「+ 직접 추가」 — 부른 쪽이 장소 입력 폼을 대체 장소 모드로 연다 */
-  onDirectAdd: () => void;
+  /** 제목 오른쪽 「+」 — 부른 쪽이 「대체 장소 추가」 창을 연다 */
+  onAdd: () => void;
   /** 카드를 누르면 그 대체 장소의 상세(메모 · 예약 상태를 바꾸기 없이 보고 고친다) */
   onOpen: (alt: ScheduleItem) => void;
 };
 
 /**
- * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」
- * (상세 위에 「대체 장소 추가」 창 — 저장한 장소에서 고르기 · 직접 추가).
+ * 대체 장소 — 이 일정이 안 될 때 갈 곳. 「대체 장소 N」 + 회색 원 「+」(「대체 장소 추가」 창), 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기.
+ * 대체 장소가 없으면 칸을 그리지 않는다(맨 아래 「추가」 줄의 칩으로 연다).
  * 바꾸기는 그 장소가 이 자리(날짜 · 순서 · 시간)에 들어가고, 예약 상태 · 메모는 각자 장소를 따라간다
  */
 export function AlternativesBlock({
@@ -33,16 +32,19 @@ export function AlternativesBlock({
   main,
   alternatives,
   actions,
-  onDirectAdd,
+  onAdd,
   onOpen,
 }: AlternativesBlockProps) {
-  const [picking, setPicking] = useState(false);
   const { data: memos = [] } = useMemos(tripId);
   /** 그 대체 장소 줄에 붙은 메모 수 — 빼기 전에 물을지 정한다 */
   const memoCount = (id: string) => memos.filter((m) => m.schedule_item_id === id).length;
+  if (alternatives.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <span className="text-[13px] font-bold text-ink-400">대체 장소 {alternatives.length}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-bold text-ink-400">대체 장소 {alternatives.length}</span>
+        <CircleAddButton label="대체 장소 추가" onClick={onAdd} />
+      </div>
       {alternatives.map((alt) => (
         <AlternativeCard
           key={alt.id}
@@ -53,32 +55,6 @@ export function AlternativesBlock({
           onOpen={() => onOpen(alt)}
         />
       ))}
-      <button
-        type="button"
-        onClick={() => setPicking(true)}
-        className="h-10.5 rounded-card border-[1.5px] border-dashed border-line-strong text-sm font-bold text-primary"
-      >
-        + 대체 장소
-      </button>
-      <SheetDialog
-        open={picking}
-        onClose={() => setPicking(false)}
-        title="대체 장소 추가"
-        locked={actions.locked}
-      >
-        <AlternativePicker
-          tripId={tripId}
-          main={main}
-          alternatives={alternatives}
-          actions={actions}
-          onClose={() => setPicking(false)}
-          onDirectAdd={() => {
-            setPicking(false);
-            onDirectAdd();
-          }}
-        />
-      </SheetDialog>
-      {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </section>
   );
 }
