@@ -8,6 +8,7 @@ import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 import {
   addDayMemo,
   addPlacesToSchedule,
+  applyScheduleEdit,
   createPlaceSchedule,
   deleteScheduleItem,
   fetchSavedPlaces,
@@ -158,5 +159,19 @@ export function useAddDayMemo(tripId: string) {
     mutationFn: ({ dayIndex, text }: { dayIndex: number; text: string }) =>
       addDayMemo(tripId, dayIndex, text),
     onSuccess: invalidate,
+  });
+}
+
+/** 일정 편집 「완료」 저장. 일정 · 대체 장소(날짜가 따라 바뀐다) · 경로 · 이동 기록을 다시 읽는다 */
+export function useApplyScheduleEdit(tripId: string) {
+  const qc = useQueryClient();
+  const invalidate = useInvalidateItems(tripId);
+  return useMutation({
+    mutationFn: ({ days, deletes }: { days: Record<number, string[]>; deletes: string[] }) =>
+      applyScheduleEdit(tripId, days, deletes),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) });
+    },
   });
 }

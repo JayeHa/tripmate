@@ -550,6 +550,10 @@ export type Database = {
         Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };
         Returns: string;
       };
+      apply_schedule_edit: {
+        Args: { p_trip: string; p_days: Json; p_deletes: string[] };
+        Returns: undefined;
+      };
       swap_alternative: {
         Args: { p_alt: string };
         Returns: undefined;
