@@ -119,10 +119,17 @@ export function useScheduleEdit({ tripId, items, trip, totalDays, onExit }: Sche
     dayItems,
     /** 편집하는 날의 하루 요약(초안) */
     summary: session?.summaries[day] ?? "",
+    /** 편집하는 날의 요약을 바꾼다. 편집 중 여행이 늘어 목록에 없는 날이면 빈 날을 채워 늘린다(moveSelected 와 같다) */
     setSummary: (text: string) => {
       if (apply.isPending) return;
       setSession(
-        (s) => s && { ...s, summaries: s.summaries.map((t, i) => (i === day ? text : t)) },
+        (s) =>
+          s && {
+            ...s,
+            summaries: Array.from({ length: Math.max(s.summaries.length, day + 1) }, (_, i) =>
+              i === day ? text : (s.summaries[i] ?? ""),
+            ),
+          },
       );
     },
     /** 편집 목록 · 지도가 그릴 줄(번호 · 설명) */
