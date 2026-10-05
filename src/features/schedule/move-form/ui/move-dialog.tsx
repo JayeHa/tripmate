@@ -8,9 +8,9 @@ import {
   MOVE_MODES,
   type MoveMode,
 } from "@/entities/schedule-item";
-import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/dialog";
+import { FilterChip } from "@/shared/ui/filter-chip";
 
 import { useMoveActions } from "../model/use-move-actions";
 
@@ -83,18 +83,9 @@ function MoveFields({ pair, actions, onClose }: MoveFieldsProps) {
       </div>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="이동 수단">
         {MOVE_MODES.map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            onClick={() => setMode(mode === m ? null : m)}
-            className={cn(
-              "flex h-8.5 items-center rounded-full px-3 text-[13px] font-bold",
-              mode === m ? "bg-ink-900 text-white" : "bg-surface-muted text-ink-700",
-            )}
-          >
+          <FilterChip key={m} selected={mode === m} onClick={() => setMode(mode === m ? null : m)}>
             {MOVE_MODE_LABEL[m]}
-          </button>
+          </FilterChip>
         ))}
       </div>
       <label className="flex flex-col gap-1.5">

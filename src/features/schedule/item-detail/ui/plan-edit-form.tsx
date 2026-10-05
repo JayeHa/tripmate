@@ -1,11 +1,6 @@
 import { useState } from "react";
 
-import {
-  RESERVATION_STATUS_LABEL,
-  RESERVATION_STATUSES,
-  type ReservationStatus,
-  type ScheduleItem,
-} from "@/entities/schedule-item";
+import { ReservationStatusPicker, type ScheduleItem } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { LinkRows } from "@/shared/ui/link-rows";
@@ -25,7 +20,7 @@ const inputClass =
   "h-11 rounded-memo border border-line text-sm text-ink-900 outline-none focus:border-primary";
 
 /**
- * 「이번 일정 수정」 창의 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
+ * 「이번 일정 수정」 창의 칸: 아이콘(일정마다 따로) · (place) 예약 상태(P7) · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
  * 아이콘을 비우면 장소의 예전 아이콘이 있으면 그것이 보여 자리 표시로 알려 준다
  */
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
@@ -36,7 +31,6 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   const draft = edit.draft ?? shown;
   if (!draft) return null;
   const isPlace = item.kind === "place";
-  const options: (ReservationStatus | null)[] = [null, ...RESERVATION_STATUSES];
   return (
     <div className="flex flex-col gap-3">
       <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
@@ -67,22 +61,10 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
       </EditField>
       {isPlace && (
         <EditField label="예약 상태">
-          <div className="grid grid-cols-4 gap-1.5">
-            {options.map((s) => (
-              <button
-                key={s ?? "none"}
-                type="button"
-                aria-pressed={draft.status === s}
-                onClick={() => edit.set("status", s)}
-                className={cn(
-                  "h-9.5 rounded-button border text-xs font-bold",
-                  draft.status === s ? statusOn(s) : "border-line bg-white text-ink-500",
-                )}
-              >
-                {s ? RESERVATION_STATUS_LABEL[s] : "없음"}
-              </button>
-            ))}
-          </div>
+          <ReservationStatusPicker
+            value={draft.status}
+            onChange={(status) => edit.set("status", status)}
+          />
         </EditField>
       )}
       <EditField label="방문 예상 시간">
@@ -125,16 +107,6 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
     </div>
   );
 }
-
-/** 고른 상태 칸의 색 — 그 상태 색, 「없음」 은 잉크 */
-const STATUS_ON = {
-  ok: "border-transparent bg-status-ok-bg text-status-ok",
-  wait: "border-transparent bg-status-wait-bg text-status-wait",
-  opt: "border-transparent bg-status-opt-bg text-status-opt",
-} satisfies Record<ReservationStatus, string>;
-/** 고른 칸의 색. 「없음」(null) 은 잉크 */
-const statusOn = (s: ReservationStatus | null) =>
-  s ? STATUS_ON[s] : "border-transparent bg-ink-900 text-white";
 
 type EditFieldProps = { label: string; children: React.ReactNode };
 

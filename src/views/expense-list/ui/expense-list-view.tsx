@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -16,6 +16,7 @@ import { dateToDayIndex, dayLabel } from "@/shared/lib/days";
 import { type ExchangeRates, formatMoney, MissingRateError, toHome } from "@/shared/lib/money";
 import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { Skeleton } from "@/shared/ui/skeleton";
 
 /** 기준 화폐로 환산. 환율이 없으면 null(합계에 「환율 없음」 표시) */
@@ -97,10 +98,12 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
         )}
 
         {expenses && expenses.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="font-medium">아직 지출이 없어요</p>
-            <p className="text-sm text-muted-foreground">첫 지출을 기록해보세요.</p>
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title="아직 지출이 없어요"
+            description="첫 지출을 기록해보세요."
+            className="flex-1 justify-center"
+          />
         )}
 
         {trip &&

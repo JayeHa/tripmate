@@ -9,13 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { floatingAddClass, FloatingAddFace } from "@/shared/ui/floating-add-button";
 
-import {
-  floatingActions,
-  floatingAddClass,
-  FloatingAddFace,
-  type FloatingAddProps,
-} from "./floating-add-actions";
+import { floatingActions, type FloatingAddProps } from "./floating-add-actions";
 
 /**
  * PC 플로팅 「+ 추가」 — 일정 목록 칸 오른쪽 아래(20 · 20, 지도 위로는 올리지 않는다). 누르면 위로 200 메뉴.

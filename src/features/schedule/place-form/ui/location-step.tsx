@@ -1,10 +1,10 @@
 "use client";
 
 import { Map, useMap } from "@vis.gl/react-google-maps";
-import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { SearchField } from "@/shared/ui/search-field";
 
 import { type LatLng, samePoint } from "../lib/place-form";
 import type { PlaceFormState } from "../model/use-place-fields";
@@ -66,21 +66,17 @@ export function LocationStep({ form }: LocationStepProps) {
           inputRef.current?.focus();
         }}
       >
-        <label className="flex h-10.5 items-center gap-2 rounded-card bg-surface-muted px-3">
-          <Search className="size-4.5 shrink-0 text-ink-400" />
-          <input
-            ref={inputRef}
-            value={form.locationQuery}
-            onChange={(e) => {
-              form.setLocationQuery(e.target.value);
-              setListOpen(true);
-            }}
-            onClick={() => setListOpen(true)}
-            placeholder="장소 · 지역 · 역 이름 검색 (예: 시부야)"
-            aria-label="위치 검색"
-            className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none"
-          />
-        </label>
+        <SearchField
+          ref={inputRef}
+          value={form.locationQuery}
+          onValueChange={(q) => {
+            form.setLocationQuery(q);
+            setListOpen(true);
+          }}
+          onClick={() => setListOpen(true)}
+          placeholder="장소 · 지역 · 역 이름 검색 (예: 시부야)"
+          aria-label="위치 검색"
+        />
         {listOpen && <LocationSuggestions form={form} onPicked={() => setListOpen(false)} />}
       </div>
       {form.mapCenter ? (

@@ -1,10 +1,11 @@
 "use client";
 
 import { useSortable } from "@dnd-kit/react/sortable";
-import { Check, Equal, GripVertical, Lock } from "lucide-react";
+import { Equal, GripVertical } from "lucide-react";
 
 import { itemName, ReservationBadge, type TimelineRow } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
+import { CheckMark } from "@/shared/ui/check-mark";
 
 import { DRAG_ROLE } from "../lib/drag-announcements";
 
@@ -123,14 +124,10 @@ function SelectCircle({ name, selected, selectable, onToggle }: SelectCircleProp
       aria-label={selectable ? `${name} 선택` : `${name} — 항공편은 항공편 화면에서 고쳐요`}
       disabled={!selectable}
       onClick={onToggle}
-      className={cn(
-        "flex size-6.5 shrink-0 items-center justify-center rounded-full border",
-        !selectable && "border-line bg-surface-muted",
-        selectable && (selected ? "border-primary bg-primary" : "border-handle bg-white"),
-      )}
+      // 누르는 영역은 44 — 원(26) 둘레로 넓히되 자리는 그대로
+      className="-m-2.25 shrink-0 p-2.25"
     >
-      {selected && <Check className="size-3.5 text-white" strokeWidth={3} />}
-      {!selectable && <Lock className="size-3 text-ink-350" />}
+      <CheckMark checked={selected} locked={!selectable} />
     </button>
   );
 }

@@ -20,6 +20,7 @@ export * from "./model/use-open-memos";
 export * from "./model/use-schedule-items";
 export * from "./ui/memo-card";
 export * from "./ui/reservation-badge";
+export * from "./ui/reservation-status-picker";
 export * from "./ui/schedule-map/schedule-map";
 export * from "./ui/timeline/number-marker";
 export * from "./ui/timeline/timeline";

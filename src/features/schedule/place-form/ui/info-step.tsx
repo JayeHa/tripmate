@@ -1,10 +1,11 @@
 import { Info, MapPin } from "lucide-react";
 
 import { CATEGORY_LABEL, PLACE_CATEGORIES } from "@/entities/schedule-item";
+import { FilterChip } from "@/shared/ui/filter-chip";
 
 import type { PlaceFormState } from "../model/use-place-fields";
 import { AddressCard } from "./address-card";
-import { ChipButton, Field, inputClass, LinkListField } from "./form-parts";
+import { Field, inputClass, LinkListField } from "./form-parts";
 import { HoursField } from "./hours-field";
 
 /** 장소 폼에서 고르는 카테고리. 공항 · 교통은 담을 장소가 아니라 뺀다 */
@@ -82,13 +83,13 @@ export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
       <Field label="카테고리" optional>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
-            <ChipButton
+            <FilterChip
               key={c}
-              on={v.category === c}
+              selected={v.category === c}
               onClick={() => set("category", v.category === c ? null : c)}
             >
               {CATEGORY_LABEL[c]}
-            </ChipButton>
+            </FilterChip>
           ))}
         </div>
       </Field>
