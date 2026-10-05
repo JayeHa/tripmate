@@ -75,13 +75,20 @@ export function useSavedPlaces(tripId: string, userId: string | undefined, cityI
   });
 }
 
-/** 장소 정보를 고친다. 이 장소를 쓰는 모든 일정에 반영된다(만든 사람만) */
+/**
+ * 장소 정보를 고친다. 이 장소를 쓰는 모든 일정에 반영된다(만든 사람만).
+ * 이름 · 위치가 바뀔 수 있어 일정 추가 화면의 「저장한 장소」 목록도 다시 읽는다
+ */
 export function useUpdatePlace(tripId: string) {
+  const qc = useQueryClient();
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"places"> }) =>
       updatePlace(id, patch),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });
+    },
   });
 }
 
