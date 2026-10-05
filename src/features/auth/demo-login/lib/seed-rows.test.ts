@@ -61,4 +61,44 @@ describe("toSeedRows", () => {
     expect(places.map((p) => p.id)).toEqual(["q1", "q2"]);
     expect(items.map((i) => i.place_id)).toEqual(["q1", "q1", "q2"]);
   });
+
+  it("대체 장소는 장소 + 붙은 일정 id 를 참조하는 줄로, 일정과 따로 돌려준다", () => {
+    const { places, items, alternatives } = toSeedRows(
+      [
+        {
+          day_index: 2,
+          position: 6,
+          kind: "place",
+          name: "머메이드 커피",
+          lat: 1,
+          lng: 1,
+          alternatives: [{ name: "아시츠보", lat: 2, lng: 2, description: "발 지압" }],
+        },
+      ],
+      {
+        tripId: "t",
+        cityId: "tokyo",
+        newId: (() => {
+          let n = 0;
+          return () => `r${++n}`;
+        })(),
+      },
+    );
+    expect(items).toEqual([expect.objectContaining({ id: "r1", place_id: "r3" })]);
+    expect(items[0]).not.toHaveProperty("alternatives");
+    expect(places.map((p) => [p.id, p.name])).toEqual([
+      ["r2", "아시츠보"],
+      ["r3", "머메이드 커피"],
+    ]);
+    expect(alternatives).toEqual([
+      {
+        trip_id: "t",
+        day_index: 2,
+        position: 0,
+        kind: "place",
+        place_id: "r2",
+        alternative_of: "r1",
+      },
+    ]);
+  });
 });

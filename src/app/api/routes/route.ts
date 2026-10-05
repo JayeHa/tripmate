@@ -26,12 +26,13 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // RLS 덕분에 멤버가 아니면 빈 배열
+  // RLS 덕분에 멤버가 아니면 빈 배열. 대체 장소 줄은 동선이 아니라 뺀다
   const { data: items, error } = await supabase
     .from("schedule_items")
     .select("id, kind, place:places(lat, lng)")
     .eq("trip_id", tripId)
     .eq("day_index", dayIndex)
+    .is("alternative_of", null)
     .order("position");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

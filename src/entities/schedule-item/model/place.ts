@@ -34,15 +34,8 @@ export function isHttpUrl(value: string | null | undefined): value is string {
 
 const httpUrl = z.string().refine(isHttpUrl);
 const linkSchema = z.object({ title: z.string(), url: httpUrl });
-const alternativeSchema = z.object({
-  name: z.string().min(1),
-  gmap: httpUrl,
-  sub: z.string().optional(),
-  hours: z.string().optional(),
-});
 
 export type PlaceLink = z.infer<typeof linkSchema>;
-export type Alternative = z.infer<typeof alternativeSchema>;
 
 /*
  * DB 의 text · jsonb 칸을 좁힌다. text 는 check 제약이 값을 보장하지만 타입 생성기는 string 으로 내보내고,
@@ -118,9 +111,4 @@ export function planLinksOf(item: Pick<ScheduleItem, "links">): PlaceLink[] {
 /** 장소 링크(공식 홈페이지 · 메뉴판 — places.links). 장소가 없거나 모양이 틀린 원소는 버린다 */
 export function placeLinksOf(item: Pick<ScheduleItem, "place">): PlaceLink[] {
   return arrayOf(linkSchema, item.place?.links);
-}
-
-/** 대체 장소. name · gmap 이 없는 원소는 버린다 */
-export function alternativesOf(item: ScheduleItem): Alternative[] {
-  return arrayOf(alternativeSchema, item.alternatives);
 }

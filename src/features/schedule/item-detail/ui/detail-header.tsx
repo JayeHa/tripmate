@@ -43,6 +43,7 @@ export function DetailHeader({
       <ItemMenu
         actions={actions}
         dayIndex={item.day_index}
+        alternativeCount={row.alternatives.length}
         startDate={startDate}
         totalDays={totalDays}
       />

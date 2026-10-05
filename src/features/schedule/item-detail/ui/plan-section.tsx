@@ -10,7 +10,7 @@ import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
 
 import type { PlanEditState } from "../model/use-plan-edit";
-import { PlanEditForm } from "./plan-edit-form";
+import { ALTERNATIVE_TIME_NOTE, PlanEditForm } from "./plan-edit-form";
 
 type PlanSectionProps = {
   item: ScheduleItem;
@@ -21,7 +21,7 @@ type PlanSectionProps = {
 
 /**
  * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 보기는 표(예약 상태 · 시간 · 링크), 「수정」 을 누르면 그 자리에서 고친다.
- * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다.
+ * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다. 대체 장소는 시간이 자리의 것이라 고칠 수 없다고 안내한다.
  */
 export function PlanSection({ item, dayTag, edit }: PlanSectionProps) {
   return (
@@ -68,9 +68,13 @@ function PlanView({ item }: PlanViewProps) {
         </Line>
       )}
       <Line label="시간">
-        <span className={cn("font-semibold", item.start_time ? "text-ink-900" : "text-ink-350")}>
-          {item.start_time?.slice(0, 5) ?? "미정"}
-        </span>
+        {item.alternative_of ? (
+          <span className="text-ink-350">{ALTERNATIVE_TIME_NOTE}</span>
+        ) : (
+          <span className={cn("font-semibold", item.start_time ? "text-ink-900" : "text-ink-350")}>
+            {item.start_time?.slice(0, 5) ?? "미정"}
+          </span>
+        )}
       </Line>
       {isPlace && (
         <Line label="링크">

@@ -38,7 +38,7 @@ export function LegLine({ leg, onEditMove }: LegLineProps) {
         <button
           type="button"
           onClick={onEditMove}
-          className="ml-16 line-clamp-2 text-left text-[13px] leading-normal text-pretty text-ink-500"
+          className="ml-16 line-clamp-2 text-left text-[13px]/normal text-pretty text-ink-500"
         >
           {secondLine}
         </button>

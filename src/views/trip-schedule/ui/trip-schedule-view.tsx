@@ -6,6 +6,8 @@ import type { City } from "@/entities/city";
 import {
   buildTimeline,
   type Place,
+  type ScheduleItem,
+  useAlternatives,
   useMoves,
   useOpenMemos,
   useScheduleItems,
@@ -51,14 +53,20 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   // 상세의 「장소 정보 수정」 으로 연 장소 입력 폼. 저장하면 닫고 상세 위에 토스트를 띄운다
   const [placeEdit, setPlaceEdit] = useState<{ place: Place; city: City | null } | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  // 상세의 대체 장소 「+ 직접 추가」 로 연 장소 입력 폼(대체 장소 모드)
+  const [altAdd, setAltAdd] = useState<{ main: ScheduleItem; city: City | null } | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
   // 이동 기록을 다 불러오기 전(또는 실패)에는 이동 방법 창을 열지 않는다. 빈 창에서 저장하면 기존 기록을 덮어쓴다
   const { data: moves, isSuccess: movesReady } = useMoves(tripId);
+  const { data: alternatives } = useAlternatives(tripId);
   // 요일별 운영시간에서 그날 값을 고르려고 그날 요일을 넘긴다
   const dow = trip ? dayOfWeek(trip.start_date, day) : null;
-  const rows = useMemo(() => buildTimeline(dayItems, moves, dow), [dayItems, moves, dow]);
+  const rows = useMemo(
+    () => buildTimeline(dayItems, moves, dow, alternatives),
+    [dayItems, moves, dow, alternatives],
+  );
   const moveDialog = useMoveDialog(movesReady);
   const memos = useOpenMemos(rows);
 
@@ -152,6 +160,24 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
           onEditPlace={(place, city) => setPlaceEdit({ place, city })}
+          onAddAlternative={(main, city) => setAltAdd({ main, city })}
+          onSwapped={setOpenId}
+        />
+      )}
+
+      {altAdd && (
+        <PlaceFormDialog
+          tripId={tripId}
+          city={altAdd.city}
+          mode={{
+            kind: "add",
+            dayIndex: altAdd.main.day_index,
+            initialQuery: "",
+            alternativeOf: altAdd.main,
+            onSaved: () => setAltAdd(null),
+          }}
+          open
+          onOpenChange={(open) => !open && setAltAdd(null)}
         />
       )}
 

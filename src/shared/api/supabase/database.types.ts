@@ -296,7 +296,7 @@ export type Database = {
           start_time: string | null;
           status: string | null;
           memo: string | null;
-          alternatives: Json;
+          alternative_of: string | null;
           links: Json;
           created_by: string | null;
           created_at: string;
@@ -315,7 +315,7 @@ export type Database = {
           start_time?: string | null;
           status?: string | null;
           memo?: string | null;
-          alternatives?: Json;
+          alternative_of?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -334,7 +334,7 @@ export type Database = {
           start_time?: string | null;
           status?: string | null;
           memo?: string | null;
-          alternatives?: Json;
+          alternative_of?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -516,6 +516,10 @@ export type Database = {
       create_place_schedule: {
         Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };
         Returns: string;
+      };
+      swap_alternative: {
+        Args: { p_alt: string };
+        Returns: undefined;
       };
       place_city_for_trip: {
         Args: { p_trip: string; p_lat: number | null; p_lng: number | null };

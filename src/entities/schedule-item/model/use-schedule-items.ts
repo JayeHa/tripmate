@@ -52,13 +52,18 @@ export function useAddPlacesToSchedule(tripId: string) {
   });
 }
 
-/** 장소를 직접 입력해 그날 끝에 담는다(새 장소 + 일정). 저장한 장소 목록도 다시 읽는다 */
+/** 장소를 직접 입력해 그날 끝에(또는 일정의 대체 장소로) 담는다(새 장소 + 일정). 저장한 장소 목록도 다시 읽는다 */
 export function useCreatePlaceSchedule(tripId: string) {
   const qc = useQueryClient();
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: (v: { dayIndex: number; place: NewPlaceFields; emoji: string | null }) =>
-      createPlaceSchedule(tripId, v.dayIndex, v.place, v.emoji),
+    mutationFn: (v: {
+      dayIndex: number;
+      place: NewPlaceFields;
+      emoji: string | null;
+      /** 있으면 그 일정의 대체 장소로 넣는다 */
+      alternativeOf?: string | null;
+    }) => createPlaceSchedule(tripId, v.dayIndex, v.place, v.emoji, v.alternativeOf ?? null),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });

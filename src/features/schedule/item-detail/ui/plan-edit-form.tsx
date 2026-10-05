@@ -12,6 +12,11 @@ import type { PlanEditState } from "../model/use-plan-edit";
 
 type PlanEditFormProps = { item: ScheduleItem; edit: PlanEditState };
 
+/**
+ * 대체 장소의 시간 칸 안내. 시간은 자리(타임라인 줄)의 것이라 대체 장소는 갖지 않고(DB check), 바꾸면 그 자리의 시간이 된다
+ */
+export const ALTERNATIVE_TIME_NOTE = "대체 장소라 시간을 바꿀 수 없어요.";
+
 /** 수정 칸 입력 상자 — 높이 44 · 둥글기 10 */
 const inputClass =
   "h-11 rounded-memo border border-line text-sm text-ink-900 outline-none focus:border-primary";
@@ -74,13 +79,17 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
         </EditField>
       )}
       <EditField label="방문 예상 시간">
-        <input
-          type="time"
-          value={draft.time}
-          onChange={(e) => edit.set("time", e.target.value)}
-          aria-label="방문 예상 시간"
-          className={`${inputClass} px-3`}
-        />
+        {item.alternative_of ? (
+          <span className="text-sm text-ink-350">{ALTERNATIVE_TIME_NOTE}</span>
+        ) : (
+          <input
+            type="time"
+            value={draft.time}
+            onChange={(e) => edit.set("time", e.target.value)}
+            aria-label="방문 예상 시간"
+            className={`${inputClass} px-3`}
+          />
+        )}
       </EditField>
       {isPlace && (
         <EditField label="일정 링크">
