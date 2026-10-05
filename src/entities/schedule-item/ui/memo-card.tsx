@@ -24,17 +24,19 @@ export function memoWhen(iso: string): string {
 
 /**
  * 메모 하나 — 작성자 아바타 · (★ 중요) · 쓴 시각, 본문(줄바꿈 유지), 링크 칩.
- * 중요 메모는 연주황 바탕 · 굵은 주황 글씨로 구분한다. 작성자를 모르면(나간 멤버) 「?」
+ * 중요 메모는 연주황 바탕 · 굵은 주황 글씨로 구분한다. 작성자를 모르면(나간 멤버 · 지운 계정 · 예전 데이터) 아바타를 그리지 않는다
  */
 export function MemoCard({ memo, author, onClick }: MemoCardProps) {
   const links = linkListOf(memo.links);
   const body = (
     <>
       <span className="flex items-center gap-1.5">
-        <Avatar className="size-4.5">
-          <AvatarImage src={author?.avatarUrl ?? undefined} alt="" />
-          <AvatarFallback className="text-[10px]">{author?.name.slice(0, 1) ?? "?"}</AvatarFallback>
-        </Avatar>
+        {author && (
+          <Avatar className="size-4.5">
+            <AvatarImage src={author.avatarUrl ?? undefined} alt="" />
+            <AvatarFallback className="text-[10px]">{author.name.slice(0, 1)}</AvatarFallback>
+          </Avatar>
+        )}
         {memo.starred && (
           <span className="flex items-center gap-0.5 text-[11px] font-extrabold text-status-wait">
             <Star className="size-3 fill-current" />
