@@ -1156,14 +1156,14 @@ describe("일정 편집 저장 (0030)", () => {
     const { trip, a, b, c, d } = await setup("2027-11-01", "2027-11-02");
     // 편집하는 동안 일행이 둘째 날에 넣은 곳
     await addPlace(trip, 1, { name: "E", lat: 35.74, lng: 139.7 });
-    await db.query(`select public.apply_schedule_edit($1, $2, $3)`, [
+    await db.query(`select public.apply_schedule_edit($1, $2, $3, null)`, [
       trip,
       JSON.stringify({ 0: [c, a], 1: [d, b] }),
       [],
     ]);
     expect(await day(trip, 0)).toEqual(["C", "A"]);
     expect(await day(trip, 1)).toEqual(["D", "B", "E"]);
-    await db.query(`select public.apply_schedule_edit($1, $2, $3)`, [
+    await db.query(`select public.apply_schedule_edit($1, $2, $3, null)`, [
       trip,
       JSON.stringify({ 0: [a] }),
       [c],
@@ -1176,10 +1176,55 @@ describe("일정 편집 저장 (0030)", () => {
     const other = await setup("2027-11-05", "2027-11-06");
     expect(
       await rejects(
-        `select public.apply_schedule_edit('${trip}', '${JSON.stringify({ 0: [b, a, other.a] })}', '{}')`,
+        `select public.apply_schedule_edit('${trip}', '${JSON.stringify({ 0: [b, a, other.a] })}', '{}', null)`,
       ),
     ).toMatch(/timeline items of this trip/);
     expect(await day(trip, 0)).toEqual(["A", "B", "C"]);
+  });
+});
+
+describe("하루 요약 (0031)", () => {
+  /** 저장된 요약 배열(JSON 으로 읽은 그대로) */
+  async function summaries(trip: string) {
+    const { rows } = await db.query<{ s: (string | null)[] }>(
+      `select to_json(day_summaries) s from public.trips where id = '${trip}'`,
+    );
+    return rows[0].s;
+  }
+
+  /** 요약만 저장한다 */
+  function save(trip: string, sums: Record<number, string>) {
+    return db.query(`select public.apply_schedule_edit($1, '{}', '{}', $2)`, [
+      trip,
+      JSON.stringify(sums),
+    ]);
+  }
+
+  it("바꾼 날만 그 자리에 — 앞의 빈 날은 null, 빈 글은 지운다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-01", "2027-12-04");
+    await save(trip, { 2: " 라멘 → 파크 " });
+    expect(await summaries(trip)).toEqual([null, null, "라멘 → 파크"]);
+    await save(trip, { 0: "도착", 2: "" });
+    expect(await summaries(trip)).toEqual(["도착", null, null]);
+  });
+
+  it("100자를 넘거나 멤버가 아니면 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-05", "2027-12-06");
+    expect(
+      await rejects(
+        `select public.apply_schedule_edit('${trip}', '{}', '{}', '${JSON.stringify({ 0: "가".repeat(101) })}')`,
+      ),
+    ).toMatch(/at most 100/);
+    await as(B);
+    expect(
+      await rejects(
+        `select public.apply_schedule_edit('${trip}', '{}', '{}', '${JSON.stringify({ 0: "남의 여행" })}')`,
+      ),
+    ).toMatch(/not a member/);
+    await as(A);
+    expect(await summaries(trip)).toEqual([]);
   });
 });
 
