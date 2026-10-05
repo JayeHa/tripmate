@@ -9,13 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { floatingAddClass, FloatingAddFace } from "@/shared/ui/floating-add-button";
 
-import {
-  floatingActions,
-  floatingAddClass,
-  FloatingAddFace,
-  type FloatingAddProps,
-} from "./floating-add-actions";
+import { floatingActions, type FloatingAddProps } from "./floating-add-actions";
 
 /**
  * 모바일 플로팅 「+ 추가」 — 하단 탭 위 오른쪽(16 · 탭바 위 16). 누르면 스크림 위에 흰 pill 세 개가 버튼 위로 쌓인다.
