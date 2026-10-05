@@ -118,6 +118,24 @@ describe("toPlacePatch", () => {
     });
   });
 
+  it("위치 없이 만들어진 장소는 위치를 정하지 않아도 이름을 고칠 수 있다", () => {
+    const old = place({
+      lat: null,
+      lng: null,
+      address: null,
+      address_local: null,
+      address_ko: null,
+    });
+    const v = placeFormOf(old);
+    expect(
+      toPlacePatch({ ...v, name: "히로키야 2호점" }, storedAddressOf(old), v, storedAddressOf(old)),
+    ).toEqual({ ok: true, patch: { name: "히로키야 2호점" } });
+    // 위치가 있던 장소는 그대로 필수
+    expect(toPlacePatch({ ...opened, at: null }, stored, opened, stored)).toMatchObject({
+      ok: false,
+    });
+  });
+
   it("운영시간을 비우면 둘 다 지운다, 이름이 비면 오류", () => {
     expect(toPlacePatch({ ...opened, hours: "" }, stored, opened, stored)).toEqual({
       ok: true,
