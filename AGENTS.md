@@ -128,6 +128,15 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - 정렬(외부 → `@/` → 상대경로), 타입 전용 `type` 표기, 중복 import 는 `--fix` 가 고친다
 - 순환 import 금지(`import/no-cycle`). 배럴끼리 다시 내보내다 생기기 쉽다
 
+## 지원 브라우저
+
+`package.json` 의 `browserslist` — **Chrome · Edge 111+, Safari · iOS 16.4+, Firefox 128+.** Tailwind v4 의 바닥선과 같다
+(`@property` · `color-mix()` 를 써서 이보다 낮으면 화면이 이미 깨진다). Next 는 이 범위로 JS 를 변환한다.
+
+- 이 범위에 없는 API 는 **기능 감지 후 대체 경로**로 쓴다. 모듈 최상위에서 만들지 않는다 — 없는 브라우저에서 그 파일을 쓰는 화면 전체가 깨진다
+  (예: `shared/lib/emoji.ts` 의 `Intl.Segmenter`)
+- 범위를 바꾸면 `docs/engineering/library-policy.md` 결정 기록에 남긴다
+
 ## 왜 airbnb 규칙을 안 쓰나
 
 `eslint-config-airbnb` 는 ESLint 8 까지만 지원한다(이 레포는 9 · flat config). 커뮤니티 포크가 있지만 규칙 다수가
