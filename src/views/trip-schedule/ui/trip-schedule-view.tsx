@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   buildTimeline,
+  type ScheduleItem,
   useAlternatives,
   useMemos,
   useMoves,
@@ -14,6 +15,7 @@ import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
 import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
+import { useScheduleEdit } from "@/features/schedule/edit-mode";
 import { ItemDetailDialog } from "@/features/schedule/item-detail";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
@@ -27,6 +29,9 @@ import { PcSchedule } from "./pc/pc-schedule";
 
 type TripScheduleViewProps = { tripId: string };
 
+/** 일정을 읽기 전의 빈 목록. 렌더마다 새 배열을 만들면 그걸 받는 memo 가 매번 다시 계산된다 */
+const NO_ITEMS: ScheduleItem[] = [];
+
 /**
  * 일정 화면. 상태와 동작(날짜 · 타임라인 · 메모 펼침 · 창들)은 여기서 쥐고, 배치는 모바일 · PC 레이아웃이 그린다.
  * 레이아웃은 미디어 쿼리로 하나만 마운트한다 — CSS 로 숨기면 Google 지도가 두 개 생긴다.
@@ -34,7 +39,7 @@ type TripScheduleViewProps = { tripId: string };
  */
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
-  const { data: items, isPending } = useScheduleItems(tripId);
+  const { data: items = NO_ITEMS, isPending } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
   const [day, setDay] = useDayParam(totalDays);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -53,8 +58,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
   const overlays = useDetailOverlays();
   const authorOf = useMemberLookup(tripId);
+  // 일정 편집. 마치면 마지막으로 편집하던 날을 보인다
+  const edit = useScheduleEdit({ tripId, items, totalDays, onExit: setDay });
 
-  const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
+  const dayItems = useMemo(() => items.filter((it) => it.day_index === day), [items, day]);
 
   // 이동 기록을 다 불러오기 전(또는 실패)에는 이동 방법 창을 열지 않는다. 빈 창에서 저장하면 기존 기록을 덮어쓴다
   const { data: moves, isSuccess: movesReady } = useMoves(tripId);
@@ -115,6 +122,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           }}
           authorOf={authorOf}
           onAddDayMemo={() => overlays.openDayMemo(day)}
+          edit={edit}
+          onStartEdit={() => edit.start(day)}
         />
       )}
 
@@ -131,7 +140,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           startDate={trip.start_date}
           totalDays={totalDays}
           initialDay={day}
-          items={items ?? []}
+          items={items}
           open={addOpen}
           onOpenChange={setAddOpen}
           onDirectAdd={setDirect}

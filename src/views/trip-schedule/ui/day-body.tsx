@@ -24,6 +24,7 @@ type DayBodyProps = {
   onAddPlace: () => void;
   onAddDayMemo: () => void;
   authorOf: (authorId: string | null) => MemoAuthor | null;
+  onStartEdit: () => void;
 };
 
 /** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「일정 추가」. 모바일과 PC 목록이 같이 쓴다 */
@@ -40,6 +41,7 @@ export function DayBody({
   onAddPlace,
   onAddDayMemo,
   authorOf,
+  onStartEdit,
 }: DayBodyProps) {
   return (
     <>
@@ -51,6 +53,7 @@ export function DayBody({
           allOpen={memos.allOpen}
           onToggleAll={memos.toggleAll}
           counts={showCounts ? countsOf(rows) : undefined}
+          onEdit={isPending ? undefined : onStartEdit}
         />
       )}
       {isPending && (

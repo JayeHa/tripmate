@@ -1130,6 +1130,59 @@ describe("날짜 메모에는 메모 목록이 없다 (0029)", () => {
   });
 });
 
+describe("일정 편집 저장 (0030)", () => {
+  /** 이틀짜리 여행에 첫날 세 곳 · 둘째 날 한 곳 */
+  async function setup(start: string, end: string) {
+    await as(A);
+    const trip = await newTrip(start, end);
+    const a = await addPlace(trip, 0, { name: "A", lat: 35.7, lng: 139.7 });
+    const b = await addPlace(trip, 0, { name: "B", lat: 35.71, lng: 139.7 });
+    const c = await addPlace(trip, 0, { name: "C", lat: 35.72, lng: 139.7 });
+    const d = await addPlace(trip, 1, { name: "D", lat: 35.73, lng: 139.7 });
+    return { trip, a, b, c, d };
+  }
+
+  /** 그날 일정 이름을 순서대로 */
+  async function day(trip: string, dayIndex: number) {
+    const { rows } = await db.query<{ name: string }>(
+      `select p.name from public.schedule_items si join public.places p on p.id = si.place_id
+       where si.trip_id = '${trip}' and si.day_index = ${dayIndex} and si.alternative_of is null
+       order by si.position`,
+    );
+    return rows.map((r) => r.name);
+  }
+
+  it("순서 바꾸기 · 다른 날로 옮기기 · 지우기를 한 번에, 목록에 없는 그날 일정은 뒤에", async () => {
+    const { trip, a, b, c, d } = await setup("2027-11-01", "2027-11-02");
+    // 편집하는 동안 일행이 둘째 날에 넣은 곳
+    await addPlace(trip, 1, { name: "E", lat: 35.74, lng: 139.7 });
+    await db.query(`select public.apply_schedule_edit($1, $2, $3)`, [
+      trip,
+      JSON.stringify({ 0: [c, a], 1: [d, b] }),
+      [],
+    ]);
+    expect(await day(trip, 0)).toEqual(["C", "A"]);
+    expect(await day(trip, 1)).toEqual(["D", "B", "E"]);
+    await db.query(`select public.apply_schedule_edit($1, $2, $3)`, [
+      trip,
+      JSON.stringify({ 0: [a] }),
+      [c],
+    ]);
+    expect(await day(trip, 0)).toEqual(["A"]);
+  });
+
+  it("다른 여행 일정이 섞이면 거부하고 아무것도 바꾸지 않는다", async () => {
+    const { trip, a, b } = await setup("2027-11-03", "2027-11-04");
+    const other = await setup("2027-11-05", "2027-11-06");
+    expect(
+      await rejects(
+        `select public.apply_schedule_edit('${trip}', '${JSON.stringify({ 0: [b, a, other.a] })}', '{}')`,
+      ),
+    ).toMatch(/timeline items of this trip/);
+    expect(await day(trip, 0)).toEqual(["A", "B", "C"]);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
