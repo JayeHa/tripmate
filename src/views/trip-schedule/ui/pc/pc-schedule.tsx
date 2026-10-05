@@ -10,6 +10,7 @@ import { cn } from "@/shared/lib/utils";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useSplitWidth } from "../../model/use-split-width";
 import { DayBody } from "../day-body";
+import { PcFloatingAdd } from "../floating-add/pc-floating-add";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { DayRail } from "./day-rail";
 import { SplitHandle } from "./split-handle";
@@ -72,25 +73,34 @@ export function PcSchedule({
           <PcScheduleEditor edit={edit} startDate={trip.start_date} totalDays={totalDays} />
         </div>
       )}
-      {/* 편집하는 동안은 숨기기만 한다 — 스크롤 강조가 잡은 목록 칸을 그대로 두려고 */}
+      {/*
+        편집하는 동안은 숨기기만 한다 — 스크롤 강조가 잡은 목록 칸을 그대로 두려고.
+        바깥 감싸개는 스크롤하지 않아 「+ 추가」 를 목록 칸 오른쪽 아래에 고정한다
+      */}
       <div
-        ref={listRef}
-        className={cn("shrink-0 overflow-y-auto", edit.editing && "hidden")}
+        className={cn("relative shrink-0", edit.editing && "hidden")}
         style={{ width: split.width }}
       >
-        {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
-        <div ref={contentRef}>
-          <DayBody
-            startDate={trip?.start_date ?? null}
-            day={day}
-            summary={trip?.day_summaries[day]}
-            showCounts
-            focusId={focus.focusId}
-            {...body}
-          />
+        <div ref={listRef} className="h-full overflow-y-auto">
+          {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
+          <div ref={contentRef}>
+            <DayBody
+              startDate={trip?.start_date ?? null}
+              day={day}
+              summary={trip?.day_summaries[day]}
+              showCounts
+              focusId={focus.focusId}
+              {...body}
+            />
+          </div>
+          {/* 마지막 장소도 기준선까지 올라오게 하는 여백. 기본 420px, 목록 칸이 높으면 「칸 높이 − 기준선」(60%) 까지 늘린다 */}
+          <div aria-hidden="true" className="h-[max(420px,60%)]" />
         </div>
-        {/* 마지막 장소도 기준선까지 올라오게 하는 여백. 기본 420px, 목록 칸이 높으면 「칸 높이 − 기준선」(60%) 까지 늘린다 */}
-        <div aria-hidden="true" className="h-[max(420px,60%)]" />
+        <PcFloatingAdd
+          onAddPlace={body.onAddPlace}
+          onStartEdit={body.onStartEdit}
+          onAddDayMemo={body.onAddDayMemo}
+        />
       </div>
       <SplitHandle
         dragging={split.dragging}

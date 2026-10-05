@@ -10,6 +10,7 @@ import { AppHeader } from "@/shared/ui/app-header";
 
 import { useScrollFocus } from "../model/use-scroll-focus";
 import { DayBody } from "./day-body";
+import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
 
@@ -86,6 +87,13 @@ export function MobileSchedule({
           }}
         />
       </main>
+      {!edit.editing && (
+        <MobileFloatingAdd
+          onAddPlace={body.onAddPlace}
+          onStartEdit={body.onStartEdit}
+          onAddDayMemo={body.onAddDayMemo}
+        />
+      )}
       {/* 편집은 화면 전체를 덮는다. 아래 일정 화면은 그대로 두어 닫으면 보던 자리로 돌아온다 */}
       {trip && edit.editing && (
         <MobileScheduleEditor
