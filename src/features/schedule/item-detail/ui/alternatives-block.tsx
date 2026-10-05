@@ -1,23 +1,14 @@
 "use client";
 
-import { ArrowLeftRight, ArrowUpRight, X } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
-import { isHttpUrl, itemName, type ScheduleItem } from "@/entities/schedule-item";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/shared/ui/alert-dialog";
+import { itemName, type ScheduleItem } from "@/entities/schedule-item";
 
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { AlternativePicker } from "./alternative-picker";
+import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
 
 type AlternativesBlockProps = {
   tripId: string;
@@ -26,10 +17,12 @@ type AlternativesBlockProps = {
   actions: AlternativeActions;
   /** 「+ 직접 추가」 — 부른 쪽이 장소 입력 폼을 대체 장소 모드로 연다 */
   onDirectAdd: () => void;
+  /** 카드를 누르면 그 대체 장소의 상세(메모 · 예약 상태를 바꾸기 없이 보고 고친다) */
+  onOpen: (alt: ScheduleItem) => void;
 };
 
 /**
- * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름(구글맵 ↗) · 설명 · 「바꾸기」 · 지우기, 아래 「+ 대체 장소」.
+ * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」.
  * 바꾸기는 그 장소가 이 자리(날짜 · 순서 · 시간)에 들어가고, 예약 상태 · 메모는 각자 장소를 따라간다
  */
 export function AlternativesBlock({
@@ -38,13 +31,14 @@ export function AlternativesBlock({
   alternatives,
   actions,
   onDirectAdd,
+  onOpen,
 }: AlternativesBlockProps) {
   const [picking, setPicking] = useState(false);
   return (
     <section className="flex flex-col gap-2">
       <span className="text-[13px] font-bold text-ink-400">대체 장소 {alternatives.length}</span>
       {alternatives.map((alt) => (
-        <AlternativeCard key={alt.id} alt={alt} actions={actions} />
+        <AlternativeCard key={alt.id} alt={alt} actions={actions} onOpen={() => onOpen(alt)} />
       ))}
       {picking ? (
         <AlternativePicker
@@ -72,31 +66,26 @@ export function AlternativesBlock({
   );
 }
 
-type AlternativeCardProps = { alt: ScheduleItem; actions: AlternativeActions };
+type AlternativeCardProps = { alt: ScheduleItem; actions: AlternativeActions; onOpen: () => void };
 
-/** 대체 장소 카드 하나. 자기 기록(상태 · 메모 · 링크)이 있으면 지우기 전에 묻는다 */
-function AlternativeCard({ alt, actions }: AlternativeCardProps) {
+/** 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 자기 기록(상태 · 메모 · 링크)이 있으면 빼기 전에 묻는다 */
+function AlternativeCard({ alt, actions, onOpen }: AlternativeCardProps) {
   const [confirming, setConfirming] = useState(false);
-  const gmap = alt.place?.gmap_url;
   const sub = alt.place?.description;
   return (
     <div className="flex items-center gap-2 rounded-card border border-line-card px-3.5 py-3">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        {isHttpUrl(gmap) ? (
-          <a
-            href={gmap}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[15px] font-bold text-ink-900"
-          >
-            {itemName(alt)}
-            <ArrowUpRight className="size-3.5 shrink-0 text-primary" />
-          </a>
-        ) : (
-          <span className="text-[15px] font-bold text-ink-900">{itemName(alt)}</span>
-        )}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
+      >
+        <span className="flex items-center gap-1 text-[15px] font-bold text-ink-900">
+          {alt.emoji && <span className="font-normal">{alt.emoji}</span>}
+          {itemName(alt)}
+          <ChevronRight className="size-4 shrink-0 text-ink-350" />
+        </span>
         {sub && <span className="text-[13px] text-ink-500">{sub}</span>}
-      </div>
+      </button>
       <button
         type="button"
         disabled={actions.pending}
@@ -115,22 +104,11 @@ function AlternativeCard({ alt, actions }: AlternativeCardProps) {
       >
         <X className="size-4" />
       </button>
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>대체 장소에서 뺄까요?</AlertDialogTitle>
-            <AlertDialogDescription>
-              이 장소에 적어 둔 예약 상태 · 메모 · 링크가 함께 지워져요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => actions.remove(alt)}>
-              빼기
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <RemoveAlternativeDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        onConfirm={() => actions.remove(alt)}
+      />
     </div>
   );
 }

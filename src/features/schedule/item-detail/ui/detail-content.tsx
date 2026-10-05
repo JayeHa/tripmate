@@ -1,5 +1,5 @@
 import { type City, useTripCities } from "@/entities/city";
-import type { Place, TimelineRow } from "@/entities/schedule-item";
+import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { dayOfWeek, dayParts } from "@/shared/lib/days";
 
@@ -17,15 +17,20 @@ type DetailContentProps = {
   row: TimelineRow;
   plan: PlanEditState;
   memo: MemoEditState;
-  alternatives: AlternativeActions;
-  /** 대체 장소 「+ 직접 추가」 — 장소 입력 폼을 이 일정의 대체 장소 모드로. 이 장소의 도시(검색 범위)를 넘긴다 */
-  onAddAlternative: (city: City | null) => void;
+  /** 대체 장소 칸. 대체 장소의 상세에서는 null(대체 장소의 대체 장소는 없다) */
+  alternatives: {
+    actions: AlternativeActions;
+    /** 「+ 직접 추가」 — 장소 입력 폼을 이 일정의 대체 장소 모드로. 이 장소의 도시(검색 범위)를 넘긴다 */
+    onAdd: (city: City | null) => void;
+    /** 카드를 누르면 그 대체 장소의 상세로 */
+    onOpen: (alt: ScheduleItem) => void;
+  } | null;
   /** 「장소 정보 수정」 — 장소와 그 도시(위치를 바꿀 때 검색 범위)를 넘긴다 */
   onEditPlace: (place: Place, city: City | null) => void;
 };
 
 /**
- * 일정 상세 본문 — 장소 정보(place 만) → 이번 일정 → 메모 → 대체 장소(place 만).
+ * 일정 상세 본문 — 장소 정보(place 만) → 이번 일정 → 메모 → 대체 장소(place 만, 대체 장소의 상세에서는 없다).
  * 바우처 · 할 일은 노트 단계(f)에서 이번 일정과 메모 사이에 들어온다. 모바일 · PC 가 같은 본문을 쓴다
  */
 export function DetailContent({
@@ -35,7 +40,6 @@ export function DetailContent({
   plan,
   memo,
   alternatives,
-  onAddAlternative,
   onEditPlace,
 }: DetailContentProps) {
   const { data: cities = [] } = useTripCities(tripId);
@@ -63,13 +67,14 @@ export function DetailContent({
       />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />
       <MemoBlock notes={row.notes} edit={memo} />
-      {item.kind === "place" && (
+      {item.kind === "place" && alternatives && (
         <AlternativesBlock
           tripId={tripId}
           main={item}
           alternatives={row.alternatives}
-          actions={alternatives}
-          onDirectAdd={() => onAddAlternative(city)}
+          actions={alternatives.actions}
+          onDirectAdd={() => alternatives.onAdd(city)}
+          onOpen={alternatives.onOpen}
         />
       )}
     </>

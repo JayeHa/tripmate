@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 
 import type { City } from "@/entities/city";
 import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
-import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
 import { useMemoEdit } from "../model/use-memo-edit";
 import { usePlanEdit } from "../model/use-plan-edit";
+import { AlternativeDetail } from "./alternative-detail";
 import { DetailContent } from "./detail-content";
 import { DetailHeader } from "./detail-header";
+import { MobileLayout, PcLayout } from "./detail-layout";
 
 /** 모바일: 아래에서 올라오는 시트(최대 90%, 위 22 둥글기) */
 const MOBILE_CLASS =
@@ -65,13 +66,30 @@ export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetai
   );
 }
 
-type DetailBodyProps = Omit<ItemDetailDialogProps, "row"> & {
+export type DetailBodyProps = Omit<ItemDetailDialogProps, "row"> & {
   row: TimelineRow;
   onLockChange: (locked: boolean) => void;
 };
 
-/** 상세 내용. 일정마다 새로 마운트돼(key) 수정 칸이 이전 일정 값을 들고 오지 않는다 */
-function DetailBody({
+/**
+ * 상세 내용. 일정마다 새로 마운트돼(key) 수정 칸이 이전 일정 값을 들고 오지 않는다.
+ * 대체 장소 카드를 누르면 같은 창 안에서 그 대체 장소의 상세로 넘어간다(머리의 ← 로 돌아온다).
+ * 보던 대체 장소가 빠지면(빼기 · 일행이 지움) 원래 일정으로 돌아온다
+ */
+function DetailBody(props: DetailBodyProps) {
+  const [altId, setAltId] = useState<string | null>(null);
+  const alt = props.row.alternatives.find((a) => a.id === altId) ?? null;
+  if (altId && !alt) setAltId(null);
+  if (alt) {
+    return <AlternativeDetail key={alt.id} {...props} alt={alt} onBack={() => setAltId(null)} />;
+  }
+  return <MainDetail {...props} onOpenAlternative={setAltId} />;
+}
+
+type MainDetailProps = DetailBodyProps & { onOpenAlternative: (altId: string) => void };
+
+/** 원래 일정의 상세 — 장소 정보 · 이번 일정 · 메모 · 대체 장소 */
+function MainDetail({
   tripId,
   startDate,
   totalDays,
@@ -83,7 +101,8 @@ function DetailBody({
   onEditPlace,
   onAddAlternative,
   onSwapped,
-}: DetailBodyProps) {
+  onOpenAlternative,
+}: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
   const memo = useMemoEdit(tripId, row.item);
   const actions = useItemActions(tripId, row.item, dayItems, onClose);
@@ -98,8 +117,11 @@ function DetailBody({
         row={row}
         plan={plan}
         memo={memo}
-        alternatives={alternatives}
-        onAddAlternative={(city) => onAddAlternative(row.item, city)}
+        alternatives={{
+          actions: alternatives,
+          onAdd: (city) => onAddAlternative(row.item, city),
+          onOpen: (alt) => onOpenAlternative(alt.id),
+        }}
         onEditPlace={onEditPlace}
       />
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
@@ -123,43 +145,5 @@ function DetailBody({
     />
   ) : (
     <MobileLayout header={header} content={content} />
-  );
-}
-
-type MobileLayoutProps = { header: React.ReactNode; content: React.ReactNode };
-
-/** 모바일: 위 손잡이 · 머리 · 스크롤 본문 */
-function MobileLayout({ header, content }: MobileLayoutProps) {
-  return (
-    <>
-      <div className="flex shrink-0 justify-center bg-surface-sunken pt-2">
-        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-line" />
-      </div>
-      {header}
-      {content}
-    </>
-  );
-}
-
-type PcLayoutProps = MobileLayoutProps & {
-  /** 「+ 메모 추가」. 메모를 고치는 중이면 null(버튼 숨김) */
-  onAddMemo: (() => void) | null;
-};
-
-/** PC: 머리 · 스크롤 본문 · 아래 안내 + 「+ 메모 추가」 */
-function PcLayout({ header, content, onAddMemo }: PcLayoutProps) {
-  return (
-    <>
-      {header}
-      {content}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-surface-muted px-6 py-3.5">
-        <span className="text-[13px] text-ink-400">「수정」을 누르면 바로 고칠 수 있어요</span>
-        {onAddMemo && (
-          <Button variant="outline" size="sm" onClick={onAddMemo}>
-            + 메모 추가
-          </Button>
-        )}
-      </div>
-    </>
   );
 }
