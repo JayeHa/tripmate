@@ -60,10 +60,10 @@ export function PcSchedule({
       return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
     },
     enabled: !edit.editing,
-    // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없으면 보고 있는 날의 핀을 그린다)
+    // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
     resetKey: null,
   });
-  const { scrollToDay } = useVisibleDay({
+  const { scrollToDay, holding } = useVisibleDay({
     scroller: listRef,
     list: contentRef,
     line: () => listRef.current?.getBoundingClientRect().top ?? 0,
@@ -134,7 +134,7 @@ export function PcSchedule({
           rows={
             edit.editing
               ? edit.rows
-              : (sections[mapDayOf(sections, focus.focusId, day)]?.rows ?? [])
+              : (sections[mapDayOf(sections, holding ? null : focus.focusId, day)]?.rows ?? [])
           }
           focusId={edit.editing ? null : focus.focusId}
           onSelect={edit.editing ? undefined : (row) => focus.focusOn(row.item.id)}

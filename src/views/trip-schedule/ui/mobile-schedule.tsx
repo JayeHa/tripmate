@@ -46,14 +46,14 @@ export function MobileSchedule({
   const stickyHeight = useElementHeight(stickyRef);
   /** sticky 영역(상단바 + 지도 + 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
-  // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없으면 보고 있는 날의 핀을 그린다)
+  // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
   const focus = useScrollFocus({
     list: listRef,
     line: () => stickyBottom() + FOCUS_LINE_OFFSET,
     enabled: mapOpen,
     resetKey: null,
   });
-  const { scrollToDay } = useVisibleDay({
+  const { scrollToDay, holding } = useVisibleDay({
     list: listRef,
     line: stickyBottom,
     enabled: !edit.editing,
@@ -68,7 +68,7 @@ export function MobileSchedule({
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
           <ScheduleMap
-            rows={sections[mapDayOf(sections, focus.focusId, day)]?.rows ?? []}
+            rows={sections[mapDayOf(sections, holding ? null : focus.focusId, day)]?.rows ?? []}
             focusId={focus.focusId}
             onSelect={(row) => focus.focusOn(row.item.id)}
           />

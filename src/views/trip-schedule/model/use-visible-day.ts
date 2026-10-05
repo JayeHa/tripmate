@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { pickVisibleDay } from "../lib/focus";
 
@@ -23,6 +23,24 @@ function targetOf(scroller: RefObject<HTMLElement | null> | undefined): HTMLElem
   return scroller?.current ?? window;
 }
 
+/**
+ * 그 날짜 머리를 기준선에 맞추는 스크롤. 머리를 못 찾으면(아직 그리기 전) false
+ * @param lineOf 스크롤 위치 → 기준선의 화면 y
+ */
+function alignDay(
+  target: HTMLElement | Window,
+  root: HTMLElement | null,
+  day: number,
+  lineOf: (scrollTop: number) => number,
+  behavior: ScrollBehavior,
+): boolean {
+  const head = root?.querySelector<HTMLElement>(`[data-day-section="${day}"]`);
+  if (!head) return false;
+  const top = scrollTopOf(target);
+  target.scrollTo({ top: top + head.getBoundingClientRect().top - lineOf(top), behavior });
+  return true;
+}
+
 /** 지금 스크롤 위치 */
 function scrollTopOf(target: HTMLElement | Window): number {
   return target instanceof Window ? document.documentElement.scrollTop : target.scrollTop;
@@ -31,7 +49,8 @@ function scrollTopOf(target: HTMLElement | Window): number {
 /**
  * 이어서 보기에서 「지금 보고 있는 날」 — 날짜 머리가 기준선을 지난 마지막 날짜(프레임당 한 번 고른다). 바뀌면 onChange 로 알린다.
  * `scrollToDay` 는 그 날짜 머리를 기준선에 맞춰 스크롤하고, 사용자가 직접 스크롤하기 전까지 그 날을 붙잡아 둔다 —
- * 짧은 마지막 날처럼 머리가 기준선까지 못 올라와도 누른 날이 그대로 보이게
+ * 짧은 마지막 날처럼 머리가 기준선까지 못 올라와도 누른 날이 그대로 보이게.
+ * `holding` 은 붙잡아 둔 동안 true — 지도는 그동안 강조된 장소 대신 이 날을 따른다
  */
 export function useVisibleDay({ scroller, list, line, enabled, onChange }: VisibleDayOptions) {
   const latest = useRef({ scroller, list, line, enabled, onChange });
@@ -39,6 +58,7 @@ export function useVisibleDay({ scroller, list, line, enabled, onChange }: Visib
     latest.current = { scroller, list, line, enabled, onChange };
   });
   const locked = useRef<number | null>(null);
+  const [holding, setHolding] = useState(false);
   // 마지막으로 알린 날 — 같은 날이면 다시 알리지 않는다
   const shown = useRef<number | null>(null);
 
@@ -66,6 +86,7 @@ export function useVisibleDay({ scroller, list, line, enabled, onChange }: Visib
     };
     const release = () => {
       locked.current = null;
+      setHolding(false);
     };
     target.addEventListener("scroll", onScroll, { passive: true });
     for (const e of USER_SCROLL_EVENTS) window.addEventListener(e, release, { passive: true });
@@ -82,21 +103,15 @@ export function useVisibleDay({ scroller, list, line, enabled, onChange }: Visib
    */
   const scrollToDay = useCallback((day: number, smooth = true): boolean => {
     const { scroller: s, list: l, line: lineOf, onChange: notify } = latest.current;
-    const head = l.current?.querySelector<HTMLElement>(`[data-day-section="${day}"]`);
-    if (!head) return false;
-    const target = targetOf(s);
-    const top = scrollTopOf(target);
+    if (!alignDay(targetOf(s), l.current, day, lineOf, smooth ? "smooth" : "instant")) return false;
     locked.current = day;
+    setHolding(true);
     if (shown.current !== day) {
       shown.current = day;
       notify(day);
     }
-    target.scrollTo({
-      top: top + head.getBoundingClientRect().top - lineOf(top),
-      behavior: smooth ? "smooth" : "instant",
-    });
     return true;
   }, []);
 
-  return { scrollToDay };
+  return { scrollToDay, holding };
 }
