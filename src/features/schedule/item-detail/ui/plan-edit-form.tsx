@@ -22,7 +22,7 @@ const inputClass =
   "h-11 rounded-memo border border-line text-sm text-ink-900 outline-none focus:border-primary";
 
 /**
- * 그 자리 수정 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
+ * 「이번 일정 수정」 창의 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
  * 아이콘을 비우면 장소의 예전 아이콘이 있으면 그것이 보여 자리 표시로 알려 준다
  */
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
@@ -31,7 +31,7 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   const isPlace = item.kind === "place";
   const options: (ReservationStatus | null)[] = [null, ...RESERVATION_STATUSES];
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-primary p-3.5">
+    <div className="flex flex-col gap-3">
       <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
         <div
           className={cn(

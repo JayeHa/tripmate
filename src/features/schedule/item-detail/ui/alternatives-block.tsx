@@ -4,6 +4,7 @@ import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
+import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
@@ -22,7 +23,8 @@ type AlternativesBlockProps = {
 };
 
 /**
- * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」.
+ * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」
+ * (상세 위에 「대체 장소 추가」 창 — 저장한 장소에서 고르기 · 직접 추가).
  * 바꾸기는 그 장소가 이 자리(날짜 · 순서 · 시간)에 들어가고, 예약 상태 · 메모는 각자 장소를 따라간다
  */
 export function AlternativesBlock({
@@ -49,7 +51,19 @@ export function AlternativesBlock({
           onOpen={() => onOpen(alt)}
         />
       ))}
-      {picking ? (
+      <button
+        type="button"
+        onClick={() => setPicking(true)}
+        className="h-10.5 rounded-card border-[1.5px] border-dashed border-line-strong text-sm font-bold text-primary"
+      >
+        + 대체 장소
+      </button>
+      <SheetDialog
+        open={picking}
+        onClose={() => setPicking(false)}
+        title="대체 장소 추가"
+        locked={actions.locked}
+      >
         <AlternativePicker
           tripId={tripId}
           main={main}
@@ -61,15 +75,7 @@ export function AlternativesBlock({
             onDirectAdd();
           }}
         />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setPicking(true)}
-          className="h-10.5 rounded-card border-[1.5px] border-dashed border-line-strong text-sm font-bold text-primary"
-        >
-          + 대체 장소
-        </button>
-      )}
+      </SheetDialog>
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </section>
   );

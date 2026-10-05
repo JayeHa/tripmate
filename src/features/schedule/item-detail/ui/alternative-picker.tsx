@@ -12,6 +12,7 @@ type AlternativePickerProps = {
   main: ScheduleItem;
   alternatives: ScheduleItem[];
   actions: AlternativeActions;
+  /** 고르면 닫는다(상세 위의 「대체 장소 추가」 창) */
   onClose: () => void;
   /** 「+ 직접 추가」 — 장소 입력 폼을 대체 장소 모드로 연다 */
   onDirectAdd: () => void;
@@ -38,13 +39,8 @@ export function AlternativePicker({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-primary p-3">
-      <div className="flex items-center gap-2">
-        <span className="flex-1 text-sm font-extrabold text-ink-900">저장한 장소에서 고르기</span>
-        <button type="button" onClick={onClose} className="text-[13px] text-ink-400">
-          닫기
-        </button>
-      </div>
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-extrabold text-ink-900">저장한 장소에서 고르기</span>
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
