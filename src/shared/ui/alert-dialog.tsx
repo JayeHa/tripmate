@@ -1,6 +1,8 @@
 "use client";
 
-import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
+// Base UI 의 AlertDialog 는 바깥 누르기로 닫히지 않게 고정돼 있다(disablePointerDismissal). 시안은 바깥을 누르면 취소라
+// Dialog 위에 role="alertdialog" 만 붙여 쓴다. 닫으면 안 되는 동안은 각 창의 onOpenChange 가 막는다
+import { Dialog as AlertDialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "cn";
 import * as React from "react";
 
@@ -42,18 +44,8 @@ function AlertDialogContent({
     <AlertDialogPortal>
       {/* 확인창은 늘 맨 위라, 다른 창 안에서 열어도(중첩) 스크림을 그린다 — Base UI 는 중첩이면 기본으로 그리지 않는다 */}
       <AlertDialogOverlay forceRender />
-      {/*
-        바깥을 누르면 취소 — AlertDialog 는 바깥 누르기로 닫히지 않아서(disablePointerDismissal 고정) 스크림 위를 닫기 영역으로 덮는다.
-        닫으면 안 되는 동안은 각 창의 onOpenChange 가 막는다
-      */}
-      <AlertDialogPrimitive.Close
-        aria-hidden
-        tabIndex={-1}
-        render={<div />}
-        nativeButton={false}
-        className="fixed inset-0 z-50"
-      />
       <AlertDialogPrimitive.Popup
+        role="alertdialog"
         data-slot="alert-dialog-content"
         data-size={size}
         // 모바일은 좌우 24 를 남긴 폭, PC(1024~)는 400. 구분선 없이 흰 바탕 하나
