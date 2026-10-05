@@ -33,7 +33,7 @@ export function AlternativePicker({
   const [query, setQuery] = useState("");
   const { choices, loading } = useAlternativeChoices(tripId, main, alternatives, query);
 
-  /** 골라 붙인다. 붙었을 때만 닫는다(실패 문구는 블록 아래에) */
+  /** 골라 붙인다. 붙었을 때만 닫는다(실패하면 창이 열린 채 아래 「+ 직접 추가」 위에 문구) */
   async function pick(placeId: string) {
     if (await actions.addSaved(placeId)) onClose();
   }
@@ -72,6 +72,7 @@ export function AlternativePicker({
           <span className="px-0.5 py-2.5 text-[13px] text-ink-350">맞는 장소가 없어요.</span>
         )}
       </div>
+      {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
       <button
         type="button"
         onClick={onDirectAdd}
