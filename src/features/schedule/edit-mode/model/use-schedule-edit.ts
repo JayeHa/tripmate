@@ -60,6 +60,8 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
    * 사라진 id 가 남은 초안에 그대로 쓰면 엉뚱한 일정이 옮겨진다
    */
   function change(fn: (draft: EditDraft) => EditDraft) {
+    // 저장 중에 바꾼 것은 저장되지 않고 닫힐 때 사라진다
+    if (apply.isPending) return;
     setSession((s) => s && { ...s, draft: fn(keepLive(s.draft, live)) });
   }
 
@@ -89,6 +91,7 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
     day,
     /** 편집할 날을 바꾼다. 선택은 그날 것만 의미가 있어 비운다 */
     setDay: (next: number) => {
+      if (apply.isPending) return;
       setDay(next);
       setSelected(NONE);
     },
@@ -125,6 +128,7 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
     discard: () => {
       if (!apply.isPending) exit();
     },
+    /** 저장 중 — 화면은 목록 · 버튼을 막는다(오프라인으로 멈춰도 다시 연결되면 이 초안으로 저장된다) */
     saving: apply.isPending,
     error: apply.error ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null,
   };

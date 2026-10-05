@@ -51,7 +51,7 @@ export function MobileScheduleEditor({
         </button>
       </div>
       <div className="relative h-37.5 shrink-0 bg-map-bg">{map}</div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-8">
+      <div inert={edit.saving} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-8">
         <EditDayHeader
           startDate={startDate}
           totalDays={totalDays}

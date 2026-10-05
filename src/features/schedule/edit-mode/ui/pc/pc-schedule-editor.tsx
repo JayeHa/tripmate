@@ -51,7 +51,7 @@ export function PcScheduleEditor({ edit, startDate, totalDays }: PcScheduleEdito
             완료
           </button>
         </div>
-        <div className="flex items-center justify-between">
+        <div inert={edit.saving} className="flex items-center justify-between">
           <button
             type="button"
             role="checkbox"
@@ -79,7 +79,7 @@ export function PcScheduleEditor({ edit, startDate, totalDays }: PcScheduleEdito
         </div>
         {edit.error && <p className="text-[13px] text-destructive">{edit.error}</p>}
       </div>
-      <div className="flex-1 pt-2.5 pb-4">
+      <div inert={edit.saving} className="flex-1 pt-2.5 pb-4">
         {edit.rows.length === 0 && (
           <p className="px-5 py-10 text-center text-sm text-ink-400">이 날은 일정이 비어 있어요</p>
         )}

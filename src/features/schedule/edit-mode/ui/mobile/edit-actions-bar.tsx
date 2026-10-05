@@ -19,7 +19,10 @@ export function EditActionsBar({ edit, startDate, totalDays }: EditActionsBarPro
   if (edit.selected.size === 0) return null;
   const days = Array.from({ length: totalDays }, (_, i) => i).filter((d) => d !== edit.day);
   return (
-    <div className="flex shrink-0 items-center gap-2 border-t border-divider bg-white px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(0,0,0,0.06)]">
+    <div
+      inert={edit.saving}
+      className="flex shrink-0 items-center gap-2 border-t border-divider bg-white px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(0,0,0,0.06)]"
+    >
       <span className="flex-1 text-[15px] font-bold text-ink-900">{edit.selected.size}개 선택</span>
       <button
         type="button"
