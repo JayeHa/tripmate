@@ -117,7 +117,10 @@ function AddBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<AddMod
   );
 }
 
-/** 장소 정보 수정. 뒤로는 ①(위치 변경 중)이면 ② 로, ② 면 닫기 — 위치 변경은 ② 안의 한 칸이라 고친 칸을 잃지 않게 */
+/**
+ * 장소 정보 수정. 뒤로는 ①(위치 변경 중)이면 위치 변경을 취소하고 ② 로, ② 면 닫기 — 위치 변경은 ② 안의 한 칸이라
+ * 고친 칸을 잃지 않게 한다. 옮긴 위치는 「이 위치로 선택」 으로만 반영된다(주소를 다 불러온 뒤)
+ */
 function EditBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<EditMode>) {
   const form = usePlaceEditForm({ tripId, city, place: mode.place, onSaved: mode.onSaved });
   useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
@@ -131,7 +134,7 @@ function EditBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<EditM
       back={
         onInfo
           ? { label: "닫기", onClick: onClose }
-          : { label: "장소 정보로", onClick: form.chooseLocation }
+          : { label: "위치 변경 취소", onClick: form.cancelLocation }
       }
       saveLabel="저장"
       editing

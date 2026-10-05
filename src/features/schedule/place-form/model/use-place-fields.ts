@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import type { Place } from "@/entities/schedule-item";
 import {
@@ -62,6 +62,8 @@ export function usePlaceFields({
   const [step, setStep] = useState<PlaceFormStep>(initialStep);
   const [locationQuery, setLocationQuery] = useState(initialQuery);
   const [error, setError] = useState<string | null>(null);
+  // ② 에서 「위치 변경」 을 누른 때의 값 — ① 에서 뒤로 가면(cancelLocation) 이 값으로 되돌린다
+  const beforeLocationRef = useRef<PlaceFormValues | null>(null);
   const same = useExistingPlace(tripId, findExisting);
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const addressHit = useAddressSearch(locationQuery, city);
@@ -133,8 +135,21 @@ export function usePlaceFields({
     /** ① 에서 다음으로: 핀이 있고, 주소 · 이미 있는 장소 확인을 기다리는 중이 아닐 때(주소는 못 불러왔어도 된다) */
     canChooseLocation: !!values.at && !found.busy && !same.checking,
     chooseLocation: () => setStep("info"),
-    /** ② 「위치 변경」 · 뒤로 */
-    changeLocation: () => setStep("location"),
+    /** ② 「위치 변경」 · 뒤로. 지금 값을 기억해 두어 ① 에서 취소할 수 있게 한다 */
+    changeLocation: () => {
+      beforeLocationRef.current = values;
+      setStep("location");
+    },
+    /**
+     * ① 에서 위치 변경을 취소하고 ② 로 — 옮긴 핀 · 고른 구글 장소 · 그로 채운 칸을 「위치 변경」 을 누른 때로 되돌린다.
+     * 옮긴 위치를 쓰려면 「이 위치로 선택」(canChooseLocation — 주소를 다 불러온 뒤)을 거쳐야 한다
+     */
+    cancelLocation: () => {
+      if (beforeLocationRef.current) setValues(beforeLocationRef.current);
+      same.clear();
+      setLocationQuery("");
+      setStep("info");
+    },
     locationQuery,
     setLocationQuery,
     suggestions,
