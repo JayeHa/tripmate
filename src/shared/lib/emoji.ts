@@ -117,12 +117,18 @@ export const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
 /** 최근에 쓴 이모지는 8개까지 기억한다 */
 export const RECENT_MAX = 8;
 
-/** 이모지 한 글자(변형 선택자 · ZWJ 로 이어진 묶음 포함) */
-const EMOJI = /\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*/u;
+/** 화면에 한 글자로 보이는 묶음(grapheme) 단위로 나눈다 — 국기 · 피부색 · ZWJ 묶음이 한 덩어리가 된다 */
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-/** 입력한 글에서 첫 이모지. 없으면 null — 키보드로 친 글자 중 이모지만 받는다 */
+/** 묶음 안에 이모지가 있는지 — 그림 문자 · 국기(지역 표시 문자) · 키캡(1️⃣) */
+const EMOJI_PART = /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
+
+/** 입력한 글에서 첫 이모지(묶음 그대로). 없으면 null — 키보드로 친 글자 중 이모지만 받는다 */
 export function firstEmoji(text: string): string | null {
-  return EMOJI.exec(text)?.[0] ?? null;
+  for (const { segment } of graphemes.segment(text)) {
+    if (EMOJI_PART.test(segment)) return segment;
+  }
+  return null;
 }
 
 /** 방금 쓴 이모지를 맨 앞에 — 같은 것은 한 번만, RECENT_MAX 개까지 */

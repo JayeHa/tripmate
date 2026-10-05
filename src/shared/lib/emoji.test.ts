@@ -22,6 +22,16 @@ describe("이모지 고르기", () => {
     expect(firstEmoji("🛍️")).toBe("🛍️");
     expect(firstEmoji("👩‍💻 코딩")).toBe("👩‍💻");
     expect(firstEmoji("abc")).toBeNull();
+    expect(firstEmoji("123")).toBeNull();
+  });
+
+  it("국기 · 키캡 · 피부색 · 피부색이 붙은 ZWJ 묶음도 한 글자 그대로", () => {
+    expect(firstEmoji("🇯🇵 도쿄")).toBe("🇯🇵");
+    expect(firstEmoji("1️⃣")).toBe("1️⃣");
+    expect(firstEmoji("👍🏽")).toBe("👍🏽");
+    expect(firstEmoji("🧑🏻‍💻")).toBe("🧑🏻‍💻");
+    expect(firstEmoji("❤️‍🔥")).toBe("❤️‍🔥");
+    expect(firstEmoji("abc🍜x")).toBe("🍜");
   });
 
   it("최근 목록은 맨 앞에 넣고 겹치지 않게 8개까지", () => {
