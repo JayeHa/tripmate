@@ -10,6 +10,7 @@ import type { ScheduleEditState } from "../../model/use-schedule-edit";
 import { DiscardConfirm } from "../discard-confirm";
 import { EditDaySelect } from "../edit-day-select";
 import { EditList } from "../edit-list";
+import { SummaryField } from "../summary-field";
 import { PcEditActionsBar } from "./pc-edit-actions-bar";
 
 type PcScheduleEditorProps = { edit: ScheduleEditState; startDate: string; totalDays: number };
@@ -51,6 +52,7 @@ export function PcScheduleEditor({ edit, startDate, totalDays }: PcScheduleEdito
             완료
           </button>
         </div>
+        <SummaryField value={edit.summary} onChange={edit.setSummary} layout="pc" />
         <div inert={edit.saving} className="flex items-center justify-between">
           <button
             type="button"

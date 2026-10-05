@@ -12,6 +12,8 @@ import { DayHeader } from "./day-header";
 type DayBodyProps = {
   startDate: string | null;
   day: number;
+  /** 그날 하루 요약 */
+  summary?: string | null;
   rows: TimelineRow[];
   isPending: boolean;
   memos: ReturnType<typeof useOpenMemos>;
@@ -31,6 +33,7 @@ type DayBodyProps = {
 export function DayBody({
   startDate,
   day,
+  summary,
   rows,
   isPending,
   memos,
@@ -53,6 +56,7 @@ export function DayBody({
           allOpen={memos.allOpen}
           onToggleAll={memos.toggleAll}
           counts={showCounts ? countsOf(rows) : undefined}
+          summary={summary}
           onEdit={isPending ? undefined : onStartEdit}
         />
       )}

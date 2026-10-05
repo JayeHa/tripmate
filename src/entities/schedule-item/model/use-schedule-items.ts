@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
-import { applyScheduleEdit } from "../api/schedule-edit";
+import { applyScheduleEdit, type ScheduleEdit } from "../api/schedule-edit";
 import {
   addDayMemo,
   addPlacesToSchedule,
@@ -16,7 +16,6 @@ import {
   moveScheduleItemToDay,
   type NewPlaceFields,
   type ScheduleEntry,
-  swapScheduleItems,
   updatePlace,
   updateScheduleItem,
 } from "../api/schedule-items";
@@ -113,36 +112,6 @@ export function useDeleteScheduleItem(tripId: string) {
   return useMutation({ mutationFn: deleteScheduleItem, onSuccess: invalidate });
 }
 
-/** 위/아래 이동: 낙관적으로 순서를 바꾸고 서버에 swap */
-export function useSwapScheduleItems(tripId: string) {
-  const qc = useQueryClient();
-  const key = queryKeys.scheduleItems(tripId);
-  return useMutation({
-    mutationFn: ({ a, b }: { a: ScheduleItem; b: ScheduleItem }) => swapScheduleItems(a, b),
-    onMutate: async ({ a, b }) => {
-      await qc.cancelQueries({ queryKey: key });
-      const prev = qc.getQueryData<ScheduleItem[]>(key);
-      qc.setQueryData<ScheduleItem[]>(key, (items = []) =>
-        items
-          .map((it) => {
-            if (it.id === a.id) return { ...it, position: b.position };
-            if (it.id === b.id) return { ...it, position: a.position };
-            return it;
-          })
-          .sort((x, y) => x.day_index - y.day_index || x.position - y.position),
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
-    },
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: key });
-      void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
-    },
-  });
-}
-
 export function useMoveScheduleItemToDay(tripId: string) {
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
@@ -162,16 +131,22 @@ export function useAddDayMemo(tripId: string) {
   });
 }
 
-/** 일정 편집 「완료」 저장. 일정 · 대체 장소(날짜가 따라 바뀐다) · 경로 · 이동 기록을 다시 읽는다 */
+/**
+ * 일정 편집 「완료」 저장. 일정 · 대체 장소(날짜가 따라 바뀐다) · 경로 · 이동 기록 · 하루 요약(여행)을 다시 읽는다.
+ * 다시 읽기를 기다린 뒤 끝난다 — 편집이 닫히자마자 옛 순서 · 옛 요약이 잠깐 보이지 않게
+ */
 export function useApplyScheduleEdit(tripId: string) {
   const qc = useQueryClient();
-  const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: ({ days, deletes }: { days: Record<number, string[]>; deletes: string[] }) =>
-      applyScheduleEdit(tripId, days, deletes),
-    onSuccess: () => {
-      invalidate();
-      void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) });
-    },
+    mutationFn: (edit: ScheduleEdit) => applyScheduleEdit(tripId, edit),
+    onSuccess: () =>
+      Promise.all([
+        // 일정 키 아래에 대체 장소 키가 있어 함께 다시 읽는다
+        qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) }),
+        qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) }),
+        qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
+        // 하루 요약은 여행 행에 있다. 앞부분이 같은 일정 · 메모 키까지 지우지 않게 정확히 그 키만
+        qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
+      ]),
   });
 }

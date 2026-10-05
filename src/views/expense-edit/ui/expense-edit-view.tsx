@@ -78,6 +78,7 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
                 <AlertDialogAction
+                  variant="danger"
                   onClick={() =>
                     remove.mutate(expenseId, { onSuccess: () => router.replace(back) })
                   }

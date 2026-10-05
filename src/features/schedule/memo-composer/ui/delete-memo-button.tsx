@@ -38,7 +38,7 @@ export function DeleteMemoButton({ disabled, onConfirm }: DeleteMemoButtonProps)
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={onConfirm}>
+            <AlertDialogAction variant="danger" onClick={onConfirm}>
               삭제
             </AlertDialogAction>
           </AlertDialogFooter>

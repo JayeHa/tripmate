@@ -4,6 +4,7 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
@@ -20,23 +21,19 @@ type MoveItemsConfirmProps = {
 export function MoveItemsConfirm({ move, onCancel, onConfirm }: MoveItemsConfirmProps) {
   return (
     <AlertDialog open={Boolean(move)} onOpenChange={(open) => !open && onCancel()}>
-      <AlertDialogContent className="rounded-sheet px-5.5 pt-6 pb-5">
+      <AlertDialogContent>
         {move && (
           <>
-            <AlertDialogTitle className="text-lg font-extrabold text-ink-900">
-              {countLabel(move)}를 옮길게요
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm/normal text-ink-500">
+            <AlertDialogTitle>{countLabel(move)}를 옮길게요</AlertDialogTitle>
+            <AlertDialogDescription>
               {daysLabel(move)}에 있던 {kindsLabel(move)} 마지막 날(day {move.lastDay})로 옮겨요.
             </AlertDialogDescription>
-            <div className="mt-3.5 flex gap-2">
-              <Button variant="outline" size="form" className="flex-1" onClick={onCancel}>
+            <AlertDialogFooter>
+              <Button variant="chip" onClick={onCancel}>
                 취소
               </Button>
-              <Button size="form" className="flex-1" onClick={onConfirm}>
-                옮기고 수정
-              </Button>
-            </div>
+              <Button onClick={onConfirm}>옮기고 수정</Button>
+            </AlertDialogFooter>
           </>
         )}
       </AlertDialogContent>

@@ -69,6 +69,7 @@ export function MobileSchedule({
           <DayBody
             startDate={trip?.start_date ?? null}
             day={day}
+            summary={trip?.day_summaries[day]}
             focusId={focus.focusId}
             {...body}
           />

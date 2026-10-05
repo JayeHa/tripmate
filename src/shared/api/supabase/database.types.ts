@@ -28,6 +28,7 @@ export type Database = {
       };
       trips: {
         Row: {
+          day_summaries: (string | null)[];
           id: string;
           owner_id: string;
           title: string;
@@ -41,6 +42,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          day_summaries?: (string | null)[];
           id?: string;
           owner_id: string;
           title: string;
@@ -54,6 +56,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          day_summaries?: (string | null)[];
           id?: string;
           owner_id?: string;
           title?: string;
@@ -551,7 +554,7 @@ export type Database = {
         Returns: string;
       };
       apply_schedule_edit: {
-        Args: { p_trip: string; p_days: Json; p_deletes: string[] };
+        Args: { p_trip: string; p_days: Json; p_deletes: string[]; p_summaries: Json };
         Returns: undefined;
       };
       swap_alternative: {

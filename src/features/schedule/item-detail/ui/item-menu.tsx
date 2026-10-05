@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CalendarDays, Ellipsis, Trash2 } from "lucide-react";
+import { CalendarDays, Ellipsis, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { dayLabel } from "@/shared/lib/days";
@@ -42,7 +42,7 @@ type ItemMenuProps = {
 };
 
 /**
- * 상세 머리의 ⋯ — 앞으로 · 뒤로 · 다른 날로 · 삭제(확인 후). 편집 모드(#13 ⑤)가 생기기 전까지의 임시 자리다.
+ * 상세 머리의 ⋯ — 다른 날로 · 삭제(확인 후). 순서 바꾸기는 일정 편집에서 한다.
  */
 export function ItemMenu({
   actions,
@@ -70,22 +70,6 @@ export function ItemMenu({
           align="end"
           className="w-44 rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
         >
-          <DropdownMenuItem
-            disabled={!actions.moveUp}
-            onClick={actions.moveUp}
-            className={ITEM_CLASS}
-          >
-            <ArrowUp className="size-4.5 text-ink-700" />
-            앞으로
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!actions.moveDown}
-            onClick={actions.moveDown}
-            className={ITEM_CLASS}
-          >
-            <ArrowDown className="size-4.5 text-ink-700" />
-            뒤로
-          </DropdownMenuItem>
           {days.length > 0 && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className={ITEM_CLASS}>
@@ -129,7 +113,7 @@ export function ItemMenu({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={actions.remove}>
+            <AlertDialogAction variant="danger" onClick={actions.remove}>
               삭제
             </AlertDialogAction>
           </AlertDialogFooter>

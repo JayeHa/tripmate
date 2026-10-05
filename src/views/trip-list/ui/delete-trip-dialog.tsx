@@ -5,6 +5,7 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
@@ -23,36 +24,22 @@ export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onCon
   return (
     // 삭제 중에는 닫지 않는다. 닫히면 실패해도 알 수 없다.
     <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && !locked && onCancel()}>
-      <AlertDialogContent className="rounded-sheet px-5.5 pt-6 pb-5">
+      <AlertDialogContent>
         {trip && (
           <>
-            <AlertDialogTitle className="text-lg font-extrabold text-ink-900">
-              {trip.title}을(를) 삭제할까요?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm/normal text-ink-500">
+            <AlertDialogTitle>{trip.title}을(를) 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription>
               일정, 메모, 가계부 기록이 함께 지워지고 되돌릴 수 없어요.
             </AlertDialogDescription>
             {error && <p className="text-sm text-destructive">삭제하지 못했어요: {error}</p>}
-            <div className="mt-3.5 flex gap-2">
-              <Button
-                variant="outline"
-                size="form"
-                className="flex-1"
-                disabled={locked}
-                onClick={onCancel}
-              >
+            <AlertDialogFooter>
+              <Button variant="chip" disabled={locked} onClick={onCancel}>
                 취소
               </Button>
-              <Button
-                variant="danger"
-                size="form"
-                className="flex-1"
-                disabled={pending}
-                onClick={() => onConfirm(trip)}
-              >
+              <Button variant="danger" disabled={pending} onClick={() => onConfirm(trip)}>
                 {pending ? "삭제 중…" : "삭제"}
               </Button>
-            </div>
+            </AlertDialogFooter>
           </>
         )}
       </AlertDialogContent>

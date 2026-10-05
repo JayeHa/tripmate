@@ -27,8 +27,6 @@ type ItemDetailDialogProps = {
   totalDays: number;
   /** 보고 있는 일정의 타임라인 줄. null 이면 닫혀 있다. 고친 뒤에도 최신 값이 오도록 부른 쪽이 목록에서 다시 찾아 넘긴다 */
   row: TimelineRow | null;
-  /** 그날 일정(position 순) — 앞으로 · 뒤로가 이웃을 찾는다 */
-  dayItems: ScheduleItem[];
   isDesktop: boolean;
   onClose: () => void;
   /** 「장소 정보 수정」 — 부른 쪽이 장소 입력 폼(수정 모드)을 상세 위에 연다 */
@@ -95,7 +93,6 @@ function MainDetail({
   startDate,
   totalDays,
   row,
-  dayItems,
   isDesktop,
   onClose,
   onLockChange,
@@ -106,7 +103,7 @@ function MainDetail({
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
-  const actions = useItemActions(tripId, row.item, dayItems, onClose);
+  const actions = useItemActions(tripId, row.item, onClose);
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
   const locked = plan.locked || actions.locked || alternatives.locked;
   useEffect(() => onLockChange(locked), [locked, onLockChange]);

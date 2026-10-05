@@ -9,6 +9,8 @@ import {
   moveSelected,
   removeSelected,
   reorder,
+  summariesOf,
+  summaryChanges,
 } from "./edit-draft";
 
 /** 날 · 순서만 있는 일정 */
@@ -28,6 +30,12 @@ describe("편집 초안", () => {
     expect(moveSelected(initial, new Set(["c", "a"]), 1)).toEqual([["b"], ["d", "a", "c"], []]);
   });
 
+  it("편집 중 기간이 늘어 초안에 없는 날로 옮기면 날을 늘려 담는다(지우지 않는다)", () => {
+    const moved = moveSelected(initial, new Set(["b"]), 4);
+    expect(moved).toEqual([["a", "c"], ["d"], [], [], ["b"]]);
+    expect(editChanges(initial, moved).deletes).toEqual([]);
+  });
+
   it("저장할 것: 순서가 달라진 날만 · 사라진 일정", () => {
     expect(editChanges(initial, initial)).toEqual({ days: {}, deletes: [] });
     const moved = moveSelected(reorder(initial, 0, 2, 0), new Set(["a"]), 2);
@@ -45,5 +53,17 @@ describe("편집 초안", () => {
       days: { 0: ["c", "a"] },
       deletes: [],
     });
+  });
+});
+
+describe("하루 요약", () => {
+  it("저장된 배열을 날 수만큼 글로 — 없는 날 · null 은 빈 글", () => {
+    expect(summariesOf([null, "라멘"], 3)).toEqual(["", "라멘", ""]);
+  });
+
+  it("공백만 다르면 그대로, 달라진 날만 다듬어서", () => {
+    const initial = ["도착", "", "라멘"];
+    expect(summaryChanges(initial, ["도착 ", "", "라멘"])).toEqual({});
+    expect(summaryChanges(initial, ["", " 파크 ", "라멘"])).toEqual({ 0: "", 1: "파크" });
   });
 });

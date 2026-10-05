@@ -42,17 +42,6 @@ export async function deleteScheduleItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** 두 아이템의 position 을 서로 바꿈 (위/아래 이동) */
-export async function swapScheduleItems(a: ScheduleItem, b: ScheduleItem): Promise<void> {
-  const supabase = createClient();
-  const [ra, rb] = await Promise.all([
-    supabase.from("schedule_items").update({ position: b.position }).eq("id", a.id),
-    supabase.from("schedule_items").update({ position: a.position }).eq("id", b.id),
-  ]);
-  if (ra.error) throw ra.error;
-  if (rb.error) throw rb.error;
-}
-
 /** 그날 맨 끝 순서(대체 장소 빼고). 그날 일정이 없으면 0 */
 async function endPosition(tripId: string, dayIndex: number): Promise<number> {
   const supabase = createClient();

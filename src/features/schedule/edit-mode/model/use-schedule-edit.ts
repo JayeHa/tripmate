@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { buildTimeline, type ScheduleItem, useApplyScheduleEdit } from "@/entities/schedule-item";
+import type { Trip } from "@/entities/trip";
 
 import {
   draftOf,
@@ -13,19 +14,28 @@ import {
   moveSelected,
   removeSelected,
   reorder,
+  summariesOf,
+  summaryChanges,
 } from "../lib/edit-draft";
 
 type ScheduleEditOptions = {
   tripId: string;
   /** 여행의 타임라인 일정(대체 장소 빼고) */
   items: ScheduleItem[];
+  /** 하루 요약(day_summaries)을 읽을 여행. 읽기 전이면 요약 없이 연다 */
+  trip: Pick<Trip, "day_summaries"> | undefined;
   totalDays: number;
   /** 편집을 마쳤다(저장했거나 바뀐 게 없거나 버렸다). 마지막으로 편집하던 날을 넘긴다 */
   onExit: (day: number) => void;
 };
 
-/** 편집 한 번 — 열 때의 일정으로 만든 처음 초안과 지금 초안 */
-type EditSession = { initial: EditDraft; draft: EditDraft };
+/** 편집 한 번 — 열 때의 일정 · 하루 요약으로 만든 처음 초안과 지금 초안 */
+type EditSession = {
+  initial: EditDraft;
+  draft: EditDraft;
+  initialSummaries: string[];
+  summaries: string[];
+};
 
 const NONE: ReadonlySet<string> = new Set();
 
@@ -34,7 +44,7 @@ const NONE: ReadonlySet<string> = new Set();
  * 「완료」 에서 한 번에 저장한다(apply_schedule_edit). 뒤로 가면 버린다.
  * 화면이 늘 들고 있다가 start 로 연다 — 모바일 · PC 레이아웃이 바뀌어도 초안이 남는다
  */
-export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEditOptions) {
+export function useScheduleEdit({ tripId, items, trip, totalDays, onExit }: ScheduleEditOptions) {
   const [session, setSession] = useState<EditSession | null>(null);
   const [day, setDay] = useState(0);
   const [selected, setSelected] = useState(NONE);
@@ -52,8 +62,18 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
   const rows = useMemo(() => buildTimeline(dayItems), [dayItems]);
   const selectableIds = dayItems.filter(isSelectable).map((it) => it.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
-  const changes = draft && initial ? editChanges(initial, draft) : null;
-  const dirty = !!changes && (Object.keys(changes.days).length > 0 || changes.deletes.length > 0);
+  const changes =
+    session && draft && initial
+      ? {
+          ...editChanges(initial, draft),
+          summaries: summaryChanges(session.initialSummaries, session.summaries),
+        }
+      : null;
+  const dirty =
+    !!changes &&
+    (Object.keys(changes.days).length > 0 ||
+      changes.deletes.length > 0 ||
+      Object.keys(changes.summaries).length > 0);
 
   /**
    * 초안을 바꾼다. 사라진 일정을 먼저 빼고 바꾼다 — 끌기 인덱스는 화면(rows) 기준이라
@@ -84,7 +104,8 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
     /** 보고 있던 날로 편집을 연다 */
     start: (startDay: number) => {
       const initial = draftOf(items, totalDays);
-      setSession({ initial, draft: initial });
+      const sums = summariesOf(trip?.day_summaries ?? [], totalDays);
+      setSession({ initial, draft: initial, initialSummaries: sums, summaries: sums });
       setDay(startDay);
       setSelected(NONE);
     },
@@ -96,6 +117,21 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
       setSelected(NONE);
     },
     dayItems,
+    /** 편집하는 날의 하루 요약(초안) */
+    summary: session?.summaries[day] ?? "",
+    /** 편집하는 날의 요약을 바꾼다. 편집 중 여행이 늘어 목록에 없는 날이면 빈 날을 채워 늘린다(moveSelected 와 같다) */
+    setSummary: (text: string) => {
+      if (apply.isPending) return;
+      setSession(
+        (s) =>
+          s && {
+            ...s,
+            summaries: Array.from({ length: Math.max(s.summaries.length, day + 1) }, (_, i) =>
+              i === day ? text : (s.summaries[i] ?? ""),
+            ),
+          },
+      );
+    },
     /** 편집 목록 · 지도가 그릴 줄(번호 · 설명) */
     rows,
     reorder: (from: number, to: number) => change((d) => reorder(d, day, from, to)),
