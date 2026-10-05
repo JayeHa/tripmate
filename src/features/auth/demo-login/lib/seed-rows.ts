@@ -17,7 +17,8 @@ type PlaceFields = Pick<
  * 시안 데이터 한 줄. 시안은 장소와 일정을 나누지 않아서 place 줄에 장소 칸이 함께 있다.
  * 시딩할 때 toSeedRows 가 장소 · 일정으로 나눈다. trip_id · place_id 는 그때 붙는다.
  * `alternatives` 는 그 일정의 대체 장소 — 장소 칸이 있는 줄로 적고, 시딩할 때 대체 장소 일정 줄이 된다(0024).
- * `memo` 는 시안처럼 줄마다 메모 하나 — 시딩할 때 메모 목록(memos, 0027)이 된다. 「★ 」 줄은 중요
+ * `memo` 는 시안처럼 줄마다 메모 하나 — 시딩할 때 메모 목록(memos, 0027)이 된다. 「★ 」 줄은 중요.
+ * 날짜 메모(note)는 메모 목록이 없어(0029) 그 줄들을 글 아래에 줄바꿈으로 합친다
  */
 export type SeedItem = Omit<TablesInsert<"schedule_items">, "trip_id" | "place_id"> &
   Partial<PlaceFields> & { alternatives?: SeedAlternative[]; memo?: string | null };
@@ -97,6 +98,11 @@ export function toSeedRows(
       row;
     const { alternatives: alts = [], memo, ...item } = rest;
     const id = newId();
+    // 날짜 메모(note)는 메모 목록이 없다(0029) — 메모 줄은 글 아래에 줄바꿈으로 합친다
+    if ((item.kind ?? "place") === "note") {
+      const lines = memoLinesOf(memo).map((l) => (l.starred ? `★ ${l.body}` : l.body));
+      return { ...item, id, trip_id: tripId, name: [item.name, ...lines].join("\n") };
+    }
     for (const line of memoLinesOf(memo)) {
       memos.push({
         trip_id: tripId,

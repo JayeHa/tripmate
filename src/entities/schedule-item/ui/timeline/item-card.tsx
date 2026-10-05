@@ -13,7 +13,8 @@ import { MemoSection } from "./memo-section";
 const TITLE_SIZE = {
   place: "text-[17px] font-bold",
   flight: "text-xl font-bold",
-  note: "text-[15px] font-medium",
+  // 날짜 메모는 여러 줄 글이라 줄바꿈을 살린다
+  note: "text-[15px] font-medium whitespace-pre-line",
 } satisfies Record<TimelineRow["kind"], string>;
 
 type ItemCardProps = {
