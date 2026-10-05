@@ -5,10 +5,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
+import { applyScheduleEdit } from "../api/schedule-edit";
 import {
   addDayMemo,
   addPlacesToSchedule,
-  applyScheduleEdit,
   createPlaceSchedule,
   deleteScheduleItem,
   fetchSavedPlaces,
