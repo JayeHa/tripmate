@@ -91,7 +91,10 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
             submitLabel="저장"
             pending={update.isPending}
             onSubmit={(values) =>
-              update.mutate({ expenseId, values }, { onSuccess: () => router.replace(back) })
+              update.mutate(
+                { expenseId, values, previousCurrency: initial.currency },
+                { onSuccess: () => router.replace(back) },
+              )
             }
           />
         )}

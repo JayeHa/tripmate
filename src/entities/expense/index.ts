@@ -1,6 +1,7 @@
 export * from "./api/expenses";
 export * from "./lib/amounts";
 export * from "./lib/balances";
+export * from "./lib/columns";
 export * from "./lib/form-values";
 export * from "./lib/settle";
 export * from "./lib/totals";

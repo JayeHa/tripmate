@@ -26,8 +26,15 @@ export function useCreateExpense(tripId: string) {
 export function useUpdateExpense(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ expenseId, values }: { expenseId: string; values: ExpenseFormValues }) =>
-      updateExpense(expenseId, values),
+    mutationFn: ({
+      expenseId,
+      values,
+      previousCurrency,
+    }: {
+      expenseId: string;
+      values: ExpenseFormValues;
+      previousCurrency: string;
+    }) => updateExpense(expenseId, values, previousCurrency),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
   });
 }

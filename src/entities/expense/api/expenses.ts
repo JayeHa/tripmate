@@ -1,6 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
 import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
+import { insertColumns, updateColumns } from "../lib/columns";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
 
@@ -30,26 +31,6 @@ export function resolveShares(values: ExpenseFormValues): Share[] {
   return splitEqual(values.amount, values.currency, values.participant_ids);
 }
 
-/** 폼 값 → 지출 행의 칸(분배는 따로 넣는다). 기준 화폐 여부는 폼이 정해 환율을 비워 보낸다 */
-function expenseColumns(values: ExpenseFormValues) {
-  return {
-    name: values.name,
-    payer_id: values.payer_id,
-    amount: values.amount,
-    currency: values.currency,
-    rate: values.rate,
-    payment_method: values.payment_method,
-    category: values.category,
-    memo: values.memo || null,
-    spent_on: values.spent_on,
-    split_mode: values.split_mode,
-    schedule_item_id: values.schedule_item_id ?? null,
-    counted: values.counted,
-    paid: values.paid,
-    due_date: values.paid ? null : values.due_date,
-  };
-}
-
 export async function createExpense(
   tripId: string,
   values: ExpenseFormValues,
@@ -59,7 +40,7 @@ export async function createExpense(
   const shares = resolveShares(values);
   const { data, error } = await supabase
     .from("expenses")
-    .insert({ ...expenseColumns(values), trip_id: tripId, created_by: createdBy })
+    .insert({ ...insertColumns(values), trip_id: tripId, created_by: createdBy })
     .select("id")
     .single();
   if (error) throw error;
@@ -75,12 +56,17 @@ export async function createExpense(
   return data.id;
 }
 
-export async function updateExpense(expenseId: string, values: ExpenseFormValues): Promise<void> {
+/** 지출을 고친다. previousCurrency 는 고치기 전 통화 — 바뀌었으면 그 지출의 환율을 비운다 */
+export async function updateExpense(
+  expenseId: string,
+  values: ExpenseFormValues,
+  previousCurrency: string,
+): Promise<void> {
   const supabase = createClient();
   const shares = resolveShares(values);
   const { error } = await supabase
     .from("expenses")
-    .update(expenseColumns(values))
+    .update(updateColumns(values, previousCurrency))
     .eq("id", expenseId);
   if (error) throw error;
 
