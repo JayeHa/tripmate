@@ -195,14 +195,14 @@ describe("trips", () => {
 });
 
 describe("schedule_items · places 칸 (0010 · 0013)", () => {
-  it("note 는 장소 없이 제목만으로, 상태 없음 · 빈 대체 장소가 된다", async () => {
+  it("note 는 장소 없이 제목만으로, 상태 없음 · 대체 장소 아님이 된다", async () => {
     await as(A);
     const id = await newTrip("2027-03-01", "2027-03-01");
     const { rows } = await db.query(
       `insert into public.schedule_items (trip_id, day_index, position, kind, name)
-       values ('${id}', 0, 0, 'note', '공항 집합') returning status, alternatives`,
+       values ('${id}', 0, 0, 'note', '공항 집합') returning status, alternative_of`,
     );
-    expect(rows).toEqual([{ status: null, alternatives: [] }]);
+    expect(rows).toEqual([{ status: null, alternative_of: null }]);
   });
 
   it("place 는 장소가 있어야 하고, note · flight 는 장소 없이 제목이 있어야 한다", async () => {
@@ -234,7 +234,6 @@ describe("schedule_items · places 칸 (0010 · 0013)", () => {
   it.each([
     ["kind = hotel", "kind, name", "'hotel', 'x'"],
     ["status = done", "kind, name, status", "'note', 'x', 'done'"],
-    ["alternatives 가 배열이 아님", "kind, name, alternatives", `'note', 'x', '"x"'`],
   ])("일정 %s 는 거부한다", async (_label, columns, values) => {
     await as(A);
     const id = await newTrip("2027-03-02", "2027-03-02");
@@ -878,6 +877,121 @@ describe("아이콘은 일정에 (0023)", () => {
     const second = await put({ emoji: "🏯" }, { emoji: "" });
     expect(await read(second.rows[0].id)).toEqual({ item: null, place: "🛁" });
     expect((await read(first.rows[0].id)).item).toBe("♨️");
+  });
+});
+
+describe("대체 장소는 일정 줄 (0024)", () => {
+  /** 그날 끝에 장소 일정을 담고, 대체 장소 둘(직접 추가 · 저장한 장소)을 붙인다 */
+  async function setup(start: string, end: string) {
+    await as(A);
+    const trip = await newTrip(start, end);
+    const main = await addPlace(trip, 0, { name: "머메이드 커피", lat: 35.73, lng: 139.71 });
+    const next = await addPlace(trip, 0, { name: "선샤인시티", lat: 35.729, lng: 139.719 });
+    await db.query(
+      `update public.schedule_items set start_time = '13:00', status = 'ok', memo = '창가 자리' where id = '${main}'`,
+    );
+    const { rows } = await db.query<{ id: string }>(
+      `select public.create_place_schedule($1, 1, $2, $3) id`,
+      [
+        trip,
+        JSON.stringify({ name: "아시츠보", lat: 35.728, lng: 139.716 }),
+        JSON.stringify({ alternative_of: main, start_time: "09:00" }),
+      ],
+    );
+    const alt = rows[0].id;
+    const second = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, place_id, alternative_of)
+       select trip_id, 1, 9, 'place', place_id, '${main}' from public.schedule_items where id = '${next}'
+       returning id`,
+    );
+    await db.query(
+      `insert into public.moves (trip_id, from_item_id, to_item_id, mode) values ('${trip}', '${main}', '${next}', 'walk')`,
+    );
+    return { trip, main, next, alt, other: second.rows[0].id };
+  }
+
+  /** 일정 한 줄의 비교할 칸 */
+  async function row(id: string) {
+    return (
+      await db.query<Record<string, unknown>>(
+        `select day_index, position, start_time::text t, status, memo, alternative_of from public.schedule_items where id = '${id}'`,
+      )
+    ).rows[0];
+  }
+
+  it("대체 장소는 붙은 일정과 같은 날 · 시간 없이 들어가고, 붙은 일정을 옮기면 따라가고 지우면 함께 지워진다", async () => {
+    const { main, alt, other } = await setup("2027-09-01", "2027-09-02");
+    expect(await row(alt)).toMatchObject({ day_index: 0, t: null, alternative_of: main });
+    expect((await row(other)).day_index).toBe(0);
+    await db.query(`update public.schedule_items set day_index = 1 where id = '${main}'`);
+    expect((await row(alt)).day_index).toBe(1);
+    expect(
+      await rejects(`update public.schedule_items set start_time = '10:00' where id = '${alt}'`),
+    ).toMatch(/check constraint/);
+    await db.query(`delete from public.schedule_items where id = '${main}'`);
+    const left = await db.query(
+      `select id from public.schedule_items where id in ('${alt}', '${other}')`,
+    );
+    expect(left.rows).toEqual([]);
+  });
+
+  it("대체 장소의 대체 장소 · note 에 붙이기 · 대체 장소가 있는 줄을 대체 장소로 만들기는 거부한다", async () => {
+    const { trip, main, next, alt } = await setup("2027-09-04", "2027-09-05");
+    const placeOf = `(select place_id from public.schedule_items where id = '${main}')`;
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, place_id, alternative_of)
+         values ('${trip}', 0, 0, 'place', ${placeOf}, '${alt}')`,
+      ),
+    ).toMatch(/cannot have alternatives/);
+    const note = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name) values ('${trip}', 0, 5, 'note', '집합') returning id`,
+    );
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, place_id, alternative_of)
+         values ('${trip}', 0, 0, 'place', ${placeOf}, '${note.rows[0].id}')`,
+      ),
+    ).toMatch(/belong to a place item/);
+    expect(
+      await rejects(
+        `update public.schedule_items set alternative_of = '${next}' where id = '${main}'`,
+      ),
+    ).toMatch(/cannot become an alternative/);
+  });
+
+  it("바꾸기: 대체 장소가 자리(날짜 · 순서 · 시간 · 이동 기록)에 들어가고, 상태 · 메모는 각자 줄에 남는다", async () => {
+    const { main, next, alt, other } = await setup("2027-09-07", "2027-09-08");
+    const before = await row(main);
+    await db.query(`select public.swap_alternative($1)`, [alt]);
+    expect(await row(alt)).toMatchObject({
+      day_index: before.day_index,
+      position: before.position,
+      t: "13:00:00",
+      status: null,
+      memo: null,
+      alternative_of: null,
+    });
+    expect(await row(main)).toMatchObject({
+      t: null,
+      status: "ok",
+      memo: "창가 자리",
+      alternative_of: alt,
+    });
+    expect((await row(other)).alternative_of).toBe(alt);
+    const moves = await db.query(
+      `select from_item_id f from public.moves where to_item_id = '${next}'`,
+    );
+    expect(moves.rows).toEqual([{ f: alt }]);
+    expect(await rejects(`select public.swap_alternative('${next}')`)).toMatch(
+      /not an alternative/,
+    );
+  });
+
+  it("멤버가 아니면 바꾸지 못한다", async () => {
+    const { alt } = await setup("2027-09-10", "2027-09-11");
+    await as(B);
+    expect(await rejects(`select public.swap_alternative('${alt}')`)).toMatch(/not an alternative/);
   });
 });
 
