@@ -16,7 +16,7 @@ export function useAlternatives(tripId: string) {
 }
 
 /**
- * 일정 · 대체 장소 · 경로를 다시 읽는다. 끝날 때까지 기다리는 Promise 를 돌려준다 —
+ * 일정 · 대체 장소 · 경로 · 이동 기록을 다시 읽는다. 끝날 때까지 기다리는 Promise 를 돌려준다 —
  * onSuccess 에서 돌려주면 mutateAsync 가 새 목록을 받은 뒤에 끝나서, 부른 쪽이 바뀐 줄을 바로 찾을 수 있다
  */
 function useRefetchItems(tripId: string) {
@@ -26,6 +26,8 @@ function useRefetchItems(tripId: string) {
       // 일정 키 아래에 대체 장소 키가 있어 함께 다시 읽는다
       qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) }),
       qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) }),
+      // 바꾸기는 앞뒤 이동 기록을 새로 그 자리에 들어온 줄로 옮긴다 — 옛 기록으로 이동 창을 열면 덮어쓴다
+      qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
     ]);
 }
 
