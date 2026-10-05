@@ -25,6 +25,7 @@ export type LatLng = { lat: number; lng: number };
  * 주소는 핀 위치에서 불러오므로(useReverseGeocode) 여기 두지 않고 저장할 때 함께 받는다.
  */
 export type PlaceFormValues = {
+  /** 담을 일정의 아이콘 — 장소가 아니라 일정에 붙는다(toNewPlace 에 넣지 않고 담을 때 따로 보낸다) */
   emoji: string;
   name: string;
   /**
@@ -207,7 +208,6 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
     ok: true,
     value: {
       name: v.name.trim().slice(0, 100),
-      emoji: orNull(v.emoji),
       category: v.category,
       lat: v.at?.lat ?? null,
       lng: v.at?.lng ?? null,

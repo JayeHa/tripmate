@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 
 import { type LatLng, samePoint } from "../lib/place-form";
-import type { PlaceFormState } from "../model/use-place-form";
+import type { PlaceFormState } from "../model/use-place-fields";
 import { AddressCard } from "./address-card";
 import { ExistingPlaceCard } from "./existing-place-card";
 import { LocationSuggestions } from "./location-suggestions";

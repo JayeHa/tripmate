@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import type { ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import type { City } from "@/entities/city";
+import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
@@ -29,6 +30,8 @@ type ItemDetailDialogProps = {
   dayItems: ScheduleItem[];
   isDesktop: boolean;
   onClose: () => void;
+  /** 「장소 정보 수정」 — 부른 쪽이 장소 입력 폼(수정 모드)을 상세 위에 연다 */
+  onEditPlace: (place: Place, city: City | null) => void;
 };
 
 /**
@@ -72,6 +75,7 @@ function DetailBody({
   isDesktop,
   onClose,
   onLockChange,
+  onEditPlace,
 }: DetailBodyProps) {
   const plan = usePlanEdit(tripId, row.item);
   const memo = useMemoEdit(tripId, row.item);
@@ -80,7 +84,14 @@ function DetailBody({
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
-      <DetailContent tripId={tripId} startDate={startDate} row={row} plan={plan} memo={memo} />
+      <DetailContent
+        tripId={tripId}
+        startDate={startDate}
+        row={row}
+        plan={plan}
+        memo={memo}
+        onEditPlace={onEditPlace}
+      />
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </div>
   );

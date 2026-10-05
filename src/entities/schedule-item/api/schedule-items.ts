@@ -171,7 +171,6 @@ export async function updatePlace(id: string, patch: TablesUpdate<"places">): Pr
 /** 장소 입력 폼의 장소 정보 칸. 0017 create_place_schedule 의 p_place */
 export type NewPlaceFields = {
   name: string;
-  emoji: string | null;
   category: string | null;
   lat: number | null;
   lng: number | null;
@@ -196,20 +195,22 @@ export type NewPlaceFields = {
 
 /**
  * 장소를 직접 입력해 그날 끝에 담는다(create_place_schedule). 장소와 일정을 한 트랜잭션으로 만든다.
- * 이번 일정 칸(p_item)은 비워 보낸다 — 직접 추가는 장소만 받고, 상태 · 시간 · 메모는 일정 상세에서 고친다.
+ * 이번 일정 칸(p_item)은 아이콘만 보낸다 — 직접 추가는 장소만 받고, 상태 · 시간 · 메모는 일정 상세에서 고친다.
  * 새 일정 id 를 돌려준다.
  */
 export async function createPlaceSchedule(
   tripId: string,
   dayIndex: number,
   place: NewPlaceFields,
+  /** 이 일정에만 붙는 아이콘(장소가 아니라 일정에 — 0023). 없으면 null */
+  emoji: string | null,
 ): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("create_place_schedule", {
     p_trip: tripId,
     p_day: dayIndex,
     p_place: place,
-    p_item: {},
+    p_item: { emoji },
   });
   if (error) throw error;
   return data;

@@ -15,8 +15,9 @@ export type ExistingCheck = "found" | "none" | "failed";
  * 위치 검색으로 고른 구글 장소가 이미 있는 장소(내 장소 · 이 여행이 쓰는 장소)인지. 있으면 그 장소를 쓸지 묻는 데 쓴다.
  * 확인하는 동안(checking)은 다음 단계로 못 가게 부른 쪽이 막는다 — 확인 전에 넘어가면 구글 장소 id 가 붙은 채 저장돼
  * create_place_schedule 이 내 기존 장소를 고쳐 쓴다. 조회가 끝나기 전에 위치가 또 바뀌면(clear) 늦게 온 결과는 버린다.
+ * `enabled` 가 false 면(장소 정보 수정) 찾지 않고 고르기 순서 · 낡은 결과 버리기만 한다.
  */
-export function useExistingPlace(tripId: string) {
+export function useExistingPlace(tripId: string, enabled: boolean) {
   // 사용자 쿼리를 구독해 둔다 — 확인할 때는 아래처럼 캐시에서 그 순간의 값을 읽는다
   useUser();
   const qc = useQueryClient();
@@ -56,7 +57,7 @@ export function useExistingPlace(tripId: string) {
       });
       if (!live() || !picked) return "none";
       const googleId = apply(picked);
-      if (!googleId) return "none";
+      if (!googleId || !enabled) return "none";
       // 고를 때 잡아 둔 값이 아니라 지금 값 — 상세 조회를 기다리는 사이 사용자 정보가 들어왔을 수 있다
       const user = qc.getQueryData<User | null>(queryKeys.user);
       if (!user) return "failed";
