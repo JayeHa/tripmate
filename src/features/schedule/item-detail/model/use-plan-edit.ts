@@ -7,7 +7,7 @@ import { type ScheduleItem, useUpdateScheduleItem } from "@/entities/schedule-it
 import { type PlanDraft, planDraftOf, toPlanPatch } from "../lib/detail";
 
 /**
- * 「이번 일정」 그 자리 수정 — 예약 상태 · 시간 · 일정 링크(note · flight 는 제목 · 시간).
+ * 「이번 일정 수정」 창 — 예약 상태 · 시간 · 일정 링크(note · flight 는 제목 · 시간).
  * 수정을 누르면 지금 값으로 칸을 채우고, 저장하면 닫는다. 저장 중에는 다시 누르지 못한다.
  */
 export function usePlanEdit(tripId: string, item: ScheduleItem) {

@@ -19,14 +19,14 @@ import { type MemoComposerState, useMemoComposer } from "../model/use-memo-compo
 import { DeleteMemoButton } from "./delete-memo-button";
 
 /**
- * 모바일: 아래에서 올라오는 시트. 처음부터 가장 큰 높이로 연다 — 링크 줄을 더할 때마다 창이 자라며 흔들리지 않게
+ * 모바일: 아래에서 올라오는 시트. 처음부터 정한 높이(592, 화면의 90% 까지)로 연다 — 링크 줄을 더할 때마다 창이 자라며 흔들리지 않게
  * (넘치는 내용은 가운데 칸이 스크롤한다)
  */
 const MOBILE_CLASS =
-  "top-auto bottom-0 left-0 flex h-[90dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none";
-/** PC: 가운데 520 모달. 모바일처럼 처음부터 가장 큰 높이(760, 화면이 작으면 화면 높이)로 연다 */
+  "top-auto bottom-0 left-0 flex h-[min(592px,90dvh)] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none";
+/** PC: 가운데 520 모달. 모바일처럼 처음부터 정한 높이(592 — 링크 한 줄이 스크롤 없이 들어간다, 화면이 작으면 화면 높이)로 연다 */
 const PC_CLASS =
-  "flex h-[min(760px,calc(100dvh-2rem))] w-130 max-w-130 flex-col gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-130";
+  "flex h-[min(592px,calc(100dvh-2rem))] w-130 max-w-130 flex-col gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-130";
 
 type MemoComposerDialogProps = {
   tripId: string;
@@ -160,14 +160,13 @@ function MemoFields({ form }: MemoFieldsProps) {
           {draft.body.length}/{MEMO_MAX}
         </span>
       </div>
-      {draft.links.length > 0 && (
-        <LinkRows
-          label="메모 링크"
-          titlePlaceholder="링크 제목 (예: 예약 확인)"
-          links={draft.links}
-          onChange={(links) => form.set("links", links)}
-        />
-      )}
+      {/* 링크가 없어도 「링크 추가」 가 보이게 늘 그린다 */}
+      <LinkRows
+        label="메모 링크"
+        titlePlaceholder="링크 제목 (예: 예약 확인)"
+        links={draft.links}
+        onChange={(links) => form.set("links", links)}
+      />
     </>
   );
 }

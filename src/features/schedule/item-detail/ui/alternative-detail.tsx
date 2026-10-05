@@ -31,7 +31,7 @@ type AlternativeDetailProps = {
   onLockChange: (locked: boolean) => void;
   onEditPlace: (place: Place, city: City | null) => void;
   /** 「이 장소로 바꾸기」 가 끝났다 — 상세가 이 대체 장소(이제 그 자리의 일정)로 옮겨 간다 */
-  onSwapped: (altId: string) => void;
+  onSwapped: (altId: string, message: string) => void;
   /** 메모 쓰기 · 고치기 — 이 대체 장소 줄에 붙는다 */
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
 };

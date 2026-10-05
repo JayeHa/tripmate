@@ -7,16 +7,18 @@ import {
   useSwapAlternative,
 } from "@/entities/schedule-item";
 
+import { swapDoneMessage } from "../lib/alternatives";
+
 /**
  * 대체 장소 동작 — 저장한 장소 붙이기 · 「바꾸기」 · 지우기.
- * 바꾸기가 끝나면(새 목록까지 받은 뒤) `onSwapped(altId)` 로 새로 그 자리에 들어온 줄을 알린다 — 상세가 그 줄로 옮겨 가야
+ * 바꾸기가 끝나면(새 목록까지 받은 뒤) `onSwapped(altId, 토스트 문구)` 로 새로 그 자리에 들어온 줄을 알린다 — 상세가 그 줄로 옮겨 가야
  * 원래 줄(이제 대체 장소)이 타임라인에서 빠지며 상세가 닫히지 않는다.
  * mutateAsync 를 쓴다: 호출 단위 콜백은 그사이 상세가 닫혀(언마운트) 버리면 실행되지 않는다
  */
 export function useAlternativeActions(
   tripId: string,
   main: ScheduleItem,
-  onSwapped: (altId: string) => void,
+  onSwapped: (altId: string, message: string) => void,
 ) {
   const add = useAddAlternative(tripId);
   const swap = useSwapAlternative(tripId);
@@ -41,7 +43,7 @@ export function useAlternativeActions(
       if (pending) return;
       resetAll();
       void swap.mutateAsync(alt.id).then(
-        () => onSwapped(alt.id),
+        () => onSwapped(alt.id, swapDoneMessage(main, alt)),
         () => undefined,
       );
     },

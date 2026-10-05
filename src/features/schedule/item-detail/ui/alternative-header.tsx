@@ -16,6 +16,7 @@ import { IconButton } from "@/shared/ui/icon-button";
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
+import { SwapAlternativeDialog } from "./swap-alternative-dialog";
 
 const ITEM_CLASS =
   "h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted";
@@ -46,6 +47,7 @@ export function AlternativeHeader({
   onClose,
 }: AlternativeHeaderProps) {
   const [confirming, setConfirming] = useState(false);
+  const [swapping, setSwapping] = useState(false);
   return (
     <div className="flex shrink-0 items-center gap-3 bg-surface-sunken px-5 py-3.5">
       <button
@@ -86,7 +88,7 @@ export function AlternativeHeader({
         >
           <DropdownMenuItem
             disabled={actions.pending}
-            onClick={() => actions.swap(alt)}
+            onClick={() => setSwapping(true)}
             className={ITEM_CLASS}
           >
             <ArrowLeftRight className="size-4.5 text-ink-700" />이 장소로 바꾸기
@@ -113,6 +115,13 @@ export function AlternativeHeader({
       >
         <X className="size-5.5" strokeWidth={2} />
       </button>
+      <SwapAlternativeDialog
+        open={swapping}
+        onOpenChange={setSwapping}
+        main={main}
+        alt={alt}
+        onConfirm={() => actions.swap(alt)}
+      />
       <RemoveAlternativeDialog
         open={confirming}
         onOpenChange={setConfirming}

@@ -8,6 +8,7 @@ import {
 } from "@/entities/schedule-item";
 import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
+import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import type { PlanEditState } from "../model/use-plan-edit";
 import { ALTERNATIVE_TIME_NOTE, PlanEditForm } from "./plan-edit-form";
@@ -18,7 +19,8 @@ type PlanSectionProps = {
 };
 
 /**
- * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크), 「수정」 을 누르면 그 자리에서 고친다.
+ * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크).
+ * 「수정」 을 누르면 상세 위에 「이번 일정 수정」 창(모바일 시트 · PC 480 모달)이 뜬다.
  * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다. 대체 장소는 시간이 자리의 것이라 고칠 수 없다고 안내한다.
  */
 export function PlanSection({ item, edit }: PlanSectionProps) {
@@ -26,18 +28,24 @@ export function PlanSection({ item, edit }: PlanSectionProps) {
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-bold text-ink-400">이번 일정</span>
-        {!edit.draft && (
-          <button
-            type="button"
-            onClick={edit.start}
-            className="flex items-center gap-1 text-sm font-bold text-primary"
-          >
-            <Pencil className="size-3.5" />
-            수정
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={edit.start}
+          className="flex items-center gap-1 text-sm font-bold text-primary"
+        >
+          <Pencil className="size-3.5" />
+          수정
+        </button>
       </div>
-      {edit.draft ? <PlanEditForm item={item} edit={edit} /> : <PlanView item={item} />}
+      <PlanView item={item} />
+      <SheetDialog
+        open={!!edit.draft}
+        onClose={edit.cancel}
+        title="이번 일정 수정"
+        locked={edit.locked}
+      >
+        <PlanEditForm item={item} edit={edit} />
+      </SheetDialog>
     </section>
   );
 }

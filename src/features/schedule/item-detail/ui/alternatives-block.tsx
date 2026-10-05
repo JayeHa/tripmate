@@ -4,11 +4,13 @@ import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
+import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { AlternativePicker } from "./alternative-picker";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
+import { SwapAlternativeDialog } from "./swap-alternative-dialog";
 
 type AlternativesBlockProps = {
   tripId: string;
@@ -22,7 +24,8 @@ type AlternativesBlockProps = {
 };
 
 /**
- * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」.
+ * 대체 장소 — 이 일정이 안 될 때 갈 곳. 카드마다 이름 · 설명(누르면 그 대체 장소의 상세) · 「바꾸기」 · 빼기, 아래 「+ 대체 장소」
+ * (상세 위에 「대체 장소 추가」 창 — 저장한 장소에서 고르기 · 직접 추가).
  * 바꾸기는 그 장소가 이 자리(날짜 · 순서 · 시간)에 들어가고, 예약 상태 · 메모는 각자 장소를 따라간다
  */
 export function AlternativesBlock({
@@ -43,13 +46,26 @@ export function AlternativesBlock({
       {alternatives.map((alt) => (
         <AlternativeCard
           key={alt.id}
+          main={main}
           alt={alt}
           memoCount={memoCount(alt.id)}
           actions={actions}
           onOpen={() => onOpen(alt)}
         />
       ))}
-      {picking ? (
+      <button
+        type="button"
+        onClick={() => setPicking(true)}
+        className="h-10.5 rounded-card border-[1.5px] border-dashed border-line-strong text-sm font-bold text-primary"
+      >
+        + 대체 장소
+      </button>
+      <SheetDialog
+        open={picking}
+        onClose={() => setPicking(false)}
+        title="대체 장소 추가"
+        locked={actions.locked}
+      >
         <AlternativePicker
           tripId={tripId}
           main={main}
@@ -61,30 +77,26 @@ export function AlternativesBlock({
             onDirectAdd();
           }}
         />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setPicking(true)}
-          className="h-10.5 rounded-card border-[1.5px] border-dashed border-line-strong text-sm font-bold text-primary"
-        >
-          + 대체 장소
-        </button>
-      )}
+      </SheetDialog>
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </section>
   );
 }
 
 type AlternativeCardProps = {
+  main: ScheduleItem;
   alt: ScheduleItem;
   memoCount: number;
   actions: AlternativeActions;
   onOpen: () => void;
 };
 
-/** 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 자기 기록(상태 · 메모 · 링크)이 있으면 빼기 전에 묻는다 */
-function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardProps) {
+/**
+ * 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 「바꾸기」 는 한 번 묻고, 빼기는 자기 기록(상태 · 메모 · 링크)이 있으면 묻는다
+ */
+function AlternativeCard({ main, alt, memoCount, actions, onOpen }: AlternativeCardProps) {
   const [confirming, setConfirming] = useState(false);
+  const [swapping, setSwapping] = useState(false);
   const sub = alt.place?.description;
   return (
     <div className="flex items-center gap-2 rounded-card border border-line-card px-3.5 py-3">
@@ -103,7 +115,7 @@ function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardPro
       <button
         type="button"
         disabled={actions.pending}
-        onClick={() => actions.swap(alt)}
+        onClick={() => setSwapping(true)}
         className="flex h-8 shrink-0 items-center gap-1 rounded-button border border-line-strong px-2.5 text-[13px] font-bold text-ink-700 disabled:opacity-40"
       >
         <ArrowLeftRight className="size-3.5" />
@@ -118,6 +130,13 @@ function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardPro
       >
         <X className="size-4" />
       </button>
+      <SwapAlternativeDialog
+        open={swapping}
+        onOpenChange={setSwapping}
+        main={main}
+        alt={alt}
+        onConfirm={() => actions.swap(alt)}
+      />
       <RemoveAlternativeDialog
         open={confirming}
         onOpenChange={setConfirming}

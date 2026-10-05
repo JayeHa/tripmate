@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   RESERVATION_STATUS_LABEL,
   RESERVATION_STATUSES,
@@ -22,16 +24,20 @@ const inputClass =
   "h-11 rounded-memo border border-line text-sm text-ink-900 outline-none focus:border-primary";
 
 /**
- * 그 자리 수정 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
+ * 「이번 일정 수정」 창의 칸: 아이콘(일정마다 따로) · (place) 예약 상태 4칸 · 시간 · 일정 링크 / (그 밖) 제목 · 시간, 아래 취소 · 저장.
  * 아이콘을 비우면 장소의 예전 아이콘이 있으면 그것이 보여 자리 표시로 알려 준다
  */
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
-  const draft = edit.draft;
+  // 마지막으로 그린 칸 값. 닫힐 때(취소 · 저장) draft 가 먼저 비어도 창이 사라지는 동안은 이 값으로 그린다 —
+  // 그러지 않으면 본문이 먼저 빠져 머리만 남은 시트가 줄어들며 사라진다
+  const [shown, setShown] = useState(edit.draft);
+  if (edit.draft && edit.draft !== shown) setShown(edit.draft);
+  const draft = edit.draft ?? shown;
   if (!draft) return null;
   const isPlace = item.kind === "place";
   const options: (ReservationStatus | null)[] = [null, ...RESERVATION_STATUSES];
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-primary p-3.5">
+    <div className="flex flex-col gap-3">
       <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
         <div
           className={cn(
@@ -103,7 +109,13 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
       )}
       {edit.error && <p className="text-[13px] text-destructive">{edit.error}</p>}
       <div className="flex gap-2">
-        <Button variant="secondary" className="h-11 flex-1" onClick={edit.cancel}>
+        {/* 저장 중에는 창의 ✕ · 바깥 누르기처럼 「취소」 도 막는다 — 닫히면 실패 문구가 함께 사라져 저장된 줄 안다 */}
+        <Button
+          variant="secondary"
+          className="h-11 flex-1"
+          disabled={edit.locked}
+          onClick={edit.cancel}
+        >
           취소
         </Button>
         <Button className="h-11 flex-2" disabled={edit.saving} onClick={edit.save}>

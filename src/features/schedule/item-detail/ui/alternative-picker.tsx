@@ -12,6 +12,7 @@ type AlternativePickerProps = {
   main: ScheduleItem;
   alternatives: ScheduleItem[];
   actions: AlternativeActions;
+  /** 고르면 닫는다(상세 위의 「대체 장소 추가」 창) */
   onClose: () => void;
   /** 「+ 직접 추가」 — 장소 입력 폼을 대체 장소 모드로 연다 */
   onDirectAdd: () => void;
@@ -32,19 +33,14 @@ export function AlternativePicker({
   const [query, setQuery] = useState("");
   const { choices, loading } = useAlternativeChoices(tripId, main, alternatives, query);
 
-  /** 골라 붙인다. 붙었을 때만 닫는다(실패 문구는 블록 아래에) */
+  /** 골라 붙인다. 붙었을 때만 닫는다(실패하면 창이 열린 채 아래 「+ 직접 추가」 위에 문구) */
   async function pick(placeId: string) {
     if (await actions.addSaved(placeId)) onClose();
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-primary p-3">
-      <div className="flex items-center gap-2">
-        <span className="flex-1 text-sm font-extrabold text-ink-900">저장한 장소에서 고르기</span>
-        <button type="button" onClick={onClose} className="text-[13px] text-ink-400">
-          닫기
-        </button>
-      </div>
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-extrabold text-ink-900">저장한 장소에서 고르기</span>
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -76,6 +72,7 @@ export function AlternativePicker({
           <span className="px-0.5 py-2.5 text-[13px] text-ink-350">맞는 장소가 없어요.</span>
         )}
       </div>
+      {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
       <button
         type="button"
         onClick={onDirectAdd}
