@@ -6,6 +6,7 @@ import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
 
 import {
+  addDayMemo,
   addPlacesToSchedule,
   createPlaceSchedule,
   deleteScheduleItem,
@@ -146,6 +147,16 @@ export function useMoveScheduleItemToDay(tripId: string) {
   return useMutation({
     mutationFn: ({ item, dayIndex }: { item: ScheduleItem; dayIndex: number }) =>
       moveScheduleItemToDay(item, dayIndex),
+    onSuccess: invalidate,
+  });
+}
+
+/** 날짜 메모를 그날 끝에 넣는다(note 일정) */
+export function useAddDayMemo(tripId: string) {
+  const invalidate = useInvalidateItems(tripId);
+  return useMutation({
+    mutationFn: ({ dayIndex, text }: { dayIndex: number; text: string }) =>
+      addDayMemo(tripId, dayIndex, text),
     onSuccess: invalidate,
   });
 }
