@@ -132,15 +132,16 @@ describe("create_trip", () => {
 });
 
 describe("update_trip_dates", () => {
-  it("줄이면 잘린 날의 일정은 마지막 날 끝으로(순서 유지), 지출은 같이 옮기고 도착일로 모은다", async () => {
+  it("줄이면 잘린 날의 일정은 마지막 날 끝으로(순서 유지), 지출은 같이 옮기고 도착일로 모은다 — 여행준비(날짜 없음)는 그대로", async () => {
     await as(A);
     const id = await newTrip("2026-11-01", "2026-11-05");
     await db.exec(`
       insert into public.schedule_items (trip_id, day_index, position, kind, name) values
         ('${id}',0,0,'note','a'),('${id}',2,0,'note','c'),('${id}',3,0,'note','d'),
         ('${id}',3,1,'note','e'),('${id}',4,0,'note','f');
-      insert into public.expenses (trip_id, payer_id, amount, currency, spent_on) values
-        ('${id}','${A}',1,'KRW','2026-11-02'),('${id}','${A}',2,'KRW','2026-11-04');
+      insert into public.expenses (trip_id, payer_id, amount, currency, spent_on, name) values
+        ('${id}','${A}',1,'KRW','2026-11-02','a'),('${id}','${A}',2,'KRW','2026-11-04','b'),
+        ('${id}','${A}',3,'KRW',null,'숙소');
       insert into public.day_routes (trip_id, day_index, items_hash, polyline, legs) values
         ('${id}',1,'h','p','[]'),('${id}',3,'h','p','[]');
     `);
@@ -154,9 +155,9 @@ describe("update_trip_dates", () => {
     expect(items.rows.map((r) => r.v)).toEqual(["0:0:a", "2:0:c", "2:1:d", "2:2:e", "2:3:f"]);
 
     const expenses = await db.query<{ v: string }>(
-      `select amount::int || '@' || spent_on v from public.expenses where trip_id = '${id}' order by amount`,
+      `select amount::int || '@' || coalesce(spent_on::text, '여행준비') v from public.expenses where trip_id = '${id}' order by amount`,
     );
-    expect(expenses.rows.map((r) => r.v)).toEqual(["1@2026-11-11", "2@2026-11-12"]);
+    expect(expenses.rows.map((r) => r.v)).toEqual(["1@2026-11-11", "2@2026-11-12", "3@여행준비"]);
 
     const routes = await db.query<{ d: number }>(
       `select day_index d from public.day_routes where trip_id = '${id}'`,
@@ -991,6 +992,30 @@ describe("대체 장소는 일정 줄 (0024)", () => {
     );
   });
 
+  it("바꾸기: 대체 장소가 된 일정의 지출은 합계에서 빠지고, 올라온 일정의 지출은 다시 들어간다 — 다시 바꾸면 원래대로", async () => {
+    const { trip, main, alt, other } = await setup("2027-09-13", "2027-09-14");
+    await db.exec(`
+      insert into public.expenses (trip_id, payer_id, amount, currency, name, schedule_item_id, counted) values
+        ('${trip}','${A}',1,'KRW','원래 일정','${main}',true),
+        ('${trip}','${A}',2,'KRW','대체 장소','${alt}',false),
+        ('${trip}','${A}',3,'KRW','다른 대체 장소','${other}',false),
+        ('${trip}','${A}',4,'KRW','연결 없음',null,true);
+    `);
+    /** 금액 순서대로 합계 포함 여부 */
+    const counted = async () =>
+      (
+        await db.query<{ counted: boolean }>(
+          `select counted from public.expenses where trip_id = '${trip}' order by amount`,
+        )
+      ).rows.map((r) => r.counted);
+
+    await db.query(`select public.swap_alternative($1)`, [alt]);
+    expect(await counted()).toEqual([false, true, false, true]);
+
+    await db.query(`select public.swap_alternative($1)`, [main]);
+    expect(await counted()).toEqual([true, false, false, true]);
+  });
+
   it("멤버가 아니면 바꾸지 못한다", async () => {
     const { alt } = await setup("2027-09-10", "2027-09-11");
     await as(B);
@@ -1248,6 +1273,92 @@ describe("편집 저장의 날 범위 (0032)", () => {
        join public.trips t on t.id = si.trip_id where si.id = '${a}'`,
     );
     expect(rows).toEqual([{ day_index: 0, s: [] }]);
+  });
+});
+
+describe("0033 데이터 이전", () => {
+  it("옛 지출의 항목명은 메모로, 메모가 없으면 「지출」 로 채운다", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0033"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('66666666-6666-4666-8666-666666666666', '${A}', 't', '2027-06-01', '2027-06-01');
+      insert into public.expenses (trip_id, payer_id, amount, currency, spent_on, memo) values
+        ('66666666-6666-4666-8666-666666666666', '${A}', 1, 'KRW', '2027-06-01', '  텐동  '),
+        ('66666666-6666-4666-8666-666666666666', '${A}', 2, 'KRW', '2027-06-01', null),
+        ('66666666-6666-4666-8666-666666666666', '${A}', 3, 'KRW', '2027-06-01', '   ');
+    `);
+    await applyMigration(pg, "0033_expense_fields.sql");
+    const { rows } = await pg.query<{ name: string }>(
+      `select name from public.expenses order by amount`,
+    );
+    expect(rows.map((r) => r.name)).toEqual(["텐동", "지출", "지출"]);
+  });
+});
+
+describe("지출 칸 (0033)", () => {
+  /** 지출 한 줄을 넣는다. 칸은 `칸 = 값` 목록으로 */
+  function insertExpense(trip: string, fields: Record<string, string>) {
+    const all = {
+      trip_id: `'${trip}'`,
+      payer_id: `'${A}'`,
+      amount: "1",
+      currency: "'JPY'",
+      name: "'라멘'",
+      ...fields,
+    };
+    return `insert into public.expenses (${Object.keys(all).join(", ")}) values (${Object.values(all).join(", ")})`;
+  }
+
+  it("기본값 — 현금 · 합계 포함 · 결제 완료 · 여행 기본 환율, 날짜가 없으면 여행준비", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-01", "2027-10-02");
+    await db.query(insertExpense(trip, {}));
+    const { rows } = await db.query(
+      `select payment_method, counted, paid, due_date, rate, spent_on, category from public.expenses where trip_id = '${trip}'`,
+    );
+    expect(rows).toEqual([
+      {
+        payment_method: "cash",
+        counted: true,
+        paid: true,
+        due_date: null,
+        rate: null,
+        spent_on: null,
+        category: "other",
+      },
+    ]);
+  });
+
+  it("항공 카테고리 · 결제 예정 + 예정일 · 지출별 환율을 받는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-04", "2027-10-05");
+    await db.query(
+      insertExpense(trip, {
+        category: "'flight'",
+        payment_method: "'card'",
+        paid: "false",
+        due_date: "'2027-09-20'",
+        rate: "8.883",
+      }),
+    );
+    const { rows } = await db.query<{ rate: string }>(
+      `select rate from public.expenses where trip_id = '${trip}'`,
+    );
+    expect(Number(rows[0].rate)).toBe(8.883);
+  });
+
+  it("빈 항목명 · 모르는 결제수단 · 0 이하 환율 · 결제 완료인데 예정일은 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-07", "2027-10-08");
+    expect(await rejects(insertExpense(trip, { name: "'  '" }))).toMatch(/expenses_name_chk/);
+    expect(await rejects(insertExpense(trip, { payment_method: "'coin'" }))).toMatch(
+      /expenses_payment_method_chk/,
+    );
+    expect(await rejects(insertExpense(trip, { rate: "0" }))).toMatch(/expenses_rate_chk/);
+    expect(await rejects(insertExpense(trip, { due_date: "'2027-09-20'" }))).toMatch(
+      /expenses_due_date_chk/,
+    );
   });
 });
 
