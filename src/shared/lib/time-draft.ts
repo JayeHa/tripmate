@@ -23,6 +23,21 @@ export function pickMinute(d: TimeDraft, m: number): TimeDraft {
 }
 
 /**
+ * 시 칸에 직접 친 글자. 숫자만 두 자리까지 받는다. 비었거나 23 을 넘으면 시는 아직 없음(확인을 막는다),
+ * 그 밖은 그 시로 고른 것과 같다(분을 안 골랐으면 00분)
+ */
+export function typeHour(d: TimeDraft, raw: string): { draft: TimeDraft; text: string } {
+  const text = raw.replace(/\D/g, "").slice(0, 2);
+  if (text === "" || Number(text) > 23) return { draft: { ...d, h: null }, text };
+  return { draft: pickHour(d, Number(text)), text };
+}
+
+/** 시 칸에 친 글자가 범위(00–23)를 벗어났는지 */
+export function hourOutOfRange(text: string | null): boolean {
+  return text !== null && text !== "" && Number(text) > 23;
+}
+
+/**
  * 분 칸에 직접 친 글자. 숫자만 두 자리까지 받는다. 비었거나 59 를 넘으면 분은 아직 없음(확인을 막는다),
  * 그 밖은 그 분으로 고른 것과 같다
  */
@@ -38,11 +53,16 @@ export function minuteOutOfRange(text: string | null): boolean {
 }
 
 /**
- * 확인하면 저장할 「HH:mm」. 시를 안 골랐거나, 분 칸을 비웠거나(다시 치는 중), 분이 범위를 벗어났으면 ""(확인 불가).
+ * 확인하면 저장할 「HH:mm」. 시를 안 골랐거나, 시 · 분 칸을 비웠거나(다시 치는 중), 범위를 벗어났으면 ""(확인 불가).
  * 분 칸을 손대지 않았으면(text null) 고른 분, 분을 안 골랐으면 00분
  */
-export function draftValue(d: TimeDraft, text: string | null): string {
+export function draftValue(
+  d: TimeDraft,
+  text: string | null,
+  hourText: string | null = null,
+): string {
   if (d.h === null || text === "" || minuteOutOfRange(text)) return "";
+  if (hourText === "" || hourOutOfRange(hourText)) return "";
   return `${pad(d.h)}:${pad(d.m ?? 0)}`;
 }
 

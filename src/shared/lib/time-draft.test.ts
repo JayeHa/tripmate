@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   draftValue,
+  hourOutOfRange,
   minuteOutOfRange,
   minuteSteps,
   parseTime,
   pickHour,
   pickMinute,
+  typeHour,
   typeMinute,
 } from "./time-draft";
 
@@ -34,6 +36,13 @@ describe("고르기", () => {
     expect(typeMinute({ h: 16, m: 0 }, "75")).toEqual({ draft: { h: 16, m: null }, text: "75" });
     expect(typeMinute({ h: 16, m: 0 }, "")).toEqual({ draft: { h: 16, m: null }, text: "" });
   });
+
+  it("시 직접 입력: 숫자 두 자리까지, 24 이상 · 빈칸이면 시 없음, 분을 안 골랐으면 00분", () => {
+    expect(typeHour(empty, "1a6")).toEqual({ draft: { h: 16, m: 0 }, text: "16" });
+    expect(typeHour({ h: 9, m: 30 }, "7")).toEqual({ draft: { h: 7, m: 30 }, text: "7" });
+    expect(typeHour({ h: 9, m: 30 }, "24")).toEqual({ draft: { h: null, m: 30 }, text: "24" });
+    expect(typeHour({ h: 9, m: 30 }, "")).toEqual({ draft: { h: null, m: 30 }, text: "" });
+  });
 });
 
 describe("draftValue · minuteOutOfRange · minuteSteps", () => {
@@ -44,6 +53,11 @@ describe("draftValue · minuteOutOfRange · minuteSteps", () => {
     expect(draftValue({ h: 16, m: null }, "75")).toBe("");
     // 분 칸을 지운 채면(다시 치는 중) 고르지 않은 00분이 저장되지 않게 막는다
     expect(draftValue({ h: 16, m: null }, "")).toBe("");
+    // 시 칸을 비웠거나 범위 밖이면 확인을 막는다
+    expect(draftValue({ h: 16, m: 5 }, null, "")).toBe("");
+    expect(draftValue({ h: 16, m: 5 }, null, "16")).toBe("16:05");
+    expect(hourOutOfRange("24")).toBe(true);
+    expect(hourOutOfRange("23")).toBe(false);
     expect(minuteOutOfRange("75")).toBe(true);
     expect(minuteOutOfRange("")).toBe(false);
     expect(minuteSteps(5)).toHaveLength(12);
