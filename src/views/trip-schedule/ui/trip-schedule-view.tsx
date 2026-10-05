@@ -18,7 +18,7 @@ import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount, dayOfWeek } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
-import { Toast } from "@/shared/ui/toast";
+import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
@@ -50,7 +50,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   // 상세의 「장소 정보 수정」 으로 연 장소 입력 폼. 저장하면 닫고 상세 위에 토스트를 띄운다
   const [placeEdit, setPlaceEdit] = useState<{ place: Place; city: City | null } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -164,7 +164,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             place: placeEdit.place,
             onSaved: (changed) => {
               setPlaceEdit(null);
-              if (changed) setToast("장소 정보를 수정했어요");
+              if (changed) setToast({ text: "장소 정보를 수정했어요", id: Date.now() });
             },
           }}
           open
