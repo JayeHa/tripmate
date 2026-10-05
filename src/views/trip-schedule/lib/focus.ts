@@ -43,3 +43,19 @@ export function pinScrollTarget(
   }
   return Math.round(hi);
 }
+
+/** 이어서 보기의 날짜 묶음. `top` 은 화면 기준 그 날짜 머리의 윗변 */
+export type DaySectionTop = { day: number; top: number };
+
+/**
+ * 지금 보고 있는 날 — 머리가 기준선(목록이 보이기 시작하는 곳)을 지난 마지막 날짜. 아직 아무것도 지나지 않았으면 첫 날짜.
+ * 묶음은 위 → 아래 순서로 받는다. 묶음이 없으면 null
+ */
+export function pickVisibleDay(sections: DaySectionTop[], line: number): number | null {
+  let picked = sections[0]?.day ?? null;
+  for (const s of sections) {
+    if (s.top > line) break;
+    picked = s.day;
+  }
+  return picked;
+}

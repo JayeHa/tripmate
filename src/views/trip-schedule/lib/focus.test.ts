@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pickFocus, pinScrollTarget } from "./focus";
+import { pickFocus, pickVisibleDay, pinScrollTarget } from "./focus";
 
 const rows = [
   { id: "a", top: 100 },
@@ -45,5 +45,20 @@ describe("pinScrollTarget", () => {
 
   it("끝까지 내려도 닿지 않으면 끝에서 멈춘다", () => {
     expect(pinScrollTarget(3000, 0, 500, () => 120, 12)).toBe(500);
+  });
+});
+
+describe("pickVisibleDay", () => {
+  const sections = [
+    { day: 0, top: -400 },
+    { day: 1, top: 80 },
+    { day: 2, top: 600 },
+  ];
+  it("머리가 기준선을 지난 마지막 날짜, 아직 아무것도 안 지났으면 첫 날짜", () => {
+    expect(pickVisibleDay(sections, 100)).toBe(1);
+    expect(pickVisibleDay(sections, 80)).toBe(1);
+    expect(pickVisibleDay(sections, 79)).toBe(0);
+    expect(pickVisibleDay([{ day: 3, top: 500 }], 100)).toBe(3);
+    expect(pickVisibleDay([], 100)).toBeNull();
   });
 });
