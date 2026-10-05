@@ -56,7 +56,7 @@ export async function swapScheduleItems(a: ScheduleItem, b: ScheduleItem): Promi
 /** 그날 맨 끝 순서(대체 장소 빼고). 그날 일정이 없으면 0 */
 async function endPosition(tripId: string, dayIndex: number): Promise<number> {
   const supabase = createClient();
-  const { data: last } = await supabase
+  const { data: last, error } = await supabase
     .from("schedule_items")
     .select("position")
     .eq("trip_id", tripId)
@@ -65,6 +65,8 @@ async function endPosition(tripId: string, dayIndex: number): Promise<number> {
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
+  // 조회가 실패하면 빈 날로 여겨 맨 위(0)에 넣지 않게 그대로 던진다
+  if (error) throw error;
   return last ? last.position + 1 : 0;
 }
 
