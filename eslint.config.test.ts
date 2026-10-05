@@ -141,3 +141,18 @@ describe("컴포넌트 props 타입", () => {
     expect(await propsErrors(code)).toEqual([]);
   });
 });
+
+/** 시간 칸은 TimeField 로만 — 브라우저 기본 시간 입력은 막는다 */
+describe("시간 입력", () => {
+  async function timeErrors(code: string) {
+    const [result] = await eslint.lintText(code, {
+      filePath: path.join(ROOT, "src/shared/ui/x.tsx"),
+    });
+    return result.messages.filter((m) => m.ruleId === "no-restricted-syntax");
+  }
+
+  it("input type=time 은 막히고, 다른 input 은 통과한다", async () => {
+    expect(await timeErrors(`export const A = () => <input type="time" />;\n`)).toHaveLength(1);
+    expect(await timeErrors(`export const A = () => <input type="text" />;\n`)).toEqual([]);
+  });
+});

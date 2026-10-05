@@ -9,6 +9,7 @@ import {
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { LinkRows } from "@/shared/ui/link-rows";
+import { TimeField } from "@/shared/ui/time-field";
 
 import type { PlanEditState } from "../model/use-plan-edit";
 
@@ -88,12 +89,10 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
         {item.alternative_of ? (
           <span className="text-sm text-ink-350">{ALTERNATIVE_TIME_NOTE}</span>
         ) : (
-          <input
-            type="time"
+          <TimeField
             value={draft.time}
-            onChange={(e) => edit.set("time", e.target.value)}
+            onChange={(time) => edit.set("time", time)}
             aria-label="방문 예상 시간"
-            className={`${inputClass} px-3`}
           />
         )}
       </EditField>
