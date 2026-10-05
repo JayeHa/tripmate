@@ -1228,6 +1228,29 @@ describe("하루 요약 (0031)", () => {
   });
 });
 
+describe("편집 저장의 날 범위 (0032)", () => {
+  it("여행 일수 밖의 날은 순서 · 요약 모두 거부하고 아무것도 바꾸지 않는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-10", "2027-12-11");
+    const a = await addPlace(trip, 0, { name: "A", lat: 35.7, lng: 139.7 });
+    expect(
+      await rejects(
+        `select public.apply_schedule_edit('${trip}', '${JSON.stringify({ 2: [a] })}', '{}', null)`,
+      ),
+    ).toMatch(/out of trip range/);
+    expect(
+      await rejects(
+        `select public.apply_schedule_edit('${trip}', '{}', '{}', '${JSON.stringify({ 2000000000: "x" })}')`,
+      ),
+    ).toMatch(/out of trip range/);
+    const { rows } = await db.query<{ day_index: number; s: unknown }>(
+      `select si.day_index, to_json(t.day_summaries) s from public.schedule_items si
+       join public.trips t on t.id = si.trip_id where si.id = '${a}'`,
+    );
+    expect(rows).toEqual([{ day_index: 0, s: [] }]);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
