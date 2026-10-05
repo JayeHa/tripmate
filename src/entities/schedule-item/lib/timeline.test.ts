@@ -39,7 +39,7 @@ function item(patch: ItemPatch): ScheduleItem {
     start_time: null,
     status: null,
     memo: null,
-    alternatives: [],
+    alternative_of: null,
     links: [],
     created_by: null,
     created_at: "",
@@ -180,11 +180,6 @@ describe("buildTimeline", () => {
           "x",
           { title: "스크립트", url: "javascript:alert(1)" },
         ],
-        alternatives: [
-          { name: "B", gmap: "https://b" },
-          { name: "C" },
-          { name: "D", gmap: "data:text/html,x" },
-        ],
       }),
     ]);
     expect(row.status).toBeNull();
@@ -193,7 +188,16 @@ describe("buildTimeline", () => {
       { title: "구글맵", url: "https://maps.google.com/x", gmap: true },
       { title: "링크", url: "https://a", gmap: false },
     ]);
-    expect(row.alternatives).toEqual([{ name: "B", gmap: "https://b" }]);
+  });
+
+  it("대체 장소 줄은 붙은 일정(alternative_of)에 넣은 순서대로 모인다", () => {
+    const main = item({ name: "머메이드 커피", lat: 35.73, lng: 139.71 });
+    const other = item({ name: "선샤인시티", lat: 35.72, lng: 139.72 });
+    const altA = item({ name: "아시츠보", alternative_of: main.id });
+    const altB = item({ name: "굿즈샵", alternative_of: main.id });
+    const rows = buildTimeline([main, other], [], null, [altA, altB]);
+    expect(rows[0].alternatives.map((a) => a.id)).toEqual([altA.id, altB.id]);
+    expect(rows[1].alternatives).toEqual([]);
   });
 
   it("링크 칩은 구글맵 · 일정 링크 · 장소 링크 순서", () => {

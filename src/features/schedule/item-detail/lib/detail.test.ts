@@ -52,7 +52,7 @@ function item(patch: Partial<ScheduleItem> = {}): ScheduleItem {
     start_time: null,
     status: null,
     memo: null,
-    alternatives: [],
+    alternative_of: null,
     links: [],
     created_by: null,
     created_at: "",

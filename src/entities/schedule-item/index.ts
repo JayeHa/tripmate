@@ -1,3 +1,4 @@
+export * from "./api/alternatives";
 export * from "./api/moves";
 export * from "./api/schedule-items";
 export * from "./lib/add-place-error";
@@ -8,6 +9,7 @@ export * from "./model/move";
 export * from "./model/place";
 export * from "./model/reservation-status";
 export * from "./model/types";
+export * from "./model/use-alternatives";
 export * from "./model/use-day-route";
 export * from "./model/use-moves";
 export * from "./model/use-open-memos";

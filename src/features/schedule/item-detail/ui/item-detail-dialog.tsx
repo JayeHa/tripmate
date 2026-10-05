@@ -7,6 +7,7 @@ import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item"
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
 import { useMemoEdit } from "../model/use-memo-edit";
 import { usePlanEdit } from "../model/use-plan-edit";
@@ -32,6 +33,10 @@ type ItemDetailDialogProps = {
   onClose: () => void;
   /** 「장소 정보 수정」 — 부른 쪽이 장소 입력 폼(수정 모드)을 상세 위에 연다 */
   onEditPlace: (place: Place, city: City | null) => void;
+  /** 대체 장소 「+ 직접 추가」 — 부른 쪽이 장소 입력 폼을 이 일정의 대체 장소 모드로 연다 */
+  onAddAlternative: (main: ScheduleItem, city: City | null) => void;
+  /** 「바꾸기」 가 끝났다 — 새로 그 자리에 들어온 일정(altId)으로 상세를 옮긴다 */
+  onSwapped: (altId: string) => void;
 };
 
 /**
@@ -76,11 +81,14 @@ function DetailBody({
   onClose,
   onLockChange,
   onEditPlace,
+  onAddAlternative,
+  onSwapped,
 }: DetailBodyProps) {
   const plan = usePlanEdit(tripId, row.item);
   const memo = useMemoEdit(tripId, row.item);
   const actions = useItemActions(tripId, row.item, dayItems, onClose);
-  const locked = plan.locked || memo.locked || actions.locked;
+  const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
+  const locked = plan.locked || memo.locked || actions.locked || alternatives.locked;
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
@@ -90,6 +98,8 @@ function DetailBody({
         row={row}
         plan={plan}
         memo={memo}
+        alternatives={alternatives}
+        onAddAlternative={(city) => onAddAlternative(row.item, city)}
         onEditPlace={onEditPlace}
       />
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}

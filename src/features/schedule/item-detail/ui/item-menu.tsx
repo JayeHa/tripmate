@@ -35,6 +35,8 @@ type ItemMenuProps = {
   actions: ItemActions;
   /** 지금 날(0-base) — 「다른 날로」 목록에서 뺀다 */
   dayIndex: number;
+  /** 이 일정의 대체 장소 수 — 지우면 함께 지워진다고 알린다 */
+  alternativeCount: number;
   startDate: string;
   totalDays: number;
 };
@@ -42,7 +44,13 @@ type ItemMenuProps = {
 /**
  * 상세 머리의 ⋯ — 앞으로 · 뒤로 · 다른 날로 · 삭제(확인 후). 편집 모드(#13 ⑤)가 생기기 전까지의 임시 자리다.
  */
-export function ItemMenu({ actions, dayIndex, startDate, totalDays }: ItemMenuProps) {
+export function ItemMenu({
+  actions,
+  dayIndex,
+  alternativeCount,
+  startDate,
+  totalDays,
+}: ItemMenuProps) {
   const [confirming, setConfirming] = useState(false);
   const days = Array.from({ length: totalDays }, (_, i) => i).filter((i) => i !== dayIndex);
   return (
@@ -113,7 +121,10 @@ export function ItemMenu({ actions, dayIndex, startDate, totalDays }: ItemMenuPr
           <AlertDialogHeader>
             <AlertDialogTitle>이 일정을 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>
-              이 일정의 시간 · 메모 · 링크가 지워져요. 장소는 저장한 장소에 남아요.
+              {alternativeCount > 0
+                ? `이 일정의 시간 · 메모 · 링크와 대체 장소 ${alternativeCount}곳이 지워져요.`
+                : "이 일정의 시간 · 메모 · 링크가 지워져요."}{" "}
+              장소는 저장한 장소에 남아요.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

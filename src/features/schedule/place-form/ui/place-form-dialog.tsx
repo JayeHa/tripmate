@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { Place } from "@/entities/schedule-item";
+import { itemName, type Place, type ScheduleItem } from "@/entities/schedule-item";
 import type { SearchCity } from "@/shared/lib/google-places";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -17,6 +17,8 @@ type AddMode = {
   dayIndex: number;
   /** 위치 검색칸의 처음 값(일정 추가 화면의 검색어) */
   initialQuery: string;
+  /** 있으면 그날 끝이 아니라 이 일정의 대체 장소로 담는다(일정 상세의 대체 장소 「+ 직접 추가」) */
+  alternativeOf?: ScheduleItem | null;
   /** 담기에 성공하면 부른다(폼은 부른 쪽이 닫는다) */
   onSaved: () => void;
 };
@@ -74,23 +76,24 @@ function AddBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<AddMod
     city,
     dayIndex: mode.dayIndex,
     initialQuery: mode.initialQuery,
+    alternativeOf: mode.alternativeOf ?? null,
     onSaved: mode.onSaved,
   });
   useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
-  const dayLabel = `day ${mode.dayIndex + 1}`;
   const onInfo = form.step === "info";
+  const copy = addCopy(mode);
   return (
     <PlaceFormLayout
       form={form}
       cityName={city?.name ?? null}
-      title="일정 직접 추가"
-      subtitle={`${onInfo ? "2/2 · 장소 정보" : "1/2 · 위치 선택"} · ${dayLabel}에 담겨요`}
+      title={copy.title}
+      subtitle={`${onInfo ? "2/2 · 장소 정보" : "1/2 · 위치 선택"} · ${copy.target}`}
       back={
         onInfo
           ? { label: "위치 선택으로", onClick: form.changeLocation }
           : { label: "닫기", onClick: onClose }
       }
-      saveLabel={`${dayLabel}에 담기`}
+      saveLabel={copy.save}
       locationFooter={
         form.existing ? (
           <>
@@ -100,7 +103,7 @@ function AddBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<AddMod
               disabled={form.saving}
               onClick={form.attachExisting}
             >
-              이 장소로 {dayLabel}에 담기
+              {copy.attach}
             </Button>
             <button
               type="button"
@@ -115,6 +118,25 @@ function AddBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<AddMod
       }
     />
   );
+}
+
+/** 담는 곳에 따른 문구 — 그날 끝(일정 직접 추가) · 일정의 대체 장소 */
+function addCopy(mode: AddMode) {
+  if (mode.alternativeOf) {
+    return {
+      title: "대체 장소 추가",
+      target: `${itemName(mode.alternativeOf)}의 대체 장소`,
+      save: "대체 장소로 담기",
+      attach: "이 장소를 대체 장소로 담기",
+    };
+  }
+  const day = `day ${mode.dayIndex + 1}`;
+  return {
+    title: "일정 직접 추가",
+    target: `${day}에 담겨요`,
+    save: `${day}에 담기`,
+    attach: `이 장소로 ${day}에 담기`,
+  };
 }
 
 /**

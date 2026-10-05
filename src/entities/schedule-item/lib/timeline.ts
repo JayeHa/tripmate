@@ -1,8 +1,6 @@
 import { hoursOnDay } from "../model/hours";
 import { type Move, MOVE_MODE_LABEL, moveKey, type MoveMode, moveModeOf } from "../model/move";
 import {
-  type Alternative,
-  alternativesOf,
   CATEGORY_LABEL,
   categoryOf,
   isHttpUrl,
@@ -57,7 +55,8 @@ export type TimelineRow = {
   /** 그날 휴무 — 카드에 경고 칩으로(메모를 접어도 보인다) */
   hoursOff: boolean;
   links: TimelineLink[];
-  alternatives: Alternative[];
+  /** 이 일정의 대체 장소(일정 줄, 장소 포함 — 0024). 넣은 순서 */
+  alternatives: ScheduleItem[];
 };
 
 type Located = { lat: number; lng: number };
@@ -139,14 +138,21 @@ function hoursOf(item: ScheduleItem, dow: number | null): Pick<TimelineRow, "hou
 
 /**
  * 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다.
- * dow 는 그날의 요일(Date.getDay(), 0 = 일요일) — 요일별 운영시간에서 그날 값을 고른다. 모르면 null
+ * dow 는 그날의 요일(Date.getDay(), 0 = 일요일) — 요일별 운영시간에서 그날 값을 고른다. 모르면 null.
+ * alternatives 는 여행의 대체 장소 줄들 — 붙은 일정(alternative_of)마다 모아 그 줄에 단다
  */
 export function buildTimeline(
   items: ScheduleItem[],
   moves: Move[] = [],
   dow: number | null = null,
+  alternatives: ScheduleItem[] = [],
 ): TimelineRow[] {
   const numbers = placeNumbers(items);
+  const altsByItem = new Map<string, ScheduleItem[]>();
+  for (const alt of alternatives) {
+    if (!alt.alternative_of) continue;
+    altsByItem.set(alt.alternative_of, [...(altsByItem.get(alt.alternative_of) ?? []), alt]);
+  }
   const moveByPair = new Map(moves.map((m) => [moveKey(m.from_item_id, m.to_item_id), m]));
   let prev: { item: ScheduleItem; at: Located } | null = null;
 
@@ -176,7 +182,7 @@ export function buildTimeline(
       notes: notesOf(item.memo),
       ...hoursOf(item, dow),
       links: linksFor(item),
-      alternatives: alternativesOf(item),
+      alternatives: altsByItem.get(item.id) ?? [],
     };
   });
 }

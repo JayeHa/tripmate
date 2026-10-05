@@ -3,6 +3,7 @@ import type { Place, TimelineRow } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { dayOfWeek, dayParts } from "@/shared/lib/days";
 
+import type { AlternativeActions } from "../model/use-alternative-actions";
 import type { MemoEditState } from "../model/use-memo-edit";
 import type { PlanEditState } from "../model/use-plan-edit";
 import { AlternativesBlock } from "./alternatives-block";
@@ -16,6 +17,9 @@ type DetailContentProps = {
   row: TimelineRow;
   plan: PlanEditState;
   memo: MemoEditState;
+  alternatives: AlternativeActions;
+  /** 대체 장소 「+ 직접 추가」 — 장소 입력 폼을 이 일정의 대체 장소 모드로. 이 장소의 도시(검색 범위)를 넘긴다 */
+  onAddAlternative: (city: City | null) => void;
   /** 「장소 정보 수정」 — 장소와 그 도시(위치를 바꿀 때 검색 범위)를 넘긴다 */
   onEditPlace: (place: Place, city: City | null) => void;
 };
@@ -30,6 +34,8 @@ export function DetailContent({
   row,
   plan,
   memo,
+  alternatives,
+  onAddAlternative,
   onEditPlace,
 }: DetailContentProps) {
   const { data: cities = [] } = useTripCities(tripId);
@@ -57,7 +63,15 @@ export function DetailContent({
       />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />
       <MemoBlock notes={row.notes} edit={memo} />
-      {item.kind === "place" && <AlternativesBlock alternatives={row.alternatives} />}
+      {item.kind === "place" && (
+        <AlternativesBlock
+          tripId={tripId}
+          main={item}
+          alternatives={row.alternatives}
+          actions={alternatives}
+          onDirectAdd={() => onAddAlternative(city)}
+        />
+      )}
     </>
   );
 }

@@ -7,12 +7,14 @@ import type { Place, ScheduleItem } from "../model/types";
 /** 일정과 그 일정이 쓰는 장소를 함께 읽는 select */
 const WITH_PLACE = "*, place:places(*)";
 
+/** 여행의 타임라인 일정(날짜 · 순서). 대체 장소 줄(alternative_of)은 빼고 fetchAlternatives 로 따로 읽는다 */
 export async function fetchScheduleItems(tripId: string): Promise<ScheduleItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("schedule_items")
     .select(WITH_PLACE)
     .eq("trip_id", tripId)
+    .is("alternative_of", null)
     .order("day_index")
     .order("position");
   if (error) throw error;
@@ -62,6 +64,7 @@ export async function moveScheduleItemToDay(
     .select("position")
     .eq("trip_id", item.trip_id)
     .eq("day_index", dayIndex)
+    .is("alternative_of", null)
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -71,13 +74,14 @@ export async function moveScheduleItemToDay(
   });
 }
 
-/** dayIndex 일째부터 끝까지의 일정 수. 기간을 줄일 때 옮겨질 일정을 미리 센다 */
+/** dayIndex 일째부터 끝까지의 일정 수(대체 장소 빼고). 기간을 줄일 때 옮겨질 일정을 미리 센다 */
 export async function countScheduleItemsFrom(tripId: string, dayIndex: number): Promise<number> {
   const supabase = createClient();
   const { count, error } = await supabase
     .from("schedule_items")
     .select("id", { count: "exact", head: true })
     .eq("trip_id", tripId)
+    .is("alternative_of", null)
     .gte("day_index", dayIndex);
   if (error) throw error;
   return count ?? 0;
@@ -196,6 +200,7 @@ export type NewPlaceFields = {
 /**
  * 장소를 직접 입력해 그날 끝에 담는다(create_place_schedule). 장소와 일정을 한 트랜잭션으로 만든다.
  * 이번 일정 칸(p_item)은 아이콘만 보낸다 — 직접 추가는 장소만 받고, 상태 · 시간 · 메모는 일정 상세에서 고친다.
+ * `alternativeOf` 가 있으면 그날 끝이 아니라 그 일정의 대체 장소로 넣는다(0024 — 날짜는 그 일정을 따른다).
  * 새 일정 id 를 돌려준다.
  */
 export async function createPlaceSchedule(
@@ -204,13 +209,14 @@ export async function createPlaceSchedule(
   place: NewPlaceFields,
   /** 이 일정에만 붙는 아이콘(장소가 아니라 일정에 — 0023). 없으면 null */
   emoji: string | null,
+  alternativeOf: string | null = null,
 ): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("create_place_schedule", {
     p_trip: tripId,
     p_day: dayIndex,
     p_place: place,
-    p_item: { emoji },
+    p_item: { emoji, alternative_of: alternativeOf },
   });
   if (error) throw error;
   return data;

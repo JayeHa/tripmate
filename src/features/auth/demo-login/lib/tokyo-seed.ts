@@ -45,7 +45,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "21:45 공항철도 → 인천공항1터미널역 · 막차 23시 전후\nT1 동편 B1 · 24시간 · 야간 6시간권 1인 28,000원\n캐리어 1인 1개 무료 보관 · 예약 불가·선착순 · 만실이면 T2 스파앳홈\n04:25 알람 → 04:55 퇴장 (초과 1시간당 1인 5,000원)",
     },
     {
@@ -63,7 +62,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "비행 2시간 25분 · 도착 제3터미널 · 보잉 737 MAX 8\n휴대 10kg(55×40×20) · 위탁 15kg(3면 합 158cm)\n위탁 추가는 10/29 11:15까지 · 트립닷컴 1400829928891490",
     },
     {
@@ -81,7 +79,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -99,7 +96,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: 'e심 활성화 — 한국에서 미리 설치, 데이터 로밍 차단\n세븐은행 ATM 2만 5천 엔 인출 (이코카 8,000 + 현금 17,000)\n이코카 1인 4,000엔 충전 — 편의점 계산대에서 "차지"\n에어포트 버스 TYO-NRT 긴자행 · 1,500엔 · 약 75분 · 예약 불필요',
     },
     {
@@ -117,7 +113,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "긴자역 하차 → 도보 3~5분\n체크인 15:00 / 체크아웃 11:00 · 24시간 프런트",
     },
     {
@@ -135,7 +130,6 @@ export const TOKYO_SEED = {
       hours: "주말 10:00–20:30",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "참기름에 진하게 튀긴 붕장어·새우 텐동 · 대기 45~50분\n앞에 15~20명 이상이면 도보 5분 텐푸라점(4.2)으로",
     },
     {
@@ -153,7 +147,6 @@ export const TOKYO_SEED = {
       hours: "10:00–20:30",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "텐동 대기가 짧았을 때만 들르는 보너스 · 매장 한정 스탬프\n긴자역 → 도쿄역 지하철 한 정거장 또는 도보 15분",
     },
     {
@@ -171,7 +164,6 @@ export const TOKYO_SEED = {
       hours: "전망대 10:00–22:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "450m 천망회랑 포함권으로 구매 — 콜라보 메인 전시\n350F 라운드 시어터 6분 영상 · 캐릭터 라이팅 100초마다 9종\n지하철 안에서 KKday·클룩 구매 → 즉시 QR\n15:30 입장 — 일몰(16:40경) 직전 엘리베이터 피크 회피",
     },
     {
@@ -189,7 +181,6 @@ export const TOKYO_SEED = {
       hours: "소라마치 10:00–21:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -207,7 +198,6 @@ export const TOKYO_SEED = {
       hours: "11:00–23:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "직원 추천: 닭고기 버섯 제노베제 몬자\n토요일 저녁 대기 45분~1시간 각오",
     },
     {
@@ -225,7 +215,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -243,7 +232,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -261,7 +249,6 @@ export const TOKYO_SEED = {
       hours: "일 7:30–19:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "07:10 러닝복 입고 숙소 출발\n미쓰비시빌딩 B1F · 신발만 빌리고 소지품은 로커",
     },
     {
@@ -279,7 +266,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "11월 초 아침 11~13℃ · 일출 6:05경\n08:50 신발 반납 → 09:15 숙소 샤워",
     },
     {
@@ -297,7 +283,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -315,7 +300,6 @@ export const TOKYO_SEED = {
       hours: "무기토 11:00–21:30 · 츠지한 10:00–22:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "무기토 올리브 긴자(4.1) — 조개 국물 라멘 · 11:00 오픈 직전 도착\n츠지한 니혼바시(4.4) — 해산물 덮밥 · 대기 40~90분\n줄이 길면 긴자 센료(스시 4.8, 숙소 도보 3분)",
     },
     {
@@ -333,7 +317,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "호스트에게 13:30~14:00 도착 전달 완료",
     },
     {
@@ -351,7 +334,6 @@ export const TOKYO_SEED = {
       hours: "10:00–22:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "On 의류를 볼 수 있는 가장 현실적인 곳\n면세 시 2% 수수료 · 면세 카운터 별도",
     },
     {
@@ -369,7 +351,6 @@ export const TOKYO_SEED = {
       hours: "11:00–20:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -387,7 +368,6 @@ export const TOKYO_SEED = {
       hours: "11:00–20:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "마법소녀 치이카와 굿즈 · 공식 X @magi_chiikawa",
     },
     {
@@ -405,7 +385,6 @@ export const TOKYO_SEED = {
       hours: "17:00–23:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "세미 파인다이닝 · 영어 가능\n대안: 고지마 하나레(4.7, 숙소 도보 7분)",
     },
     {
@@ -423,7 +402,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -441,7 +419,6 @@ export const TOKYO_SEED = {
       hours: "11:00–21:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "11:00 오픈 전 8층 도착 · 첫 회차가 대기 최소\nKKday 11:00~13:00 범위 예약 · 굿즈는 주문자만\n정리권 실패 시 14시 이후 예약 없이 입장",
     },
     {
@@ -459,7 +436,6 @@ export const TOKYO_SEED = {
       hours: "11:00–21:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -477,7 +453,6 @@ export const TOKYO_SEED = {
       hours: "10:00–20:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -495,7 +470,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -522,7 +496,6 @@ export const TOKYO_SEED = {
           url: "https://www.google.com/search?q=chiikawa+park+tokyo",
         },
       ],
-      alternatives: [],
       memo: "체험 전시 · 웰컴 시어터 · 기념 촬영 · 파크 한정 굿즈\n숙소 도보 5~6분",
     },
     {
@@ -540,7 +513,6 @@ export const TOKYO_SEED = {
       hours: "10:00–21:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -561,8 +533,13 @@ export const TOKYO_SEED = {
       alternatives: [
         {
           name: "아시츠보 이치방 선샤인도리점",
-          gmap: "https://www.google.com/maps/search/?api=1&query=%E8%B6%B3%E3%81%A4%E3%81%BC%E4%B8%80%E7%95%AA+%E3%82%B5%E3%83%B3%E3%82%B7%E3%83%A3%E3%82%A4%E3%83%B3%E9%80%9A%E3%82%8A%E5%BA%97",
-          sub: "발 지압 30분 3,000엔 · ★ 4.8 · 굿즈 거리 가는 길",
+          lat: 35.7298,
+          lng: 139.7163,
+          category: "rest",
+          rating: 4.8,
+          description: "발 지압 30분 3,000엔 · 굿즈 거리 가는 길",
+          gmap_url:
+            "https://www.google.com/maps/search/?api=1&query=%E8%B6%B3%E3%81%A4%E3%81%BC%E4%B8%80%E7%95%AA+%E3%82%B5%E3%83%B3%E3%82%B7%E3%83%A3%E3%82%A4%E3%83%B3%E9%80%9A%E3%82%8A%E5%BA%97",
         },
       ],
       memo: "말차 쿠키·참깨 크루아상 · 2층 창가 추천",
@@ -582,7 +559,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -601,7 +577,6 @@ export const TOKYO_SEED = {
       gmap_url:
         "https://www.google.com/maps/search/?api=1&query=Chiikawa+Restaurant+Ikebukuro+Parco",
       links: [],
-      alternatives: [],
       memo: "18:50까지 7층 매장 앞 집합 — 늦으면 정리번호 무효\n좌석 최대 60분 · 식사권 1,000엔 포함 · KKday 바우처",
     },
     {
@@ -619,7 +594,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "멜티키스 · 미니 푸딩 · 킷캣 · 포키\n면세 5,000엔부터 · 여권 필수",
     },
     {
@@ -637,7 +611,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -655,7 +628,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "멘쯔유 · 후리카케 · 오차즈케노모토 · 폰즈",
     },
     {
@@ -673,7 +645,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -691,7 +662,6 @@ export const TOKYO_SEED = {
       hours: "9:30–17:30",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "공휴일이라 오후 입장 제한 가능 — 9:15 도착\n출발 1주 전 공식 X @chiikawamgmg 재확인",
     },
     {
@@ -709,7 +679,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "하네츠키 삼각 야키소바 400엔\n하치(고구마 브륄레) · 카쇼후몬 · 오사츠안",
     },
     {
@@ -727,7 +696,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "로스트비프 오노(4.7) — 베이커리 도보 1분\n우나기노 나루세(4.8) — 14:45 마감\n둘 다 놓치면 규카츠 카츠규(4.8)",
     },
     {
@@ -745,7 +713,6 @@ export const TOKYO_SEED = {
       hours: "접수 19:30까지",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "노벨티·1,000엔 쇼핑권 없음 (티켓 열리면 재판단)\n빵 주문 → 굿즈 → 한 번에 계산 → 빵 수령",
     },
     {
@@ -763,7 +730,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -781,7 +747,6 @@ export const TOKYO_SEED = {
       hours: "11:00–19:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "마감이 가장 이르니 먼저",
     },
     {
@@ -799,7 +764,6 @@ export const TOKYO_SEED = {
       hours: "10:30–20:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -817,7 +781,6 @@ export const TOKYO_SEED = {
       hours: "11:00–20:00",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -835,7 +798,6 @@ export const TOKYO_SEED = {
       hours: "24시간",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -853,7 +815,6 @@ export const TOKYO_SEED = {
       hours: "11:00–익일 08:30",
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -871,7 +832,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -889,7 +849,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -907,7 +866,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "이코카 불가 · 특급권 별도",
     },
     {
@@ -925,7 +883,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "먼저 통과 — 출국심사 후 식당이 더 많음\n수하물 무게 확인",
     },
     {
@@ -943,7 +900,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "약 25분 소요 — 40분 이상 남았을 때\n시간 없으면 BlueSky MISO KITCHEN(4.0) 10~15분",
     },
     {
@@ -961,7 +917,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: null,
     },
     {
@@ -979,7 +934,6 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
-      alternatives: [],
       memo: "비행 2시간 50분 · 출발 제2터미널 · 보잉 787-9\n휴대 10kg · 위탁 1개 15kg",
     },
   ],

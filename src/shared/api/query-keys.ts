@@ -9,6 +9,8 @@ export const queryKeys = {
     members: (tripId: string) => ["trips", tripId, "members"] as const,
   },
   scheduleItems: (tripId: string) => ["trips", tripId, "schedule-items"] as const,
+  /** 대체 장소 줄. 일정 키 아래라 일정을 무효화하면 함께 다시 읽는다 */
+  alternatives: (tripId: string) => ["trips", tripId, "schedule-items", "alternatives"] as const,
   /** 여행이 고른 도시(순서대로, 좌표 포함) */
   tripCities: (tripId: string) => ["trips", tripId, "cities"] as const,
   /** 「일정 추가」의 저장한 장소 — 이 여행 도시의 내 장소 */

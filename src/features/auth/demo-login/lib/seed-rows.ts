@@ -16,39 +16,45 @@ type PlaceFields = Pick<
 /**
  * 시안 데이터 한 줄. 시안은 장소와 일정을 나누지 않아서 place 줄에 장소 칸이 함께 있다.
  * 시딩할 때 toSeedRows 가 장소 · 일정으로 나눈다. trip_id · place_id 는 그때 붙는다.
+ * `alternatives` 는 그 일정의 대체 장소 — 장소 칸이 있는 줄로 적고, 시딩할 때 대체 장소 일정 줄이 된다(0024)
  */
 export type SeedItem = Omit<TablesInsert<"schedule_items">, "trip_id" | "place_id"> &
+  Partial<PlaceFields> & { alternatives?: SeedAlternative[] };
+
+/** 대체 장소 한 줄 — 장소 칸과 이름 · 설명만. 날짜 · 순서는 붙은 일정을 따른다 */
+export type SeedAlternative = Pick<SeedItem, "name" | "description" | "emoji"> &
   Partial<PlaceFields>;
 
 type SeedRows = {
   places: TablesInsert<"places">[];
   items: TablesInsert<"schedule_items">[];
+  /** 대체 장소 줄. 붙을 일정이 먼저 있어야 해서(트리거가 확인한다) items 다음에 넣는다 */
+  alternatives: TablesInsert<"schedule_items">[];
 };
+
+type SeedOptions = { tripId: string; cityId: string; newId: () => string };
 
 /**
  * 시안 줄들을 장소 · 일정 행으로 나눈다. 장소 id 는 미리 만들어(`newId`) 일정이 바로 참조한다.
  * 이름과 좌표가 같은 place 줄은 장소 하나를 함께 쓴다(숙소처럼 여러 날 나오는 곳 — 장소 1 · 일정 N).
- * 장소 정보는 처음 나온 줄의 값을 쓴다.
+ * 장소 정보는 처음 나온 줄의 값을 쓴다. 대체 장소가 있는 일정은 id 도 미리 만들어 대체 장소 줄이 참조한다.
  */
-export function toSeedRows(
-  seed: SeedItem[],
-  { tripId, cityId, newId }: { tripId: string; cityId: string; newId: () => string },
-): SeedRows {
+export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOptions): SeedRows {
   const places = new Map<string, TablesInsert<"places">>();
-  const items = seed.map((row): TablesInsert<"schedule_items"> => {
-    const { lat, lng, address, category, rating, review_count, hours, gmap_url, links, ...item } =
-      row;
-    if ((item.kind ?? "place") !== "place") return { ...item, trip_id: tripId };
+  const alternatives: TablesInsert<"schedule_items">[] = [];
 
-    const key = `${item.name ?? ""}|${lat ?? ""}|${lng ?? ""}`;
+  /** 장소 칸으로 장소를 찾거나 만들어 id 를 돌려준다 */
+  function placeIdOf(row: SeedAlternative): string {
+    const { lat, lng, address, category, rating, review_count, hours, gmap_url, links } = row;
+    const key = `${row.name ?? ""}|${lat ?? ""}|${lng ?? ""}`;
     let place = places.get(key);
     if (!place) {
       place = {
         id: newId(),
         city_id: cityId,
-        name: item.name ?? "",
-        description: item.description,
-        emoji: item.emoji,
+        name: row.name ?? "",
+        description: row.description,
+        emoji: row.emoji,
         lat,
         lng,
         address,
@@ -61,15 +67,51 @@ export function toSeedRows(
       };
       places.set(key, place);
     }
+    return place.id ?? "";
+  }
+
+  const items = seed.map((row): TablesInsert<"schedule_items"> => {
+    const { lat, lng, address, category, rating, review_count, hours, gmap_url, links, ...rest } =
+      row;
+    const { alternatives: alts = [], ...item } = rest;
+    const placeFields = {
+      lat,
+      lng,
+      address,
+      category,
+      rating,
+      review_count,
+      hours,
+      gmap_url,
+      links,
+    };
+    if ((item.kind ?? "place") !== "place") return { ...item, trip_id: tripId };
+    const id = alts.length > 0 ? newId() : undefined;
+    alts.forEach((alt, position) =>
+      alternatives.push({
+        trip_id: tripId,
+        day_index: item.day_index,
+        position,
+        kind: "place",
+        place_id: placeIdOf(alt),
+        alternative_of: id,
+      }),
+    );
     return {
       ...item,
+      ...(id ? { id } : {}),
       trip_id: tripId,
-      place_id: place.id,
+      place_id: placeIdOf({
+        ...placeFields,
+        name: item.name,
+        description: item.description,
+        emoji: item.emoji,
+      }),
       // 장소 일정의 제목 · 설명 · 아이콘은 장소 쪽 값을 쓴다
       name: null,
       description: null,
       emoji: null,
     };
   });
-  return { places: [...places.values()], items };
+  return { places: [...places.values()], items, alternatives };
 }
