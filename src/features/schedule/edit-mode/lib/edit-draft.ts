@@ -86,3 +86,29 @@ export function summaryChanges(initial: string[], draft: string[]): Record<numbe
   });
   return changed;
 }
+
+/**
+ * 초안이 지금 여행 기간보다 긴지 — 편집하는 동안 일행이 기간을 줄였다. 사라진 날이 초안에 남으면
+ * 저장이 날 범위 검사(apply_schedule_edit, 0032)에 계속 막히므로 편집을 닫는다. 늘어난 건 초안을 늘려 받는다
+ */
+export function exceedsTripDays(
+  draft: EditDraft,
+  summaries: readonly string[],
+  totalDays: number,
+): boolean {
+  return Math.max(draft.length, summaries.length) > totalDays;
+}
+
+/**
+ * 편집 중 여행 기간이 바뀌었을 때 할 일 — 초안 · 하루 요약에 사라진 날이 남으면 "close"(닫고 알린다),
+ * 초안은 맞는데 보고 있던 날만 사라졌으면 "lastDay"(마지막 날로 옮긴다, 다른 날의 편집은 지킨다), 아니면 null
+ */
+export function tripDaysChange(
+  draft: EditDraft,
+  summaries: readonly string[],
+  totalDays: number,
+  day: number,
+): "close" | "lastDay" | null {
+  if (exceedsTripDays(draft, summaries, totalDays)) return "close";
+  return day >= totalDays ? "lastDay" : null;
+}

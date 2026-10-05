@@ -16,6 +16,7 @@ import {
   reorder,
   summariesOf,
   summaryChanges,
+  tripDaysChange,
 } from "../lib/edit-draft";
 
 type ScheduleEditOptions = {
@@ -29,6 +30,8 @@ type ScheduleEditOptions = {
   totalDays: number;
   /** 편집을 마쳤다(저장했거나 바뀐 게 없거나 버렸다). 마지막으로 편집하던 날을 넘긴다 */
   onExit: (day: number) => void;
+  /** 편집하는 동안 일행이 여행 기간을 줄여 편집을 닫았다 — 부른 쪽이 알린다(토스트) */
+  onInterrupted: (message: string) => void;
 };
 
 /** 편집 한 번 — 열 때의 일정 · 하루 요약으로 만든 처음 초안과 지금 초안 */
@@ -53,12 +56,30 @@ export function useScheduleEdit({
   trip,
   totalDays,
   onExit,
+  onInterrupted,
 }: ScheduleEditOptions) {
   const [session, setSession] = useState<EditSession | null>(null);
   const [day, setDay] = useState(0);
   const [selected, setSelected] = useState(NONE);
   const apply = useApplyScheduleEdit(tripId);
   const canStart = trip !== undefined && itemsReady;
+  /**
+   * 편집하는 동안 일행이 기간을 줄였으면 맞춘다(렌더 중 — 이 훅의 상태만 바꾼다). 초안에 사라진 날이 남으면 저장이 계속 막혀서
+   * 닫고 알리고, 보고 있던 날만 사라졌으면 마지막 날로 옮긴다(늘어난 건 초안이 받는다).
+   * 저장 중이면 기다린다 — 끝나면 저장이 닫거나, 실패하면 다음 렌더에서 다시 본다
+   */
+  function followTripDays() {
+    if (!session || apply.isPending) return;
+    const change = tripDaysChange(session.draft, session.summaries, totalDays, day);
+    if (change === "close") {
+      setSession(null);
+      onInterrupted("여행 기간이 바뀌어 편집을 닫았어요");
+    } else if (change === "lastDay") {
+      setDay(totalDays - 1);
+    }
+    if (change) setSelected(NONE);
+  }
+  followTripDays();
   const live = useMemo(() => new Set(items.map((it) => it.id)), [items]);
   // 열 때 고정한 초안에서 그 뒤 사라진 일정을 뺀 것. 화면 · 저장은 이걸 기준으로 한다
   const draft = useMemo(() => session && keepLive(session.draft, live), [session, live]);
@@ -114,6 +135,8 @@ export function useScheduleEdit({
     if (!canStart) return;
     const initial = draftOf(items, totalDays);
     const sums = summariesOf(trip?.day_summaries ?? [], totalDays);
+    // 지난 편집(기간이 줄어 닫혔을 수도 있다)의 저장 오류가 남지 않게
+    apply.reset();
     setSession({ initial, draft: initial, initialSummaries: sums, summaries: sums });
     setDay(startDay);
     setSelected(NONE);
