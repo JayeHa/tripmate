@@ -31,6 +31,7 @@ erDiagram
   profiles ||--o{ places : "created_by"
   trips ||--o{ schedule_items : ""
   places ||--o{ schedule_items : "place_id"
+  schedule_items |o--o{ schedule_items : "alternative_of"
   schedule_items ||--o{ moves : "from · to"
   trips ||--o{ day_routes : ""
   trips ||--o{ expenses : ""
@@ -38,20 +39,20 @@ erDiagram
   expenses ||--o{ expense_splits : ""
 ```
 
-| 테이블           | 무엇                                                                                  | 단위        |
-| ---------------- | ------------------------------------------------------------------------------------- | ----------- |
-| `profiles`       | 사람(이름 · 아바타). `auth.users` 가 생기면 트리거가 만든다                           | 사람        |
-| `trips`          | 여행(제목 · 기간 · 통화 · 환율 · 초대 토큰)                                           | 여행        |
-| `trip_members`   | 여행 멤버와 역할(owner · member)                                                      | 여행        |
-| `city_regions`   | 해외 권역. 기준 데이터                                                                | 공용        |
-| `cities`         | 도시(지도 중심 · 통화 · 시간대 · 포함 지역). 기준 데이터                              | 공용        |
-| `trip_cities`    | 여행이 고른 도시와 순서                                                               | 여행        |
-| `places`         | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)     | 사람 · 도시 |
-| `schedule_items` | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모 · 대체 장소) | 여행        |
-| `moves`          | 두 장소 사이의 이동 방법(수단 · 상세)                                                 | 여행        |
-| `day_routes`     | Routes API 경로 캐시(지도 화면)                                                       | 여행        |
-| `expenses`       | 지출                                                                                  | 여행        |
-| `expense_splits` | 지출을 누가 얼마씩 나누는지                                                           | 여행        |
+| 테이블           | 무엇                                                                                                             | 단위        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- | ----------- |
+| `profiles`       | 사람(이름 · 아바타). `auth.users` 가 생기면 트리거가 만든다                                                      | 사람        |
+| `trips`          | 여행(제목 · 기간 · 통화 · 환율 · 초대 토큰)                                                                      | 여행        |
+| `trip_members`   | 여행 멤버와 역할(owner · member)                                                                                 | 여행        |
+| `city_regions`   | 해외 권역. 기준 데이터                                                                                           | 공용        |
+| `cities`         | 도시(지도 중심 · 통화 · 시간대 · 포함 지역). 기준 데이터                                                         | 공용        |
+| `trip_cities`    | 여행이 고른 도시와 순서                                                                                          | 여행        |
+| `places`         | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)                                | 사람 · 도시 |
+| `schedule_items` | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모). 대체 장소도 일정 줄(`alternative_of`) | 여행        |
+| `moves`          | 두 장소 사이의 이동 방법(수단 · 상세)                                                                            | 여행        |
+| `day_routes`     | Routes API 경로 캐시(지도 화면)                                                                                  | 여행        |
+| `expenses`       | 지출                                                                                                             | 여행        |
+| `expense_splits` | 지출을 누가 얼마씩 나누는지                                                                                      | 여행        |
 
 일정 링크(`schedule_items.links`, 예약 페이지 · 구매한 상품)는 이번 방문에만 해당해 장소 링크(`places.links`)와 따로 둔다. 예상 대기(`places.wait`)는 장소 정보다. 주소는 넷이다 — `address`(한국어로 요청한 번지 주소, 일본은 구글에 한국어 표기가 없어 로마자) · `address_local`(현지어, 현지인 · 택시에 보여 줄 용도) · `address_ko`(한글 — 일본은 한글 동네 이름 + 번지 숫자, 한국은 `address` 와 같아 비움) · `address_detail`(사용자가 적는 상세 위치 「파르코 본관 8F」). 화면은 로마자 → 현지어 → 한글 순으로 함께 적는다. 운영시간은 `hours`(매일 같음) · `hours_week`(요일별 `{ mon: "11:00–22:00", sun: null }` — null 은 휴무, 키가 없으면 모름) 둘이고, 요일 값이 하나라도 있으면 `hours_week` 를 본다.
 
