@@ -3,13 +3,17 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
 
-/** 토스트가 떠 있는 시간 */
-const SHOW_MS = 2000;
+/** 토스트가 떠 있는 시간 — 한 줄 알림 1.6s, 「제목 · 설명」 안내형 2.6s */
+const SHOW_MS = 1600;
+const GUIDE_MS = 2600;
 /** 빈 알림 영역을 붙인 뒤 글을 넣기까지 */
 const FILL_MS = 50;
 
-/** 보일 토스트 한 번. 같은 문구를 다시 띄울 때도 id 가 달라 시간을 다시 잰다 */
-export type ToastMessage = { text: string; id: number };
+/**
+ * 보일 토스트 한 번. 같은 문구를 다시 띄울 때도 id 가 달라 시간을 다시 잰다.
+ * detail 이 있으면 안내형 — 굵은 text 뒤에 「 · detail」, 조금 더 오래 보인다
+ */
+export type ToastMessage = { text: string; detail?: string; id: number };
 
 type ToastProps = {
   /** null 이면 아무것도 그리지 않는다 */
@@ -19,7 +23,7 @@ type ToastProps = {
 };
 
 /**
- * 화면 아래 가운데에 잠깐 떴다 사라지는 한 줄 알림. 열린 창(다이얼로그 z-50) 위에도 보이게 body 에 그리고,
+ * 화면 아래 가운데에 잠깐 떴다 사라지는 한 줄 알림(모바일은 하단 탭 위 110, PC 는 28). 새 토스트가 이전 것을 대체한다. 열린 창(다이얼로그 z-50) 위에도 보이게 body 에 그리고,
  * 누르는 것을 막지 않는다(pointer-events-none).
  *
  * 스크린리더는 이미 있는 live region 의 변화만 읽는 경우가 많아, 빈 `role="status"` 를 먼저 붙이고 다음 틱에 글을 넣는다.
@@ -33,7 +37,7 @@ export function Toast({ message, onDone }: ToastProps) {
   useEffect(() => {
     if (!message) return;
     const fill = setTimeout(() => setFilled(message.id), FILL_MS);
-    const hide = setTimeout(done, SHOW_MS);
+    const hide = setTimeout(done, message.detail ? GUIDE_MS : SHOW_MS);
     return () => {
       clearTimeout(fill);
       clearTimeout(hide);
@@ -43,11 +47,17 @@ export function Toast({ message, onDone }: ToastProps) {
   return createPortal(
     <div
       role="status"
-      className="pointer-events-none fixed bottom-7 left-1/2 z-100 -translate-x-1/2"
+      className="pointer-events-none fixed bottom-[calc(110px+env(safe-area-inset-bottom))] left-1/2 z-100 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 lg:bottom-7"
     >
       {filled === message.id && (
-        <span className="block rounded-full bg-ink-900/92 px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-white">
-          {message.text}
+        <span className="block rounded-[20px] bg-ink-900/92 px-4.5 py-2.5 text-center text-sm font-semibold text-white">
+          {message.detail ? (
+            <>
+              <b className="font-extrabold">{message.text}</b> · {message.detail}
+            </>
+          ) : (
+            message.text
+          )}
         </span>
       )}
     </div>,
