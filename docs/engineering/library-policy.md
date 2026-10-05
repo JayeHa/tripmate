@@ -214,6 +214,16 @@ provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에�
 새 결정은 위에 쌓는다. **소급** 표시는 이 문서가 생기기 전에 내린 결정을 나중에 적은 것이다. 당시 비교 기록이 없는 부분은 지어내지 않고 「기록 없음」 으로 둔다.
 사실 항목은 `npm view` 로 2026-10-04 에 조회했다.
 
+### 2026-10 · 지원 브라우저 범위 → Tailwind v4 바닥선 그대로
+
+- **문제**: 지원 범위가 정해져 있지 않아(browserslist 없음) 새 API(`Intl.Segmenter`)를 써도 되는지 리뷰에서 판단할 기준이 없었다(#110).
+- **후보**: Next 기본값(Chrome · Edge · Firefox 111+, Safari 16.4+) / Tailwind v4 바닥선(Firefox 만 128+) / 더 낮게(Tailwind v3 로 되돌려야 함).
+- **선택**: Tailwind v4 바닥선 — Chrome · Edge 111+, Safari · iOS 16.4+, Firefox 128+. `package.json` `browserslist`.
+- **근거**: 화면이 Tailwind v4(`@property` · `color-mix()`)에 기대어 있어 이보다 낮은 브라우저는 이미 정상이 아니다
+  (@see https://tailwindcss.com/docs/compatibility). 일행 둘이 iPhone Safari · PC Chrome 으로 쓰고, iOS 16.4 는 2023-03 이라 거의 다 들어온다.
+- **포기한 것 / 재평가 트리거**: Firefox 111–127 · iOS 16.3 이하. 범위 밖 API 는 기능 감지 후 대체 경로로 쓴다(AGENTS.md 「지원 브라우저」).
+  Tailwind 를 올리거나 바꾸면 다시 맞춘다.
+
 ### 2026-10 · 일정 편집 모드의 순서 드래그 → `@dnd-kit/react`
 
 - **문제**: 편집 모드에서 한 날짜의 일정 순서를 끌어서 바꾼다. 터치(길게 누르기) · 마우스 · 키보드와 끌 때 자동 스크롤이 필요하다.
