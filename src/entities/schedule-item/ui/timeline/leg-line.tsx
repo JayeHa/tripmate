@@ -8,13 +8,12 @@ type LegLineProps = {
 };
 
 /**
- * 카드 사이의 길. 1줄 `[거리 pill] 🚇 지하철`, 2줄 상세(최대 2줄, 수단 글자 아래 정렬).
- * 아무것도 적지 않았으면 pill 옆에 회색 「+ 이동 방법」.
+ * 카드 사이의 길. 1줄 `[거리 pill] 🚇 지하철`(수단이 없으면 회색 「+ 이동 방법」), 2줄 상세(최대 2줄, 수단 글자 아래 정렬).
+ * 상세만 적었어도 첫 줄은 「+ 이동 방법」 이고 상세는 둘째 줄이다
  */
 export function LegLine({ leg, onEditMove }: LegLineProps) {
-  const note = leg.modeLabel ?? leg.detail;
-  // 수단이 있으면 상세는 둘째 줄, 상세만 있으면 그게 첫 줄 글자다
-  const secondLine = leg.modeLabel ? leg.detail : null;
+  const note = leg.modeLabel;
+  const secondLine = leg.detail;
   return (
     <div className="flex flex-col gap-1 pr-5 pb-2.5 pl-2">
       <div className="flex min-w-0 items-center gap-2">
@@ -26,7 +25,7 @@ export function LegLine({ leg, onEditMove }: LegLineProps) {
             title={leg.hasMove ? "이동 방법 수정" : "이동 방법 적기"}
             className={
               note
-                ? "min-w-0 truncate text-[13px] font-semibold text-ink-700"
+                ? "min-w-0 truncate text-[13px] font-bold text-ink-700"
                 : "text-xs font-bold whitespace-nowrap text-ink-350"
             }
           >
