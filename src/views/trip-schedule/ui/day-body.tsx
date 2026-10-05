@@ -1,3 +1,5 @@
+import { CalendarDays } from "lucide-react";
+
 import {
   type MemoAuthor,
   Timeline,
@@ -5,6 +7,7 @@ import {
   type useOpenMemos,
 } from "@/entities/schedule-item";
 import { Button } from "@/shared/ui/button";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { Skeleton } from "@/shared/ui/skeleton";
 
 import { DayHeader } from "./day-header";
@@ -68,10 +71,11 @@ export function DayBody({
         </div>
       )}
       {!isPending && rows.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-          <p className="font-medium">아직 일정이 없어요</p>
-          <p className="text-sm text-muted-foreground">아래 버튼으로 일정을 추가해보세요.</p>
-        </div>
+        <EmptyState
+          icon={CalendarDays}
+          title="아직 일정이 없어요"
+          description="아래 버튼으로 일정을 추가해보세요."
+        />
       )}
       <Timeline
         rows={rows}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Luggage } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useMyProfile, useUser } from "@/entities/session";
@@ -19,6 +19,7 @@ import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { todayISO } from "@/shared/lib/days";
 import { Button } from "@/shared/ui/button";
 import { DialogTitle } from "@/shared/ui/dialog";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { FlowDialog } from "@/shared/ui/flow-dialog";
 import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
@@ -104,10 +105,12 @@ export function TripListView() {
         )}
 
         {trips?.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 py-20 text-center">
-            <p className="text-[17px] font-bold text-ink-900">아직 여행이 없어요</p>
-            <p className="text-sm text-ink-400">첫 여행을 만들어 일정을 짜보세요.</p>
-          </div>
+          <EmptyState
+            icon={Luggage}
+            title="아직 여행이 없어요"
+            description="첫 여행을 만들어 일정을 짜보세요."
+            className="flex-1 justify-center py-20"
+          />
         )}
 
         {groups.map((group) => (
