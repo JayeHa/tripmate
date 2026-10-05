@@ -12,6 +12,14 @@ export function draftOf(items: ScheduleItem[], totalDays: number): EditDraft {
   return days;
 }
 
+/**
+ * 지금 있는 일정만 남긴다 — 편집하는 동안 일행이 지운 일정은 초안에서 뺀다.
+ * 남겨 두면 저장이 「이 여행의 일정이 아님」 으로 계속 거부되고, 화면 순서와 초안 순서가 어긋난다
+ */
+export function keepLive(draft: EditDraft, live: ReadonlySet<string>): EditDraft {
+  return draft.map((d) => d.filter((id) => live.has(id)));
+}
+
 /** 고를 수 있는 일정인지 — 항공편은 항공편 화면에서만 고치고 지운다(순서 끌기는 된다) */
 export function isSelectable(item: Pick<ScheduleItem, "kind">): boolean {
   return item.kind !== "flight";

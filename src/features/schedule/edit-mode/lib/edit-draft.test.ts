@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { ScheduleItem } from "@/entities/schedule-item";
 
-import { draftOf, editChanges, moveSelected, removeSelected, reorder } from "./edit-draft";
+import {
+  draftOf,
+  editChanges,
+  keepLive,
+  moveSelected,
+  removeSelected,
+  reorder,
+} from "./edit-draft";
 
 /** 날 · 순서만 있는 일정 */
 const item = (id: string, day_index: number, position: number) =>
@@ -27,6 +34,16 @@ describe("편집 초안", () => {
     expect(editChanges(initial, removeSelected(moved, new Set(["d"])))).toEqual({
       days: { 0: ["c", "b"], 1: [], 2: ["a"] },
       deletes: ["d"],
+    });
+  });
+
+  it("편집 중 일행이 지운 일정(b)은 초안 · 처음 모두에서 빼서 저장 목록에 넣지 않는다", () => {
+    const live = new Set(["a", "c", "d"]);
+    const draft = keepLive(reorder(initial, 0, 2, 0), live);
+    expect(draft).toEqual([["c", "a"], ["d"], []]);
+    expect(editChanges(keepLive(initial, live), draft)).toEqual({
+      days: { 0: ["c", "a"] },
+      deletes: [],
     });
   });
 });

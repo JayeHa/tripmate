@@ -9,6 +9,7 @@ import {
   editChanges,
   type EditDraft,
   isSelectable,
+  keepLive,
   moveSelected,
   removeSelected,
   reorder,
@@ -38,7 +39,11 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
   const [day, setDay] = useState(0);
   const [selected, setSelected] = useState(NONE);
   const apply = useApplyScheduleEdit(tripId);
-  const dayIds = session?.draft[day];
+  const live = useMemo(() => new Set(items.map((it) => it.id)), [items]);
+  // 열 때 고정한 초안에서 그 뒤 사라진 일정을 뺀 것. 화면 · 저장은 이걸 기준으로 한다
+  const draft = useMemo(() => session && keepLive(session.draft, live), [session, live]);
+  const initial = useMemo(() => session && keepLive(session.initial, live), [session, live]);
+  const dayIds = draft?.[day];
   // 지도가 핀을 다시 맞추지 않게 초안 · 일정이 그대로면 같은 배열을 준다
   const dayItems = useMemo(() => {
     const byId = new Map(items.map((it) => [it.id, it]));
@@ -47,7 +52,7 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
   const rows = useMemo(() => buildTimeline(dayItems), [dayItems]);
   const selectableIds = dayItems.filter(isSelectable).map((it) => it.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
-  const changes = session ? editChanges(session.initial, session.draft) : null;
+  const changes = draft && initial ? editChanges(initial, draft) : null;
   const dirty = !!changes && (Object.keys(changes.days).length > 0 || changes.deletes.length > 0);
 
   /** 초안을 바꾼다. 고른 것은 비운다 */
