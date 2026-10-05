@@ -12,20 +12,28 @@ type Props = {
   onChange: (day: number) => void;
 };
 
-/** 날짜 칩 줄 「day 1 10.31」. 32px 알약, 선택은 잉크색. 고른 칩이 가운데로 오게 스크롤한다 */
+/**
+ * 날짜 칩 줄 「day 1 10.31」. 32px 알약, 선택은 잉크색. 고른 칩이 가운데로 오게 칩 줄만 가로로 스크롤한다 —
+ * scrollIntoView 는 페이지까지 스크롤해서, 칩을 눌러 그 날짜로 가는 페이지의 smooth 스크롤을 끊는다.
+ * 칩 줄이 `relative` 라 칩의 offsetLeft 는 칩 줄 기준이다
+ */
 export function DayChips({ startDate, totalDays, value, onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    ref.current
-      ?.querySelector<HTMLElement>(`[data-day="${value}"]`)
-      ?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    const row = ref.current;
+    const chip = row?.querySelector<HTMLElement>(`[data-day="${value}"]`);
+    if (!row || !chip) return;
+    row.scrollTo({
+      left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2,
+      behavior: "smooth",
+    });
   }, [value]);
 
   return (
     <div
       ref={ref}
-      className="flex scrollbar-none gap-2 overflow-x-auto border-b border-divider bg-white px-5 pt-0.5 pb-2.5 [&::-webkit-scrollbar]:hidden"
+      className="relative flex scrollbar-none gap-2 overflow-x-auto border-b border-divider bg-white px-5 pt-0.5 pb-2.5 [&::-webkit-scrollbar]:hidden"
     >
       {Array.from({ length: totalDays }, (_, i) => (
         <button

@@ -7,9 +7,12 @@ import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 import { cn } from "@/shared/lib/utils";
 
+import { mapDayOf } from "../../lib/focus";
+import { useDayJumps } from "../../model/use-day-jumps";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useSplitWidth } from "../../model/use-split-width";
-import { DayBody } from "../day-body";
+import { useVisibleDay } from "../../model/use-visible-day";
+import { DayList } from "../day-list";
 import { PcFloatingAdd } from "../floating-add/pc-floating-add";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { DayRail } from "./day-rail";
@@ -28,7 +31,8 @@ const FOCUS_LINE_TOP = 120;
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
  * PC 헤더 아래 화면 높이를 채우고 칸마다 따로 스크롤한다. 모바일 상단바는 그리지 않는다.
- * 목록을 스크롤하면 기준선을 지난 장소가 지도에 강조된다.
+ * 목록은 모든 날짜를 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · `?day`)이고,
+ * 레일에서 날짜를 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다.
  */
 export function PcSchedule({
   trip,
@@ -36,6 +40,10 @@ export function PcSchedule({
   day,
   onDayChange,
   edit,
+  sections,
+  isPending,
+  jump,
+  startEditAt,
   ...body
 }: ScheduleLayoutProps) {
   const split = useSplitWidth();
@@ -52,8 +60,17 @@ export function PcSchedule({
       return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
     },
     enabled: !edit.editing,
-    resetKey: day,
+    // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
+    resetKey: null,
   });
+  const { scrollToDay, holding } = useVisibleDay({
+    scroller: listRef,
+    list: contentRef,
+    line: () => listRef.current?.getBoundingClientRect().top ?? 0,
+    enabled: !edit.editing,
+    onChange: onDayChange,
+  });
+  useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump });
 
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
@@ -64,7 +81,7 @@ export function PcSchedule({
           endDate={trip.end_date}
           // 편집 중에는 레일도 편집할 날을 고른다
           day={edit.editing ? edit.day : day}
-          onChange={edit.editing ? edit.setDay : onDayChange}
+          onChange={edit.editing ? edit.setDay : (d) => scrollToDay(d)}
           summaries={trip.day_summaries}
         />
       )}
@@ -84,10 +101,11 @@ export function PcSchedule({
         <div ref={listRef} className="h-full overflow-y-auto">
           {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
           <div ref={contentRef}>
-            <DayBody
-              startDate={trip?.start_date ?? null}
-              day={day}
-              summary={trip?.day_summaries[day]}
+            <DayList
+              trip={trip}
+              sections={sections}
+              isPending={isPending}
+              startEditAt={startEditAt}
               showCounts
               focusId={focus.focusId}
               {...body}
@@ -97,9 +115,9 @@ export function PcSchedule({
           <div aria-hidden="true" className="h-[max(420px,60%)]" />
         </div>
         <PcFloatingAdd
-          onAddPlace={body.onAddPlace}
-          onStartEdit={body.onStartEdit}
-          onAddDayMemo={body.onAddDayMemo}
+          onAddPlace={() => body.onAddPlace(day)}
+          onStartEdit={startEditAt(day)}
+          onAddDayMemo={() => body.onAddDayMemo(day)}
         />
       </div>
       <SplitHandle
@@ -113,7 +131,11 @@ export function PcSchedule({
       />
       <div className="relative min-w-80 flex-1">
         <ScheduleMap
-          rows={edit.editing ? edit.rows : body.rows}
+          rows={
+            edit.editing
+              ? edit.rows
+              : (sections[mapDayOf(sections, holding ? null : focus.focusId, day)]?.rows ?? [])
+          }
           focusId={edit.editing ? null : focus.focusId}
           onSelect={edit.editing ? undefined : (row) => focus.focusOn(row.item.id)}
           pinSize="lg"

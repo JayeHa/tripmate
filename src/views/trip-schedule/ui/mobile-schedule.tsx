@@ -8,8 +8,11 @@ import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
 
+import { mapDayOf } from "../lib/focus";
+import { useDayJumps } from "../model/use-day-jumps";
 import { useScrollFocus } from "../model/use-scroll-focus";
-import { DayBody } from "./day-body";
+import { useVisibleDay } from "../model/use-visible-day";
+import { DayList } from "./day-list";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
@@ -21,8 +24,9 @@ import type { ScheduleLayoutProps } from "./schedule-layout";
 const FOCUS_LINE_OFFSET = 48;
 
 /**
- * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 하루치 본문.
- * 페이지(window)가 스크롤된다. 스크롤하면 기준선을 지난 장소가 지도에 강조된다(지도가 펼쳐져 있을 때만).
+ * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 모든 날짜를 이어서 그린다.
+ * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · `?day`)이고,
+ * 칩을 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다(지도가 펼쳐져 있을 때만).
  */
 export function MobileSchedule({
   trip,
@@ -30,18 +34,32 @@ export function MobileSchedule({
   day,
   onDayChange,
   edit,
+  sections,
+  isPending,
+  jump,
+  startEditAt,
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stickyHeight = useElementHeight(stickyRef);
+  /** sticky 영역(상단바 + 지도 + 칩) 아래 끝의 화면 y */
+  const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
+  // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
   const focus = useScrollFocus({
     list: listRef,
-    line: () => (stickyRef.current?.getBoundingClientRect().bottom ?? 0) + FOCUS_LINE_OFFSET,
+    line: () => stickyBottom() + FOCUS_LINE_OFFSET,
     enabled: mapOpen,
-    resetKey: day,
+    resetKey: null,
   });
+  const { scrollToDay, holding } = useVisibleDay({
+    list: listRef,
+    line: stickyBottom,
+    enabled: !edit.editing,
+    onChange: onDayChange,
+  });
+  useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump });
 
   return (
     <>
@@ -50,7 +68,7 @@ export function MobileSchedule({
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
           <ScheduleMap
-            rows={body.rows}
+            rows={sections[mapDayOf(sections, holding ? null : focus.focusId, day)]?.rows ?? []}
             focusId={focus.focusId}
             onSelect={(row) => focus.focusOn(row.item.id)}
           />
@@ -60,17 +78,18 @@ export function MobileSchedule({
             startDate={trip.start_date}
             totalDays={totalDays}
             value={day}
-            onChange={onDayChange}
+            onChange={(d) => scrollToDay(d)}
           />
         )}
       </div>
       <main className="flex flex-1 flex-col">
         {/* 내용 높이를 따라 변하는 감싸개. main 은 flex-1 로 늘어나 내용이 짧으면 크기가 그대로다 */}
         <div ref={listRef} className="flex flex-col">
-          <DayBody
-            startDate={trip?.start_date ?? null}
-            day={day}
-            summary={trip?.day_summaries[day]}
+          <DayList
+            trip={trip}
+            sections={sections}
+            isPending={isPending}
+            startEditAt={startEditAt}
             focusId={focus.focusId}
             {...body}
           />
@@ -89,9 +108,9 @@ export function MobileSchedule({
       </main>
       {!edit.editing && (
         <MobileFloatingAdd
-          onAddPlace={body.onAddPlace}
-          onStartEdit={body.onStartEdit}
-          onAddDayMemo={body.onAddDayMemo}
+          onAddPlace={() => body.onAddPlace(day)}
+          onStartEdit={startEditAt(day)}
+          onAddDayMemo={() => body.onAddDayMemo(day)}
         />
       )}
       {/* 편집은 화면 전체를 덮는다. 아래 일정 화면은 그대로 두어 닫으면 보던 자리로 돌아온다 */}
