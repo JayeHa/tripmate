@@ -131,17 +131,22 @@ export function useAddDayMemo(tripId: string) {
   });
 }
 
-/** 일정 편집 「완료」 저장. 일정 · 대체 장소(날짜가 따라 바뀐다) · 경로 · 이동 기록을 다시 읽는다 */
+/**
+ * 일정 편집 「완료」 저장. 일정 · 대체 장소(날짜가 따라 바뀐다) · 경로 · 이동 기록 · 하루 요약(여행)을 다시 읽는다.
+ * 다시 읽기를 기다린 뒤 끝난다 — 편집이 닫히자마자 옛 순서 · 옛 요약이 잠깐 보이지 않게
+ */
 export function useApplyScheduleEdit(tripId: string) {
   const qc = useQueryClient();
-  const invalidate = useInvalidateItems(tripId);
   return useMutation({
     mutationFn: (edit: ScheduleEdit) => applyScheduleEdit(tripId, edit),
-    onSuccess: () => {
-      invalidate();
-      // 하루 요약은 여행 행에 있다. 앞부분이 같은 일정 · 메모 키까지 지우지 않게 정확히 그 키만
-      void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true });
-      void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) });
-    },
+    onSuccess: () =>
+      Promise.all([
+        // 일정 키 아래에 대체 장소 키가 있어 함께 다시 읽는다
+        qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) }),
+        qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) }),
+        qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
+        // 하루 요약은 여행 행에 있다. 앞부분이 같은 일정 · 메모 키까지 지우지 않게 정확히 그 키만
+        qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
+      ]),
   });
 }
