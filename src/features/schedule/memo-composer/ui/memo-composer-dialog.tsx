@@ -18,12 +18,15 @@ import { LinkRows } from "@/shared/ui/link-rows";
 import { type MemoComposerState, useMemoComposer } from "../model/use-memo-composer";
 import { DeleteMemoButton } from "./delete-memo-button";
 
-/** 모바일: 아래에서 올라오는 시트 */
+/**
+ * 모바일: 아래에서 올라오는 시트. 처음부터 가장 큰 높이로 연다 — 링크 줄을 더할 때마다 창이 자라며 흔들리지 않게
+ * (넘치는 내용은 가운데 칸이 스크롤한다)
+ */
 const MOBILE_CLASS =
-  "top-auto bottom-0 left-0 flex max-h-[90dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none";
-/** PC: 가운데 520 모달 */
+  "top-auto bottom-0 left-0 flex h-[90dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none";
+/** PC: 가운데 520 모달. 모바일처럼 처음부터 가장 큰 높이(760, 화면이 작으면 화면 높이)로 연다 */
 const PC_CLASS =
-  "flex max-h-[calc(100dvh-2rem)] w-130 max-w-130 flex-col gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-130";
+  "flex h-[min(760px,calc(100dvh-2rem))] w-130 max-w-130 flex-col gap-0 overflow-hidden rounded-sheet bg-white p-0 shadow-sheet ring-0 sm:max-w-130";
 
 type MemoComposerDialogProps = {
   tripId: string;
@@ -76,16 +79,19 @@ function ComposerBody({ tripId, row, when, memo, onClose, onLockChange }: Compos
           <X className="size-5.5" strokeWidth={2} />
         </button>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pb-4">
-        <div className="flex items-center gap-2.5 rounded-card bg-surface-sunken px-3.5 py-3">
-          <NumberMarker kind={row.kind} num={row.num} status={row.status} />
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-bold text-ink-900">{itemName(row.item)}</span>
-            <span className="text-xs text-ink-400">{when}</span>
+      {/* 스크롤 칸 안의 내용은 flex 로 줄어들지 않게 한 겹 감싼다 — 링크 줄이 많아지면 줄 · 버튼이 납작해지던 문제 */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5 rounded-card bg-surface-sunken px-3.5 py-3">
+            <NumberMarker kind={row.kind} num={row.num} status={row.status} />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-bold text-ink-900">{itemName(row.item)}</span>
+              <span className="text-xs text-ink-400">{when}</span>
+            </div>
           </div>
+          <MemoFields form={form} />
+          {form.error && <p className="text-[13px] text-destructive">{form.error}</p>}
         </div>
-        <MemoFields form={form} />
-        {form.error && <p className="text-[13px] text-destructive">{form.error}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-2 border-t border-divider px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
         {form.editing && <DeleteMemoButton disabled={form.pending} onConfirm={form.destroy} />}
