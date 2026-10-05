@@ -166,7 +166,11 @@ export function usePlaceFields({
     found,
     /** 지도 중심: 정한 위치, 아직 없으면 도시 중심. 도시도 없으면 null(검색으로 고르기 전엔 지도가 없다) */
     mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
-    canSave: !!values.at && values.name.trim().length > 0,
+    /**
+     * 이름이 있고 위치를 정했고, 그 위치의 주소를 기다리는 중이 아닐 때. 위치 변경을 취소해 핀이 돌아오면 그 위치 주소를
+     * 다시 불러오는데, 그사이 저장하면 좌표만 바뀌고 주소가 빈 채로 저장된다
+     */
+    canSave: !!values.at && !found.busy && values.name.trim().length > 0,
     /** 입력 · 검증 오류(저장 요청의 실패 문구는 부른 쪽이 더한다) */
     error,
     setError,
