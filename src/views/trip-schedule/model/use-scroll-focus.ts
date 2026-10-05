@@ -91,14 +91,17 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
 
   /**
    * 스크롤이 HOLD_MS 동안 멈출 때까지 다시 고르지 않다가, 멈추면 한 번 고른다.
-   * 핀으로 고른 행이 목록 끝에 막혔으면 다시 고르지 않는다 — 고르면 기준선을 지난 앞 장소로 바뀐다
+   * 핀으로 고른 행이 목록 끝에 막혔고 아직 끝에 있으면 다시 고르지 않는다 — 고르면 기준선을 지난 앞 장소로 바뀐다.
+   * 멈추기 전에 사용자가 위로 스크롤했으면 끝이 아니라서 평소처럼 고른다
    */
   const holdScan = useCallback(() => {
     if (hold.current) clearTimeout(hold.current);
     hold.current = setTimeout(() => {
       hold.current = null;
-      if (!pinnedAtEnd.current) scan();
+      const { top, max } = scrollMetricsOf(scrollTargetOf(latest.current.scroller));
+      const keepPinned = pinnedAtEnd.current && top >= max - 1;
       pinnedAtEnd.current = false;
+      if (!keepPinned) scan();
     }, HOLD_MS);
   }, [scan]);
 
