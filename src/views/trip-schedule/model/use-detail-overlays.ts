@@ -38,7 +38,8 @@ export function useDetailOverlays() {
     closeDayMemo: () => setDayMemo(null),
     openNote: (item: ScheduleItem) => setNote(item),
     closeNote: () => setNote(null),
-    showToast: (text: string) => setToast({ text, id: Date.now() }),
+    /** detail 이 있으면 안내형(「제목 · 설명」, 조금 더 오래) */
+    showToast: (text: string, detail?: string) => setToast({ text, detail, id: Date.now() }),
     clearToast: () => setToast(null),
   };
 }

@@ -6,7 +6,6 @@ import { ScheduleMap } from "@/entities/schedule-item";
 import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 import { cn } from "@/shared/lib/utils";
-import { Toast } from "@/shared/ui/toast";
 
 import { mapDayOf } from "../../lib/focus";
 import { useDayJumps } from "../../model/use-day-jumps";
@@ -32,6 +31,11 @@ import { SplitPresets } from "./split-presets";
  */
 const FOCUS_LINE_RATIO = 0.4;
 const FOCUS_LINE_TOP = 120;
+
+type PcScheduleProps = ScheduleLayoutProps & {
+  /** 「이어서 / 하루씩」 을 바꾼 직후의 안내 — 화면의 토스트로 띄운다 */
+  onGuide: (text: string, detail: string) => void;
+};
 
 type MapRowsInput = Pick<ScheduleLayoutProps, "edit" | "sections" | "day"> & {
   focusId: string | null;
@@ -61,12 +65,13 @@ export function PcSchedule({
   isPending,
   jump,
   startEditAt,
+  onGuide,
   ...body
-}: ScheduleLayoutProps) {
+}: PcScheduleProps) {
   const split = useSplitWidth();
   // 지도 폭이 200ms 동안 그대로일 때만 핀을 다시 맞춘다. 키보드 연타 · 창 크기 조절마다 맞추면 지도가 흔들린다
   const fitKey = useDebouncedValue(split.settledWidth, 200);
-  const view = usePcDayView();
+  const view = usePcDayView(onGuide);
   const one = view.mode === "one";
   const listRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -178,7 +183,6 @@ export function PcSchedule({
         />
         <SplitPresets presets={split.presets} width={split.width} onSelect={split.setWidth} />
       </div>
-      <Toast message={view.guide} onDone={view.clearGuide} />
     </div>
   );
 }
