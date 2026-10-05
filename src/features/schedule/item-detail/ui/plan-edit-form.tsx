@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ReservationStatusPicker, type ScheduleItem } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { EmojiField } from "@/shared/ui/emoji-field";
 import { LinkRows } from "@/shared/ui/link-rows";
 import { TimeField } from "@/shared/ui/time-field";
 
@@ -37,16 +38,13 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
         <div
           className={cn(
             "grid gap-2",
-            isPlace ? "grid-cols-[52px]" : "grid-cols-[52px_minmax(0,1fr)]",
+            isPlace ? "grid-cols-[56px]" : "grid-cols-[56px_minmax(0,1fr)]",
           )}
         >
-          <input
+          <EmojiField
             value={draft.emoji}
-            onChange={(e) => edit.set("emoji", e.target.value.trim())}
-            maxLength={8}
-            placeholder={item.place?.emoji || "🙂"}
-            aria-label="아이콘"
-            className={`${inputClass} px-0 text-center text-xl`}
+            onChange={(emoji) => edit.set("emoji", emoji)}
+            defaultEmoji={item.place?.emoji ?? undefined}
           />
           {!isPlace && (
             <input
