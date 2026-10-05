@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pickFocus, pickVisibleDay, pinScrollTarget } from "./focus";
+import { mapDayOf, pickFocus, pickVisibleDay, pinScrollTarget } from "./focus";
 
 const rows = [
   { id: "a", top: 100 },
@@ -60,5 +60,19 @@ describe("pickVisibleDay", () => {
     expect(pickVisibleDay(sections, 79)).toBe(0);
     expect(pickVisibleDay([{ day: 3, top: 500 }], 100)).toBe(3);
     expect(pickVisibleDay([], 100)).toBeNull();
+  });
+});
+
+describe("mapDayOf", () => {
+  const sections = [
+    { day: 0, rows: [{ item: { id: "a" } }] },
+    { day: 1, rows: [{ item: { id: "b" } }, { item: { id: "c" } }] },
+  ];
+  it("강조된 장소가 있으면 그 장소의 날", () => {
+    expect(mapDayOf(sections, "c", 0)).toBe(1);
+  });
+  it("강조가 없거나 어느 날에도 없으면 보고 있는 날", () => {
+    expect(mapDayOf(sections, null, 0)).toBe(0);
+    expect(mapDayOf(sections, "gone", 1)).toBe(1);
   });
 });

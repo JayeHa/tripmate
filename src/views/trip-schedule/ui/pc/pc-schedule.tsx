@@ -7,6 +7,7 @@ import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 import { cn } from "@/shared/lib/utils";
 
+import { mapDayOf } from "../../lib/focus";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useSplitWidth } from "../../model/use-split-width";
@@ -30,7 +31,7 @@ const FOCUS_LINE_TOP = 120;
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
  * PC 헤더 아래 화면 높이를 채우고 칸마다 따로 스크롤한다. 모바일 상단바는 그리지 않는다.
- * 목록은 모든 날짜를 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · 지도 핀 · `?day`)이고,
+ * 목록은 모든 날짜를 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · `?day`)이고,
  * 레일에서 날짜를 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다.
  */
 export function PcSchedule({
@@ -59,7 +60,7 @@ export function PcSchedule({
       return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
     },
     enabled: !edit.editing,
-    // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 보고 있는 날의 핀만 그린다)
+    // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없으면 보고 있는 날의 핀을 그린다)
     resetKey: null,
   });
   const { scrollToDay } = useVisibleDay({
@@ -130,7 +131,11 @@ export function PcSchedule({
       />
       <div className="relative min-w-80 flex-1">
         <ScheduleMap
-          rows={edit.editing ? edit.rows : (sections[day]?.rows ?? [])}
+          rows={
+            edit.editing
+              ? edit.rows
+              : (sections[mapDayOf(sections, focus.focusId, day)]?.rows ?? [])
+          }
           focusId={edit.editing ? null : focus.focusId}
           onSelect={edit.editing ? undefined : (row) => focus.focusOn(row.item.id)}
           pinSize="lg"

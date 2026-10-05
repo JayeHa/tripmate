@@ -59,3 +59,16 @@ export function pickVisibleDay(sections: DaySectionTop[], line: number): number 
   }
   return picked;
 }
+
+/** 지도가 핀을 그릴 날을 고르는 데 쓰는 날짜 묶음 — 그 날의 줄 id 들 */
+export type DayRowIds = { day: number; rows: { item: { id: string } }[] };
+
+/**
+ * 지도가 핀을 그릴 날 — 강조된 장소가 있으면 그 장소의 날, 없으면 보고 있는 날.
+ * 「보고 있는 날」 은 날짜 머리가 목록 위를 지날 때 바뀌고 강조 기준선은 그보다 아래라, 날짜 경계에서는
+ * 다음 날의 첫 장소가 먼저 강조된다. 그때 지도가 보고 있는 날만 따르면 강조된 장소의 핀이 없다
+ */
+export function mapDayOf(sections: DayRowIds[], focusId: string | null, day: number): number {
+  if (focusId === null) return day;
+  return sections.find((s) => s.rows.some((r) => r.item.id === focusId))?.day ?? day;
+}

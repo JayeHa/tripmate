@@ -8,6 +8,7 @@ import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
 
+import { mapDayOf } from "../lib/focus";
 import { useDayJumps } from "../model/use-day-jumps";
 import { useScrollFocus } from "../model/use-scroll-focus";
 import { useVisibleDay } from "../model/use-visible-day";
@@ -24,7 +25,7 @@ const FOCUS_LINE_OFFSET = 48;
 
 /**
  * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 모든 날짜를 이어서 그린다.
- * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · 지도 핀 · `?day`)이고,
+ * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · `?day`)이고,
  * 칩을 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다(지도가 펼쳐져 있을 때만).
  */
 export function MobileSchedule({
@@ -45,7 +46,7 @@ export function MobileSchedule({
   const stickyHeight = useElementHeight(stickyRef);
   /** sticky 영역(상단바 + 지도 + 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
-  // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 보고 있는 날의 핀만 그린다)
+  // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없으면 보고 있는 날의 핀을 그린다)
   const focus = useScrollFocus({
     list: listRef,
     line: () => stickyBottom() + FOCUS_LINE_OFFSET,
@@ -67,7 +68,7 @@ export function MobileSchedule({
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
           <ScheduleMap
-            rows={sections[day]?.rows ?? []}
+            rows={sections[mapDayOf(sections, focus.focusId, day)]?.rows ?? []}
             focusId={focus.focusId}
             onSelect={(row) => focus.focusOn(row.item.id)}
           />
