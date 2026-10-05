@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   type Memo,
@@ -25,8 +25,8 @@ type MemoComposerOptions = {
 
 /**
  * 메모 작성 · 수정 — 본문(500자) · ★ 중요 · 링크. 여행 멤버 누구나 고치고 지운다(0027).
- * 열릴 때마다 새로 마운트돼 처음 값에서 시작한다. 저장 · 삭제는 mutateAsync 로 받아,
- * 그사이 창이 닫혀도(오프라인으로 멈춘 동안) 완료를 알린다
+ * 열릴 때마다 새로 마운트돼 처음 값에서 시작한다. 저장 · 삭제는 mutateAsync 로 받고, 끝났을 때 이 창이
+ * 아직 떠 있으면 닫는다(오프라인으로 멈춘 동안 창을 닫고 다른 메모를 열었으면 그 창은 건드리지 않는다)
  */
 export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOptions) {
   const [draft, setDraft] = useState<MemoDraft>(() => memoDraftOf(memo));
@@ -36,6 +36,19 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
   const remove = useDeleteMemo(tripId);
   const mutations = [create, update, remove];
   const pending = mutations.some((m) => m.isPending);
+  // 이 창이 아직 떠 있는지. 오프라인으로 멈춘 요청은 창을 닫을 수 있어서, 늦게 끝난 요청이 그사이 연 다른 메모 창을
+  // 닫지 않게(onDone 은 「지금 열린 창」 을 닫는다) 떠 있을 때만 완료를 알린다
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  /** 저장 · 삭제가 끝났다 — 이 창이 아직 떠 있을 때만 닫는다 */
+  const finish = () => {
+    if (mountedRef.current) onDone();
+  };
 
   /** 칸 하나를 고친다 */
   function set<K extends keyof MemoDraft>(key: K, value: MemoDraft[K]) {
@@ -60,13 +73,13 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
     const done = memo
       ? update.mutateAsync({ id: memo.id, patch: result.value })
       : create.mutateAsync({ trip_id: tripId, schedule_item_id: item.id, ...result.value });
-    void done.then(onDone, () => undefined);
+    void done.then(finish, () => undefined);
   }
 
   /** 고치는 메모를 지운다 */
   function destroy() {
     if (!memo || pending) return;
-    void remove.mutateAsync(memo.id).then(onDone, () => undefined);
+    void remove.mutateAsync(memo.id).then(finish, () => undefined);
   }
 
   return {
