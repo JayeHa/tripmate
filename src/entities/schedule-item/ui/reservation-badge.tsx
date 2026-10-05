@@ -9,7 +9,7 @@ import { RESERVATION_STATUS_LABEL, type ReservationStatus } from "../model/reser
  * 예약 상태 칩. 장소 카드의 제목 위에 놓는다.
  * 상태가 없으면 칩을 그리지 않는다.
  */
-const TONE = {
+export const RESERVATION_TONE = {
   ok: { icon: CircleCheck, className: "bg-status-ok-bg text-status-ok" },
   wait: { icon: CircleAlert, className: "bg-status-wait-bg text-status-wait" },
   opt: { icon: CircleDashed, className: "bg-status-opt-bg text-status-opt" },
@@ -22,7 +22,7 @@ type Props = Omit<ComponentProps<"span">, "children"> & {
 };
 
 export function ReservationBadge({ className, status, label, ...props }: Props) {
-  const { icon: Icon, className: tone } = TONE[status];
+  const { icon: Icon, className: tone } = RESERVATION_TONE[status];
   return (
     <span
       data-slot="reservation-badge"
