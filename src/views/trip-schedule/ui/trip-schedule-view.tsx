@@ -39,7 +39,7 @@ const NO_ITEMS: ScheduleItem[] = [];
  */
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
-  const { data: items = NO_ITEMS, isPending } = useScheduleItems(tripId);
+  const { data: items = NO_ITEMS, isPending, isSuccess: itemsReady } = useScheduleItems(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
   const [day, setDay] = useDayParam(totalDays);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -62,6 +62,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const edit = useScheduleEdit({
     tripId,
     items,
+    // 읽기에 실패하면 isPending 은 false 지만 일정은 빈 목록이다 — 성공했을 때만 연다
+    itemsReady,
     trip,
     totalDays,
     onExit: setDay,
@@ -129,7 +131,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           authorOf={authorOf}
           onAddDayMemo={() => overlays.openDayMemo(day)}
           edit={edit}
-          onStartEdit={() => edit.start(day)}
+          onStartEdit={edit.opener(day)}
         />
       )}
 
