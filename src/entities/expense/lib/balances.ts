@@ -1,7 +1,7 @@
 import { decimalsOf, type ExchangeRates, roundTo } from "@/shared/lib/money";
 
 import type { ExpenseWithSplits } from "../model/types";
-import { expenseRate } from "./amounts";
+import { toHomeFor } from "./amounts";
 
 export type Balances = {
   /** 홈 화폐 기준 낸 금액 */
@@ -47,8 +47,7 @@ export function computeNetBalances(
     if (!e.counted) continue;
     const amount = Number(e.amount);
     ensure(e.payer_id);
-    const rate = expenseRate(e, home, rates);
-    const homeAmount = amount * rate;
+    const homeAmount = toHomeFor(e, amount, home, rates);
     paid[e.payer_id] += homeAmount;
     paidByCurrency[e.payer_id][e.currency] = (paidByCurrency[e.payer_id][e.currency] ?? 0) + amount;
     totalByCurrency[e.currency] = (totalByCurrency[e.currency] ?? 0) + amount;
@@ -56,7 +55,7 @@ export function computeNetBalances(
 
     for (const s of e.splits) {
       ensure(s.user_id);
-      owed[s.user_id] += Number(s.share) * rate;
+      owed[s.user_id] += toHomeFor(e, Number(s.share), home, rates);
     }
   }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatMoney, MissingRateError, ratePerUnit, roundTo, toHome } from "./currency";
+import { formatMoney, MissingRateError, roundTo, toHome } from "./currency";
 
 const rates = { JPY: { unit: 100, value: 900 }, USD: { unit: 1, value: 1350 } };
 
@@ -15,15 +15,6 @@ describe("toHome", () => {
   });
   it("throws when rate missing", () => {
     expect(() => toHome(1, "EUR", "KRW", rates)).toThrow(MissingRateError);
-  });
-});
-
-describe("ratePerUnit", () => {
-  it("통화 1단위가 홈 화폐로 얼마인지 — 같은 화폐면 1, 환율이 없으면 던진다", () => {
-    expect(ratePerUnit("JPY", "KRW", rates)).toBe(9);
-    expect(ratePerUnit("USD", "KRW", rates)).toBe(1350);
-    expect(ratePerUnit("KRW", "KRW", rates)).toBe(1);
-    expect(() => ratePerUnit("EUR", "KRW", rates)).toThrow(MissingRateError);
   });
 });
 
