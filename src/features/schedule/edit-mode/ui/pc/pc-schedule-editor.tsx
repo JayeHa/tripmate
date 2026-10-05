@@ -1,10 +1,9 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useState } from "react";
 
 import { dayParts } from "@/shared/lib/days";
-import { cn } from "@/shared/lib/utils";
+import { CheckMark } from "@/shared/ui/check-mark";
 
 import type { ScheduleEditState } from "../../model/use-schedule-edit";
 import { DiscardConfirm } from "../discard-confirm";
@@ -62,14 +61,7 @@ export function PcScheduleEditor({ edit, startDate, totalDays }: PcScheduleEdito
             onClick={edit.toggleAll}
             className="flex items-center gap-2 text-sm font-bold text-ink-700 disabled:opacity-40"
           >
-            <span
-              className={cn(
-                "flex size-5.5 items-center justify-center rounded-full border",
-                edit.allSelected ? "border-primary bg-primary" : "border-handle bg-white",
-              )}
-            >
-              {edit.allSelected && <Check className="size-3.25 text-white" strokeWidth={3} />}
-            </span>
+            <CheckMark checked={edit.allSelected} className="size-5.5" />
             {edit.allSelected ? "day 전체 해제" : "day 전체 선택"}
           </button>
           <EditDaySelect
