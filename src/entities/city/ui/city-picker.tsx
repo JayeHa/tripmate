@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { FilterChip } from "@/shared/ui/filter-chip";
 
 import { cityAreasLabel, groupByRegion, searchCities } from "../lib/search";
 import type { City, CityCatalog, CityScope } from "../model/types";
@@ -24,15 +25,6 @@ const SCOPES: { key: CityScope; label: string }[] = [
   { key: "domestic", label: "국내도시" },
 ];
 const ALL = "전체";
-
-const CHIP_SIZE: Record<Layout, string> = {
-  pc: "h-8 px-3.5 text-[13px] font-bold whitespace-nowrap",
-  mobile: "h-[34px] border px-3.5 text-sm font-semibold",
-};
-const CHIP_OFF: Record<Layout, string> = {
-  pc: "bg-surface-muted text-ink-600",
-  mobile: "border-line bg-white text-ink-700",
-};
 
 /**
  * 도시 다중 선택. 해외/국내 탭 + 권역 칩 + 도시 목록.
@@ -76,18 +68,9 @@ export function CityPicker({ catalog, query, selected, onToggle, layout }: Props
   const chipRow = chips.map((id) => {
     const on = region === id;
     return (
-      <button
-        key={id}
-        type="button"
-        onClick={() => setRegion(id)}
-        className={cn(
-          "flex shrink-0 items-center rounded-full",
-          CHIP_SIZE[layout],
-          on ? "border-ink-900 bg-ink-900 text-white" : CHIP_OFF[layout],
-        )}
-      >
+      <FilterChip key={id} selected={on} onClick={() => setRegion(id)}>
         {chipLabel(id)}
-      </button>
+      </FilterChip>
     );
   });
 

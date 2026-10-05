@@ -7,6 +7,7 @@ import { MEMO_MAX } from "@/entities/schedule-item";
 import { dayLabel } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { FilterChip } from "@/shared/ui/filter-chip";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { useDayMemo } from "../model/use-day-memo";
@@ -72,21 +73,17 @@ function DayMemoBody({
       {picking && (
         <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: totalDays }, (_, day) => day).map((i) => (
-            <button
+            <FilterChip
               key={i}
-              type="button"
-              aria-pressed={i === form.dayIndex}
+              size="lg"
+              selected={i === form.dayIndex}
               onClick={() => {
                 form.setDayIndex(i);
                 setPicking(false);
               }}
-              className={cn(
-                "h-9 rounded-full px-3.5 text-[13px] font-bold",
-                i === form.dayIndex ? "bg-ink-900 text-white" : "bg-surface-muted text-ink-500",
-              )}
             >
               day {i + 1}
-            </button>
+            </FilterChip>
           ))}
         </div>
       )}
