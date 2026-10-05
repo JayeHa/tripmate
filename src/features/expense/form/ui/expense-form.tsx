@@ -38,6 +38,15 @@ export function ExpenseForm({
   return (
     <form onSubmit={form.submit} className="flex flex-col gap-5">
       <AmountField form={form} autoFocus={!initial} />
+      <div className="flex flex-col gap-1.5">
+        <Label>항목명</Label>
+        <Input
+          value={form.name}
+          onChange={(e) => form.setName(e.target.value)}
+          maxLength={100}
+          placeholder="예: 이치란 라멘"
+        />
+      </div>
       <CategoryField form={form} />
       <PeopleFields form={form} members={members} />
       <SplitField form={form} members={members} />
@@ -47,7 +56,7 @@ export function ExpenseForm({
         <Input
           value={form.memo}
           onChange={(e) => form.setMemo(e.target.value)}
-          placeholder="예: 이치란 라멘 3인"
+          placeholder="예: 3인 · 웨이팅 30분"
         />
       </div>
       {form.error && <p className="text-sm text-destructive">{form.error}</p>}
