@@ -9,6 +9,7 @@ import {
   draftOf,
   editChanges,
   type EditDraft,
+  exceedsTripDays,
   isSelectable,
   keepLive,
   moveSelected,
@@ -29,6 +30,8 @@ type ScheduleEditOptions = {
   totalDays: number;
   /** 편집을 마쳤다(저장했거나 바뀐 게 없거나 버렸다). 마지막으로 편집하던 날을 넘긴다 */
   onExit: (day: number) => void;
+  /** 편집하는 동안 일행이 여행 기간을 줄여 편집을 닫았다 — 부른 쪽이 알린다(토스트) */
+  onInterrupted: (message: string) => void;
 };
 
 /** 편집 한 번 — 열 때의 일정 · 하루 요약으로 만든 처음 초안과 지금 초안 */
@@ -53,12 +56,19 @@ export function useScheduleEdit({
   trip,
   totalDays,
   onExit,
+  onInterrupted,
 }: ScheduleEditOptions) {
   const [session, setSession] = useState<EditSession | null>(null);
   const [day, setDay] = useState(0);
   const [selected, setSelected] = useState(NONE);
   const apply = useApplyScheduleEdit(tripId);
   const canStart = trip !== undefined && itemsReady;
+  // 편집하는 동안 일행이 기간을 줄였다 — 초안에 사라진 날이 남으면 저장이 계속 막혀서 닫고 알린다(늘어난 건 초안이 받는다)
+  if (session && exceedsTripDays(session.draft, session.summaries, totalDays)) {
+    setSession(null);
+    setSelected(NONE);
+    onInterrupted("여행 기간이 바뀌어 편집을 닫았어요");
+  }
   const live = useMemo(() => new Set(items.map((it) => it.id)), [items]);
   // 열 때 고정한 초안에서 그 뒤 사라진 일정을 뺀 것. 화면 · 저장은 이걸 기준으로 한다
   const draft = useMemo(() => session && keepLive(session.draft, live), [session, live]);

@@ -67,6 +67,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     trip,
     totalDays,
     onExit: setDay,
+    onInterrupted: overlays.showToast,
   });
 
   const dayItems = useMemo(() => items.filter((it) => it.day_index === day), [items, day]);
