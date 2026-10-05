@@ -10,6 +10,7 @@ import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { AlternativePicker } from "./alternative-picker";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
+import { SwapAlternativeDialog } from "./swap-alternative-dialog";
 
 type AlternativesBlockProps = {
   tripId: string;
@@ -45,6 +46,7 @@ export function AlternativesBlock({
       {alternatives.map((alt) => (
         <AlternativeCard
           key={alt.id}
+          main={main}
           alt={alt}
           memoCount={memoCount(alt.id)}
           actions={actions}
@@ -82,15 +84,19 @@ export function AlternativesBlock({
 }
 
 type AlternativeCardProps = {
+  main: ScheduleItem;
   alt: ScheduleItem;
   memoCount: number;
   actions: AlternativeActions;
   onOpen: () => void;
 };
 
-/** 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 자기 기록(상태 · 메모 · 링크)이 있으면 빼기 전에 묻는다 */
-function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardProps) {
+/**
+ * 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 「바꾸기」 는 한 번 묻고, 빼기는 자기 기록(상태 · 메모 · 링크)이 있으면 묻는다
+ */
+function AlternativeCard({ main, alt, memoCount, actions, onOpen }: AlternativeCardProps) {
   const [confirming, setConfirming] = useState(false);
+  const [swapping, setSwapping] = useState(false);
   const sub = alt.place?.description;
   return (
     <div className="flex items-center gap-2 rounded-card border border-line-card px-3.5 py-3">
@@ -109,7 +115,7 @@ function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardPro
       <button
         type="button"
         disabled={actions.pending}
-        onClick={() => actions.swap(alt)}
+        onClick={() => setSwapping(true)}
         className="flex h-8 shrink-0 items-center gap-1 rounded-button border border-line-strong px-2.5 text-[13px] font-bold text-ink-700 disabled:opacity-40"
       >
         <ArrowLeftRight className="size-3.5" />
@@ -124,6 +130,13 @@ function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardPro
       >
         <X className="size-4" />
       </button>
+      <SwapAlternativeDialog
+        open={swapping}
+        onOpenChange={setSwapping}
+        main={main}
+        alt={alt}
+        onConfirm={() => actions.swap(alt)}
+      />
       <RemoveAlternativeDialog
         open={confirming}
         onOpenChange={setConfirming}

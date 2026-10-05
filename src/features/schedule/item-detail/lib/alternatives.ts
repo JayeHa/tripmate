@@ -1,9 +1,11 @@
 import {
   CATEGORY_LABEL,
+  itemName,
   type Place,
   PLACE_CATEGORIES,
   type ScheduleItem,
 } from "@/entities/schedule-item";
+import { euro } from "@/shared/lib/josa";
 
 /** 고를 수 있는 장소 한 줄 */
 export type AlternativeChoice = { place: Place; meta: string };
@@ -38,4 +40,20 @@ export function alternativeChoices(
 export function hasOwnRecord(alt: ScheduleItem, memoCount: number): boolean {
   const links = Array.isArray(alt.links) ? alt.links.length : 0;
   return !!alt.status || memoCount > 0 || links > 0;
+}
+
+/** 「「A」 대신 「B」으로」 — 바꾸기 확인창 · 토스트가 같이 쓰는 앞부분 */
+function swapPhrase(main: ScheduleItem, alt: ScheduleItem): string {
+  const to = itemName(alt);
+  return `「${itemName(main)}」 대신 「${to}」${euro(to)}`;
+}
+
+/** 바꾸기 확인창 제목 */
+export function swapQuestion(main: ScheduleItem, alt: ScheduleItem): string {
+  return `${swapPhrase(main, alt)} 바꿀까요?`;
+}
+
+/** 바꾸기가 끝난 뒤 토스트 */
+export function swapDoneMessage(main: ScheduleItem, alt: ScheduleItem): string {
+  return `${swapPhrase(main, alt)} 바꿨어요`;
 }

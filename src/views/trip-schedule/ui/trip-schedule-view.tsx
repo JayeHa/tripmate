@@ -161,7 +161,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           onClose={() => setOpenId(null)}
           onEditPlace={overlays.openPlaceEdit}
           onAddAlternative={overlays.openAltAdd}
-          onSwapped={setOpenId}
+          onSwapped={(altId, message) => {
+            setOpenId(altId);
+            overlays.showToast(message);
+          }}
           onMemo={overlays.openMemo}
         />
       )}

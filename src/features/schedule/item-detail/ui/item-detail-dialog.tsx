@@ -35,8 +35,8 @@ type ItemDetailDialogProps = {
   onEditPlace: (place: Place, city: City | null) => void;
   /** 대체 장소 「+ 직접 추가」 — 부른 쪽이 장소 입력 폼을 이 일정의 대체 장소 모드로 연다 */
   onAddAlternative: (main: ScheduleItem, city: City | null) => void;
-  /** 「바꾸기」 가 끝났다 — 새로 그 자리에 들어온 일정(altId)으로 상세를 옮긴다 */
-  onSwapped: (altId: string) => void;
+  /** 「바꾸기」 가 끝났다 — 새로 그 자리에 들어온 일정(altId)으로 상세를 옮기고 토스트(message)를 띄운다 */
+  onSwapped: (altId: string, message: string) => void;
   /** 메모 쓰기 · 고치기 — 부른 쪽이 그 일정(줄)의 메모 작성 창을 상세 위에 연다. 새로 쓰면 memo 는 null */
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
 };

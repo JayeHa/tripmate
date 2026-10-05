@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Place, ScheduleItem } from "@/entities/schedule-item";
 
-import { alternativeChoices, hasOwnRecord } from "./alternatives";
+import { alternativeChoices, hasOwnRecord, swapDoneMessage, swapQuestion } from "./alternatives";
 
 /** 기본값이 채워진 장소 */
 function place(id: string, patch: Partial<Place> = {}): Place {
@@ -84,5 +84,23 @@ describe("hasOwnRecord", () => {
     expect(hasOwnRecord(item("a", { status: "ok" }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 1)).toBe(true);
     expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
+  });
+});
+
+describe("바꾸기 문구", () => {
+  it("「원래」 대신 「대체」 + 받침에 맞는 「로/으로」", () => {
+    const main = item("치이카와 라멘 豚");
+    expect(swapQuestion(main, item("다이소 라군"))).toBe(
+      "「치이카와 라멘 豚」 대신 「다이소 라군」으로 바꿀까요?",
+    );
+    expect(swapDoneMessage(main, item("아시츠보 이치방"))).toBe(
+      "「치이카와 라멘 豚」 대신 「아시츠보 이치방」으로 바꿨어요",
+    );
+    expect(swapDoneMessage(main, item("굿즈샵"))).toBe(
+      "「치이카와 라멘 豚」 대신 「굿즈샵」으로 바꿨어요",
+    );
+    expect(swapDoneMessage(main, item("다이소"))).toBe(
+      "「치이카와 라멘 豚」 대신 「다이소」로 바꿨어요",
+    );
   });
 });
