@@ -40,7 +40,8 @@ function AlertDialogContent({
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      {/* 확인창은 늘 맨 위라, 다른 창 안에서 열어도(중첩) 스크림을 그린다 — Base UI 는 중첩이면 기본으로 그리지 않는다 */}
+      <AlertDialogOverlay forceRender />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-size={size}

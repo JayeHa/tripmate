@@ -23,6 +23,8 @@ export function SheetDialog({ open, onClose, title, locked = false, children }: 
     <Dialog open={open} onOpenChange={(next) => !next && !locked && onClose()}>
       <DialogContent
         showCloseButton={false}
+        // 일정 상세 안에서 여는 중첩 창이라 스크림을 직접 그려 뒤 창을 어둡게 한다
+        forceOverlay
         className="top-auto bottom-0 left-0 flex max-h-[85dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none lg:top-1/2 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100dvh-2rem)] lg:w-120 lg:max-w-120 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
       >
         <div className="flex shrink-0 items-center gap-3 px-5 pt-5 pb-3.5">
