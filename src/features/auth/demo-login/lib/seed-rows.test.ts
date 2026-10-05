@@ -36,7 +36,8 @@ describe("toSeedRows", () => {
       }),
     ]);
     expect(items).toEqual([
-      { id: "p1", day_index: 0, position: 0, kind: "note", name: "집합", trip_id: "t" },
+      // 날짜 메모(note)의 메모 줄은 글 아래에 합친다(0029)
+      { id: "p1", day_index: 0, position: 0, kind: "note", name: "집합\n07시", trip_id: "t" },
       expect.objectContaining({ id: "p2", trip_id: "t", place_id: "p3", name: null, status: "ok" }),
     ]);
     expect(items[1]).not.toHaveProperty("lat");
@@ -102,9 +103,19 @@ describe("toSeedRows", () => {
     ]);
   });
 
-  it("메모 글은 줄마다 메모 하나 — 빈 줄은 버리고 「★ 」 줄은 중요, 쓴 시각은 1ms 씩 늦춰 순서를 남긴다", () => {
+  it("장소 메모 글은 줄마다 메모 하나 — 빈 줄은 버리고 「★ 」 줄은 중요, 쓴 시각은 1ms 씩 늦춰 순서를 남긴다", () => {
     const { items, memos } = toSeedRows(
-      [{ day_index: 0, position: 0, kind: "note", name: "집합", memo: "07시\n\n★ 늦으면 무효" }],
+      [
+        {
+          day_index: 0,
+          position: 0,
+          kind: "place",
+          name: "센소지",
+          lat: 1,
+          lng: 1,
+          memo: "07시\n\n★ 늦으면 무효",
+        },
+      ],
       { tripId: "t", cityId: "tokyo", newId: () => "m1", at: new Date("2026-10-05T00:00:00Z") },
     );
     expect(items[0]).not.toHaveProperty("memo");
@@ -124,5 +135,15 @@ describe("toSeedRows", () => {
         created_at: "2026-10-05T00:00:00.001Z",
       },
     ]);
+  });
+
+  it("날짜 메모(note)는 메모 줄을 글 아래에 합치고(★ 유지) 메모를 만들지 않는다", () => {
+    const { items, memos } = toSeedRows(
+      [{ day_index: 0, position: 0, kind: "note", name: "집합", memo: "07시\n★ 늦으면 무효" }],
+      { tripId: "t", cityId: "tokyo", newId: () => "n1" },
+    );
+    expect(items[0]).toMatchObject({ name: "집합\n07시\n★ 늦으면 무효" });
+    expect(items[0]).not.toHaveProperty("memo");
+    expect(memos).toEqual([]);
   });
 });

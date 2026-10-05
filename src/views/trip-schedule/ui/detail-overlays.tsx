@@ -1,6 +1,6 @@
 "use client";
 
-import { MemoComposerDialog } from "@/features/schedule/memo-composer";
+import { DayMemoDialog, MemoComposerDialog, NoteDialog } from "@/features/schedule/memo-composer";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayLabel } from "@/shared/lib/days";
 import { Toast } from "@/shared/ui/toast";
@@ -10,12 +10,19 @@ import type { DetailOverlays as Overlays } from "../model/use-detail-overlays";
 type DetailOverlaysProps = {
   tripId: string;
   startDate: string;
+  totalDays: number;
   isDesktop: boolean;
   overlays: Overlays;
 };
 
-/** 일정 상세 · 카드 위에 여는 창들 — 대체 장소 직접 추가 · 장소 정보 수정 · 메모 작성 · 토스트 */
-export function DetailOverlays({ tripId, startDate, isDesktop, overlays: o }: DetailOverlaysProps) {
+/** 일정 상세 · 카드 위에 여는 창들 — 대체 장소 직접 추가 · 장소 정보 수정 · 메모 작성 · 날짜 메모 쓰기 · 고치기 · 토스트 */
+export function DetailOverlays({
+  tripId,
+  startDate,
+  totalDays,
+  isDesktop,
+  overlays: o,
+}: DetailOverlaysProps) {
   return (
     <>
       {o.altAdd && (
@@ -68,6 +75,18 @@ export function DetailOverlays({ tripId, startDate, isDesktop, overlays: o }: De
           onClose={o.closeMemo}
         />
       )}
+
+      {o.dayMemo !== null && (
+        <DayMemoDialog
+          tripId={tripId}
+          startDate={startDate}
+          totalDays={totalDays}
+          dayIndex={o.dayMemo}
+          onClose={o.closeDayMemo}
+        />
+      )}
+
+      {o.note && <NoteDialog key={o.note.id} tripId={tripId} item={o.note} onClose={o.closeNote} />}
 
       <Toast message={o.toast} onDone={o.clearToast} />
     </>

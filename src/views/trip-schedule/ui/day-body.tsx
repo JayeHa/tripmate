@@ -22,6 +22,7 @@ type DayBodyProps = {
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: () => void;
+  onAddDayMemo: () => void;
   authorOf: (authorId: string | null) => MemoAuthor | null;
 };
 
@@ -37,6 +38,7 @@ export function DayBody({
   onOpen,
   onEditMove,
   onAddPlace,
+  onAddDayMemo,
   authorOf,
 }: DayBodyProps) {
   return (
@@ -72,10 +74,12 @@ export function DayBody({
         focusId={focusId}
         authorOf={authorOf}
       />
-      {/* 메모 추가는 메모 단계에서 이 옆에 붙는다 */}
       <div className="flex gap-2.5 px-5 pt-1 pb-8">
         <Button variant="outline" size="form" className="flex-1" onClick={onAddPlace}>
           일정 추가
+        </Button>
+        <Button variant="outline" size="form" className="flex-1" onClick={onAddDayMemo}>
+          메모 추가
         </Button>
       </div>
     </>

@@ -1093,6 +1093,43 @@ describe("0027 데이터 이전", () => {
   });
 });
 
+describe("날짜 메모에는 메모 목록이 없다 (0029)", () => {
+  it("note 에 메모를 붙이면 거부한다 — 장소에는 붙는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-07", "2027-10-07");
+    const note = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name) values ('${trip}', 0, 0, 'note', '집합') returning id`,
+    );
+    expect(
+      await rejects(
+        `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${note.rows[0].id}', '메모')`,
+      ),
+    ).toMatch(/has no memos/);
+  });
+
+  it("이전: note 에 붙은 메모를 글 아래에 줄바꿈으로 합치고(★ 유지) 메모는 지운다", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0029"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('66666666-6666-6666-6666-666666666666', '${A}', 't', '2027-06-01', '2027-06-01');
+      insert into public.schedule_items (id, trip_id, day_index, position, kind, name)
+        values ('77777777-7777-7777-7777-777777777777', '66666666-6666-6666-6666-666666666666', 0, 0, 'note', '스파앳홈');
+      alter table public.memos disable trigger memos_author;
+      insert into public.memos (trip_id, schedule_item_id, body, starred, created_at) values
+        ('66666666-6666-6666-6666-666666666666', '77777777-7777-7777-7777-777777777777', '둘째', true, '2027-01-02'),
+        ('66666666-6666-6666-6666-666666666666', '77777777-7777-7777-7777-777777777777', '첫째', false, '2027-01-01');
+    `);
+    await applyMigration(pg, "0029_note_memos_into_text.sql");
+    const item = await pg.query<{ name: string }>(
+      `select name from public.schedule_items where id = '77777777-7777-7777-7777-777777777777'`,
+    );
+    expect(item.rows[0].name).toBe("스파앳홈\n첫째\n★ 둘째");
+    const left = await pg.query(`select id from public.memos`);
+    expect(left.rows).toEqual([]);
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");

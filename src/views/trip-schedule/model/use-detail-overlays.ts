@@ -7,7 +7,7 @@ import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule
 import type { ToastMessage } from "@/shared/ui/toast";
 
 /**
- * 일정 상세 · 카드에서 위에 여는 창들의 상태 — 장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트.
+ * 일정 상세 · 카드에서 위에 여는 창들의 상태 — 장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 날짜 메모 · 토스트.
  * 화면(TripScheduleView)이 쥐고 DetailOverlays 가 그린다. 열 때 받은 값으로 창을 열고, 닫으면 null
  */
 export function useDetailOverlays() {
@@ -17,11 +17,16 @@ export function useDetailOverlays() {
   const [altAdd, setAltAdd] = useState<{ main: ScheduleItem; city: City | null } | null>(null);
   // 메모 작성 · 수정 창. 상세의 「+ 메모」 · 메모 누르기
   const [memo, setMemo] = useState<{ row: TimelineRow; memo: Memo | null } | null>(null);
+  // 날짜 메모 쓰기(날짜 끝 「메모 추가」) — 처음 고른 날 · 날짜 메모 고치기(메모 줄 누르기)
+  const [dayMemo, setDayMemo] = useState<number | null>(null);
+  const [note, setNote] = useState<ScheduleItem | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   return {
     placeEdit,
     altAdd,
     memo,
+    dayMemo,
+    note,
     toast,
     openPlaceEdit: (place: Place, city: City | null) => setPlaceEdit({ place, city }),
     openAltAdd: (main: ScheduleItem, city: City | null) => setAltAdd({ main, city }),
@@ -29,6 +34,10 @@ export function useDetailOverlays() {
     closePlaceEdit: () => setPlaceEdit(null),
     closeAltAdd: () => setAltAdd(null),
     closeMemo: () => setMemo(null),
+    openDayMemo: (dayIndex: number) => setDayMemo(dayIndex),
+    closeDayMemo: () => setDayMemo(null),
+    openNote: (item: ScheduleItem) => setNote(item),
+    closeNote: () => setNote(null),
     showToast: (text: string) => setToast({ text, id: Date.now() }),
     clearToast: () => setToast(null),
   };

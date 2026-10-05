@@ -104,13 +104,17 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           rows={rows}
           isPending={isPending}
           memos={memos}
-          onOpen={(row) => setOpenId(row.item.id)}
+          // 날짜 메모 줄은 일정 상세 대신 시간 · 메모만 고치는 창
+          onOpen={(row) =>
+            row.kind === "note" ? overlays.openNote(row.item) : setOpenId(row.item.id)
+          }
           onEditMove={moveDialog.openFor}
           onAddPlace={() => {
             setAddNotice(null);
             setAddOpen(true);
           }}
           authorOf={authorOf}
+          onAddDayMemo={() => overlays.openDayMemo(day)}
         />
       )}
 
@@ -173,6 +177,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         <DetailOverlays
           tripId={tripId}
           startDate={trip.start_date}
+          totalDays={totalDays}
           isDesktop={isDesktop}
           overlays={overlays}
         />

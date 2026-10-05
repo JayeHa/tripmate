@@ -53,25 +53,45 @@ export async function swapScheduleItems(a: ScheduleItem, b: ScheduleItem): Promi
   if (rb.error) throw rb.error;
 }
 
-/** 다른 날로 이동: 대상 날의 맨 끝으로 */
-export async function moveScheduleItemToDay(
-  item: ScheduleItem,
-  dayIndex: number,
-): Promise<ScheduleItem> {
+/** 그날 맨 끝 순서(대체 장소 빼고). 그날 일정이 없으면 0 */
+async function endPosition(tripId: string, dayIndex: number): Promise<number> {
   const supabase = createClient();
-  const { data: last } = await supabase
+  const { data: last, error } = await supabase
     .from("schedule_items")
     .select("position")
-    .eq("trip_id", item.trip_id)
+    .eq("trip_id", tripId)
     .eq("day_index", dayIndex)
     .is("alternative_of", null)
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
+  // 조회가 실패하면 빈 날로 여겨 맨 위(0)에 넣지 않게 그대로 던진다
+  if (error) throw error;
+  return last ? last.position + 1 : 0;
+}
+
+/** 다른 날로 이동: 대상 날의 맨 끝으로 */
+export async function moveScheduleItemToDay(
+  item: ScheduleItem,
+  dayIndex: number,
+): Promise<ScheduleItem> {
   return updateScheduleItem(item.id, {
     day_index: dayIndex,
-    position: last ? last.position + 1 : 0,
+    position: await endPosition(item.trip_id, dayIndex),
   });
+}
+
+/** 날짜 메모 — 그날 맨 끝에 note 일정 한 줄(글은 제목 칸)을 넣는다 */
+export async function addDayMemo(tripId: string, dayIndex: number, text: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("schedule_items").insert({
+    trip_id: tripId,
+    day_index: dayIndex,
+    position: await endPosition(tripId, dayIndex),
+    kind: "note",
+    name: text,
+  });
+  if (error) throw error;
 }
 
 /** dayIndex 일째부터 끝까지의 일정 수(대체 장소 빼고). 기간을 줄일 때 옮겨질 일정을 미리 센다 */

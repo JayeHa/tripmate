@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   type Memo,
@@ -12,6 +12,7 @@ import {
 } from "@/entities/schedule-item";
 
 import { type MemoDraft, memoDraftOf, samePayload, toMemoPayload } from "../lib/memo-draft";
+import { useMountedDone } from "./use-mounted-done";
 
 type MemoComposerOptions = {
   tripId: string;
@@ -36,19 +37,8 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
   const remove = useDeleteMemo(tripId);
   const mutations = [create, update, remove];
   const pending = mutations.some((m) => m.isPending);
-  // 이 창이 아직 떠 있는지. 오프라인으로 멈춘 요청은 창을 닫을 수 있어서, 늦게 끝난 요청이 그사이 연 다른 메모 창을
-  // 닫지 않게(onDone 은 「지금 열린 창」 을 닫는다) 떠 있을 때만 완료를 알린다
-  const mountedRef = useRef(true);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-  /** 저장 · 삭제가 끝났다 — 이 창이 아직 떠 있을 때만 닫는다 */
-  const finish = () => {
-    if (mountedRef.current) onDone();
-  };
+  // 저장 · 삭제가 끝났을 때 이 창이 아직 떠 있을 때만 닫는다(늦게 끝난 요청이 다른 메모 창을 닫지 않게)
+  const finish = useMountedDone(onDone);
 
   /** 칸 하나를 고친다 */
   function set<K extends keyof MemoDraft>(key: K, value: MemoDraft[K]) {
