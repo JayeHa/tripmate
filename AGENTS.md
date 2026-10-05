@@ -137,6 +137,29 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - 범위에 없는 API 는 **기능 감지 후 대체 경로**로 쓴다. 모듈 최상위에서 만들지 않는다 — 없는 브라우저에서 그 파일을 쓰는 화면 전체가 깨진다
 - 범위를 바꾸면 `docs/engineering/library-policy.md` 결정 기록에 남긴다
 
+## 기기별 저장값(localStorage)
+
+기기마다 기억하고 **일행과 나누지 않는 값**만 둔다(보기 설정 · 최근 고른 것 · 안내를 봤는지). 일행이 함께 봐야 하는 값은 DB 에 둔다.
+
+- 키는 `tm-` 로 시작한다. 지금 쓰는 키: `tm-recent-emoji` · `tm-pc-day-view` · `tm-pc-day-view-tip`. 새 키를 만들면 여기에 더한다
+- **읽기 · 쓰기를 `try/catch` 로 감싼다.** 사생활 모드 · 막힌 저장소에서는 접근만으로 예외가 난다. 실패하면 기본값으로 그리고, 바꾼 값은 그 화면에서만 기억한다
+- 첫 렌더에서 읽으면 하이드레이션과 어긋난다. 클라이언트에서만 마운트되는 컴포넌트(예: 화면 폭을 안 뒤에 그리는 PC 레이아웃)에서 읽거나 마운트 뒤에 읽는다
+
+## 토스트는 화면에 하나
+
+`Toast` 는 body 의 같은 자리에 그려서, **두 곳에서 그리면 겹친다.** 「새 토스트가 이전 것을 대체한다」 는 한 인스턴스 안에서만 맞다.
+화면(view)이 하나를 그리고 상태를 쥔다. 하위 컴포넌트 · 훅은 `<Toast>` 를 직접 그리지 않고 콜백(`onToast(text)` · `onGuide(text, detail)`)으로 요청한다.
+예: `views/trip-schedule` 의 `useDetailOverlays().showToast`.
+
+## 요청을 prop 으로 내릴 때
+
+「그 날로 스크롤해 줘」 처럼 **한 번 실행할 요청**을 상태로 만들어 prop 으로 내리면, 받는 컴포넌트가 다시 마운트될 때 지난 요청이 다시 실행된다.
+모바일 · PC 레이아웃은 화면 폭에 따라 하나만 마운트하므로(지도가 두 개 생기지 않게) 폭이 1024 를 넘나들 때의 재마운트가 정상 경로다.
+
+- 요청은 매번 새 객체로 만든다(`{ day, at: Date.now() }`) — 같은 값을 다시 요청해도 실행되게
+- 받는 쪽은 **마운트할 때 이미 있던 요청을 처리한 것으로 본다.** 예: `views/trip-schedule/model/use-day-jumps.ts`
+- 받는 훅을 끌 때는 꺼진 동안 온 요청을 버릴지 · 나중에 실행할지 정해서 주석에 적는다
+
 ## 왜 airbnb 규칙을 안 쓰나
 
 `eslint-config-airbnb` 는 ESLint 8 까지만 지원한다(이 레포는 9 · flat config). 커뮤니티 포크가 있지만 규칙 다수가
@@ -153,6 +176,16 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
   그 PR 에서 정리한다. 손대지 않은 파일의 오래된 경고로는 실패하지 않는다
 - **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) ·
   `lint:changed`(PR 만) · `pnpm test` · `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
+
+## 브라우저로 확인할 때
+
+화면 동작은 PR 을 올리기 전에 브라우저에서 확인한다(PC + 모바일 390px). 자동화로 여는 탭은 **백그라운드라 그리기 단계가 돌지 않아** 아래는 확인되지 않는다.
+확인하지 못한 것은 PR 본문에 「직접 확인 필요」 로 적는다. 확인했다고 쓰지 않는다.
+
+- 부드러운 스크롤(`behavior: "smooth"`) · `requestAnimationFrame` · `ResizeObserver` · 닫히는 애니메이션 — 위치만 볼 때는 `scrollTo` 를 `instant` 로 바꿔 확인한다
+- 지도 타일 · 핀, 바깥 누르기 · blur · 끌기
+- **Chrome 은 스크롤 앵커링이 기본이라** 위쪽 내용이 길어져도 보던 자리를 지킨다. Safari 처럼 앵커링이 없는 브라우저의 동작을 재현하려면 스크롤 칸에 `overflow-anchor: none` 을 건다
+- 확인하느라 바꾼 것(DB 의 테스트 데이터 · localStorage 값)은 원래대로 돌려 놓는다
 
 # 의존성
 
@@ -200,6 +233,7 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 테이블마다 누가 읽고 고치는지, 지켜야 하는 규칙과 그것을 지키는 곳, 동작별로 바뀌는 데이터는
 [`docs/policies/data-model.md`](docs/policies/data-model.md) 에 있다. 권한을 다루는 기능을 만들거나 리뷰할 때 먼저 읽는다.
 장소 검색 범위 · 구글 지도 · 장소 API 결정은 [`docs/policies/place-search.md`](docs/policies/place-search.md) 에 쌓는다.
+일정 화면의 동작 규칙(이어서 · 하루씩 보기 · 편집 · 상세 · 시간 입력)은 [`docs/policies/schedule.md`](docs/policies/schedule.md) 에 있다. 일정 화면의 동작을 바꾸면 같은 PR 에서 그 문서도 고친다.
 **마이그레이션(테이블 · 정책 · 함수 · 트리거)을 바꾸면 같은 PR 에서 이 문서도 고친다.** 테이블 · 함수 이름이 빠지면 `migrations.test.ts` 가 막는다.
 
 ## 클라이언트 가드는 가드가 아니다
