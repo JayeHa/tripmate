@@ -103,7 +103,13 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
       )}
       {edit.error && <p className="text-[13px] text-destructive">{edit.error}</p>}
       <div className="flex gap-2">
-        <Button variant="secondary" className="h-11 flex-1" onClick={edit.cancel}>
+        {/* 저장 중에는 창의 ✕ · 바깥 누르기처럼 「취소」 도 막는다 — 닫히면 실패 문구가 함께 사라져 저장된 줄 안다 */}
+        <Button
+          variant="secondary"
+          className="h-11 flex-1"
+          disabled={edit.locked}
+          onClick={edit.cancel}
+        >
           취소
         </Button>
         <Button className="h-11 flex-2" disabled={edit.saving} onClick={edit.save}>
