@@ -97,7 +97,7 @@ function DayMemoBody({
         className={cn(
           "flex h-8 items-center gap-1 self-start rounded-full border px-3 text-[13px] font-bold",
           form.starred
-            ? "border-[#fdd5b4] bg-status-wait-bg text-status-wait"
+            ? "border-important-line bg-status-wait-bg text-status-wait"
             : "border-line bg-white text-ink-500",
         )}
       >
@@ -125,15 +125,17 @@ function DayMemoBody({
       {form.error && <p className="text-[13px] text-destructive">{form.error}</p>}
       <div className="flex gap-2">
         <Button
-          variant="secondary"
-          className="h-11 flex-1"
+          variant="chip"
+          size="form"
+          className="flex-1"
           disabled={form.locked}
           onClick={onClose}
         >
           취소
         </Button>
         <Button
-          className="h-11 flex-2"
+          size="form"
+          className="flex-2"
           disabled={!form.canSave || form.pending}
           onClick={form.save}
         >

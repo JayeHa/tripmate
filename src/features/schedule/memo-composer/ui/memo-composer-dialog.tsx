@@ -96,14 +96,20 @@ function ComposerBody({ tripId, row, when, memo, onClose, onLockChange }: Compos
       <div className="flex shrink-0 items-center gap-2 border-t border-divider px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
         {form.editing && <DeleteMemoButton disabled={form.pending} onConfirm={form.destroy} />}
         <Button
-          variant="secondary"
-          className="ml-auto h-11 w-24"
+          variant="chip"
+          size="form"
+          className="ml-auto w-24"
           onClick={onClose}
           disabled={form.locked}
         >
           취소
         </Button>
-        <Button className="h-11 w-36" disabled={!form.canSave || form.pending} onClick={form.save}>
+        <Button
+          size="form"
+          className="w-36"
+          disabled={!form.canSave || form.pending}
+          onClick={form.save}
+        >
           저장
         </Button>
       </div>
@@ -126,7 +132,7 @@ function MemoFields({ form }: MemoFieldsProps) {
           className={cn(
             "flex h-8 items-center gap-1 rounded-full border px-3 text-[13px] font-bold",
             draft.starred
-              ? "border-[#fdd5b4] bg-status-wait-bg text-status-wait"
+              ? "border-important-line bg-status-wait-bg text-status-wait"
               : "border-line bg-white text-ink-500",
           )}
         >

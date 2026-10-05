@@ -65,14 +65,20 @@ function NoteBody({ tripId, item, onClose, onLockChange }: NoteBodyProps) {
       <div className="flex items-center gap-2">
         <DeleteMemoButton disabled={form.pending} onConfirm={form.destroy} />
         <Button
-          variant="secondary"
-          className="ml-auto h-11 w-24"
+          variant="chip"
+          size="form"
+          className="ml-auto w-24"
           disabled={form.locked}
           onClick={onClose}
         >
           취소
         </Button>
-        <Button className="h-11 w-36" disabled={!form.canSave || form.pending} onClick={form.save}>
+        <Button
+          size="form"
+          className="w-36"
+          disabled={!form.canSave || form.pending}
+          onClick={form.save}
+        >
           저장
         </Button>
       </div>
