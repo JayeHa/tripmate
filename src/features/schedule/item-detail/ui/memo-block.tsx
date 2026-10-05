@@ -1,6 +1,12 @@
 "use client";
 
-import { type Memo, MemoCard, type ScheduleItem, useMemos } from "@/entities/schedule-item";
+import {
+  byCreatedAt,
+  type Memo,
+  MemoCard,
+  type ScheduleItem,
+  useMemos,
+} from "@/entities/schedule-item";
 import { useMemberLookup } from "@/entities/trip-member";
 
 type MemoBlockProps = {
@@ -19,9 +25,7 @@ type MemoBlockProps = {
 export function MemoBlock({ tripId, item, onAdd, onEdit }: MemoBlockProps) {
   const { data: all = [] } = useMemos(tripId);
   const authorOf = useMemberLookup(tripId);
-  const memos = all
-    .filter((m) => m.schedule_item_id === item.id)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const memos = all.filter((m) => m.schedule_item_id === item.id).sort(byCreatedAt);
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
