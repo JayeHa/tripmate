@@ -1,6 +1,7 @@
 import { Info, MapPin } from "lucide-react";
 
 import { CATEGORY_LABEL, PLACE_CATEGORIES } from "@/entities/schedule-item";
+import { EmojiField } from "@/shared/ui/emoji-field";
 import { FilterChip } from "@/shared/ui/filter-chip";
 
 import type { PlaceFormState } from "../model/use-place-fields";
@@ -59,17 +60,8 @@ export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
         />
       </Field>
       <Field label="장소 이름">
-        <div className={editing ? "grid" : "grid grid-cols-[52px_minmax(0,1fr)] gap-2"}>
-          {!editing && (
-            <input
-              value={v.emoji}
-              onChange={(e) => set("emoji", e.target.value.trim())}
-              maxLength={8}
-              placeholder="🙂"
-              aria-label="아이콘"
-              className={`${inputClass} px-0 text-center text-[22px]`}
-            />
-          )}
+        <div className={editing ? "grid" : "grid grid-cols-[56px_minmax(0,1fr)] gap-2"}>
+          {!editing && <EmojiField value={v.emoji} onChange={(emoji) => set("emoji", emoji)} />}
           <input
             value={v.name}
             onChange={(e) => set("name", e.target.value)}
