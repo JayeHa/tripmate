@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { ScheduleMap } from "@/entities/schedule-item";
 import { DayChips } from "@/features/schedule/day-selector";
+import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
 
@@ -27,6 +28,7 @@ export function MobileSchedule({
   totalDays,
   day,
   onDayChange,
+  edit,
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
@@ -83,6 +85,15 @@ export function MobileSchedule({
           }}
         />
       </main>
+      {/* 편집은 화면 전체를 덮는다. 아래 일정 화면은 그대로 두어 닫으면 보던 자리로 돌아온다 */}
+      {trip && edit.editing && (
+        <MobileScheduleEditor
+          edit={edit}
+          startDate={trip.start_date}
+          totalDays={totalDays}
+          map={<ScheduleMap rows={edit.rows} />}
+        />
+      )}
     </>
   );
 }

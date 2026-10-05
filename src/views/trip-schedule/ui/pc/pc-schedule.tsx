@@ -3,7 +3,9 @@
 import { useRef } from "react";
 
 import { ScheduleMap } from "@/entities/schedule-item";
+import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
+import { cn } from "@/shared/lib/utils";
 
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useSplitWidth } from "../../model/use-split-width";
@@ -27,7 +29,14 @@ const FOCUS_LINE_TOP = 120;
  * PC 헤더 아래 화면 높이를 채우고 칸마다 따로 스크롤한다. 모바일 상단바는 그리지 않는다.
  * 목록을 스크롤하면 기준선을 지난 장소가 지도에 강조된다.
  */
-export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutProps) {
+export function PcSchedule({
+  trip,
+  totalDays,
+  day,
+  onDayChange,
+  edit,
+  ...body
+}: ScheduleLayoutProps) {
   const split = useSplitWidth();
   // 지도 폭이 200ms 동안 그대로일 때만 핀을 다시 맞춘다. 키보드 연타 · 창 크기 조절마다 맞추면 지도가 흔들린다
   const fitKey = useDebouncedValue(split.settledWidth, 200);
@@ -41,7 +50,7 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
       if (!rect) return 0;
       return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
     },
-    enabled: true,
+    enabled: !edit.editing,
     resetKey: day,
   });
 
@@ -52,11 +61,22 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
           title={trip.title}
           startDate={trip.start_date}
           endDate={trip.end_date}
-          day={day}
-          onChange={onDayChange}
+          // 편집 중에는 레일도 편집할 날을 고른다
+          day={edit.editing ? edit.day : day}
+          onChange={edit.editing ? edit.setDay : onDayChange}
         />
       )}
-      <div ref={listRef} className="shrink-0 overflow-y-auto" style={{ width: split.width }}>
+      {trip && edit.editing && (
+        <div className="shrink-0 overflow-y-auto" style={{ width: split.width }}>
+          <PcScheduleEditor edit={edit} startDate={trip.start_date} totalDays={totalDays} />
+        </div>
+      )}
+      {/* 편집하는 동안은 숨기기만 한다 — 스크롤 강조가 잡은 목록 칸을 그대로 두려고 */}
+      <div
+        ref={listRef}
+        className={cn("shrink-0 overflow-y-auto", edit.editing && "hidden")}
+        style={{ width: split.width }}
+      >
         {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
         <div ref={contentRef}>
           <DayBody
@@ -81,9 +101,9 @@ export function PcSchedule({ trip, day, onDayChange, ...body }: ScheduleLayoutPr
       />
       <div className="relative min-w-80 flex-1">
         <ScheduleMap
-          rows={body.rows}
-          focusId={focus.focusId}
-          onSelect={(row) => focus.focusOn(row.item.id)}
+          rows={edit.editing ? edit.rows : body.rows}
+          focusId={edit.editing ? null : focus.focusId}
+          onSelect={edit.editing ? undefined : (row) => focus.focusOn(row.item.id)}
           pinSize="lg"
           fitKey={fitKey}
         />

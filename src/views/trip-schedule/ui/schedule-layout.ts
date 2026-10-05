@@ -1,5 +1,6 @@
 import type { MemoAuthor, TimelineRow, useOpenMemos } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
+import type { ScheduleEditState } from "@/features/schedule/edit-mode";
 
 /** 모바일 · PC 일정 레이아웃이 받는 값. 상태와 동작은 화면(TripScheduleView)이 쥐고 레이아웃은 그린다 */
 export type ScheduleLayoutProps = {
@@ -17,4 +18,8 @@ export type ScheduleLayoutProps = {
   onAddDayMemo: () => void;
   /** 메모 작성자 표시 */
   authorOf: (authorId: string | null) => MemoAuthor | null;
+  /** 일정 편집. 열려 있으면 모바일은 화면 전체를, PC 는 목록 칸을 편집 화면으로 바꾼다 */
+  edit: ScheduleEditState;
+  /** day 헤더 「편집」 — 보고 있던 날로 편집을 연다 */
+  onStartEdit: () => void;
 };

@@ -11,10 +11,12 @@ type DayHeaderProps = {
   onToggleAll: () => void;
   /** 있으면(PC) 버튼 줄 왼쪽에 「메모 N개 · 장소 N곳」 */
   counts?: { memos: number; places: number };
+  /** 제목 오른쪽 「편집」. 일정을 다 읽기 전에는 없다 */
+  onEdit?: () => void;
 };
 
 /**
- * 「day 1  10.31/토」. 하루 요약과 「편집」은 편집 모드에서 붙인다.
+ * 「day 1  10.31/토」 · 오른쪽 「편집」(일정 편집을 연다). 하루 요약은 아직 없다.
  * 아래 줄에 메모를 한꺼번에 펼치고 접는 버튼(PC 는 왼쪽에 메모 · 장소 개수).
  */
 export function DayHeader({
@@ -24,16 +26,24 @@ export function DayHeader({
   allOpen,
   onToggleAll,
   counts,
+  onEdit,
 }: DayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
   const Icon = allOpen ? ChevronsDownUp : ChevronsUpDown;
   return (
     <>
-      <div className="flex items-baseline gap-1.5 px-5 pt-4.5 pb-1.5">
-        <h2 className="text-[17px] font-extrabold text-ink-900">day {day + 1}</h2>
-        <span className="text-base text-ink-400">
-          {date}/{dow}
-        </span>
+      <div className="flex items-center justify-between px-5 pt-4.5 pb-1.5">
+        <div className="flex items-baseline gap-1.5">
+          <h2 className="text-[17px] font-extrabold text-ink-900">day {day + 1}</h2>
+          <span className="text-base text-ink-400">
+            {date}/{dow}
+          </span>
+        </div>
+        {onEdit && (
+          <button type="button" onClick={onEdit} className="text-[15px] text-ink-500">
+            편집
+          </button>
+        )}
       </div>
       {(hasMemos || counts) && (
         <div className="flex items-center justify-end gap-3 px-5 pb-1.5">

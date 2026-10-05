@@ -1,0 +1,59 @@
+import type { ScheduleItem } from "@/entities/schedule-item";
+
+/** 편집 중인 여행 일정 — 날마다 일정 id 순서. 「완료」 전까지 여기만 바뀐다 */
+export type EditDraft = string[][];
+
+/** 일정 목록(position 순)을 날마다 id 순서로 */
+export function draftOf(items: ScheduleItem[], totalDays: number): EditDraft {
+  const days: EditDraft = Array.from({ length: totalDays }, () => []);
+  for (const item of [...items].sort((a, b) => a.position - b.position)) {
+    days[item.day_index]?.push(item.id);
+  }
+  return days;
+}
+
+/** 고를 수 있는 일정인지 — 항공편은 항공편 화면에서만 고치고 지운다(순서 끌기는 된다) */
+export function isSelectable(item: Pick<ScheduleItem, "kind">): boolean {
+  return item.kind !== "flight";
+}
+
+/** 그날 안에서 from 번째를 to 번째로 옮긴다 */
+export function reorder(draft: EditDraft, day: number, from: number, to: number): EditDraft {
+  if (from === to) return draft;
+  const list = [...draft[day]];
+  const [moved] = list.splice(from, 1);
+  list.splice(to, 0, moved);
+  return draft.map((d, i) => (i === day ? list : d));
+}
+
+/** 고른 일정을 지운다 */
+export function removeSelected(draft: EditDraft, selected: ReadonlySet<string>): EditDraft {
+  return draft.map((d) => d.filter((id) => !selected.has(id)));
+}
+
+/** 고른 일정을 그날 맨 끝으로 옮긴다(지금 순서대로) */
+export function moveSelected(
+  draft: EditDraft,
+  selected: ReadonlySet<string>,
+  day: number,
+): EditDraft {
+  const picked = draft.flat().filter((id) => selected.has(id));
+  const rest = removeSelected(draft, selected);
+  return rest.map((d, i) => (i === day ? [...d, ...picked] : d));
+}
+
+/**
+ * 저장할 것 — 처음과 순서가 달라진 날의 새 순서, 처음에 있었는데 사라진(지운) 일정.
+ * 바뀐 게 없으면 둘 다 비어 있다
+ */
+export function editChanges(
+  initial: EditDraft,
+  draft: EditDraft,
+): { days: Record<number, string[]>; deletes: string[] } {
+  const days: Record<number, string[]> = {};
+  draft.forEach((ids, day) => {
+    if (ids.join() !== (initial[day] ?? []).join()) days[day] = ids;
+  });
+  const kept = new Set(draft.flat());
+  return { days, deletes: initial.flat().filter((id) => !kept.has(id)) };
+}
