@@ -1032,6 +1032,26 @@ describe("메모 목록 (0027)", () => {
     expect(left.rows).toEqual([]);
   });
 
+  it("작성자 계정을 지우면 작성자만 비고 메모는 남는다 (0028)", async () => {
+    const C = "33333333-3333-3333-3333-333333333333";
+    await db.exec(`reset role; insert into auth.users (id, email) values ('${C}', 'c@x');`);
+    await as(A);
+    const trip = await newTrip("2027-10-05", "2027-10-05");
+    const item = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${C}', 'member');`,
+    );
+    await as(C);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${item}', '메모') returning id`,
+    );
+    await db.exec(`reset role; delete from public.profiles where id = '${C}';`);
+    const left = await db.query<{ author_id: string | null }>(
+      `select author_id from public.memos where id = '${rows[0].id}'`,
+    );
+    expect(left.rows).toEqual([{ author_id: null }]);
+  });
+
   it("멤버가 아니면 읽지도 쓰지도 못한다", async () => {
     await as(A);
     const trip = await newTrip("2027-10-03", "2027-10-03");
