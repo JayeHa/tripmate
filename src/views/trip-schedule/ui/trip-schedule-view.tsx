@@ -59,7 +59,13 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const overlays = useDetailOverlays();
   const authorOf = useMemberLookup(tripId);
   // 일정 편집. 마치면 마지막으로 편집하던 날을 보인다
-  const edit = useScheduleEdit({ tripId, items, totalDays, onExit: setDay });
+  const edit = useScheduleEdit({
+    tripId,
+    items,
+    trip,
+    totalDays,
+    onExit: setDay,
+  });
 
   const dayItems = useMemo(() => items.filter((it) => it.day_index === day), [items, day]);
 
@@ -169,7 +175,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           startDate={trip.start_date}
           totalDays={totalDays}
           row={openRow}
-          dayItems={dayItems}
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
           onEditPlace={overlays.openPlaceEdit}

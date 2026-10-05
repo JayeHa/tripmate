@@ -9,6 +9,8 @@ import {
   moveSelected,
   removeSelected,
   reorder,
+  summariesOf,
+  summaryChanges,
 } from "./edit-draft";
 
 /** 날 · 순서만 있는 일정 */
@@ -45,5 +47,17 @@ describe("편집 초안", () => {
       days: { 0: ["c", "a"] },
       deletes: [],
     });
+  });
+});
+
+describe("하루 요약", () => {
+  it("저장된 배열을 날 수만큼 글로 — 없는 날 · null 은 빈 글", () => {
+    expect(summariesOf([null, "라멘"], 3)).toEqual(["", "라멘", ""]);
+  });
+
+  it("공백만 다르면 그대로, 달라진 날만 다듬어서", () => {
+    const initial = ["도착", "", "라멘"];
+    expect(summaryChanges(initial, ["도착 ", "", "라멘"])).toEqual({});
+    expect(summaryChanges(initial, ["", " 파크 ", "라멘"])).toEqual({ 0: "", 1: "파크" });
   });
 });

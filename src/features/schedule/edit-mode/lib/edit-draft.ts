@@ -65,3 +65,20 @@ export function editChanges(
   const kept = new Set(draft.flat());
   return { days, deletes: initial.flat().filter((id) => !kept.has(id)) };
 }
+
+/** 하루 요약 100자 */
+export const SUMMARY_MAX = 100;
+
+/** 저장된 하루 요약(빈 날은 null, 기간보다 짧을 수 있다)을 날마다 글로 — 없는 날은 빈 글 */
+export function summariesOf(saved: readonly (string | null)[], totalDays: number): string[] {
+  return Array.from({ length: totalDays }, (_, day) => saved[day] ?? "");
+}
+
+/** 저장할 하루 요약 — 앞뒤 공백을 뺀 글이 처음과 달라진 날만(빈 글이면 그날 요약을 지운다) */
+export function summaryChanges(initial: string[], draft: string[]): Record<number, string> {
+  const changed: Record<number, string> = {};
+  draft.forEach((text, day) => {
+    if (text.trim() !== (initial[day] ?? "").trim()) changed[day] = text.trim();
+  });
+  return changed;
+}

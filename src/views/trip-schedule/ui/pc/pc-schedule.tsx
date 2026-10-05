@@ -64,6 +64,7 @@ export function PcSchedule({
           // 편집 중에는 레일도 편집할 날을 고른다
           day={edit.editing ? edit.day : day}
           onChange={edit.editing ? edit.setDay : onDayChange}
+          summaries={trip.day_summaries}
         />
       )}
       {trip && edit.editing && (
@@ -82,6 +83,7 @@ export function PcSchedule({
           <DayBody
             startDate={trip?.start_date ?? null}
             day={day}
+            summary={trip?.day_summaries[day]}
             showCounts
             focusId={focus.focusId}
             {...body}

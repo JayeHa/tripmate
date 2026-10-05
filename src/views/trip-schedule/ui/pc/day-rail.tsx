@@ -7,13 +7,15 @@ type DayRailProps = {
   endDate: string;
   day: number;
   onChange: (day: number) => void;
+  /** 날마다 하루 요약(빈 날은 null) */
+  summaries: readonly (string | null)[];
 };
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
- * 하루 요약(2줄)은 편집 모드에서, 아래 도구(항공편 · 숙소)는 그 단계에서 붙인다.
+ * 날마다 「day 2 11.1/일」 아래 하루 요약 2줄. 아래 도구(항공편 · 숙소)는 그 단계에서 붙인다.
  */
-export function DayRail({ title, startDate, endDate, day, onChange }: DayRailProps) {
+export function DayRail({ title, startDate, endDate, day, onChange, summaries }: DayRailProps) {
   const total = dayCount(startDate, endDate);
   return (
     <aside className="flex w-58 shrink-0 flex-col border-r border-divider">
@@ -31,6 +33,7 @@ export function DayRail({ title, startDate, endDate, day, onChange }: DayRailPro
       >
         {Array.from({ length: total }, (_, i) => {
           const { date, dow } = dayParts(startDate, i);
+          const summary = summaries[i];
           return (
             <button
               key={date}
@@ -38,21 +41,26 @@ export function DayRail({ title, startDate, endDate, day, onChange }: DayRailPro
               aria-current={i === day ? "date" : undefined}
               onClick={() => onChange(i)}
               className={cn(
-                "flex items-baseline gap-1.5 rounded-card px-3 py-2.5 text-left whitespace-nowrap",
+                "flex flex-col gap-0.5 rounded-card px-3 py-2.5 text-left",
                 i === day ? "bg-surface-muted" : "hover:bg-surface-sunken",
               )}
             >
-              <span
-                className={cn(
-                  "text-[15px] font-extrabold",
-                  i === day ? "text-ink-900" : "text-ink-600",
-                )}
-              >
-                day {i + 1}
+              <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span
+                  className={cn(
+                    "text-[15px] font-extrabold",
+                    i === day ? "text-ink-900" : "text-ink-600",
+                  )}
+                >
+                  day {i + 1}
+                </span>
+                <span className="text-[13px] text-ink-400">
+                  {date}/{dow}
+                </span>
               </span>
-              <span className="text-[13px] text-ink-400">
-                {date}/{dow}
-              </span>
+              {summary && (
+                <span className="line-clamp-2 text-[13px]/[1.45] text-ink-500">{summary}</span>
+              )}
             </button>
           );
         })}

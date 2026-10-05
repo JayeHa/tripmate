@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { ScheduleEditState } from "../../model/use-schedule-edit";
 import { DiscardConfirm } from "../discard-confirm";
 import { EditList } from "../edit-list";
+import { SummaryField } from "../summary-field";
 import { EditActionsBar } from "./edit-actions-bar";
 import { EditDayHeader } from "./edit-day-header";
 
@@ -58,6 +59,7 @@ export function MobileScheduleEditor({
           day={edit.day}
           onDayChange={edit.setDay}
         />
+        <SummaryField value={edit.summary} onChange={edit.setSummary} layout="mobile" />
         {edit.rows.length === 0 && (
           <p className="py-10 text-center text-sm text-ink-400">이 날은 일정이 비어 있어요</p>
         )}
