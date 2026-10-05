@@ -28,7 +28,7 @@ export function LinkRows({ label, titlePlaceholder, links, onChange }: LinkRowsP
               onChange={(e) => update(i, { title: e.target.value })}
               placeholder={titlePlaceholder}
               aria-label={`${label} 제목`}
-              className="h-11 border-b border-divider px-3.5 text-[15px] font-bold text-ink-900 outline-none"
+              className="h-11 border-b border-line-card px-3.5 text-[15px] font-bold text-ink-900 outline-none"
             />
             <input
               value={link.url}
@@ -36,14 +36,14 @@ export function LinkRows({ label, titlePlaceholder, links, onChange }: LinkRowsP
               placeholder="https://"
               inputMode="url"
               aria-label={`${label} 주소`}
-              className="h-11 px-3.5 text-sm text-ink-700 outline-none"
+              className="h-11 px-3.5 text-sm text-primary outline-none placeholder:text-ink-350"
             />
           </div>
           <button
             type="button"
             aria-label={`${label} 지우기`}
             onClick={() => onChange(links.filter((_, j) => j !== i))}
-            className="flex w-11 items-center justify-center border-l border-divider text-ink-400"
+            className="flex w-11 items-center justify-center border-l border-line-card text-ink-400"
           >
             <Trash2 className="size-4.5" />
           </button>
@@ -52,9 +52,9 @@ export function LinkRows({ label, titlePlaceholder, links, onChange }: LinkRowsP
       <button
         type="button"
         onClick={() => onChange([...links, { title: "", url: "" }])}
-        className="flex h-10 items-center justify-center gap-1 rounded-card border border-dashed border-line-strong text-sm font-bold text-ink-600"
+        className="flex h-10 items-center justify-center gap-1 rounded-memo border-[1.5px] border-dashed border-line-dashed text-[13px] font-bold text-primary"
       >
-        <Plus className="size-4" /> 링크 추가
+        <Plus className="size-3.75" /> 링크 추가
       </button>
     </>
   );

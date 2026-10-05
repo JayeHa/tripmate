@@ -16,7 +16,8 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+        // 테두리 없는 원. 크기는 쓰는 곳에서 정하고, 이니셜 글자는 그 크기의 0.35 배(@container + cqw)
+        "group/avatar @container relative flex size-8 shrink-0 rounded-full select-none data-[size=lg]:size-10 data-[size=sm]:size-6",
         className,
       )}
       {...props}
@@ -39,7 +40,7 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props)
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-avatar-bg text-[11px] font-bold text-avatar group-data-[size=lg]/avatar:text-sm group-data-[size=sm]/avatar:text-[8px]",
+        "flex size-full items-center justify-center rounded-full bg-avatar-bg text-[35cqw] font-bold text-avatar",
         className,
       )}
       {...props}
@@ -68,7 +69,8 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="avatar-group"
       className={cn(
-        "group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background",
+        // 겹침 −6 · 흰 링 2
+        "group/avatar-group flex -space-x-1.5 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-white",
         className,
       )}
       {...props}
