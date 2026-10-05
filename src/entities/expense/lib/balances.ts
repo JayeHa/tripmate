@@ -1,6 +1,7 @@
-import { decimalsOf, type ExchangeRates, roundTo, toHome } from "@/shared/lib/money";
+import { decimalsOf, type ExchangeRates, roundTo } from "@/shared/lib/money";
 
 import type { ExpenseWithSplits } from "../model/types";
+import { expenseRate } from "./amounts";
 
 export type Balances = {
   /** 홈 화폐 기준 낸 금액 */
@@ -17,6 +18,10 @@ export type Balances = {
   totalHome: number;
 };
 
+/**
+ * 멤버별 낸 돈 · 내 몫 · 차액. 합계에서 뺀 지출(counted = false)은 쓰지 않은 돈이라 정산에도 넣지 않는다.
+ * 환율은 지출에 적은 것이 먼저고, 없으면 여행 기본 환율이다. 그것도 없으면 MissingRateError
+ */
 export function computeNetBalances(
   expenses: ExpenseWithSplits[],
   memberIds: string[],
@@ -39,9 +44,11 @@ export function computeNetBalances(
   memberIds.forEach(ensure);
 
   for (const e of expenses) {
+    if (!e.counted) continue;
     const amount = Number(e.amount);
     ensure(e.payer_id);
-    const homeAmount = toHome(amount, e.currency, home, rates);
+    const rate = expenseRate(e, home, rates);
+    const homeAmount = amount * rate;
     paid[e.payer_id] += homeAmount;
     paidByCurrency[e.payer_id][e.currency] = (paidByCurrency[e.payer_id][e.currency] ?? 0) + amount;
     totalByCurrency[e.currency] = (totalByCurrency[e.currency] ?? 0) + amount;
@@ -49,7 +56,7 @@ export function computeNetBalances(
 
     for (const s of e.splits) {
       ensure(s.user_id);
-      owed[s.user_id] += toHome(Number(s.share), e.currency, home, rates);
+      owed[s.user_id] += Number(s.share) * rate;
     }
   }
 
