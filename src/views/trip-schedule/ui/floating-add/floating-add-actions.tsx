@@ -10,19 +10,16 @@ export type FloatingAddProps = {
   onAddDayMemo: () => void;
 };
 
-/**
- * 펼친 세 갈래 — 일정 추가(파랑 핀) · 일정 편집 · 메모 추가.
- * 아이콘 색은 important — 공용 메뉴 항목이 포커스(열면 첫 항목)일 때 자식 글자색을 모두 덮는다
- */
+/** 펼친 세 갈래 — 일정 추가(파랑 핀) · 일정 편집 · 메모 추가 */
 export function floatingActions({ onAddPlace, onStartEdit, onAddDayMemo }: FloatingAddProps) {
   return [
-    { key: "place", label: "일정 추가", Icon: MapPin, tone: "text-primary!", run: onAddPlace },
-    { key: "edit", label: "일정 편집", Icon: ListOrdered, tone: "text-ink-700!", run: onStartEdit },
+    { key: "place", label: "일정 추가", Icon: MapPin, tone: "text-primary", run: onAddPlace },
+    { key: "edit", label: "일정 편집", Icon: ListOrdered, tone: "text-ink-700", run: onStartEdit },
     {
       key: "memo",
       label: "메모 추가",
       Icon: NotebookPen,
-      tone: "text-ink-700!",
+      tone: "text-ink-700",
       run: onAddDayMemo,
     },
   ];

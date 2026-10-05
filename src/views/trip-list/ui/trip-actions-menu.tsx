@@ -33,23 +33,13 @@ export function TripActionsMenu({ trip, canDelete, onEdit, onDelete }: Props) {
       >
         <Ellipsis className="size-5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-42 rounded-card border border-line-card bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0"
-      >
-        <DropdownMenuItem
-          onClick={() => onEdit(trip)}
-          className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted"
-        >
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEdit(trip)}>
           <CalendarDays className="size-4.5 text-ink-700" />
           여행일정 수정
         </DropdownMenuItem>
         {canDelete && (
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => onDelete(trip)}
-            className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-destructive-soft"
-          >
+          <DropdownMenuItem variant="destructive" onClick={() => onDelete(trip)}>
             <Trash2 className="size-4.5" />
             여행 삭제
           </DropdownMenuItem>
