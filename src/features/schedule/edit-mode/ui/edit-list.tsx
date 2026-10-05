@@ -6,6 +6,7 @@ import { isSortable } from "@dnd-kit/react/sortable";
 import { isSelectable } from "../lib/edit-draft";
 import type { ScheduleEditState } from "../model/use-schedule-edit";
 import { EditRow } from "./edit-row";
+import { koreanPlugins } from "./korean-accessibility";
 
 type EditListProps = { edit: ScheduleEditState; layout: "mobile" | "pc" };
 
@@ -16,6 +17,7 @@ type EditListProps = { edit: ScheduleEditState; layout: "mobile" | "pc" };
 export function EditList({ edit, layout }: EditListProps) {
   return (
     <DragDropProvider
+      plugins={koreanPlugins}
       onDragEnd={(event) => {
         const { source } = event.operation;
         if (event.canceled || !isSortable(source)) return;

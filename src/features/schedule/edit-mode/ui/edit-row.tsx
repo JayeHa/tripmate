@@ -6,6 +6,8 @@ import { Check, Equal, GripVertical, Lock } from "lucide-react";
 import { itemName, ReservationBadge, type TimelineRow } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
+import { DRAG_ROLE } from "../lib/drag-announcements";
+
 type EditRowProps = {
   row: TimelineRow;
   index: number;
@@ -41,7 +43,11 @@ const LAYOUT = {
  */
 export function EditRow({ row, index, selected, selectable, onToggle, layout }: EditRowProps) {
   const look = LAYOUT[layout];
-  const { ref, handleRef, isDragging } = useSortable({ id: row.item.id, index });
+  const { ref, handleRef, isDragging } = useSortable({
+    id: row.item.id,
+    index,
+    data: { name: itemName(row.item) },
+  });
   const name = itemName(row.item);
   return (
     <div
@@ -88,6 +94,7 @@ export function EditRow({ row, index, selected, selectable, onToggle, layout }: 
         ref={handleRef}
         type="button"
         aria-label={`${name} 순서 옮기기`}
+        aria-roledescription={DRAG_ROLE}
         className={cn(
           "flex shrink-0 cursor-grab touch-none items-center justify-center text-ink-350",
           look.grip,
