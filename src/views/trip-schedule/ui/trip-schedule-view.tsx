@@ -110,7 +110,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             setAddNotice(null);
             setAddOpen(true);
           }}
-          onAddMemo={(row) => overlays.openMemo(row, null)}
           authorOf={authorOf}
         />
       )}

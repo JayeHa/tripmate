@@ -13,8 +13,6 @@ export type ScheduleLayoutProps = {
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: () => void;
-  /** 카드의 「+ 메모」 */
-  onAddMemo: (row: TimelineRow) => void;
   /** 메모 작성자 표시 */
   authorOf: (authorId: string | null) => MemoAuthor | null;
 };

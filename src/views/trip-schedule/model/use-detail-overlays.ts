@@ -15,7 +15,7 @@ export function useDetailOverlays() {
   const [placeEdit, setPlaceEdit] = useState<{ place: Place; city: City | null } | null>(null);
   // 대체 장소 「+ 직접 추가」 로 연 장소 입력 폼(대체 장소 모드)
   const [altAdd, setAltAdd] = useState<{ main: ScheduleItem; city: City | null } | null>(null);
-  // 메모 작성 · 수정 창. 카드의 「+ 메모」 · 상세의 「+ 메모」 · 메모 누르기
+  // 메모 작성 · 수정 창. 상세의 「+ 메모」 · 메모 누르기
   const [memo, setMemo] = useState<{ row: TimelineRow; memo: Memo | null } | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   return {

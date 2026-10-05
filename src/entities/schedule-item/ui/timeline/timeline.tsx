@@ -21,8 +21,6 @@ type TimelineProps = {
   focusId?: string | null;
   /** 메모 작성자 표시(여행 멤버에서 찾는다). 모르면 null */
   authorOf: (authorId: string | null) => MemoAuthor | null;
-  /** 카드의 「+ 메모」 — 그 일정에 메모를 쓴다 */
-  onAddMemo?: (row: TimelineRow) => void;
 };
 
 /**
@@ -37,7 +35,6 @@ export function Timeline({
   onEditMove,
   focusId,
   authorOf,
-  onAddMemo,
 }: TimelineProps) {
   return (
     // isolate: 강조 배경(-z-10)을 이 목록 안에 가둬 세로선 아래 · 페이지 배경 위에 깐다
@@ -83,7 +80,6 @@ export function Timeline({
                 onToggle={() => onToggleMemo(row.item.id)}
                 onOpen={() => onOpen(row)}
                 authorOf={authorOf}
-                onAddMemo={onAddMemo && (() => onAddMemo(row))}
               />
             </div>
           </li>

@@ -22,8 +22,6 @@ type ItemCardProps = {
   onToggle: () => void;
   onOpen: () => void;
   authorOf: (authorId: string | null) => MemoAuthor | null;
-  /** 카드의 「+ 메모」. 없으면 버튼을 그리지 않는다 */
-  onAddMemo?: () => void;
 };
 
 /**
@@ -32,7 +30,7 @@ type ItemCardProps = {
  * 따로 동작하는 것과 펼친 메모 본문(무반응)은 relative 로 그 위에 올린다.
  * 식사(food)는 배경 대신 오른쪽 위 64px 사진 칸(지금은 🍽️ 자리표시)을 두고 제목 · 설명이 그 자리를 비운다.
  */
-export function ItemCard({ row, open, onToggle, onOpen, authorOf, onAddMemo }: ItemCardProps) {
+export function ItemCard({ row, open, onToggle, onOpen, authorOf }: ItemCardProps) {
   return (
     <div
       className={cn(
@@ -78,7 +76,6 @@ export function ItemCard({ row, open, onToggle, onOpen, authorOf, onAddMemo }: I
         open={open}
         onToggle={onToggle}
         authorOf={authorOf}
-        onAddMemo={onAddMemo}
       />
     </div>
   );
