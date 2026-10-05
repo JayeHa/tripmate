@@ -98,3 +98,17 @@ export function exceedsTripDays(
 ): boolean {
   return Math.max(draft.length, summaries.length) > totalDays;
 }
+
+/**
+ * 편집 중 여행 기간이 바뀌었을 때 할 일 — 초안 · 하루 요약에 사라진 날이 남으면 "close"(닫고 알린다),
+ * 초안은 맞는데 보고 있던 날만 사라졌으면 "lastDay"(마지막 날로 옮긴다, 다른 날의 편집은 지킨다), 아니면 null
+ */
+export function tripDaysChange(
+  draft: EditDraft,
+  summaries: readonly string[],
+  totalDays: number,
+  day: number,
+): "close" | "lastDay" | null {
+  if (exceedsTripDays(draft, summaries, totalDays)) return "close";
+  return day >= totalDays ? "lastDay" : null;
+}

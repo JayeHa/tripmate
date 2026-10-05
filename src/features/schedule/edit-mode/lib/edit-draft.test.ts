@@ -12,6 +12,7 @@ import {
   reorder,
   summariesOf,
   summaryChanges,
+  tripDaysChange,
 } from "./edit-draft";
 
 /** 날 · 순서만 있는 일정 */
@@ -77,5 +78,14 @@ describe("편집 중 여행 기간이 바뀜", () => {
     expect(exceedsTripDays(draft, ["", "", "", ""], 5)).toBe(false);
     // 늘어난 날로 옮겨 초안이 길어진 뒤 다시 줄면
     expect(exceedsTripDays([...draft, ["c"]], ["", "", "", ""], 4)).toBe(true);
+  });
+
+  it("초안은 맞는데 보고 있던 날만 사라졌으면 마지막 날로, 둘 다 괜찮으면 null", () => {
+    const draft = [["a"], [], [], []];
+    const sums = ["", "", "", ""];
+    expect(tripDaysChange(draft, sums, 3, 1)).toBe("close");
+    // 6일로 늘었을 때 day 6(5) 을 보다가 다시 4일로 — 초안은 4일 그대로
+    expect(tripDaysChange(draft, sums, 4, 5)).toBe("lastDay");
+    expect(tripDaysChange(draft, sums, 4, 2)).toBeNull();
   });
 });
