@@ -55,9 +55,17 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
   const changes = draft && initial ? editChanges(initial, draft) : null;
   const dirty = !!changes && (Object.keys(changes.days).length > 0 || changes.deletes.length > 0);
 
-  /** 초안을 바꾼다. 고른 것은 비운다 */
+  /**
+   * 초안을 바꾼다. 사라진 일정을 먼저 빼고 바꾼다 — 끌기 인덱스는 화면(rows) 기준이라
+   * 사라진 id 가 남은 초안에 그대로 쓰면 엉뚱한 일정이 옮겨진다
+   */
+  function change(fn: (draft: EditDraft) => EditDraft) {
+    setSession((s) => s && { ...s, draft: fn(keepLive(s.draft, live)) });
+  }
+
+  /** 초안을 바꾸고 고른 것은 비운다 */
   function edit(fn: (draft: EditDraft) => EditDraft) {
-    setSession((s) => s && { ...s, draft: fn(s.draft) });
+    change(fn);
     setSelected(NONE);
   }
 
@@ -87,8 +95,7 @@ export function useScheduleEdit({ tripId, items, totalDays, onExit }: ScheduleEd
     dayItems,
     /** 편집 목록 · 지도가 그릴 줄(번호 · 설명) */
     rows,
-    reorder: (from: number, to: number) =>
-      setSession((s) => s && { ...s, draft: reorder(s.draft, day, from, to) }),
+    reorder: (from: number, to: number) => change((d) => reorder(d, day, from, to)),
     selected,
     toggle: (item: ScheduleItem) => {
       if (!isSelectable(item)) return;
