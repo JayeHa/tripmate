@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 
 import type { City } from "@/entities/city";
-import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
-import { useMemoEdit } from "../model/use-memo-edit";
 import { usePlanEdit } from "../model/use-plan-edit";
 import { AlternativeDetail } from "./alternative-detail";
 import { DetailContent } from "./detail-content";
@@ -38,6 +37,8 @@ type ItemDetailDialogProps = {
   onAddAlternative: (main: ScheduleItem, city: City | null) => void;
   /** 「바꾸기」 가 끝났다 — 새로 그 자리에 들어온 일정(altId)으로 상세를 옮긴다 */
   onSwapped: (altId: string) => void;
+  /** 메모 쓰기 · 고치기 — 부른 쪽이 그 일정(줄)의 메모 작성 창을 상세 위에 연다. 새로 쓰면 memo 는 null */
+  onMemo: (row: TimelineRow, memo: Memo | null) => void;
 };
 
 /**
@@ -101,13 +102,13 @@ function MainDetail({
   onEditPlace,
   onAddAlternative,
   onSwapped,
+  onMemo,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
-  const memo = useMemoEdit(tripId, row.item);
   const actions = useItemActions(tripId, row.item, dayItems, onClose);
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
-  const locked = plan.locked || memo.locked || actions.locked || alternatives.locked;
+  const locked = plan.locked || actions.locked || alternatives.locked;
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
@@ -116,7 +117,7 @@ function MainDetail({
         startDate={startDate}
         row={row}
         plan={plan}
-        memo={memo}
+        onMemo={(memo) => onMemo(row, memo)}
         alternatives={{
           actions: alternatives,
           onAdd: (city) => onAddAlternative(row.item, city),
@@ -138,11 +139,7 @@ function MainDetail({
     />
   );
   return isDesktop ? (
-    <PcLayout
-      header={header}
-      content={content}
-      onAddMemo={memo.text === null ? memo.start : null}
-    />
+    <PcLayout header={header} content={content} />
   ) : (
     <MobileLayout header={header} content={content} />
   );

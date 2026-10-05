@@ -27,7 +27,7 @@ describe("toSeedRows", () => {
     );
     expect(places).toEqual([
       expect.objectContaining({
-        id: "p1",
+        id: "p3",
         city_id: "tokyo",
         name: "센소지",
         lat: 1,
@@ -36,8 +36,8 @@ describe("toSeedRows", () => {
       }),
     ]);
     expect(items).toEqual([
-      { day_index: 0, position: 0, kind: "note", name: "집합", memo: "07시", trip_id: "t" },
-      expect.objectContaining({ trip_id: "t", place_id: "p1", name: null, status: "ok" }),
+      { id: "p1", day_index: 0, position: 0, kind: "note", name: "집합", trip_id: "t" },
+      expect.objectContaining({ id: "p2", trip_id: "t", place_id: "p3", name: null, status: "ok" }),
     ]);
     expect(items[1]).not.toHaveProperty("lat");
   });
@@ -58,8 +58,8 @@ describe("toSeedRows", () => {
         })(),
       },
     );
-    expect(places.map((p) => p.id)).toEqual(["q1", "q2"]);
-    expect(items.map((i) => i.place_id)).toEqual(["q1", "q1", "q2"]);
+    expect(places.map((p) => p.id)).toEqual(["q2", "q5"]);
+    expect(items.map((i) => i.place_id)).toEqual(["q2", "q2", "q5"]);
   });
 
   it("대체 장소는 장소 + 붙은 일정 id 를 참조하는 줄로, 일정과 따로 돌려준다", () => {
@@ -98,6 +98,30 @@ describe("toSeedRows", () => {
         kind: "place",
         place_id: "r2",
         alternative_of: "r1",
+      },
+    ]);
+  });
+
+  it("메모 글은 줄마다 메모 하나 — 빈 줄은 버리고 「★ 」 줄은 중요, 쓴 시각은 1ms 씩 늦춰 순서를 남긴다", () => {
+    const { items, memos } = toSeedRows(
+      [{ day_index: 0, position: 0, kind: "note", name: "집합", memo: "07시\n\n★ 늦으면 무효" }],
+      { tripId: "t", cityId: "tokyo", newId: () => "m1", at: new Date("2026-10-05T00:00:00Z") },
+    );
+    expect(items[0]).not.toHaveProperty("memo");
+    expect(memos).toEqual([
+      {
+        trip_id: "t",
+        schedule_item_id: "m1",
+        body: "07시",
+        starred: false,
+        created_at: "2026-10-05T00:00:00.000Z",
+      },
+      {
+        trip_id: "t",
+        schedule_item_id: "m1",
+        body: "늦으면 무효",
+        starred: true,
+        created_at: "2026-10-05T00:00:00.001Z",
       },
     ]);
   });

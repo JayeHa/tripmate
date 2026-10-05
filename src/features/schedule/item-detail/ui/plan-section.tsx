@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarDays, Pencil } from "lucide-react";
+import { ArrowUpRight, Pencil } from "lucide-react";
 
 import {
   planLinksOf,
@@ -14,23 +14,18 @@ import { ALTERNATIVE_TIME_NOTE, PlanEditForm } from "./plan-edit-form";
 
 type PlanSectionProps = {
   item: ScheduleItem;
-  /** 「📅 day 3 · 11.2 (월) 일정」 */
-  dayTag: string;
   edit: PlanEditState;
 };
 
 /**
- * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 보기는 표(예약 상태 · 시간 · 링크), 「수정」 을 누르면 그 자리에서 고친다.
+ * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크), 「수정」 을 누르면 그 자리에서 고친다.
  * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다. 대체 장소는 시간이 자리의 것이라 고칠 수 없다고 안내한다.
  */
-export function PlanSection({ item, dayTag, edit }: PlanSectionProps) {
+export function PlanSection({ item, edit }: PlanSectionProps) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <span className="flex h-6 items-center gap-1 rounded-full bg-ink-900 px-2.25 text-xs font-extrabold text-white">
-          <CalendarDays className="size-3" />
-          {dayTag}
-        </span>
+        <span className="text-[13px] font-bold text-ink-400">이번 일정</span>
         {!edit.draft && (
           <button
             type="button"

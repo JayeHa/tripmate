@@ -48,7 +48,6 @@ function item(placeId: string, patch: Partial<ScheduleItem> = {}): ScheduleItem 
     emoji: null,
     start_time: null,
     status: null,
-    memo: null,
     alternative_of: null,
     links: [],
     created_by: null,
@@ -81,10 +80,9 @@ describe("alternativeChoices", () => {
 
 describe("hasOwnRecord", () => {
   it("예약 상태 · 메모 · 일정 링크 중 하나라도 있으면 true", () => {
-    expect(hasOwnRecord(item("a"))).toBe(false);
-    expect(hasOwnRecord(item("a", { memo: " " }))).toBe(false);
-    expect(hasOwnRecord(item("a", { status: "ok" }))).toBe(true);
-    expect(hasOwnRecord(item("a", { memo: "창가" }))).toBe(true);
-    expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }))).toBe(true);
+    expect(hasOwnRecord(item("a"), 0)).toBe(false);
+    expect(hasOwnRecord(item("a", { status: "ok" }), 0)).toBe(true);
+    expect(hasOwnRecord(item("a"), 1)).toBe(true);
+    expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
   });
 });

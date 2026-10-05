@@ -1,41 +1,65 @@
-import { withKeys } from "@/shared/lib/keys";
+import type { Memo, MemoAuthor } from "../../model/memo";
+import { MemoCard } from "../memo-card";
 
 type MemoSectionProps = {
-  notes: string[];
+  memos: Memo[];
   hours: string | null;
   open: boolean;
   onToggle: () => void;
+  /** 메모 작성자 표시. 모르면 null */
+  authorOf: (authorId: string | null) => MemoAuthor | null;
+  /** 「+ 메모」 — 이 일정에 메모를 쓴다. 없으면 버튼을 그리지 않는다 */
+  onAddMemo?: () => void;
 };
 
 /**
- * 카드 하단의 메모. 접혀 있으면 「메모 N개 보기」만, 펼치면 노트 목록과 운영시간.
- * 일행이 남긴 메모(작성자 · 태그)와 「+ 메모」는 메모 추가 화면과 함께 붙인다.
+ * 카드 하단의 메모. ★ 중요 메모는 접어 둬도 보인다. 펼치면 모든 메모와 운영시간.
+ * 아래 줄은 「메모 N개 보기 ⌄ / 메모 접기 ⌃」(펼칠 게 있을 때) + 오른쪽 「+ 메모」.
+ * 메모 본문은 눌러도 반응하지 않는다(카드 전체를 덮는 상세 열기 영역 위로 relative 로 올린다)
  */
-export function MemoSection({ notes, hours, open, onToggle }: MemoSectionProps) {
+export function MemoSection({
+  memos,
+  hours,
+  open,
+  onToggle,
+  authorOf,
+  onAddMemo,
+}: MemoSectionProps) {
   // useOpenMemos 의 hasMemo 와 같은 기준이어야 「모두 펼치기」가 이 카드를 센다
-  if (notes.length === 0 && !hours) return null;
+  const expandable = memos.length > 0 || !!hours;
+  const shown = open ? memos : memos.filter((m) => m.starred);
+  if (!expandable && !onAddMemo) return null;
   return (
     <>
-      {open && (
-        // relative: 카드 전체를 덮는 상세 열기 영역 위로 올린다. 펼친 메모 본문은 눌러도 반응하지 않는다
-        <div className="relative mt-1.5 flex flex-col gap-1.5 border-t border-divider pt-3">
-          {withKeys(notes, (note) => note).map(({ key, value: note }) => (
-            <p key={key} className="flex gap-1.5 text-sm/normal text-ink-600">
-              <span className="text-[#bbb]">·</span>
-              <span className="text-pretty">{note}</span>
-            </p>
+      {(shown.length > 0 || (open && hours)) && (
+        <div className="relative mt-1.5 flex flex-col gap-2 border-t border-divider pt-3">
+          {shown.map((memo) => (
+            <MemoCard key={memo.id} memo={memo} author={authorOf(memo.author_id)} />
           ))}
-          {hours && <p className="mt-0.5 text-[13px] font-semibold text-primary">운영 {hours}</p>}
+          {open && hours && (
+            <p className="mt-0.5 text-[13px] font-semibold text-primary">운영 {hours}</p>
+          )}
         </div>
       )}
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={onToggle}
-        className="relative mt-0.5 self-start text-[13px] font-semibold text-ink-400"
-      >
-        {open ? "메모 접기 ⌃" : `메모 ${notes.length + (hours ? 1 : 0)}개 보기 ⌄`}
-      </button>
+      <div className="relative mt-0.5 flex items-center justify-between">
+        {expandable ? (
+          <button
+            type="button"
+            aria-expanded={open}
+            onClick={onToggle}
+            className="text-[13px] font-semibold text-ink-400"
+          >
+            {open ? "메모 접기 ⌃" : `메모 ${memos.length + (hours ? 1 : 0)}개 보기 ⌄`}
+          </button>
+        ) : (
+          <span />
+        )}
+        {onAddMemo && (
+          <button type="button" onClick={onAddMemo} className="text-[13px] font-bold text-primary">
+            + 메모
+          </button>
+        )}
+      </div>
     </>
   );
 }

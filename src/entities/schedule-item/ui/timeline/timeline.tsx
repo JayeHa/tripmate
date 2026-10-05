@@ -1,6 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 
 import type { TimelineRow } from "../../lib/timeline";
+import type { MemoAuthor } from "../../model/memo";
 import { ItemCard } from "./item-card";
 import { LegLine } from "./leg-line";
 import { NumberMarker } from "./number-marker";
@@ -18,6 +19,10 @@ type TimelineProps = {
   onEditMove?: (row: TimelineRow) => void;
   /** 지도에 강조된 장소. 그 행 전체(거터 포함)에 옅은 파란 배경을 깐다 */
   focusId?: string | null;
+  /** 메모 작성자 표시(여행 멤버에서 찾는다). 모르면 null */
+  authorOf: (authorId: string | null) => MemoAuthor | null;
+  /** 카드의 「+ 메모」 — 그 일정에 메모를 쓴다 */
+  onAddMemo?: (row: TimelineRow) => void;
 };
 
 /**
@@ -31,6 +36,8 @@ export function Timeline({
   onOpen,
   onEditMove,
   focusId,
+  authorOf,
+  onAddMemo,
 }: TimelineProps) {
   return (
     // isolate: 강조 배경(-z-10)을 이 목록 안에 가둬 세로선 아래 · 페이지 배경 위에 깐다
@@ -75,6 +82,8 @@ export function Timeline({
                 open={openIds.has(row.item.id)}
                 onToggle={() => onToggleMemo(row.item.id)}
                 onOpen={() => onOpen(row)}
+                authorOf={authorOf}
+                onAddMemo={onAddMemo && (() => onAddMemo(row))}
               />
             </div>
           </li>

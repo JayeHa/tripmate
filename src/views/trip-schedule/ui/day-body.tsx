@@ -1,4 +1,9 @@
-import { Timeline, type TimelineRow, type useOpenMemos } from "@/entities/schedule-item";
+import {
+  type MemoAuthor,
+  Timeline,
+  type TimelineRow,
+  type useOpenMemos,
+} from "@/entities/schedule-item";
 import { Button } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
 
@@ -17,6 +22,8 @@ type DayBodyProps = {
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: () => void;
+  onAddMemo: (row: TimelineRow) => void;
+  authorOf: (authorId: string | null) => MemoAuthor | null;
 };
 
 /** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「일정 추가」. 모바일과 PC 목록이 같이 쓴다 */
@@ -31,6 +38,8 @@ export function DayBody({
   onOpen,
   onEditMove,
   onAddPlace,
+  onAddMemo,
+  authorOf,
 }: DayBodyProps) {
   return (
     <>
@@ -63,6 +72,8 @@ export function DayBody({
         onOpen={onOpen}
         onEditMove={onEditMove}
         focusId={focusId}
+        authorOf={authorOf}
+        onAddMemo={onAddMemo}
       />
       {/* 메모 추가는 메모 단계에서 이 옆에 붙는다 */}
       <div className="flex gap-2.5 px-5 pt-1 pb-8">
@@ -74,10 +85,10 @@ export function DayBody({
   );
 }
 
-/** 「메모 N개 · 장소 N곳」. 메모는 카드의 「메모 N개 보기」와 같은 기준(노트 줄 + 운영시간) */
+/** 「메모 N개 · 장소 N곳」. 메모는 카드의 「메모 N개 보기」와 같은 기준(메모 + 운영시간) */
 function countsOf(rows: TimelineRow[]) {
   return {
-    memos: rows.reduce((n, r) => n + r.notes.length + (r.hours && !r.hoursOff ? 1 : 0), 0),
+    memos: rows.reduce((n, r) => n + r.memos.length + (r.hours && !r.hoursOff ? 1 : 0), 0),
     places: rows.filter((r) => r.kind === "place").length,
   };
 }

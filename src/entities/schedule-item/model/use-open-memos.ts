@@ -4,9 +4,9 @@ import { useState } from "react";
 
 import type { TimelineRow } from "../lib/timeline";
 
-/** 메모가 있어 펼칠 수 있는 줄인지(노트 또는 운영시간) */
+/** 메모가 있어 펼칠 수 있는 줄인지(메모 또는 운영시간) */
 export function hasMemo(row: TimelineRow): boolean {
-  return row.notes.length > 0 || (!!row.hours && !row.hoursOff);
+  return row.memos.length > 0 || (!!row.hours && !row.hoursOff);
 }
 
 /**

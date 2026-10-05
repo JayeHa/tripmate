@@ -51,7 +51,6 @@ function item(patch: Partial<ScheduleItem> = {}): ScheduleItem {
     emoji: null,
     start_time: null,
     status: null,
-    memo: null,
     alternative_of: null,
     links: [],
     created_by: null,

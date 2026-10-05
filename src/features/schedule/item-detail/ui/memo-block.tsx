@@ -1,71 +1,44 @@
-import { Button } from "@/shared/ui/button";
+"use client";
 
-import type { MemoEditState } from "../model/use-memo-edit";
+import { type Memo, MemoCard, type ScheduleItem, useMemos } from "@/entities/schedule-item";
+import { useMemberLookup } from "@/entities/trip-member";
 
 type MemoBlockProps = {
-  /** 메모 줄들(빈 줄 뺌) */
-  notes: string[];
-  edit: MemoEditState;
+  tripId: string;
+  item: ScheduleItem;
+  /** 「+ 메모」 */
+  onAdd: () => void;
+  /** 메모를 누르면 고치기 · 지우기(여행 멤버 누구나) */
+  onEdit: (memo: Memo) => void;
 };
 
 /**
- * 메모 — 줄마다 · 로 보이는 연회색 박스. 「수정」(없으면 「+ 메모」)을 누르면 그 자리에서 한 칸을 고친다.
- * 작성자 · ★ 중요 · 링크가 붙는 메모 목록은 ④ 에서 이 자리를 대신한다.
+ * 메모 — 「메모 N」 + 오른쪽 「+ 메모」, 아래 메모 목록(작성자 · ★ 중요 · 쓴 시각 · 본문 · 링크). 쓴 순서.
+ * 메모를 누르면 작성 창이 고치기로 열린다
  */
-export function MemoBlock({ notes, edit }: MemoBlockProps) {
+export function MemoBlock({ tripId, item, onAdd, onEdit }: MemoBlockProps) {
+  const { data: all = [] } = useMemos(tripId);
+  const authorOf = useMemberLookup(tripId);
+  const memos = all
+    .filter((m) => m.schedule_item_id === item.id)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-bold text-ink-400">메모 {notes.length}</span>
-        {edit.text === null && (
-          <button type="button" onClick={edit.start} className="text-sm font-bold text-primary">
-            {notes.length > 0 ? "수정" : "+ 메모"}
-          </button>
-        )}
+        <span className="text-[13px] font-bold text-ink-400">메모 {memos.length}</span>
+        <button type="button" onClick={onAdd} className="text-sm font-bold text-primary">
+          + 메모
+        </button>
       </div>
-      {edit.text === null ? (
-        <MemoView notes={notes} />
-      ) : (
-        <div className="flex flex-col gap-2">
-          <textarea
-            value={edit.text}
-            onChange={(e) => edit.setText(e.target.value)}
-            rows={4}
-            maxLength={500}
-            placeholder="한 줄에 하나씩 적어 주세요"
-            aria-label="메모"
-            className="resize-none rounded-card border border-primary px-3.5 py-3 text-sm/normal text-ink-900 outline-none"
-          />
-          {edit.error && <p className="text-[13px] text-destructive">{edit.error}</p>}
-          <div className="flex gap-2">
-            <Button variant="secondary" className="h-11 flex-1" onClick={edit.cancel}>
-              취소
-            </Button>
-            <Button className="h-11 flex-2" disabled={edit.saving} onClick={edit.save}>
-              저장
-            </Button>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
-type MemoViewProps = { notes: string[] };
-
-/** 보기: 줄마다 · , 없으면 「아직 메모가 없어요.」 */
-function MemoView({ notes }: MemoViewProps) {
-  if (notes.length === 0) return <p className="text-[13px] text-ink-350">아직 메모가 없어요.</p>;
-  return (
-    <div className="flex flex-col gap-1.5 rounded-card bg-surface-sunken px-3.5 py-3">
-      {notes.map((line, i) => (
-        // 메모 줄은 같은 글이 두 번 올 수 있고 순서만 있다
-        // eslint-disable-next-line react/no-array-index-key
-        <p key={i} className="flex gap-1.5 text-sm/normal text-ink-600">
-          <span className="text-ink-350">·</span>
-          <span className="text-pretty">{line}</span>
-        </p>
+      {memos.map((memo) => (
+        <MemoCard
+          key={memo.id}
+          memo={memo}
+          author={authorOf(memo.author_id)}
+          onClick={() => onEdit(memo)}
+        />
       ))}
-    </div>
+      {memos.length === 0 && <span className="text-[13px] text-ink-350">아직 메모가 없어요.</span>}
+    </section>
   );
 }

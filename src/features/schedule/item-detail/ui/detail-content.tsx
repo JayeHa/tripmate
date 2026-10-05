@@ -1,10 +1,9 @@
 import { type City, useTripCities } from "@/entities/city";
-import type { Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
-import { dayOfWeek, dayParts } from "@/shared/lib/days";
+import { dayOfWeek } from "@/shared/lib/days";
 
 import type { AlternativeActions } from "../model/use-alternative-actions";
-import type { MemoEditState } from "../model/use-memo-edit";
 import type { PlanEditState } from "../model/use-plan-edit";
 import { AlternativesBlock } from "./alternatives-block";
 import { MemoBlock } from "./memo-block";
@@ -16,7 +15,8 @@ type DetailContentProps = {
   startDate: string;
   row: TimelineRow;
   plan: PlanEditState;
-  memo: MemoEditState;
+  /** 메모 「+ 메모」 · 메모 누르기 — 부른 쪽이 메모 작성 창을 연다(고칠 메모, 새로 쓰면 null) */
+  onMemo: (memo: Memo | null) => void;
   /** 대체 장소 칸. 대체 장소의 상세에서는 null(대체 장소의 대체 장소는 없다) */
   alternatives: {
     actions: AlternativeActions;
@@ -38,7 +38,7 @@ export function DetailContent({
   startDate,
   row,
   plan,
-  memo,
+  onMemo,
   alternatives,
   onEditPlace,
 }: DetailContentProps) {
@@ -46,7 +46,6 @@ export function DetailContent({
   const { data: user } = useUser();
   const item = row.item;
   const place = item.place;
-  const day = dayParts(startDate, item.day_index);
   const city = place ? (cities.find((c) => c.id === place.city_id) ?? null) : null;
   // 장소는 만든 사람만 고친다(RLS). 사용자를 아직 모르면 숨긴다 — 눌러도 DB 가 막지만 실패할 버튼을 보이지 않게
   const canEditPlace = !!place && !!user && place.created_by === user.id;
@@ -60,13 +59,9 @@ export function DetailContent({
           onEdit={canEditPlace ? () => onEditPlace(place, city) : null}
         />
       )}
-      <PlanSection
-        item={item}
-        dayTag={`day ${item.day_index + 1} · ${day.date} 일정`}
-        edit={plan}
-      />
+      <PlanSection item={item} edit={plan} />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />
-      <MemoBlock notes={row.notes} edit={memo} />
+      <MemoBlock tripId={tripId} item={item} onAdd={() => onMemo(null)} onEdit={onMemo} />
       {item.kind === "place" && alternatives && (
         <AlternativesBlock
           tripId={tripId}

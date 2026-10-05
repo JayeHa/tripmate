@@ -16,10 +16,11 @@ type PlaceFields = Pick<
 /**
  * 시안 데이터 한 줄. 시안은 장소와 일정을 나누지 않아서 place 줄에 장소 칸이 함께 있다.
  * 시딩할 때 toSeedRows 가 장소 · 일정으로 나눈다. trip_id · place_id 는 그때 붙는다.
- * `alternatives` 는 그 일정의 대체 장소 — 장소 칸이 있는 줄로 적고, 시딩할 때 대체 장소 일정 줄이 된다(0024)
+ * `alternatives` 는 그 일정의 대체 장소 — 장소 칸이 있는 줄로 적고, 시딩할 때 대체 장소 일정 줄이 된다(0024).
+ * `memo` 는 시안처럼 줄마다 메모 하나 — 시딩할 때 메모 목록(memos, 0027)이 된다. 「★ 」 줄은 중요
  */
 export type SeedItem = Omit<TablesInsert<"schedule_items">, "trip_id" | "place_id"> &
-  Partial<PlaceFields> & { alternatives?: SeedAlternative[] };
+  Partial<PlaceFields> & { alternatives?: SeedAlternative[]; memo?: string | null };
 
 /** 대체 장소 한 줄 — 장소 칸과 이름 · 설명만. 날짜 · 순서는 붙은 일정을 따른다 */
 export type SeedAlternative = Pick<SeedItem, "name" | "description" | "emoji"> &
@@ -30,18 +31,39 @@ type SeedRows = {
   items: TablesInsert<"schedule_items">[];
   /** 대체 장소 줄. 붙을 일정이 먼저 있어야 해서(트리거가 확인한다) items 다음에 넣는다 */
   alternatives: TablesInsert<"schedule_items">[];
+  /** 메모. 붙을 일정이 먼저 있어야 해서(FK) items 다음에 넣는다 */
+  memos: TablesInsert<"memos">[];
 };
 
-type SeedOptions = { tripId: string; cityId: string; newId: () => string };
+type SeedOptions = {
+  tripId: string;
+  cityId: string;
+  newId: () => string;
+  /** 메모를 쓴 시각의 기준. 한 번에 넣어도 줄 순서가 남게 메모마다 1ms 씩 늦춘다 */
+  at?: Date;
+};
+
+/** 시안 메모 글을 메모 줄들로 — 빈 줄은 버리고, 「★ 」로 시작하면 중요(★ 는 뗀다) */
+function memoLinesOf(memo: string | null | undefined): { body: string; starred: boolean }[] {
+  return (memo ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => ({ body: line.replace(/^★\s*/, ""), starred: line.startsWith("★") }));
+}
 
 /**
  * 시안 줄들을 장소 · 일정 행으로 나눈다. 장소 id 는 미리 만들어(`newId`) 일정이 바로 참조한다.
  * 이름과 좌표가 같은 place 줄은 장소 하나를 함께 쓴다(숙소처럼 여러 날 나오는 곳 — 장소 1 · 일정 N).
- * 장소 정보는 처음 나온 줄의 값을 쓴다. 대체 장소가 있는 일정은 id 도 미리 만들어 대체 장소 줄이 참조한다.
+ * 장소 정보는 처음 나온 줄의 값을 쓴다. 일정 id 도 미리 만들어 대체 장소 줄 · 메모가 참조한다.
  */
-export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOptions): SeedRows {
+export function toSeedRows(
+  seed: SeedItem[],
+  { tripId, cityId, newId, at = new Date() }: SeedOptions,
+): SeedRows {
   const places = new Map<string, TablesInsert<"places">>();
   const alternatives: TablesInsert<"schedule_items">[] = [];
+  const memos: TablesInsert<"memos">[] = [];
 
   /** 장소 칸으로 장소를 찾거나 만들어 id 를 돌려준다 */
   function placeIdOf(row: SeedAlternative): string {
@@ -73,7 +95,16 @@ export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOpti
   const items = seed.map((row): TablesInsert<"schedule_items"> => {
     const { lat, lng, address, category, rating, review_count, hours, gmap_url, links, ...rest } =
       row;
-    const { alternatives: alts = [], ...item } = rest;
+    const { alternatives: alts = [], memo, ...item } = rest;
+    const id = newId();
+    for (const line of memoLinesOf(memo)) {
+      memos.push({
+        trip_id: tripId,
+        schedule_item_id: id,
+        ...line,
+        created_at: new Date(at.getTime() + memos.length).toISOString(),
+      });
+    }
     const placeFields = {
       lat,
       lng,
@@ -85,8 +116,7 @@ export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOpti
       gmap_url,
       links,
     };
-    if ((item.kind ?? "place") !== "place") return { ...item, trip_id: tripId };
-    const id = alts.length > 0 ? newId() : undefined;
+    if ((item.kind ?? "place") !== "place") return { ...item, id, trip_id: tripId };
     alts.forEach((alt, position) =>
       alternatives.push({
         trip_id: tripId,
@@ -99,7 +129,7 @@ export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOpti
     );
     return {
       ...item,
-      ...(id ? { id } : {}),
+      id,
       trip_id: tripId,
       place_id: placeIdOf({
         ...placeFields,
@@ -113,5 +143,5 @@ export function toSeedRows(seed: SeedItem[], { tripId, cityId, newId }: SeedOpti
       emoji: null,
     };
   });
-  return { places: [...places.values()], items, alternatives };
+  return { places: [...places.values()], items, alternatives, memos };
 }

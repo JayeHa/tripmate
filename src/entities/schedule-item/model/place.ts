@@ -108,6 +108,11 @@ export function planLinksOf(item: Pick<ScheduleItem, "links">): PlaceLink[] {
   return arrayOf(linkSchema, item.links);
 }
 
+/** jsonb 링크 배열을 제목 · URL 목록으로. 모양이 틀리거나 http(s) 가 아닌 원소는 버린다 */
+export function linkListOf(value: unknown): PlaceLink[] {
+  return arrayOf(linkSchema, value);
+}
+
 /** 장소 링크(공식 홈페이지 · 메뉴판 — places.links). 장소가 없거나 모양이 틀린 원소는 버린다 */
 export function placeLinksOf(item: Pick<ScheduleItem, "place">): PlaceLink[] {
   return arrayOf(linkSchema, item.place?.links);

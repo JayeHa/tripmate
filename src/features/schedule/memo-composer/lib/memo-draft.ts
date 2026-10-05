@@ -1,0 +1,36 @@
+import { isHttpUrl, linkListOf, type Memo, MEMO_MAX } from "@/entities/schedule-item";
+import type { LinkDraft } from "@/shared/ui/link-rows";
+
+/** 메모 작성 칸의 값 — 입력 칸이 다루는 그대로 */
+export type MemoDraft = { body: string; starred: boolean; links: LinkDraft[] };
+
+/** 새 메모면 빈 칸, 고치는 메모면 그 메모 값 */
+export function memoDraftOf(memo: Memo | null): MemoDraft {
+  if (!memo) return { body: "", starred: false, links: [] };
+  return {
+    body: memo.body,
+    starred: memo.starred,
+    links: linkListOf(memo.links).map((l) => ({ ...l })),
+  };
+}
+
+export type MemoPayload = { body: string; starred: boolean; links: LinkDraft[] };
+
+export type MemoDraftResult = { ok: true; value: MemoPayload } | { ok: false; error: string };
+
+/**
+ * 저장할 메모 칸으로. 본문은 앞뒤 공백을 떼고 1~500자(DB check 와 같다), 빈 링크 줄은 버리고
+ * 주소가 http(s) 가 아니면 오류
+ */
+export function toMemoPayload(draft: MemoDraft): MemoDraftResult {
+  const body = draft.body.trim();
+  if (!body) return { ok: false, error: "메모를 입력해 주세요" };
+  if (body.length > MEMO_MAX) return { ok: false, error: `메모는 ${MEMO_MAX}자까지 쓸 수 있어요` };
+  const links = draft.links
+    .map((l) => ({ title: l.title.trim(), url: l.url.trim() }))
+    .filter((l) => l.url);
+  if (links.some((l) => !isHttpUrl(l.url))) {
+    return { ok: false, error: "링크 주소는 http:// 나 https:// 로 시작해야 해요" };
+  }
+  return { ok: true, value: { body, starred: draft.starred, links } };
+}
