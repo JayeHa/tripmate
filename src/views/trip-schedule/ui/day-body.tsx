@@ -26,7 +26,8 @@ type DayBodyProps = {
   onAddPlace: () => void;
   onAddDayMemo: () => void;
   authorOf: (authorId: string | null) => MemoAuthor | null;
-  onStartEdit: () => void;
+  /** 일정 · 여행을 읽는 동안은 없다 — 「편집」 을 그리지 않는다 */
+  onStartEdit?: () => void;
 };
 
 /** 하루치 본문 — day 헤더 · 빈 상태 · 타임라인 · 「일정 추가」. 모바일과 PC 목록이 같이 쓴다 */
@@ -57,7 +58,7 @@ export function DayBody({
           onToggleAll={memos.toggleAll}
           counts={showCounts ? countsOf(rows) : undefined}
           summary={summary}
-          onEdit={isPending ? undefined : onStartEdit}
+          onEdit={onStartEdit}
         />
       )}
       {isPending && (

@@ -62,6 +62,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const edit = useScheduleEdit({
     tripId,
     items,
+    itemsReady: !isPending,
     trip,
     totalDays,
     onExit: setDay,
@@ -129,7 +130,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           authorOf={authorOf}
           onAddDayMemo={() => overlays.openDayMemo(day)}
           edit={edit}
-          onStartEdit={() => edit.start(day)}
+          onStartEdit={edit.opener(day)}
         />
       )}
 

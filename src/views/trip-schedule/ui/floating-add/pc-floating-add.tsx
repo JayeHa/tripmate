@@ -37,6 +37,7 @@ export function PcFloatingAdd(props: FloatingAddProps) {
         {floatingActions(props).map(({ key, label, Icon, tone, run }) => (
           <DropdownMenuItem
             key={key}
+            disabled={!run}
             onClick={run}
             className="h-11 gap-2.5 rounded-memo px-3 text-[15px] font-bold text-ink-900 focus:bg-surface-sunken"
           >

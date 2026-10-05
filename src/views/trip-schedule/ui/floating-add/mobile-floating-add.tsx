@@ -44,6 +44,7 @@ export function MobileFloatingAdd(props: FloatingAddProps) {
           {floatingActions(props).map(({ key, label, Icon, tone, run }) => (
             <DropdownMenuItem
               key={key}
+              disabled={!run}
               onClick={run}
               className="flex h-11 gap-2 rounded-full bg-white pr-4 pl-3 text-[15px] font-bold text-ink-900 shadow-[0_4px_14px_rgba(0,0,0,0.16)] focus:bg-surface-sunken"
             >

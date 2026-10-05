@@ -22,6 +22,8 @@ type ScheduleEditOptions = {
   tripId: string;
   /** 여행의 타임라인 일정(대체 장소 빼고) */
   items: ScheduleItem[];
+  /** 일정을 다 읽었는지. 읽는 중에 열면 빈 초안이 되고, 뒤에 도착한 일정은 초안에 들어가지 않는다 */
+  itemsReady: boolean;
   /** 하루 요약(day_summaries)을 읽을 여행. 읽기 전이면 요약 없이 연다 */
   trip: Pick<Trip, "day_summaries"> | undefined;
   totalDays: number;
@@ -44,11 +46,19 @@ const NONE: ReadonlySet<string> = new Set();
  * 「완료」 에서 한 번에 저장한다(apply_schedule_edit). 뒤로 가면 버린다.
  * 화면이 늘 들고 있다가 start 로 연다 — 모바일 · PC 레이아웃이 바뀌어도 초안이 남는다
  */
-export function useScheduleEdit({ tripId, items, trip, totalDays, onExit }: ScheduleEditOptions) {
+export function useScheduleEdit({
+  tripId,
+  items,
+  itemsReady,
+  trip,
+  totalDays,
+  onExit,
+}: ScheduleEditOptions) {
   const [session, setSession] = useState<EditSession | null>(null);
   const [day, setDay] = useState(0);
   const [selected, setSelected] = useState(NONE);
   const apply = useApplyScheduleEdit(tripId);
+  const canStart = trip !== undefined && itemsReady;
   const live = useMemo(() => new Set(items.map((it) => it.id)), [items]);
   // 열 때 고정한 초안에서 그 뒤 사라진 일정을 뺀 것. 화면 · 저장은 이걸 기준으로 한다
   const draft = useMemo(() => session && keepLive(session.draft, live), [session, live]);
@@ -99,16 +109,24 @@ export function useScheduleEdit({ tripId, items, trip, totalDays, onExit }: Sche
     onExit(day);
   }
 
+  /** 보고 있던 날로 편집을 연다(canStart 일 때만) */
+  function start(startDay: number) {
+    if (!canStart) return;
+    const initial = draftOf(items, totalDays);
+    const sums = summariesOf(trip?.day_summaries ?? [], totalDays);
+    setSession({ initial, draft: initial, initialSummaries: sums, summaries: sums });
+    setDay(startDay);
+    setSelected(NONE);
+  }
+
   return {
     editing: session !== null,
-    /** 보고 있던 날로 편집을 연다 */
-    start: (startDay: number) => {
-      const initial = draftOf(items, totalDays);
-      const sums = summariesOf(trip?.day_summaries ?? [], totalDays);
-      setSession({ initial, draft: initial, initialSummaries: sums, summaries: sums });
-      setDay(startDay);
-      setSelected(NONE);
-    },
+    /**
+     * 그날로 여는 동작 — 일정 · 여행을 다 읽기 전이면 undefined(들어가는 버튼을 숨기거나 막는다).
+     * 편집 화면은 여행이 있어야 그려져서, 그 전에 열면 화면 없이 「편집 중」 이 되어 나갈 길이 없다.
+     * 들어가는 곳(day 헤더 · 플로팅)이 모두 이걸 쓴다
+     */
+    opener: (startDay: number) => (canStart ? () => start(startDay) : undefined),
     day,
     /** 편집할 날을 바꾼다. 선택은 그날 것만 의미가 있어 비운다 */
     setDay: (next: number) => {

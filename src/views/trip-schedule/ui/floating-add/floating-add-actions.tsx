@@ -5,7 +5,8 @@ import { cn } from "@/shared/lib/utils";
 /** 플로팅 「+ 추가」 가 받는 동작. 날짜는 모두 보고 있는 날 */
 export type FloatingAddProps = {
   onAddPlace: () => void;
-  onStartEdit: () => void;
+  /** 일정 · 여행을 읽는 동안은 없다 — 「일정 편집」 이 비활성 */
+  onStartEdit?: () => void;
   onAddDayMemo: () => void;
 };
 

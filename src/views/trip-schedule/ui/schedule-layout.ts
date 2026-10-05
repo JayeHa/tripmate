@@ -20,6 +20,6 @@ export type ScheduleLayoutProps = {
   authorOf: (authorId: string | null) => MemoAuthor | null;
   /** 일정 편집. 열려 있으면 모바일은 화면 전체를, PC 는 목록 칸을 편집 화면으로 바꾼다 */
   edit: ScheduleEditState;
-  /** day 헤더 「편집」 — 보고 있던 날로 편집을 연다 */
-  onStartEdit: () => void;
+  /** 「편집」(day 헤더 · 플로팅) — 보고 있던 날로 편집을 연다. 일정 · 여행을 읽는 동안은 없다 */
+  onStartEdit?: () => void;
 };
