@@ -17,6 +17,8 @@ type TimeFieldProps = {
   step?: number;
   /** 창을 칸 아래(기본) · 위에 연다 — 아래 공간이 모자란 자리 */
   placement?: "bottom" | "top";
+  /** 창을 칸 왼쪽(기본) · 오른쪽 끝에 맞춘다 — 두 칸을 나란히 둔 오른쪽 칸이면 창이 화면 밖으로 잘리지 않게 */
+  align?: "left" | "right";
   "aria-label"?: string;
 };
 
@@ -30,6 +32,7 @@ export function TimeField({
   placeholder = "시간 선택",
   step = 5,
   placement = "bottom",
+  align = "left",
   "aria-label": ariaLabel = "시간",
 }: TimeFieldProps) {
   const picker = useTimePicker(value, onChange);
@@ -66,7 +69,7 @@ export function TimeField({
       </div>
       <PopoverContent
         side={placement}
-        align="start"
+        align={align === "right" ? "end" : "start"}
         sideOffset={6}
         className="w-75 max-w-[calc(100vw-2rem)] gap-0 rounded-card bg-white p-3.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-1 ring-divider"
       >
