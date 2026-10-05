@@ -166,8 +166,7 @@ export function usePlaceFields({
     found,
     /** 지도 중심: 정한 위치, 아직 없으면 도시 중심. 도시도 없으면 null(검색으로 고르기 전엔 지도가 없다) */
     mapCenter: values.at ?? (city ? { lat: city.lat, lng: city.lng } : null),
-    /** 이름이 있고 위치를 정했을 때. 고치는 장소가 원래 위치가 없었으면(stored.at null) 위치 없이도 된다 */
-    canSave: (!!values.at || (!!stored && !stored.at)) && values.name.trim().length > 0,
+    canSave: !!values.at && values.name.trim().length > 0,
     /** 입력 · 검증 오류(저장 요청의 실패 문구는 부른 쪽이 더한다) */
     error,
     setError,

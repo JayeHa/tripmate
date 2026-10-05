@@ -83,11 +83,9 @@ export function toPlacePatch(
   initial: PlaceFormValues,
   initialFound: FoundAddress,
 ): PlacePatchResult {
-  // 위치 없이 만들어진 예전 장소는 위치를 정하지 않아도 저장한다 — 이름 오타 · 운영시간만 고치려는데 막히지 않게
-  const options = { requireLocation: initial.at !== null };
-  const next = toNewPlace(v, found, options);
+  const next = toNewPlace(v, found);
   if (!next.ok) return next;
-  const base = toNewPlace(initial, initialFound, options);
+  const base = toNewPlace(initial, initialFound);
   const before: Record<string, unknown> = base.ok ? base.value : {};
   const patch = Object.fromEntries(
     Object.entries(next.value).filter(

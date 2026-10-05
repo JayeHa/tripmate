@@ -187,8 +187,8 @@ function numberOf(input: string, digits = 0): number | null {
 }
 
 /** 저장 전에 사용자가 고칠 수 있는 첫 문제. 없으면 null */
-function problemOf(v: PlaceFormValues, requireLocation: boolean): string | null {
-  if (requireLocation && !v.at) return "위치를 정해 주세요";
+function problemOf(v: PlaceFormValues): string | null {
+  if (!v.at) return "위치를 정해 주세요";
   if (!v.name.trim()) return "장소 이름을 입력해 주세요";
   const gmap = v.gmap.trim();
   if (gmap && !isHttpUrl(gmap)) return "구글맵 링크는 https:// 로 시작해야 해요";
@@ -198,14 +198,9 @@ function problemOf(v: PlaceFormValues, requireLocation: boolean): string | null 
 /**
  * 폼 값을 저장할 장소 모양으로(create_place_schedule 의 p_place). 사용자가 고칠 수 있는 문제면 첫 오류 문구를 돌려준다.
  * 칸 범위(카테고리 · 대기 길이)는 DB 제약이 다시 지킨다 — 여기서는 입력 중 알 수 있는 것만 본다.
- * 위치는 반드시 정한다. 다만 위치 없이 만들어진 예전 장소를 고칠 때는(requireLocation: false) 이름 · 운영시간만 고칠 수 있게 둔다
  */
-export function toNewPlace(
-  v: PlaceFormValues,
-  found: FoundAddress,
-  { requireLocation = true }: { requireLocation?: boolean } = {},
-): PlaceFormResult {
-  const problem = problemOf(v, requireLocation);
+export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormResult {
+  const problem = problemOf(v);
   if (problem) return { ok: false, error: problem };
   const links = linksOf(v.links, "장소 링크");
   if (typeof links === "string") return { ok: false, error: links };
