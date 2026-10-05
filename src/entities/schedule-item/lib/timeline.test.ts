@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { Memo } from "../model/memo";
 import type { Move } from "../model/move";
 import type { Place, ScheduleItem } from "../model/types";
 import { buildTimeline, placeNumbers } from "./timeline";
@@ -38,7 +39,6 @@ function item(patch: ItemPatch): ScheduleItem {
     emoji: null,
     start_time: null,
     status: null,
-    memo: null,
     alternative_of: null,
     links: [],
     created_by: null,
@@ -228,9 +228,34 @@ describe("buildTimeline", () => {
     });
   });
 
-  it("메모는 줄 단위 노트, 시각은 HH:mm", () => {
-    const [row] = buildTimeline([item({ memo: "첫 줄\n\n  둘째 줄 ", start_time: "09:40:00" })]);
-    expect(row.notes).toEqual(["첫 줄", "둘째 줄"]);
-    expect(row.time).toBe("09:40");
+  it("메모는 일정마다 쓴 순서로 모이고, 시각은 HH:mm", () => {
+    const a = item({ start_time: "09:40:00" });
+    const b = item({});
+    /** 메모 한 줄 */
+    const memo = (id: string, itemId: string, at: string): Memo => ({
+      id,
+      trip_id: "t",
+      schedule_item_id: itemId,
+      author_id: null,
+      body: id,
+      starred: false,
+      links: [],
+      created_at: at,
+      updated_at: at,
+    });
+    const [rowA, rowB] = buildTimeline(
+      [a, b],
+      [],
+      null,
+      [],
+      [
+        memo("둘째", a.id, "2026-10-01T00:00:05.5+00:00"),
+        memo("첫째", a.id, "2026-10-01T00:00:05+00:00"),
+        memo("다른 일정", b.id, "2026-10-01"),
+      ],
+    );
+    expect(rowA.memos.map((m) => m.body)).toEqual(["첫째", "둘째"]);
+    expect(rowB.memos.map((m) => m.body)).toEqual(["다른 일정"]);
+    expect(rowA.time).toBe("09:40");
   });
 });

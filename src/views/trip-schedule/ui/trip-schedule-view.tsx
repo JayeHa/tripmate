@@ -2,17 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { City } from "@/entities/city";
 import {
   buildTimeline,
-  type Place,
-  type ScheduleItem,
   useAlternatives,
+  useMemos,
   useMoves,
   useOpenMemos,
   useScheduleItems,
 } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
+import { useMemberLookup } from "@/entities/trip-member";
 import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { ItemDetailDialog } from "@/features/schedule/item-detail";
@@ -20,8 +19,9 @@ import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount, dayOfWeek } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
-import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
+import { useDetailOverlays } from "../model/use-detail-overlays";
+import { DetailOverlays } from "./detail-overlays";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
 
@@ -50,11 +50,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   }, [direct]);
   // 상세를 연 일정. 줄은 그날 목록에서 다시 찾는다 — 고친 내용이 바로 보이고, 다른 날로 옮기면 저절로 닫힌다
   const [openId, setOpenId] = useState<string | null>(null);
-  // 상세의 「장소 정보 수정」 으로 연 장소 입력 폼. 저장하면 닫고 상세 위에 토스트를 띄운다
-  const [placeEdit, setPlaceEdit] = useState<{ place: Place; city: City | null } | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
-  // 상세의 대체 장소 「+ 직접 추가」 로 연 장소 입력 폼(대체 장소 모드)
-  const [altAdd, setAltAdd] = useState<{ main: ScheduleItem; city: City | null } | null>(null);
+  // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
+  const overlays = useDetailOverlays();
+  const authorOf = useMemberLookup(tripId);
 
   const dayItems = useMemo(() => (items ?? []).filter((it) => it.day_index === day), [items, day]);
 
@@ -63,9 +61,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: alternatives } = useAlternatives(tripId);
   // 요일별 운영시간에서 그날 값을 고르려고 그날 요일을 넘긴다
   const dow = trip ? dayOfWeek(trip.start_date, day) : null;
+  const { data: allMemos } = useMemos(tripId);
   const rows = useMemo(
-    () => buildTimeline(dayItems, moves, dow, alternatives),
-    [dayItems, moves, dow, alternatives],
+    () => buildTimeline(dayItems, moves, dow, alternatives, allMemos),
+    [dayItems, moves, dow, alternatives, allMemos],
   );
   const moveDialog = useMoveDialog(movesReady);
   const memos = useOpenMemos(rows);
@@ -111,6 +110,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             setAddNotice(null);
             setAddOpen(true);
           }}
+          authorOf={authorOf}
         />
       )}
 
@@ -159,46 +159,21 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           dayItems={dayItems}
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
-          onEditPlace={(place, city) => setPlaceEdit({ place, city })}
-          onAddAlternative={(main, city) => setAltAdd({ main, city })}
+          onEditPlace={overlays.openPlaceEdit}
+          onAddAlternative={overlays.openAltAdd}
           onSwapped={setOpenId}
+          onMemo={overlays.openMemo}
         />
       )}
 
-      {altAdd && (
-        <PlaceFormDialog
+      {trip && isDesktop !== null && (
+        <DetailOverlays
           tripId={tripId}
-          city={altAdd.city}
-          mode={{
-            kind: "add",
-            dayIndex: altAdd.main.day_index,
-            initialQuery: "",
-            alternativeOf: altAdd.main,
-            onSaved: () => setAltAdd(null),
-          }}
-          open
-          onOpenChange={(open) => !open && setAltAdd(null)}
+          startDate={trip.start_date}
+          isDesktop={isDesktop}
+          overlays={overlays}
         />
       )}
-
-      {placeEdit && (
-        <PlaceFormDialog
-          tripId={tripId}
-          city={placeEdit.city}
-          mode={{
-            kind: "edit",
-            place: placeEdit.place,
-            onSaved: (changed) => {
-              setPlaceEdit(null);
-              if (changed) setToast({ text: "장소 정보를 수정했어요", id: Date.now() });
-            },
-          }}
-          open
-          onOpenChange={(open) => !open && setPlaceEdit(null)}
-        />
-      )}
-
-      <Toast message={toast} onDone={() => setToast(null)} />
     </>
   );
 }

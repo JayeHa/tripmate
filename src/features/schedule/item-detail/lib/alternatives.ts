@@ -31,8 +31,11 @@ export function alternativeChoices(
     });
 }
 
-/** 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정) */
-export function hasOwnRecord(alt: ScheduleItem): boolean {
+/**
+ * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정).
+ * 메모는 따로 읽으므로(memos) 그 줄의 메모 수를 받는다
+ */
+export function hasOwnRecord(alt: ScheduleItem, memoCount: number): boolean {
   const links = Array.isArray(alt.links) ? alt.links.length : 0;
-  return !!alt.status || !!alt.memo?.trim() || links > 0;
+  return !!alt.status || memoCount > 0 || links > 0;
 }

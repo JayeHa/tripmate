@@ -295,7 +295,6 @@ export type Database = {
           emoji: string | null;
           start_time: string | null;
           status: string | null;
-          memo: string | null;
           alternative_of: string | null;
           links: Json;
           created_by: string | null;
@@ -314,7 +313,6 @@ export type Database = {
           emoji?: string | null;
           start_time?: string | null;
           status?: string | null;
-          memo?: string | null;
           alternative_of?: string | null;
           links?: Json;
           created_by?: string | null;
@@ -333,7 +331,6 @@ export type Database = {
           emoji?: string | null;
           start_time?: string | null;
           status?: string | null;
-          memo?: string | null;
           alternative_of?: string | null;
           links?: Json;
           created_by?: string | null;
@@ -349,6 +346,42 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      memos: {
+        Row: {
+          id: string;
+          trip_id: string;
+          schedule_item_id: string;
+          author_id: string | null;
+          body: string;
+          starred: boolean;
+          links: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          schedule_item_id: string;
+          author_id?: string | null;
+          body: string;
+          starred?: boolean;
+          links?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          schedule_item_id?: string;
+          author_id?: string | null;
+          body?: string;
+          starred?: boolean;
+          links?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       moves: {
         Row: {

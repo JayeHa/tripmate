@@ -23,6 +23,8 @@ const ITEM_CLASS =
 type AlternativeHeaderProps = {
   main: ScheduleItem;
   alt: ScheduleItem;
+  /** 이 대체 장소 줄의 메모 수 — 빼기 전에 물을지 정한다 */
+  memoCount: number;
   actions: AlternativeActions;
   /** 요청이 서버에 가 있는 동안 — 뒤로 · 닫기를 막는다 */
   locked: boolean;
@@ -37,6 +39,7 @@ type AlternativeHeaderProps = {
 export function AlternativeHeader({
   main,
   alt,
+  memoCount,
   actions,
   locked,
   onBack,
@@ -91,7 +94,9 @@ export function AlternativeHeader({
           <DropdownMenuItem
             variant="destructive"
             disabled={actions.pending}
-            onClick={() => (hasOwnRecord(alt) ? setConfirming(true) : actions.remove(alt))}
+            onClick={() =>
+              hasOwnRecord(alt, memoCount) ? setConfirming(true) : actions.remove(alt)
+            }
             className="h-10 gap-2.5 rounded-button px-2.5 text-sm font-semibold data-[variant=destructive]:focus:bg-destructive-soft"
           >
             <Trash2 className="size-4.5" />

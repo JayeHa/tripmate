@@ -3,7 +3,7 @@
 import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
-import { itemName, type ScheduleItem } from "@/entities/schedule-item";
+import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
 
 import { hasOwnRecord } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
@@ -34,11 +34,20 @@ export function AlternativesBlock({
   onOpen,
 }: AlternativesBlockProps) {
   const [picking, setPicking] = useState(false);
+  const { data: memos = [] } = useMemos(tripId);
+  /** 그 대체 장소 줄에 붙은 메모 수 — 빼기 전에 물을지 정한다 */
+  const memoCount = (id: string) => memos.filter((m) => m.schedule_item_id === id).length;
   return (
     <section className="flex flex-col gap-2">
       <span className="text-[13px] font-bold text-ink-400">대체 장소 {alternatives.length}</span>
       {alternatives.map((alt) => (
-        <AlternativeCard key={alt.id} alt={alt} actions={actions} onOpen={() => onOpen(alt)} />
+        <AlternativeCard
+          key={alt.id}
+          alt={alt}
+          memoCount={memoCount(alt.id)}
+          actions={actions}
+          onOpen={() => onOpen(alt)}
+        />
       ))}
       {picking ? (
         <AlternativePicker
@@ -66,10 +75,15 @@ export function AlternativesBlock({
   );
 }
 
-type AlternativeCardProps = { alt: ScheduleItem; actions: AlternativeActions; onOpen: () => void };
+type AlternativeCardProps = {
+  alt: ScheduleItem;
+  memoCount: number;
+  actions: AlternativeActions;
+  onOpen: () => void;
+};
 
 /** 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 자기 기록(상태 · 메모 · 링크)이 있으면 빼기 전에 묻는다 */
-function AlternativeCard({ alt, actions, onOpen }: AlternativeCardProps) {
+function AlternativeCard({ alt, memoCount, actions, onOpen }: AlternativeCardProps) {
   const [confirming, setConfirming] = useState(false);
   const sub = alt.place?.description;
   return (
@@ -99,7 +113,7 @@ function AlternativeCard({ alt, actions, onOpen }: AlternativeCardProps) {
         type="button"
         aria-label={`${itemName(alt)} 대체 장소에서 빼기`}
         disabled={actions.pending}
-        onClick={() => (hasOwnRecord(alt) ? setConfirming(true) : actions.remove(alt))}
+        onClick={() => (hasOwnRecord(alt, memoCount) ? setConfirming(true) : actions.remove(alt))}
         className="flex size-8 shrink-0 items-center justify-center text-ink-400 disabled:opacity-40"
       >
         <X className="size-4" />

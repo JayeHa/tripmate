@@ -5,14 +5,15 @@ import { useEffect, useMemo } from "react";
 import type { City } from "@/entities/city";
 import {
   buildTimeline,
+  type Memo,
   type Place,
   type ScheduleItem,
   type TimelineRow,
+  useMemos,
 } from "@/entities/schedule-item";
 import { dayOfWeek } from "@/shared/lib/days";
 
 import { useAlternativeActions } from "../model/use-alternative-actions";
-import { useMemoEdit } from "../model/use-memo-edit";
 import { usePlanEdit } from "../model/use-plan-edit";
 import { AlternativeHeader } from "./alternative-header";
 import { DetailContent } from "./detail-content";
@@ -31,6 +32,8 @@ type AlternativeDetailProps = {
   onEditPlace: (place: Place, city: City | null) => void;
   /** 「이 장소로 바꾸기」 가 끝났다 — 상세가 이 대체 장소(이제 그 자리의 일정)로 옮겨 간다 */
   onSwapped: (altId: string) => void;
+  /** 메모 쓰기 · 고치기 — 이 대체 장소 줄에 붙는다 */
+  onMemo: (row: TimelineRow, memo: Memo | null) => void;
 };
 
 /**
@@ -48,16 +51,17 @@ export function AlternativeDetail({
   onLockChange,
   onEditPlace,
   onSwapped,
+  onMemo,
 }: AlternativeDetailProps) {
   const plan = usePlanEdit(tripId, alt);
-  const memo = useMemoEdit(tripId, alt);
   const actions = useAlternativeActions(tripId, row.item, onSwapped);
-  const locked = plan.locked || memo.locked || actions.locked;
+  const locked = plan.locked || actions.locked;
+  const { data: memos = [] } = useMemos(tripId);
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
-    () => buildTimeline([alt], [], dayOfWeek(startDate, alt.day_index))[0],
-    [alt, startDate],
+    () => buildTimeline([alt], [], dayOfWeek(startDate, alt.day_index), [], memos)[0],
+    [alt, startDate, memos],
   );
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
@@ -66,7 +70,7 @@ export function AlternativeDetail({
         startDate={startDate}
         row={altRow}
         plan={plan}
-        memo={memo}
+        onMemo={(memo) => onMemo(altRow, memo)}
         alternatives={null}
         onEditPlace={onEditPlace}
       />
@@ -77,6 +81,7 @@ export function AlternativeDetail({
     <AlternativeHeader
       main={row.item}
       alt={alt}
+      memoCount={altRow.memos.length}
       actions={actions}
       locked={locked}
       onBack={onBack}
@@ -84,11 +89,7 @@ export function AlternativeDetail({
     />
   );
   return isDesktop ? (
-    <PcLayout
-      header={header}
-      content={content}
-      onAddMemo={memo.text === null ? memo.start : null}
-    />
+    <PcLayout header={header} content={content} />
   ) : (
     <MobileLayout header={header} content={content} />
   );

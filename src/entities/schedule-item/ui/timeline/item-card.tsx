@@ -3,6 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
 import type { TimelineRow } from "../../lib/timeline";
+import type { MemoAuthor } from "../../model/memo";
 import { itemName } from "../../model/place";
 import { ReservationBadge } from "../reservation-badge";
 import { AlternativesLine } from "./alternatives-line";
@@ -20,6 +21,7 @@ type ItemCardProps = {
   open: boolean;
   onToggle: () => void;
   onOpen: () => void;
+  authorOf: (authorId: string | null) => MemoAuthor | null;
 };
 
 /**
@@ -28,7 +30,7 @@ type ItemCardProps = {
  * 따로 동작하는 것과 펼친 메모 본문(무반응)은 relative 로 그 위에 올린다.
  * 식사(food)는 배경 대신 오른쪽 위 64px 사진 칸(지금은 🍽️ 자리표시)을 두고 제목 · 설명이 그 자리를 비운다.
  */
-export function ItemCard({ row, open, onToggle, onOpen }: ItemCardProps) {
+export function ItemCard({ row, open, onToggle, onOpen, authorOf }: ItemCardProps) {
   return (
     <div
       className={cn(
@@ -69,10 +71,11 @@ export function ItemCard({ row, open, onToggle, onOpen }: ItemCardProps) {
         </p>
       )}
       <MemoSection
-        notes={row.notes}
+        memos={row.memos}
         hours={row.hoursOff ? null : row.hours}
         open={open}
         onToggle={onToggle}
+        authorOf={authorOf}
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { hoursOnDay } from "../model/hours";
+import { type Memo, memosByItem } from "../model/memo";
 import { type Move, MOVE_MODE_LABEL, moveKey, type MoveMode, moveModeOf } from "../model/move";
 import {
   CATEGORY_LABEL,
@@ -48,8 +49,8 @@ export type TimelineRow = {
   isMeal: boolean;
   /** 직전 번호 장소에서 오는 길. 50m 이하면 없다(이동 방법도 그때만 적을 수 있다) */
   leg: TimelineLeg | null;
-  /** memo 의 줄들. 펼치면 `·` 목록으로 보인다 */
-  notes: string[];
+  /** 이 일정의 메모(쓴 순서). ★ 중요는 접어도 보인다 */
+  memos: Memo[];
   /** 그날의 운영시간(요일별이면 그 요일 값, 「일 10:00–22:00」). 펼친 메모 칸에 「운영 …」 으로 */
   hours: string | null;
   /** 그날 휴무 — 카드에 경고 칩으로(메모를 접어도 보인다) */
@@ -89,13 +90,6 @@ function linksFor(item: ScheduleItem): TimelineLink[] {
     ...gmap,
     ...linksOf(item).map((l) => ({ title: l.title || "링크", url: l.url, gmap: false })),
   ];
-}
-
-function notesOf(memo: string | null): string[] {
-  return (memo ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
 }
 
 /**
@@ -139,14 +133,17 @@ function hoursOf(item: ScheduleItem, dow: number | null): Pick<TimelineRow, "hou
 /**
  * 하루치 일정(position 순)과 여행의 이동 기록을 타임라인 줄로 바꾼다.
  * dow 는 그날의 요일(Date.getDay(), 0 = 일요일) — 요일별 운영시간에서 그날 값을 고른다. 모르면 null.
- * alternatives 는 여행의 대체 장소 줄들 — 붙은 일정(alternative_of)마다 모아 그 줄에 단다
+ * alternatives 는 여행의 대체 장소 줄들 — 붙은 일정(alternative_of)마다 모아 그 줄에 단다.
+ * memos 는 여행의 메모들 — 일정마다 모아 단다
  */
 export function buildTimeline(
   items: ScheduleItem[],
   moves: Move[] = [],
   dow: number | null = null,
   alternatives: ScheduleItem[] = [],
+  memos: Memo[] = [],
 ): TimelineRow[] {
+  const memosOf = memosByItem(memos);
   const numbers = placeNumbers(items);
   const altsByItem = new Map<string, ScheduleItem[]>();
   for (const alt of alternatives) {
@@ -179,7 +176,7 @@ export function buildTimeline(
       meta: metaOf(item, kind, category),
       isMeal: kind === "place" && category === "food",
       leg,
-      notes: notesOf(item.memo),
+      memos: memosOf.get(item.id) ?? [],
       ...hoursOf(item, dow),
       links: linksFor(item),
       alternatives: altsByItem.get(item.id) ?? [],

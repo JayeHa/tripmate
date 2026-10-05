@@ -33,6 +33,8 @@ erDiagram
   places ||--o{ schedule_items : "place_id"
   schedule_items |o--o{ schedule_items : "alternative_of"
   schedule_items ||--o{ moves : "from · to"
+  schedule_items ||--o{ memos : "schedule_item_id"
+  profiles |o--o{ memos : "author_id"
   trips ||--o{ day_routes : ""
   trips ||--o{ expenses : ""
   schedule_items |o--o{ expenses : "schedule_item_id"
@@ -49,6 +51,7 @@ erDiagram
 | `trip_cities`    | 여행이 고른 도시와 순서                                                                                          | 여행        |
 | `places`         | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)                                | 사람 · 도시 |
 | `schedule_items` | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모). 대체 장소도 일정 줄(`alternative_of`) | 여행        |
+| `memos`          | 일정에 붙는 메모 하나(작성자 · 본문 · ★ 중요 · 링크)                                                             | 여행        |
 | `moves`          | 두 장소 사이의 이동 방법(수단 · 상세)                                                                            | 여행        |
 | `day_routes`     | Routes API 경로 캐시(지도 화면)                                                                                  | 여행        |
 | `expenses`       | 지출                                                                                                             | 여행        |
@@ -62,7 +65,9 @@ erDiagram
 일정은 `place_id` 로 장소를 참조할 뿐 복사하지 않는다. note · flight 일정은 장소가 없고 제목(`name`) · 설명을 직접 갖는다.
 아이콘은 **일정**에 붙인다(0023). 장소 입력 폼 · 「이번 일정 · 수정」이 일정의 `emoji` 에 쓰고, 장소의 `emoji` 는 더 쓰지 않는다 — 장소는 함께 쓰는 정보라 한 사람이 바꾼 아이콘이 그 장소를 쓰는 모든 일정에 퍼지지 않게. 이미 있는 장소의 `emoji` 는 일정 아이콘이 없을 때 카드의 기본값으로 남는다.
 
-**대체 장소도 일정 한 줄이다**(0024, `alternative_of` = 붙은 일정). 타임라인 · 동선 · 개수는 `alternative_of` 가 빈 줄만 본다. 예약 상태 · 일정 링크 · 메모 · 지출 연결(`expenses.schedule_item_id`, 앞으로 바우처 · 할 일)은 줄마다 따로라 「바꾸기」 하면 각자 장소를 따라간다(지출 폼이 대체 장소 줄을 보이지 않는 문제는 #91). 시간 · 이동 기록은 「자리」 의 것이라 대체 장소 줄은 시간이 없고(check), 바꾸기 할 때 새로 들어온 줄로 옮긴다. 같은 여행의 타임라인 장소 줄에만 붙고(FK · 트리거), 대체 장소의 대체 장소는 없고, 붙은 일정과 같은 날이다(넣을 때 · 옮길 때 트리거가 맞춘다). 붙은 일정을 지우면 함께 지워진다.
+**메모는 목록이다**(0027, `memos`). 메모 하나가 한 줄이고 작성자 · ★ 중요 · 링크(제목 + URL)를 갖는다. 일정 줄에 붙어(대체 장소 줄도) 「바꾸기」 하면 장소를 따라가고, 일정을 지우면 함께 지워진다. 여행 멤버 누구나 쓰고 고치고 지운다(사용자 결정 2026-10-05). 예전 일정 메모 칸(`schedule_items.memo`)은 줄마다 메모 하나로 옮기고 지웠다.
+
+**대체 장소도 일정 한 줄이다**(0024, `alternative_of` = 붙은 일정). 타임라인 · 동선 · 개수는 `alternative_of` 가 빈 줄만 본다. 예약 상태 · 일정 링크 · 메모(`memos`) · 지출 연결(`expenses.schedule_item_id`, 앞으로 바우처 · 할 일)은 줄마다 따로라 「바꾸기」 하면 각자 장소를 따라간다(지출 폼이 대체 장소 줄을 보이지 않는 문제는 #91). 시간 · 이동 기록은 「자리」 의 것이라 대체 장소 줄은 시간이 없고(check), 바꾸기 할 때 새로 들어온 줄로 옮긴다. 같은 여행의 타임라인 장소 줄에만 붙고(FK · 트리거), 대체 장소의 대체 장소는 없고, 붙은 일정과 같은 날이다(넣을 때 · 옮길 때 트리거가 맞춘다). 붙은 일정을 지우면 함께 지워진다.
 
 ---
 
@@ -79,6 +84,7 @@ erDiagram
 | `trip_cities`                 | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `trip_cities_*`                                            |
 | `places`                      | 만든 사람 + 그 장소를 일정에 쓰는 여행의 멤버 | 만든 사람 = 나                                                 | **만든 사람만**            | **만든 사람만**, 쓰는 일정이 있으면 불가                                        | 허용          | `places_*` 정책 · FK `restrict`                            |
 | `schedule_items`              | 멤버                                          | 멤버 + 붙일 수 있는 장소만                                     | 멤버 + 붙일 수 있는 장소만 | 멤버                                                                            | 허용          | `items_all` · `can_attach_place`                           |
+| `memos`                       | 멤버                                          | 멤버(작성자 = 나, 트리거)                                      | 멤버(작성자는 그대로)      | 멤버                                                                            | 허용          | `memos_all` · `keep_memo_author` · 복합 FK                 |
 | `moves`                       | 멤버                                          | 멤버 + 두 일정이 같은 여행                                     | 같음                       | 멤버                                                                            | 허용          | `moves_all` · 복합 FK                                      |
 | `day_routes`                  | 멤버                                          | 멤버(경로 API)                                                 | 멤버                       | 멤버                                                                            | 허용          | `routes_all`                                               |
 | `expenses` · `expense_splits` | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `expenses_all` · `splits_all`                              |
@@ -153,6 +159,7 @@ erDiagram
 | `add_schedule_place`         | invoker          | 허용(멤버)                                   | 장소(재사용 · 도시 결정 · 이름 정규화) + 그날 끝 일정                                                                                                                                                                                                                |
 | `add_schedule_places`        | invoker          | 허용(멤버)                                   | 일정 추가 화면에서 고른 여러 곳(저장한 장소 · 구글 · 이름만)을 고른 순서대로 한 번에. 하나라도 실패하면 아무것도 안 남는다                                                                                                                                           |
 | `create_place_schedule`      | invoker          | 허용(멤버)                                   | 장소 입력 폼의 「일정에 담기」 — 장소 정보로 새 장소(이미 가진 구글 장소면 적은 칸만 고쳐 쓴다, 이름은 늘 덮어씀) + 그날 끝 일정. 일정 칸 `p_item` 중 폼은 아이콘만 보낸다(0023 부터 아이콘은 일정에). `p_item.alternative_of` 가 있으면 그 일정의 대체 장소로(0024) |
+| `keep_memo_author`           | 트리거 · invoker | —                                            | 메모 작성자는 넣을 때 나(`auth.uid()`)로 정하고 고칠 때 바뀌지 않는다(지우기만 된다 — 계정을 지우면 FK 가 null 로, 0028)                                                                                                                                             |
 | `swap_alternative`           | invoker          | 허용(멤버)                                   | 대체 장소 「바꾸기」 — 자리 · 시간 · 이동 기록을 대체 장소로 옮기고 원래 일정을 대체 장소로. 원래 일정 줄을 잠가 같은 일정의 대체 장소를 동시에 바꾸면 뒤의 것은 거부된다(0025)                                                                                      |
 | `check_schedule_alternative` | 트리거 · invoker | —                                            | 대체 장소는 타임라인 장소 줄에만 붙고 대체 장소의 대체 장소는 없다. 날짜는 붙은 일정을 따른다. 붙을 일정을 잠가 바꾸기 · 옮기기와 겹쳐도 끝난 뒤의 값을 본다(0026)                                                                                                   |
 | `follow_alternative_day`     | 트리거 · invoker | —                                            | 일정이 다른 날로 옮겨지면 대체 장소도 같은 날로                                                                                                                                                                                                                      |
@@ -166,10 +173,10 @@ erDiagram
 
 ## 실시간
 
-`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `moves` · `places` · `expenses` · `expense_splits` 를 발행한다.
+`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` 를 발행한다.
 여행 화면은 여행 하나에 채널 하나를 열고(`features/trip/realtime-sync`) 변경이 오면 해당 쿼리를 다시 읽는다.
 
-- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `moves` · `expenses` · `expense_splits` · `places`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
+- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
 - **삭제 이벤트에는 RLS 가 적용되지 않는다**(지워진 행은 권한을 확인할 수 없다). 필터 없이 구독하는 `places` · `expense_splits` 는 남의 삭제 이벤트가 올 수 있어 확인이 필요하다(#73)
 - 근거: <https://supabase.com/docs/guides/realtime/postgres-changes> (2026-10-04 확인)
 - `places` · `expense_splits` 는 `trip_id` 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 행만 온다
