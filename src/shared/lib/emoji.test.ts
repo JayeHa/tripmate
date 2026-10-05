@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   emojiKeyboardHint,
@@ -56,5 +56,18 @@ describe("이모지 고르기", () => {
     expect(emojiKeyboardHint(device({ platform: "MacIntel" })).text).toContain("⌃ ⌘ Space");
     expect(emojiKeyboardHint(device({ platform: "Win32" })).text).toContain("Win + .");
     expect(emojiKeyboardHint(device({ platform: "Linux x86_64" })).kind).toBe("other");
+  });
+
+  it("Intl.Segmenter 가 없는 브라우저에서도 모듈이 깨지지 않고 코드포인트로 이모지를 고른다", async () => {
+    vi.resetModules();
+    vi.stubGlobal("Intl", { ...Intl, Segmenter: undefined });
+    try {
+      const { firstEmoji: fallback } = await import("./emoji");
+      expect(fallback("abc🍜x")).toBe("🍜");
+      expect(fallback("👍🏽")).toBe("👍");
+      expect(fallback("abc")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
