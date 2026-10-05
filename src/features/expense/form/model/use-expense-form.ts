@@ -12,6 +12,8 @@ type ExpenseFormOptions = {
   members: TripMember[];
   currentUserId: string;
   initial?: ExpenseFormValues;
+  /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
+  defaultSpentOn?: string;
   onSubmit: (values: ExpenseFormValues) => void;
 };
 
@@ -26,6 +28,7 @@ export function useExpenseForm({
   members,
   currentUserId,
   initial,
+  defaultSpentOn,
   onSubmit,
 }: ExpenseFormOptions) {
   const currencies = useMemo(
@@ -35,7 +38,7 @@ export function useExpenseForm({
   const memberIds = members.map((m) => m.user_id);
 
   const [start] = useState(() =>
-    startValues({ trip, currencies, memberIds, currentUserId, initial }),
+    startValues({ trip, currencies, memberIds, currentUserId, initial, defaultSpentOn }),
   );
   const [name, setName] = useState(start.name);
   const [amount, setAmount] = useState(start.amount);

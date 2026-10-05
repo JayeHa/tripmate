@@ -15,6 +15,8 @@ type StartOptions = {
   memberIds: string[];
   currentUserId: string;
   initial?: ExpenseFormValues;
+  /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd. 없으면 여행 첫날 */
+  defaultSpentOn?: string;
 };
 
 const KEPT_DEFAULTS: KeptValues = {
@@ -26,10 +28,17 @@ const KEPT_DEFAULTS: KeptValues = {
 };
 
 /**
- * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값(마지막 통화 · 내가 결제 · 모두 나눔 · 식비 · 여행 첫날).
+ * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값(마지막 통화 · 내가 결제 · 모두 나눔 · 식비 · 고른 날 또는 여행 첫날).
  * 숫자는 입력 칸이 다루는 문자열로, 날짜는 여행준비(null)를 빈 글로 바꾼다.
  */
-export function startValues({ trip, currencies, memberIds, currentUserId, initial }: StartOptions) {
+export function startValues({
+  trip,
+  currencies,
+  memberIds,
+  currentUserId,
+  initial,
+  defaultSpentOn,
+}: StartOptions) {
   if (initial) return savedValues(initial);
   return {
     name: "",
@@ -41,7 +50,7 @@ export function startValues({ trip, currencies, memberIds, currentUserId, initia
     custom: {} as Record<string, string>,
     category: "food" as ExpenseFormValues["category"],
     memo: "",
-    spentOn: trip.start_date,
+    spentOn: defaultSpentOn ?? trip.start_date,
     itemId: "",
     kept: KEPT_DEFAULTS,
   };

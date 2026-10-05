@@ -18,6 +18,8 @@ type Props = {
   items?: ScheduleItem[];
   currentUserId: string;
   initial?: ExpenseFormValues;
+  /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
+  defaultSpentOn?: string;
   submitLabel: string;
   pending?: boolean;
   onSubmit: (values: ExpenseFormValues) => void;
@@ -30,11 +32,19 @@ export function ExpenseForm({
   items = [],
   currentUserId,
   initial,
+  defaultSpentOn,
   submitLabel,
   pending,
   onSubmit,
 }: Props) {
-  const form = useExpenseForm({ trip, members, currentUserId, initial, onSubmit });
+  const form = useExpenseForm({
+    trip,
+    members,
+    currentUserId,
+    initial,
+    defaultSpentOn,
+    onSubmit,
+  });
   return (
     <form onSubmit={form.submit} className="flex flex-col gap-5">
       <AmountField form={form} autoFocus={!initial} />
