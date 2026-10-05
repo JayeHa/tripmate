@@ -48,7 +48,7 @@ export function MemoCard({ memo, author, onClick }: MemoCardProps) {
       <span
         className={cn(
           "text-sm/normal whitespace-pre-line",
-          memo.starred ? "font-semibold text-[#9a3412]" : "text-ink-800",
+          memo.starred ? "font-semibold text-important-text" : "text-ink-800",
         )}
       >
         {memo.body}

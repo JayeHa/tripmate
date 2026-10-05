@@ -78,6 +78,8 @@
   --color-line-card: #f0f1f3;
   --color-divider: #eef0f2;
   --color-handle: #c9cdd2;
+  /* 점선 추가 버튼 · 체크 원 테두리 — 값은 handle 과 같지만 쓰임이 달라 이름을 따로 둔다 */
+  --color-line-dashed: #c9cdd2;
 
   /* Primary */
   --color-primary-pressed: #1f6feb;
@@ -113,6 +115,10 @@
   --color-status-wait-bg: #fff1e6;
   --color-status-opt: #6b7280;
   --color-status-opt-bg: #f1f2f4;
+
+  /* ★ 중요 메모 — 칩 테두리 · 카드 글자(바탕은 status-wait-bg) */
+  --color-important-line: #fdd5b4;
+  --color-important-text: #9a3412;
 
   /* 메모 태그 */
   --color-tag-tip: #1f6feb;
@@ -159,7 +165,7 @@
   --accent-foreground: #222222;
   --destructive: #f04452;
   --border: #e3e5e8;
-  --input: #d5d8dc;
+  --input: #e3e5e8;
   --ring: #3a8bff;
   --chart-1: #3a8bff;
   --chart-2: #8b5cf6;
