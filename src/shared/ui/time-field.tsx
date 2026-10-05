@@ -1,77 +1,115 @@
 "use client";
 
 import { Clock, X } from "lucide-react";
+import { type ClipboardEvent, type FocusEvent, useRef } from "react";
 
-import { useTimePicker } from "@/shared/lib/use-time-picker";
+import { timeErrorText } from "@/shared/lib/time-input";
+import { useTimeInput } from "@/shared/lib/use-time-input";
 import { cn } from "@/shared/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-
-import { TimePickerPanel } from "./time-picker-panel";
 
 type TimeFieldProps = {
-  /** 「HH:mm」 또는 ""(시간 없음) */
+  /** 「HH:MM」 또는 ""(시간 없음) */
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
-  /** 창을 칸 아래(기본) · 위에 연다 — 아래 공간이 모자란 자리 */
-  placement?: "bottom" | "top";
-  /** 창을 칸 왼쪽(기본) · 오른쪽 끝에 맞춘다 — 두 칸을 나란히 둔 오른쪽 칸이면 창이 화면 밖으로 잘리지 않게 */
-  align?: "left" | "right";
+  disabled?: boolean;
+  autoFocus?: boolean;
   "aria-label"?: string;
 };
 
+/** 숫자 칸 공통 — 폭 28 · 가운데 · 15/700 */
+const NUMBER =
+  "w-7 bg-transparent p-0 text-center text-[15px] font-bold text-ink-900 outline-none placeholder:text-ink-350 disabled:opacity-40";
+
 /**
- * 시간 칸 — 브라우저 기본 시간 입력 대신 쓴다. 누르면 칸 아래(또는 위) 300 창에서 시 · 분을 키보드로 치고 「확인」 해야 바뀐다.
- * 값이 있으면 오른쪽 ✕ 로 지운다. 결제 예정일 달력과 같은 팝오버 계열
+ * 시간 칸 — 브라우저 기본 시간 입력 대신 쓴다. 칸 안에서 「[시] 시 : [분] 분」 을 바로 치고, 칸 밖으로 나가면 확정한다
+ * (팝오버 · 목록 · 확인 버튼 없음). 값이 있으면 오른쪽 ✕ 로 시간 없음. 범위를 벗어나면 빨간 테두리 · 안내만 보이고 저장하지 않는다
  */
 export function TimeField({
   value,
   onChange,
-  placeholder = "시간 선택",
-  placement = "bottom",
-  align = "left",
+  disabled = false,
+  autoFocus = false,
   "aria-label": ariaLabel = "시간",
 }: TimeFieldProps) {
-  const picker = useTimePicker(value, onChange);
+  const hourRef = useRef<HTMLInputElement>(null);
+  const minuteRef = useRef<HTMLInputElement>(null);
+  const t = useTimeInput(value, onChange, { hourRef, minuteRef });
+  const filled = t.hour !== "" || t.minute !== "";
+
+  /** 칸 묶음 밖으로 나갈 때만 확정한다(시 → 분 이동은 그대로) */
+  function onBlur(e: FocusEvent<HTMLDivElement>) {
+    if (!e.currentTarget.contains(e.relatedTarget)) t.commit();
+  }
+
+  /** 붙여넣기가 시간 모양이면 두 칸에 나눠 넣는다 */
+  function onPaste(e: ClipboardEvent) {
+    if (t.paste(e.clipboardData.getData("text"))) e.preventDefault();
+  }
+
   return (
-    <Popover open={picker.open} onOpenChange={picker.setOpen}>
-      <div className="relative">
-        <PopoverTrigger
-          aria-label={value ? `${ariaLabel} ${value}` : ariaLabel}
-          className={cn(
-            "flex h-11 w-full items-center gap-2 rounded-memo bg-white pr-10 pl-3.5 text-left",
-            picker.open ? "border-[1.5px] border-primary" : "border border-line",
-          )}
-        >
-          <Clock className={cn("size-4.25 shrink-0", value ? "text-primary" : "text-ink-350")} />
-          <span
-            className={cn(
-              "text-[15px]",
-              value ? "font-bold text-ink-900" : "font-medium text-ink-350",
-            )}
-          >
-            {value || placeholder}
-          </span>
-        </PopoverTrigger>
-        {value && !picker.open && (
+    <div className="flex flex-col gap-1">
+      <div
+        role="group"
+        aria-label={ariaLabel}
+        onBlur={onBlur}
+        className={cn(
+          "flex h-11 items-center gap-1.5 rounded-memo bg-white px-3",
+          t.error
+            ? "border-[1.5px] border-destructive"
+            : "border border-line focus-within:border-[1.5px] focus-within:border-primary",
+        )}
+      >
+        <Clock className="size-4 shrink-0 text-ink-400" />
+        <input
+          ref={hourRef}
+          value={t.hour}
+          onChange={(e) => t.typeHour(e.target.value)}
+          onKeyDown={t.hourKey}
+          onPaste={onPaste}
+          onFocus={(e) => e.currentTarget.select()}
+          inputMode="numeric"
+          maxLength={2}
+          placeholder="--"
+          aria-label={`${ariaLabel} 시`}
+          disabled={disabled}
+          // 시간 칸을 바로 치도록 연 창에서만 쓴다
+
+          autoFocus={autoFocus}
+          className={NUMBER}
+        />
+        <span className="text-[13px] text-ink-400">시</span>
+        <span className="text-[15px] font-bold text-ink-350">:</span>
+        <input
+          ref={minuteRef}
+          value={t.minute}
+          onChange={(e) => t.typeMinute(e.target.value)}
+          onKeyDown={t.minuteKey}
+          onPaste={onPaste}
+          onFocus={(e) => e.currentTarget.select()}
+          inputMode="numeric"
+          maxLength={2}
+          placeholder="--"
+          aria-label={`${ariaLabel} 분`}
+          disabled={disabled}
+          className={NUMBER}
+        />
+        <span className="flex-1 text-[13px] text-ink-400">분</span>
+        {filled && !disabled && (
           <button
             type="button"
             aria-label={`${ariaLabel} 지우기`}
-            onClick={() => onChange("")}
-            className="absolute top-1/2 right-2.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-line"
+            onClick={t.clear}
+            className="flex size-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-ink-400"
           >
-            <X className="size-3 text-white" strokeWidth={3} />
+            <X className="size-3" strokeWidth={2.6} />
           </button>
         )}
       </div>
-      <PopoverContent
-        side={placement}
-        align={align === "right" ? "end" : "start"}
-        sideOffset={6}
-        className="w-75 max-w-[calc(100vw-2rem)] gap-0 rounded-card bg-white p-3.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-1 ring-divider"
-      >
-        <TimePickerPanel picker={picker} />
-      </PopoverContent>
-    </Popover>
+      {t.error && (
+        <span className="text-xs font-semibold text-destructive">
+          {timeErrorText(t.error, t.hour)}
+        </span>
+      )}
+    </div>
   );
 }
