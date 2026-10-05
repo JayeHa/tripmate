@@ -5,7 +5,7 @@ import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 import { decimalsOf, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
-import { type SplitMode, startValues } from "./start-values";
+import { type SplitMode, startValues } from "../lib/start-values";
 
 type ExpenseFormOptions = {
   trip: Trip;

@@ -5,7 +5,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 
-import type { SplitMode } from "../model/start-values";
+import type { SplitMode } from "../lib/start-values";
 import type { ExpenseFormState } from "../model/use-expense-form";
 
 type SplitFieldProps = {
