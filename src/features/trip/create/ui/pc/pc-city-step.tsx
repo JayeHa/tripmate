@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
+import { SearchField } from "@/shared/ui/search-field";
 
 import type { TripCreateState } from "../../model/use-trip-create";
-import { CitySearchInput } from "../parts/city-search-input";
 import { CityStepBody } from "../parts/city-step-body";
 
 type PcCityStepProps = { state: TripCreateState };
@@ -11,10 +10,12 @@ export function PcCityStep({ state }: PcCityStepProps) {
   return (
     <>
       <div className="shrink-0 px-7">
-        <div className="flex h-11.5 items-center gap-2 rounded-card bg-surface-muted px-3.5">
-          <Search className="size-5 shrink-0 text-ink-400" />
-          <CitySearchInput value={state.query} onChange={state.setQuery} className="text-[15px]" />
-        </div>
+        <SearchField
+          value={state.query}
+          onValueChange={state.setQuery}
+          placeholder="여행, 어디로 떠나시나요?"
+          aria-label="도시 검색"
+        />
       </div>
       <CityStepBody state={state} layout="pc" />
     </>
