@@ -28,7 +28,7 @@ export function SummaryField({ value, onChange, layout }: SummaryFieldProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={SUMMARY_MAX}
-        placeholder="예: 파르코 라멘 → 파크 14:00 → 굿즈 쇼핑"
+        placeholder="예: 디즈니랜드 가는 날"
         className={cn(
           "w-full rounded-memo border border-line bg-white px-3 text-ink-900 outline-none placeholder:text-ink-350 focus:border-primary",
           look.input,
