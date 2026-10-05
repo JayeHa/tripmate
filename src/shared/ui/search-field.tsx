@@ -17,7 +17,7 @@ type SearchFieldProps = Omit<React.ComponentProps<"input">, "size" | "value" | "
 };
 
 /**
- * 검색 칸(P3) — 회색 채움(#F2F3F5) · 테두리 없음(입력 폼 칸과 구분) · 왼쪽 Search 18 #999 · 값이 있으면 ✕(22 원).
+ * 검색 칸(P3) — 회색 채움(#F2F3F5) · 테두리 없음(입력 폼 칸과 구분) · 왼쪽 Search 18 #999 · 값이 있으면 ✕(22 원, 지우면 입력칸에 포커스).
  * 입력 속성(ref · onKeyDown · placeholder 등)은 안쪽 input 에 그대로 넘긴다
  */
 export function SearchField({
@@ -46,7 +46,11 @@ export function SearchField({
         <button
           type="button"
           aria-label="검색어 지우기"
-          onClick={() => onValueChange("")}
+          onClick={(e) => {
+            // 지운 뒤 입력칸으로 포커스를 돌려준다 — 버튼이 사라지며 포커스가 창으로 빠지면 Esc 가 창을 닫는다
+            e.currentTarget.closest("label")?.querySelector("input")?.focus();
+            onValueChange("");
+          }}
           className="flex size-5.5 shrink-0 items-center justify-center rounded-full bg-line-dashed text-white"
         >
           <X className="size-3" strokeWidth={3} />
