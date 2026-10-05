@@ -6,6 +6,7 @@ import { useState } from "react";
 import { tripFormSchema, type TripFormValues } from "@/entities/trip";
 import { CURRENCY_OPTIONS } from "@/shared/lib/money";
 import { Button } from "@/shared/ui/button";
+import { DateField } from "@/shared/ui/date-field";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
@@ -94,23 +95,18 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="시작일" error={errors.start_date}>
-          <Input
-            type="date"
-            value={form.start_date}
-            onChange={(e) => set("start_date", e.target.value)}
-          />
-        </Field>
-        <Field label="종료일" error={errors.end_date}>
-          <Input
-            type="date"
-            value={form.end_date}
-            min={form.start_date || undefined}
-            onChange={(e) => set("end_date", e.target.value)}
-          />
-        </Field>
-      </div>
+      <Field label="여행 기간" error={errors.start_date || errors.end_date}>
+        <DateField
+          mode="range"
+          aria-label="여행 기간"
+          start={form.start_date}
+          end={form.end_date}
+          required
+          onChange={({ start, end }) =>
+            setForm((f) => ({ ...f, start_date: start, end_date: end }))
+          }
+        />
+      </Field>
 
       <Field label="기준 화폐 (정산에 사용)" error={errors.home_currency}>
         <select
