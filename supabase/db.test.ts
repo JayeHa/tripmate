@@ -586,13 +586,12 @@ describe("create_place_schedule (0017)", () => {
         JSON.stringify({
           status: "wait",
           start_time: "19:30",
-          memo: "수건 챙기기",
           links: [{ title: "티켓", url: "https://t.example.com" }],
         }),
       ],
     );
     const { rows: got } = await db.query<Record<string, unknown>>(
-      `select si.position, si.status, si.start_time::text t, si.memo, si.links item_links,
+      `select si.position, si.status, si.start_time::text t, si.links item_links,
               p.name, p.category, p.wait, p.review_count, p.city_id, p.links place_links
        from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
     );
@@ -600,7 +599,6 @@ describe("create_place_schedule (0017)", () => {
       position: 1,
       status: "wait",
       t: "19:30:00",
-      memo: "수건 챙기기",
       name: "유야 온천",
       category: "rest",
       wait: "20분",
@@ -682,17 +680,17 @@ describe("create_place_schedule — 이미 가진 구글 장소 (0018)", () => {
           wait: "30분",
           links: [],
         }),
-        JSON.stringify({ memo: "카운터석" }),
+        JSON.stringify({ status: "ok" }),
       ],
     );
     const { rows: got } = await db.query<Record<string, unknown>>(
       `select si.place_id = (select place_id from public.schedule_items where id = '${first}') same,
-              si.memo, p.name, p.category, p.wait, p.address, p.lat
+              si.status, p.name, p.category, p.wait, p.address, p.lat
        from public.schedule_items si join public.places p on p.id = si.place_id where si.id = '${rows[0].id}'`,
     );
     expect(got[0]).toMatchObject({
       same: true,
-      memo: "카운터석",
+      status: "ok",
       name: "이치란",
       category: "food",
       wait: "30분",
@@ -888,7 +886,10 @@ describe("대체 장소는 일정 줄 (0024)", () => {
     const main = await addPlace(trip, 0, { name: "머메이드 커피", lat: 35.73, lng: 139.71 });
     const next = await addPlace(trip, 0, { name: "선샤인시티", lat: 35.729, lng: 139.719 });
     await db.query(
-      `update public.schedule_items set start_time = '13:00', status = 'ok', memo = '창가 자리' where id = '${main}'`,
+      `update public.schedule_items set start_time = '13:00', status = 'ok' where id = '${main}'`,
+    );
+    await db.query(
+      `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${main}', '창가 자리')`,
     );
     const { rows } = await db.query<{ id: string }>(
       `select public.create_place_schedule($1, 1, $2, $3) id`,
@@ -914,7 +915,9 @@ describe("대체 장소는 일정 줄 (0024)", () => {
   async function row(id: string) {
     return (
       await db.query<Record<string, unknown>>(
-        `select day_index, position, start_time::text t, status, memo, alternative_of from public.schedule_items where id = '${id}'`,
+        `select si.day_index, si.position, si.start_time::text t, si.status, si.alternative_of,
+                (select string_agg(body, ',') from public.memos m where m.schedule_item_id = si.id) memo
+         from public.schedule_items si where si.id = '${id}'`,
       )
     ).rows[0];
   }
@@ -992,6 +995,81 @@ describe("대체 장소는 일정 줄 (0024)", () => {
     const { alt } = await setup("2027-09-10", "2027-09-11");
     await as(B);
     expect(await rejects(`select public.swap_alternative('${alt}')`)).toMatch(/not an alternative/);
+  });
+});
+
+describe("메모 목록 (0027)", () => {
+  it("일정에 메모를 붙이고, 작성자는 넣은 사람으로 고정 · 멤버 누구나 고치고 지운다 · 일정을 지우면 함께", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-01", "2027-10-01");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const item = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    const { rows } = await db.query<{ id: string; author_id: string }>(
+      `insert into public.memos (trip_id, schedule_item_id, author_id, body, starred, links)
+       values ('${trip}', '${item}', '${B}', '카운터석', true, '[{"title":"메뉴","url":"https://m"}]')
+       returning id, author_id`,
+    );
+    expect(rows[0].author_id).toBe(A);
+    await as(B);
+    await db.query(
+      `update public.memos set body = '창가석', author_id = '${B}' where id = '${rows[0].id}'`,
+    );
+    const after = await db.query<{ body: string; author_id: string }>(
+      `select body, author_id from public.memos where id = '${rows[0].id}'`,
+    );
+    expect(after.rows[0]).toEqual({ body: "창가석", author_id: A });
+    expect(
+      await rejects(
+        `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${item}', '  ')`,
+      ),
+    ).toMatch(/check constraint/);
+    await as(A);
+    await db.query(`delete from public.schedule_items where id = '${item}'`);
+    const left = await db.query(`select id from public.memos where id = '${rows[0].id}'`);
+    expect(left.rows).toEqual([]);
+  });
+
+  it("멤버가 아니면 읽지도 쓰지도 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-03", "2027-10-03");
+    const item = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    await db.query(
+      `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${item}', '메모')`,
+    );
+    await as(B);
+    const seen = await db.query(`select id from public.memos where trip_id = '${trip}'`);
+    expect(seen.rows).toEqual([]);
+    expect(
+      await rejects(
+        `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${item}', '메모')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+});
+
+describe("0027 데이터 이전", () => {
+  it("일정 메모 한 줄 = 메모 하나, 「★ 」 줄은 중요, 작성자는 일정을 만든 사람, 줄 순서 유지", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0027"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('44444444-4444-4444-4444-444444444444', '${A}', 't', '2027-06-01', '2027-06-01');
+      insert into public.schedule_items (id, trip_id, day_index, position, kind, name, memo, created_by)
+        values ('55555555-5555-5555-5555-555555555555', '44444444-4444-4444-4444-444444444444', 0, 0, 'note', '집합',
+                E'첫 줄\n\n★ 7층 집합\n  셋째 줄  ', '${A}');
+    `);
+    await applyMigration(pg, "0027_memos.sql");
+    const { rows } = await pg.query<{ body: string; starred: boolean; author_id: string }>(
+      `select body, starred, author_id from public.memos order by created_at`,
+    );
+    expect(rows).toEqual([
+      { body: "첫 줄", starred: false, author_id: A },
+      { body: "7층 집합", starred: true, author_id: A },
+      { body: "셋째 줄", starred: false, author_id: A },
+    ]);
   });
 });
 
