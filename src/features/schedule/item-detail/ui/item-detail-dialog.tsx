@@ -37,6 +37,8 @@ type ItemDetailDialogProps = {
   onSwapped: (altId: string, message: string) => void;
   /** 메모 쓰기 · 고치기 — 부른 쪽이 그 일정(줄)의 메모 작성 창을 상세 위에 연다. 새로 쓰면 memo 는 null */
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
+  /** ⋯ 메뉴의 이동 · 삭제가 끝났다 — 상세는 닫히고 부른 쪽이 토스트(message)를 띄운다 */
+  onToast: (message: string) => void;
 };
 
 /**
@@ -100,10 +102,14 @@ function MainDetail({
   onAddAlternative,
   onSwapped,
   onMemo,
+  onToast,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
-  const actions = useItemActions(tripId, row.item, onClose);
+  const actions = useItemActions(tripId, row.item, (message) => {
+    onClose();
+    onToast(message);
+  });
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
   const locked = plan.locked || actions.locked || alternatives.locked;
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
