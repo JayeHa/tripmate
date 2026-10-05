@@ -99,6 +99,7 @@ export function TripSettingsView({ tripId }: TripSettingsViewProps) {
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
                 <AlertDialogAction
+                  variant="danger"
                   onClick={() =>
                     remove.mutate(tripId, { onSuccess: () => router.replace("/trips") })
                   }

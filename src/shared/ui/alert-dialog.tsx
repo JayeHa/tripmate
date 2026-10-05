@@ -42,11 +42,23 @@ function AlertDialogContent({
     <AlertDialogPortal>
       {/* 확인창은 늘 맨 위라, 다른 창 안에서 열어도(중첩) 스크림을 그린다 — Base UI 는 중첩이면 기본으로 그리지 않는다 */}
       <AlertDialogOverlay forceRender />
+      {/*
+        바깥을 누르면 취소 — AlertDialog 는 바깥 누르기로 닫히지 않아서(disablePointerDismissal 고정) 스크림 위를 닫기 영역으로 덮는다.
+        닫으면 안 되는 동안은 각 창의 onOpenChange 가 막는다
+      */}
+      <AlertDialogPrimitive.Close
+        aria-hidden
+        tabIndex={-1}
+        render={<div />}
+        nativeButton={false}
+        className="fixed inset-0 z-50"
+      />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-size={size}
+        // 모바일은 좌우 24 를 남긴 폭, PC(1024~)는 400. 구분선 없이 흰 바탕 하나
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-3rem)] -translate-1/2 gap-2 rounded-[16px] bg-white px-5 pt-6 pb-4 text-ink-900 duration-100 outline-none lg:w-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
@@ -59,10 +71,7 @@ function AlertDialogHeader({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn(
-        "grid grid-rows-[auto_1fr] place-items-center gap-1.5 text-center has-data-[slot=alert-dialog-media]:grid-rows-[auto_auto_1fr] has-data-[slot=alert-dialog-media]:gap-x-4 sm:group-data-[size=default]/alert-dialog-content:place-items-start sm:group-data-[size=default]/alert-dialog-content:text-left sm:group-data-[size=default]/alert-dialog-content:has-data-[slot=alert-dialog-media]:grid-rows-[auto_1fr]",
-        className,
-      )}
+      className={cn("grid place-items-start gap-2 text-left", className)}
       {...props}
     />
   );
@@ -73,7 +82,8 @@ function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">)
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
+        // 버튼은 가로 한 줄 — 모바일은 반씩 46, PC 는 오른쪽에 붙은 42
+        "flex gap-2 pt-3 *:h-11.5 *:flex-1 *:text-[15px] *:font-bold lg:justify-end lg:*:h-10.5 lg:*:flex-none lg:*:px-4.5 lg:*:text-sm",
         className,
       )}
       {...props}
@@ -101,10 +111,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn(
-        "font-heading text-base font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
-        className,
-      )}
+      className={cn("text-lg font-extrabold text-ink-900 lg:text-[19px]", className)}
       {...props}
     />
   );
@@ -117,10 +124,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn(
-        "text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
-        className,
-      )}
+      className={cn("text-sm/normal text-pretty text-ink-500", className)}
       {...props}
     />
   );
@@ -132,7 +136,7 @@ function AlertDialogAction({ className, ...props }: React.ComponentProps<typeof 
 
 function AlertDialogCancel({
   className,
-  variant = "outline",
+  variant = "chip",
   size = "default",
   ...props
 }: AlertDialogPrimitive.Close.Props &
