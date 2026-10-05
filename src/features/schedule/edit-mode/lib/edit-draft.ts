@@ -39,7 +39,10 @@ export function removeSelected(draft: EditDraft, selected: ReadonlySet<string>):
   return draft.map((d) => d.filter((id) => !selected.has(id)));
 }
 
-/** 고른 일정을 그날 맨 끝으로 옮긴다(지금 순서대로) */
+/**
+ * 고른 일정을 그날 맨 끝으로 옮긴다(지금 순서대로).
+ * 편집하는 동안 여행이 늘어 초안에 없는 날이면 빈 날을 채워 늘린다 — 늘리지 않으면 고른 일정이 어느 날에도 없어 지울 것으로 저장된다
+ */
 export function moveSelected(
   draft: EditDraft,
   selected: ReadonlySet<string>,
@@ -47,7 +50,8 @@ export function moveSelected(
 ): EditDraft {
   const picked = draft.flat().filter((id) => selected.has(id));
   const rest = removeSelected(draft, selected);
-  return rest.map((d, i) => (i === day ? [...d, ...picked] : d));
+  const days = Array.from({ length: Math.max(rest.length, day + 1) }, (_, i) => rest[i] ?? []);
+  return days.map((d, i) => (i === day ? [...d, ...picked] : d));
 }
 
 /**

@@ -30,6 +30,12 @@ describe("편집 초안", () => {
     expect(moveSelected(initial, new Set(["c", "a"]), 1)).toEqual([["b"], ["d", "a", "c"], []]);
   });
 
+  it("편집 중 기간이 늘어 초안에 없는 날로 옮기면 날을 늘려 담는다(지우지 않는다)", () => {
+    const moved = moveSelected(initial, new Set(["b"]), 4);
+    expect(moved).toEqual([["a", "c"], ["d"], [], [], ["b"]]);
+    expect(editChanges(initial, moved).deletes).toEqual([]);
+  });
+
   it("저장할 것: 순서가 달라진 날만 · 사라진 일정", () => {
     expect(editChanges(initial, initial)).toEqual({ days: {}, deletes: [] });
     const moved = moveSelected(reorder(initial, 0, 2, 0), new Set(["a"]), 2);
