@@ -125,7 +125,7 @@ export function PeopleFields({ form, members }: PeopleFieldsProps) {
 
 type DateItemFieldsProps = FormProps & { trip: Trip; items: ScheduleItem[] };
 
-/** 날짜 + 그날 일정 중 연결할 것(선택) */
+/** 날짜(여행준비 또는 여행 중 하루) + 그날 일정 중 연결할 것(선택) */
 export function DateItemFields({ form, trip, items }: DateItemFieldsProps) {
   const days = Math.max(1, dayCount(trip.start_date, trip.end_date));
   const dayItems = items.filter(
@@ -140,6 +140,7 @@ export function DateItemFields({ form, trip, items }: DateItemFieldsProps) {
           value={form.spentOn}
           onChange={(e) => form.setSpentOn(e.target.value)}
         >
+          <option value="">여행준비</option>
           {Array.from({ length: days }, (_, i) => (
             <option key={i} value={dayIndexToDate(trip.start_date, i)}>
               Day {i + 1} · {dayLabel(trip.start_date, i)}

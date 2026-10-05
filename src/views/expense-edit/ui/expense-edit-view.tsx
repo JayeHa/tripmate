@@ -4,8 +4,8 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import {
-  type ExpenseCategory,
   type ExpenseFormValues,
+  formValuesOf,
   useDeleteExpense,
   useExpenses,
   useUpdateExpense,
@@ -44,21 +44,7 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
   const expense = expenses?.find((e) => e.id === expenseId);
   const back = `/trips/${tripId}/expenses`;
 
-  const initial: ExpenseFormValues | undefined = expense && {
-    amount: Number(expense.amount),
-    currency: expense.currency,
-    payer_id: expense.payer_id,
-    participant_ids: expense.splits.map((s) => s.user_id),
-    split_mode: expense.split_mode as "equal" | "custom",
-    custom_shares:
-      expense.split_mode === "custom"
-        ? Object.fromEntries(expense.splits.map((s) => [s.user_id, Number(s.share)]))
-        : undefined,
-    category: expense.category as ExpenseCategory,
-    memo: expense.memo ?? undefined,
-    spent_on: expense.spent_on,
-    schedule_item_id: expense.schedule_item_id,
-  };
+  const initial: ExpenseFormValues | undefined = expense && formValuesOf(expense);
 
   return (
     <>
@@ -105,7 +91,10 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
             submitLabel="저장"
             pending={update.isPending}
             onSubmit={(values) =>
-              update.mutate({ expenseId, values }, { onSuccess: () => router.replace(back) })
+              update.mutate(
+                { expenseId, values, previousCurrency: initial.currency },
+                { onSuccess: () => router.replace(back) },
+              )
             }
           />
         )}

@@ -22,7 +22,13 @@ function expense(
     amount,
     currency,
     category: "other",
+    name: id,
     memo: null,
+    payment_method: "cash",
+    rate: null,
+    counted: true,
+    paid: true,
+    due_date: null,
     spent_on: "2026-10-29",
     split_mode: "equal",
     created_by: null,
@@ -89,5 +95,35 @@ describe("computeNetBalances", () => {
     const sum = Object.values(b.net).reduce((x, y) => x + y, 0);
     expect(sum).toBe(0);
     for (const v of Object.values(b.net)) expect(Number.isInteger(v)).toBe(true);
+  });
+
+  it("합계에서 뺀 지출은 낸 돈 · 몫 · 합계 어디에도 넣지 않는다", () => {
+    const b = computeNetBalances(
+      [
+        expense("e1", "a", 9000, "KRW", members),
+        { ...expense("e2", "b", 6000, "KRW", members), counted: false },
+      ],
+      members,
+      "KRW",
+      rates,
+    );
+    expect(b.net).toEqual({ a: 6000, b: -3000, c: -3000 });
+    expect(b.totalHome).toBe(9000);
+    expect(b.paidByCurrency.b).toEqual({});
+  });
+
+  it("지출에 적은 환율이 여행 기본 환율보다 먼저다 — 기본 환율이 없어도 계산된다", () => {
+    const b = computeNetBalances(
+      [
+        { ...expense("e1", "a", 3000, "JPY", members), rate: 8.883 },
+        { ...expense("e2", "b", 30, "USD", members), rate: 1400 },
+      ],
+      members,
+      "KRW",
+      rates,
+    );
+    // 3,000엔 × 8.883 = 26,649원 · 30달러 × 1,400 = 42,000원 → 한 사람 몫 22,883원
+    expect(b.totalHome).toBe(68649);
+    expect(b.net).toEqual({ a: 3766, b: 19117, c: -22883 });
   });
 });

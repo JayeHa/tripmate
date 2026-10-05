@@ -37,6 +37,7 @@ export function toHome(
   if (currency === home) return amount;
   const rate = rates[currency];
   if (!rate || rate.unit <= 0) throw new MissingRateError(currency);
+  // 곱한 뒤 나눈다 — 100엔 = 920원에서 100 × (920 / 100) 은 919.99… 가 된다
   return (amount * rate.value) / rate.unit;
 }
 

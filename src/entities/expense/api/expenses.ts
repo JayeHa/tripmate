@@ -1,6 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
 import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
+import { insertColumns, updateColumns } from "../lib/columns";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
 
@@ -39,18 +40,7 @@ export async function createExpense(
   const shares = resolveShares(values);
   const { data, error } = await supabase
     .from("expenses")
-    .insert({
-      trip_id: tripId,
-      payer_id: values.payer_id,
-      amount: values.amount,
-      currency: values.currency,
-      category: values.category,
-      memo: values.memo || null,
-      spent_on: values.spent_on,
-      split_mode: values.split_mode,
-      schedule_item_id: values.schedule_item_id ?? null,
-      created_by: createdBy,
-    })
+    .insert({ ...insertColumns(values), trip_id: tripId, created_by: createdBy })
     .select("id")
     .single();
   if (error) throw error;
@@ -66,21 +56,17 @@ export async function createExpense(
   return data.id;
 }
 
-export async function updateExpense(expenseId: string, values: ExpenseFormValues): Promise<void> {
+/** 지출을 고친다. previousCurrency 는 고치기 전 통화 — 바뀌었으면 그 지출의 환율을 비운다 */
+export async function updateExpense(
+  expenseId: string,
+  values: ExpenseFormValues,
+  previousCurrency: string,
+): Promise<void> {
   const supabase = createClient();
   const shares = resolveShares(values);
   const { error } = await supabase
     .from("expenses")
-    .update({
-      payer_id: values.payer_id,
-      amount: values.amount,
-      currency: values.currency,
-      category: values.category,
-      memo: values.memo || null,
-      spent_on: values.spent_on,
-      split_mode: values.split_mode,
-      schedule_item_id: values.schedule_item_id ?? null,
-    })
+    .update(updateColumns(values, previousCurrency))
     .eq("id", expenseId);
   if (error) throw error;
 
@@ -101,7 +87,7 @@ export async function deleteExpense(expenseId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** date 이후(포함)의 지출 수. 기간을 줄일 때 마지막 날로 모일 지출을 미리 센다 */
+/** date 이후(포함)의 지출 수. 기간을 줄일 때 마지막 날로 모일 지출을 미리 센다. 여행준비(날짜 없음)는 세지 않는다 */
 export async function countExpensesFrom(tripId: string, date: string): Promise<number> {
   const supabase = createClient();
   const { count, error } = await supabase

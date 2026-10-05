@@ -5,7 +5,7 @@ import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 import { decimalsOf, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
-export type SplitMode = ExpenseFormValues["split_mode"];
+import { type SplitMode, startValues } from "../lib/start-values";
 
 type ExpenseFormOptions = {
   trip: Trip;
@@ -15,56 +15,11 @@ type ExpenseFormOptions = {
   onSubmit: (values: ExpenseFormValues) => void;
 };
 
-type StartOptions = {
-  trip: Trip;
-  currencies: string[];
-  memberIds: string[];
-  currentUserId: string;
-  initial?: ExpenseFormValues;
-};
-
-/**
- * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값(마지막 통화 · 내가 결제 · 모두 나눔 · 식비 · 여행 첫날).
- * 숫자는 입력 칸이 다루는 문자열로 바꾼다.
- */
-function startValues({ trip, currencies, memberIds, currentUserId, initial }: StartOptions) {
-  if (initial) return savedValues(initial);
-  return {
-    amount: "",
-    currency: currencies[currencies.length - 1],
-    payerId: currentUserId,
-    participants: memberIds,
-    splitMode: "equal" as SplitMode,
-    custom: {} as Record<string, string>,
-    category: "food" as ExpenseFormValues["category"],
-    memo: "",
-    spentOn: trip.start_date,
-    itemId: "",
-  };
-}
-
-/** 저장된 지출을 입력 칸 값으로 */
-function savedValues(initial: ExpenseFormValues) {
-  return {
-    amount: String(initial.amount),
-    currency: initial.currency,
-    payerId: initial.payer_id,
-    participants: initial.participant_ids,
-    splitMode: initial.split_mode,
-    custom: Object.fromEntries(
-      Object.entries(initial.custom_shares ?? {}).map(([k, v]) => [k, String(v)]),
-    ),
-    category: initial.category,
-    memo: initial.memo ?? "",
-    spentOn: initial.spent_on,
-    itemId: initial.schedule_item_id ?? "",
-  };
-}
-
 /**
  * 지출 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
  * 금액 · 직접 나눈 몫은 입력 중인 문자열로 들고, 제출할 때 숫자로 바꾼다.
- * 날짜를 바꾸면 연결 일정을 비운다(그날 일정에서만 고른다).
+ * 날짜를 바꾸면 연결 일정을 비운다(그날 일정에서만 고른다). 날짜가 빈 글이면 여행준비다.
+ * 환율 · 결제수단 · 합계 포함 · 결제 상태는 칸이 없어 처음 값을 들고만 있다 — 새 지출은 그 값으로 넣고, 수정은 보내지 않는다(updateColumns)
  */
 export function useExpenseForm({
   trip,
@@ -82,6 +37,7 @@ export function useExpenseForm({
   const [start] = useState(() =>
     startValues({ trip, currencies, memberIds, currentUserId, initial }),
   );
+  const [name, setName] = useState(start.name);
   const [amount, setAmount] = useState(start.amount);
   const [currency, setCurrency] = useState(start.currency);
   const [payerId, setPayerId] = useState(start.payerId);
@@ -130,6 +86,8 @@ export function useExpenseForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = expenseFormSchema.safeParse({
+      ...start.kept,
+      name,
       amount: numAmount,
       currency,
       payer_id: payerId,
@@ -138,7 +96,7 @@ export function useExpenseForm({
       custom_shares: splitMode === "custom" ? customShares() : undefined,
       category,
       memo: memo || undefined,
-      spent_on: spentOn,
+      spent_on: spentOn || null,
       schedule_item_id: itemId || null,
     } satisfies ExpenseFormValues);
     if (!parsed.success) {
@@ -166,6 +124,8 @@ export function useExpenseForm({
   return {
     currencies,
     memberIds,
+    name,
+    setName,
     amount,
     setAmount,
     currency,
