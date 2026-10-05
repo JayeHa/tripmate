@@ -50,6 +50,7 @@ function scrollTopOf(target: HTMLElement | Window): number {
  * 이어서 보기에서 「지금 보고 있는 날」 — 날짜 머리가 기준선을 지난 마지막 날짜(프레임당 한 번 고른다). 바뀌면 onChange 로 알린다.
  * `scrollToDay` 는 그 날짜 머리를 기준선에 맞춰 스크롤하고, 사용자가 직접 스크롤하기 전까지 그 날을 붙잡아 둔다 —
  * 짧은 마지막 날처럼 머리가 기준선까지 못 올라와도 누른 날이 그대로 보이게.
+ * 붙잡은 동안 목록 높이가 바뀌면(이동 기록 · 메모 · 대체 장소가 늦게 도착해 위쪽 날이 길어지면) 같은 날로 다시 맞춘다.
  * `holding` 은 붙잡아 둔 동안 true — 지도는 그동안 강조된 장소 대신 이 날을 따른다
  */
 export function useVisibleDay({ scroller, list, line, enabled, onChange }: VisibleDayOptions) {
@@ -88,14 +89,22 @@ export function useVisibleDay({ scroller, list, line, enabled, onChange }: Visib
       locked.current = null;
       setHolding(false);
     };
+    // 붙잡은 날이 있으면 목록 높이가 바뀔 때 그 날로 다시 맞춘다(바로 — 늦게 온 데이터로 밀린 만큼만)
+    const realign = new ResizeObserver(() => {
+      const day = locked.current;
+      const { scroller: s, list: l, line: lineOf } = latest.current;
+      if (day !== null) alignDay(targetOf(s), l.current, day, lineOf, "instant");
+    });
+    if (list.current) realign.observe(list.current);
     target.addEventListener("scroll", onScroll, { passive: true });
     for (const e of USER_SCROLL_EVENTS) window.addEventListener(e, release, { passive: true });
     return () => {
       target.removeEventListener("scroll", onScroll);
       for (const e of USER_SCROLL_EVENTS) window.removeEventListener(e, release);
+      realign.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [scroller, scan]);
+  }, [scroller, list, scan]);
 
   /**
    * 그 날짜 머리를 기준선에 맞춰 스크롤하고 그 날로 붙잡아 둔다(바뀌었으면 onChange 로 알린다 — 붙잡은 동안은 스크롤로 고르지 않는다).
