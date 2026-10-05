@@ -179,6 +179,11 @@ const eslintConfig = defineConfig([
           selector,
           message: "컴포넌트 props 타입은 `type 컴포넌트이름Props = { … }` 로 따로 선언합니다.",
         })),
+        {
+          selector:
+            "JSXOpeningElement[name.name='input'] > JSXAttribute[name.name='type'][value.value='time']",
+          message: "브라우저 기본 시간 입력 대신 `@/shared/ui/time-field` 의 TimeField 를 씁니다.",
+        },
       ],
       // 지금 코드의 관례: 이름 있는 컴포넌트는 function 선언
       "react/function-component-definition": [
