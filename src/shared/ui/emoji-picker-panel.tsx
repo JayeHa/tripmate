@@ -91,7 +91,7 @@ export function EmojiPickerPanel({ value, defaultEmoji, onPick }: EmojiPickerPan
               if (emoji) pick(emoji);
               else setTyped(e.target.value);
             }}
-            maxLength={8}
+            // 길이 제한은 두지 않는다 — 친 글자가 칸을 채우면 이모지가 들어가지 못한다. 고르는 건 첫 이모지 묶음뿐
             placeholder="다른 이모지는 키보드로"
             aria-label="이모지 직접 입력"
             className="min-w-0 flex-1 bg-transparent text-[13px] text-ink-900 outline-none placeholder:text-ink-400"
