@@ -44,6 +44,19 @@ type PlaceFieldsOptions = {
 };
 
 /**
+ * 핀 위치의 주소. 저장돼 있던 위치 그대로면 저장된 주소를 쓴다 — 열 때마다 역지오코딩을 다시 부르지 않고,
+ * 손대지 않은 주소가 바뀌지 않게. 저장된 주소가 없으면(예전 데이터) 그 위치의 주소를 불러와 저장할 때 채운다
+ */
+function usePinAddress(at: LatLng | null, stored: StoredLocation | null, city: SearchCity | null) {
+  const keep = !!stored?.at && !!stored.found.address && !!at && samePoint(at, stored.at);
+  const geocoded = useReverseGeocode(
+    keep ? null : at,
+    city ? localLanguage(city.country_code) : null,
+  );
+  return keep && stored ? { ...stored.found, busy: false, failed: false } : geocoded;
+}
+
+/**
  * 장소 입력 폼의 칸과 위치 고르기 — 새로 담기(usePlaceForm) · 장소 정보 수정(usePlaceEditForm)이 함께 쓴다.
  * ① 위치 선택: 위치 검색으로 고르거나(구글 장소, 같은 도시 제한) 지도를 끌어 중앙 핀을 맞춘다. 핀 위치의 주소를 불러와야
  *    (또는 불러오지 못했으면) 다음으로 간다. 지도를 끌면 고른 구글 장소는 지운다(핀과 장소가 달라지므로)
@@ -67,15 +80,7 @@ export function usePlaceFields({
   const same = useExistingPlace(tripId, findExisting);
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const addressHit = useAddressSearch(locationQuery, city);
-  // 저장돼 있던 위치 그대로면 저장된 주소를 쓴다 — 열 때마다 역지오코딩을 다시 부르지 않고, 손대지 않은 주소가 바뀌지 않게.
-  // 저장된 주소가 없으면(예전 데이터) 그 위치의 주소를 불러와 저장할 때 채운다
-  const keep =
-    !!stored?.at && !!stored.found.address && !!values.at && samePoint(values.at, stored.at);
-  const geocoded = useReverseGeocode(
-    keep ? null : values.at,
-    city ? localLanguage(city.country_code) : null,
-  );
-  const found = keep && stored ? { ...stored.found, busy: false, failed: false } : geocoded;
+  const found = usePinAddress(values.at, stored, city);
 
   /** 칸 하나를 고친다 */
   function set<K extends keyof PlaceFormValues>(key: K, value: PlaceFormValues[K]) {
