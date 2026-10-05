@@ -1,4 +1,5 @@
 import { MEMO_MAX, type ScheduleItem } from "@/entities/schedule-item";
+import { isTimeValue } from "@/shared/lib/time-input";
 
 /** 중요 날짜 메모의 앞머리. 날짜 메모는 note 일정의 제목 한 칸이라 ★ 를 글 앞에 붙여 둔다 */
 const STAR = "★ ";
@@ -32,6 +33,8 @@ export function toNotePatch(draft: NoteDraft, initial: NoteDraft): NotePatchResu
   const text = draft.text.trim();
   if (!text) return { ok: false, error: "메모를 입력해 주세요" };
   if (text.length > MEMO_MAX) return { ok: false, error: `메모는 ${MEMO_MAX}자까지 쓸 수 있어요` };
+  // 시간 칸은 확정이 틀리면 친 그대로를 넘긴다 — 옛 시간이 조용히 남지 않게 여기서 막는다
+  if (draft.time && !isTimeValue(draft.time)) return { ok: false, error: "시간을 확인해 주세요" };
   const patch: { name?: string; start_time?: string | null } = {};
   if (text !== initial.text.trim()) patch.name = text;
   if (draft.time !== initial.time) patch.start_time = draft.time || null;

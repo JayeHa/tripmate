@@ -31,6 +31,11 @@ describe("날짜 메모 고치기", () => {
       ok: true,
       patch: { name: "체크인 16시" },
     });
+    // 시간 칸이 틀린 채(친 그대로) 넘어오면 저장하지 않는다
+    expect(toNotePatch({ ...opened, time: "25:00" }, opened)).toEqual({
+      ok: false,
+      error: "시간을 확인해 주세요",
+    });
     expect(toNotePatch({ ...opened, time: "" }, opened)).toEqual({
       ok: true,
       patch: { start_time: null },
