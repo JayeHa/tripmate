@@ -111,7 +111,7 @@ type LineProps = { label: string; children: React.ReactNode };
 function Line({ label, children }: LineProps) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-15 shrink-0 text-ink-400">{label}</span>
+      <span className="w-15 shrink-0 text-ink-400 lg:w-16">{label}</span>
       {children}
     </div>
   );

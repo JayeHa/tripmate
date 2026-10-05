@@ -77,7 +77,7 @@ function InfoLine({ row }: InfoLineProps) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex gap-3 text-[13px]/normal">
-      <span className="w-15 shrink-0 text-ink-400">{row.label}</span>
+      <span className="w-15 shrink-0 text-ink-400 lg:w-16">{row.label}</span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <span
           className={cn(
