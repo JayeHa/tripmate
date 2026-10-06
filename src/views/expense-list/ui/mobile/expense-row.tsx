@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ExpenseBadge, ExpenseCategoryIcon } from "@/entities/expense";
+import { ExpenseBadge, ExpenseCategoryTile } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
 import type { ExpenseRowView } from "../../lib/row";
@@ -26,7 +26,7 @@ export function ExpenseRow({ row, href, onMarkPaid, paying }: ExpenseRowProps) {
         row.excluded && "opacity-50",
       )}
     >
-      <ExpenseCategoryIcon category={row.category} className="mt-0.5 size-5" />
+      <ExpenseCategoryTile category={row.category} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}

@@ -8,25 +8,25 @@ export type TripGuest = Tables<"trip_guests">;
 /** 정산에서 이미 보낸 돈 한 줄 */
 export type Settlement = Tables<"settlements">;
 
-/** 지출 카테고리 7개 — 고르는 칸 · 통계에 이 순서로 보인다 */
+/** 지출 카테고리 7개 — 자주 쓰는 순서. 고르는 칸 · 목록 · 통계 · 필터가 모두 이 순서로 보인다 */
 export const EXPENSE_CATEGORIES = [
+  "food",
+  "transport",
+  "shopping",
+  "activity",
   "lodging",
   "flight",
-  "transport",
-  "activity",
-  "food",
-  "shopping",
   "other",
 ] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
 export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, string> = {
+  food: "식비",
+  transport: "교통",
+  shopping: "쇼핑",
+  activity: "관광",
   lodging: "숙소",
   flight: "항공",
-  transport: "교통",
-  activity: "관광",
-  food: "식비",
-  shopping: "쇼핑",
   other: "기타",
 };
 
