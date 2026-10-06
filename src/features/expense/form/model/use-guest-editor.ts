@@ -34,8 +34,9 @@ export function useGuestEditor({ tripId, onAdded, onRemoved }: GuestEditorOption
     setError(null);
   }
 
-  /** 이 인원의 이름 바꾸기를 시작한다 */
+  /** 이 인원의 이름 바꾸기를 시작한다. 저장 중이면 받지 않는다 — 끝나며 칸을 비울 때 새로 시작한 편집까지 지우지 않게 */
   function startEdit(guest: EditingGuest) {
+    if (pending) return;
     setEditing(guest);
     setName(guest.name);
     setError(null);

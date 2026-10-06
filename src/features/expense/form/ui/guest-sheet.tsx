@@ -89,7 +89,8 @@ function PersonRow({ person, isMe, editor }: PersonRowProps) {
           type="button"
           aria-label={`${person.name} 이름 바꾸기`}
           onClick={() => editor.startEdit({ id, name: person.name })}
-          className="-mr-1.5 flex size-8 items-center justify-center text-ink-400"
+          disabled={editor.pending}
+          className="-mr-1.5 flex size-8 items-center justify-center text-ink-400 disabled:opacity-40"
         >
           <Pencil className="size-3.5" aria-hidden="true" />
         </button>
