@@ -13,7 +13,8 @@ type SplitPreviewInput = {
 };
 
 /**
- * 「누가 내고, 누구와 나눴나요?」 아래 미리보기 두 줄. 금액이 없거나 혼자 쓴 돈(「각자 냄」 이 아닌 1명)이면 null.
+ * 「누가 내고, 누구와 나눴나요?」 아래 미리보기 두 줄. 금액이 없거나 결제한 사람 혼자 쓴 돈이면 null.
+ * 함께한 사람이 한 명이어도 결제자가 아니면(대신 결제) 그 사람이 전액을 보내야 해서 보인다.
  * 첫 줄은 1인 몫, 둘째 줄은 누가 누구에게 보낼지 — 결제한 사람만 함께했으면 빈 글
  */
 export function splitPreview({
@@ -25,7 +26,8 @@ export function splitPreview({
   nameOf,
 }: SplitPreviewInput): { head: string; sub: string } | null {
   const count = participants.length;
-  if (amount <= 0 || count === 0 || (count === 1 && !splitEach)) return null;
+  const payerAlone = count === 1 && participants[0] === payer;
+  if (amount <= 0 || count === 0 || payerAlone) return null;
   const share = formatMoney(amount / count, currency);
   if (splitEach)
     return {

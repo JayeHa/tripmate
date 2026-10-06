@@ -37,7 +37,14 @@ describe("splitPreview", () => {
     });
   });
 
-  it("금액이 없거나 혼자 쓴 돈이면 null", () => {
+  it("대신 결제 — 함께한 한 명이 결제자가 아니면 그 사람이 전액을 보낸다", () => {
+    expect(splitPreview({ ...base, participants: ["b"] })).toEqual({
+      head: "1명이 나눠요 · 1인 ≈ ₩30,000",
+      sub: "동규 → 정원 ₩30,000",
+    });
+  });
+
+  it("금액이 없거나 결제한 사람 혼자 쓴 돈이면 null", () => {
     expect(splitPreview({ ...base, amount: 0 })).toBeNull();
     expect(splitPreview({ ...base, participants: ["a"] })).toBeNull();
   });
