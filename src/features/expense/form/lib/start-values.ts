@@ -6,7 +6,7 @@ export type SplitMode = ExpenseFormValues["split_mode"];
 /** 이 폼이 칸으로 다루지 않고 그대로 들고 있다가 저장하는 값 — 환율 · 결제수단 · 합계 포함 · 결제 상태 */
 export type KeptValues = Pick<
   ExpenseFormValues,
-  "rate" | "payment_method" | "counted" | "paid" | "due_date"
+  "rate" | "payment_method" | "counted" | "paid" | "due_date" | "split_each"
 >;
 
 type StartOptions = {
@@ -21,6 +21,7 @@ type StartOptions = {
 };
 
 const KEPT_DEFAULTS: KeptValues = {
+  split_each: false,
   rate: null,
   payment_method: "cash",
   counted: true,
@@ -74,6 +75,7 @@ function savedValues(initial: ExpenseFormValues) {
     spentOn: initial.spent_on ?? "",
     itemId: initial.schedule_item_id ?? "",
     kept: {
+      split_each: initial.split_each,
       rate: initial.rate,
       payment_method: initial.payment_method,
       counted: initial.counted,

@@ -26,7 +26,7 @@ type ExpenseFormOptions = {
  * 지출 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
  * 금액 · 직접 나눈 몫은 입력 중인 문자열로 들고, 제출할 때 숫자로 바꾼다.
  * 날짜를 바꾸면 연결 일정을 비운다(그날 일정에서만 고른다). 날짜가 빈 글이면 여행준비다.
- * 환율 · 결제수단 · 합계 포함 · 결제 상태는 칸이 없어 처음 값을 들고만 있다 — 새 지출은 그 값으로 넣고, 수정은 보내지 않는다(updateColumns)
+ * 환율 · 결제수단 · 합계 포함 · 결제 상태 · 각자 냄은 칸이 없어 처음 값을 들고만 있다 — 새 지출은 그 값으로 넣고, 수정은 보내지 않는다(updateColumns)
  */
 export function useExpenseForm({
   trip,
@@ -116,7 +116,6 @@ export function useExpenseForm({
       amount: numAmount,
       currency,
       payer: personOfKey(payerId),
-      split_each: false,
       participants: participants.flatMap((key) => personOfKey(key) ?? []),
       split_mode: splitMode,
       custom_shares: splitMode === "custom" ? customShares() : undefined,

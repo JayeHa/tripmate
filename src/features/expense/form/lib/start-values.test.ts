@@ -45,7 +45,14 @@ describe("startValues", () => {
       memo: "",
       spentOn: "2026-10-31",
       itemId: "",
-      kept: { rate: null, payment_method: "cash", counted: true, paid: true, due_date: null },
+      kept: {
+        split_each: false,
+        rate: null,
+        payment_method: "cash",
+        counted: true,
+        paid: true,
+        due_date: null,
+      },
     });
   });
 
@@ -63,6 +70,7 @@ describe("startValues", () => {
       spentOn: "",
       itemId: "",
       kept: {
+        split_each: false,
         rate: null,
         payment_method: "card",
         counted: false,
