@@ -454,7 +454,9 @@ export type Database = {
           id: string;
           trip_id: string;
           schedule_item_id: string | null;
-          payer_id: string;
+          payer_id: string | null;
+          payer_guest_id: string | null;
+          split_each: boolean;
           amount: number;
           currency: string;
           category: string;
@@ -475,7 +477,9 @@ export type Database = {
           id?: string;
           trip_id: string;
           schedule_item_id?: string | null;
-          payer_id: string;
+          payer_id?: string | null;
+          payer_guest_id?: string | null;
+          split_each?: boolean;
           amount: number;
           currency: string;
           category?: string;
@@ -496,7 +500,9 @@ export type Database = {
           id?: string;
           trip_id?: string;
           schedule_item_id?: string | null;
-          payer_id?: string;
+          payer_id?: string | null;
+          payer_guest_id?: string | null;
+          split_each?: boolean;
           amount?: number;
           currency?: string;
           category?: string;
@@ -517,18 +523,24 @@ export type Database = {
       };
       expense_splits: {
         Row: {
+          id: string;
           expense_id: string;
-          user_id: string;
+          user_id: string | null;
+          guest_id: string | null;
           share: number;
         };
         Insert: {
+          id?: string;
           expense_id: string;
-          user_id: string;
+          user_id?: string | null;
+          guest_id?: string | null;
           share: number;
         };
         Update: {
+          id?: string;
           expense_id?: string;
-          user_id?: string;
+          user_id?: string | null;
+          guest_id?: string | null;
           share?: number;
         };
         Relationships: [
@@ -540,6 +552,63 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      trip_guests: {
+        Row: {
+          id: string;
+          trip_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      settlements: {
+        Row: {
+          id: string;
+          trip_id: string;
+          from_user_id: string | null;
+          from_guest_id: string | null;
+          to_user_id: string | null;
+          to_guest_id: string | null;
+          amount: number;
+          settled_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          from_user_id?: string | null;
+          from_guest_id?: string | null;
+          to_user_id?: string | null;
+          to_guest_id?: string | null;
+          amount: number;
+          settled_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          from_user_id?: string | null;
+          from_guest_id?: string | null;
+          to_user_id?: string | null;
+          to_guest_id?: string | null;
+          amount?: number;
+          settled_at?: string;
+          created_by?: string | null;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -573,6 +642,10 @@ export type Database = {
       };
       apply_schedule_edit: {
         Args: { p_trip: string; p_days: Json; p_deletes: string[]; p_summaries: Json };
+        Returns: undefined;
+      };
+      merge_trip_guest: {
+        Args: { p_guest: string; p_user: string };
         Returns: undefined;
       };
       swap_alternative: {

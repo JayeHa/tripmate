@@ -39,6 +39,10 @@ erDiagram
   trips ||--o{ expenses : ""
   schedule_items |o--o{ expenses : "schedule_item_id"
   expenses ||--o{ expense_splits : ""
+  trip_guests |o--o{ expenses : "payer_guest_id"
+  trip_guests |o--o{ expense_splits : "guest_id"
+  trips ||--o{ trip_guests : ""
+  trips ||--o{ settlements : ""
 ```
 
 | 테이블           | 무엇                                                                                                                        | 단위        |
@@ -56,6 +60,8 @@ erDiagram
 | `day_routes`     | Routes API 경로 캐시(지도 화면)                                                                                             | 여행        |
 | `expenses`       | 지출 — 항목명 · 금액 · 통화(+ 그 지출만의 환율) · 결제수단 · 카테고리 · 쓴 날(없으면 여행준비) · 합계 포함 여부 · 결제 상태 | 여행        |
 | `expense_splits` | 지출을 누가 얼마씩 나누는지                                                                                                 | 여행        |
+| `trip_guests`    | **정산 인원** — 앱에 초대하지 않고 가계부 정산에만 넣는 사람(이름만, 1–20자)                                                | 여행        |
+| `settlements`    | 정산에서 **이미 보낸 돈** 한 줄(보낸 쪽 · 받는 쪽 · 금액)                                                                   | 여행        |
 
 일정 링크(`schedule_items.links`, 예약 페이지 · 구매한 상품)는 이번 방문에만 해당해 장소 링크(`places.links`)와 따로 둔다. 예상 대기(`places.wait`)는 장소 정보다. 주소는 넷이다 — `address`(한국어로 요청한 번지 주소, 일본은 구글에 한국어 표기가 없어 로마자) · `address_local`(현지어, 현지인 · 택시에 보여 줄 용도) · `address_ko`(한글 — 일본은 한글 동네 이름 + 번지 숫자, 한국은 `address` 와 같아 비움) · `address_detail`(사용자가 적는 상세 위치 「파르코 본관 8F」). 화면은 로마자 → 현지어 → 한글 순으로 함께 적는다. 운영시간은 `hours`(매일 같음) · `hours_week`(요일별 `{ mon: "11:00–22:00", sun: null }` — null 은 휴무, 키가 없으면 모름) 둘이고, 요일 값이 하나라도 있으면 `hours_week` 를 본다.
 
@@ -70,6 +76,10 @@ erDiagram
 **대체 장소도 일정 한 줄이다**(0024, `alternative_of` = 붙은 일정). 타임라인 · 동선 · 개수는 `alternative_of` 가 빈 줄만 본다. 예약 상태 · 일정 링크 · 메모(`memos`) · 지출 연결(`expenses.schedule_item_id`, 앞으로 바우처 · 할 일)은 줄마다 따로라 「바꾸기」 하면 각자 장소를 따라간다(지출 폼이 대체 장소 줄을 보이지 않는 문제는 #91). 시간 · 이동 기록은 「자리」 의 것이라 대체 장소 줄은 시간이 없고(check), 바꾸기 할 때 새로 들어온 줄로 옮긴다. 같은 여행의 타임라인 장소 줄에만 붙고(FK · 트리거), 대체 장소의 대체 장소는 없고, 붙은 일정과 같은 날이다(넣을 때 · 옮길 때 트리거가 맞춘다). 붙은 일정을 지우면 함께 지워진다.
 
 **지출**(0033). 쓴 날(`expenses.spent_on`)이 **비어 있으면 「여행준비」** 다 — 출발 전에 쓴 돈(숙소 · 항공 · eSIM)이고, 실제 결제한 날짜는 적지 않는다(2026-10-06 사용자 결정). 환율은 여행의 기본값(`trips.exchange_rates`)을 쓰되 지출마다 덮어쓸 수 있다(`rate` = 기준 화폐 / 통화 1단위, 100엔 = 888.3원이면 8.883). **합계 포함 여부(`counted`)와 결제 상태(`paid` · `due_date`)는 별개다** — 합계에서 뺀 지출은 총합계 · 통화별 · 날짜별 합계 · 통계 · 정산 어디에도 넣지 않고, 결제 예정인 지출은 모두 넣는다. 카테고리는 7개(`lodging` 숙소 · `flight` 항공 · `transport` 교통 · `activity` 관광 · `food` 식비 · `shopping` 쇼핑 · `other` 기타), 결제수단은 `cash` 현금 · `card` 카드 · `transit` 교통카드. 계산은 `entities/expense/lib`(`toHomeFor` · `sumExpenses` · `computeNetBalances`)에 있다.
+
+**지출의 사람**(0034). 비용의 **결제자**와 **나눌 사람**은 멤버(`user_id`)이거나 **정산 인원**(`guest_id`)이다 — 둘 중 하나만 채운다(check). 정산 인원은 앱에 초대하지 않고 이름만 넣는 사람이라 `profiles` 에 두지 않는다(로그인 계정이 아니고, `auth.users` 와 어긋나면 안 된다). **「각자 냄」**(`expenses.split_each`)은 각자 자기 몫을 낸 비용이라 결제자가 없고 정산에서 빠진다. 나눌 사람은 그대로 둔다 — 「누가 얼마를 썼는지」(개인별 지출)에는 들어가기 때문이다.
+
+**정산**(0034). 「누가 누구에게 얼마를」 은 비용에서 계산하고, **이미 보낸 돈**(`settlements`)만 뺀다. 「받았어요 · 보냈어요」 를 누르면 그 줄이 생기고, 취소하면 지운다. 계산된 송금 쌍에 표시를 다는 대신 기록을 남기는 이유는, 비용이 나중에 바뀌어도 이미 보낸 돈은 그대로 남고 남은 금액만 다시 계산되기 때문이다(2026-10-06 사용자 결정).
 
 - **대체 장소 「바꾸기」 는 합계 포함 여부를 덮어쓴다**(0033). 대체 장소가 된 일정의 지출은 모두 빼고, 타임라인에 올라온 일정의 지출은 모두 넣는다 — 사용자가 손으로 바꾼 값과 구분하지 않는다
 - **대체 장소가 된 줄을 「빼기」 로 지우면** 그 줄의 지출은 연결이 끊기고(`set null`) 합계에서 뺀 채로 남는다(#92 결정 — `counted` 는 그대로 둔다)
@@ -94,6 +104,7 @@ erDiagram
 | `moves`                       | 멤버                                          | 멤버 + 두 일정이 같은 여행                                     | 같음                       | 멤버                                                                            | 허용          | `moves_all` · 복합 FK                                      |
 | `day_routes`                  | 멤버                                          | 멤버(경로 API)                                                 | 멤버                       | 멤버                                                                            | 허용          | `routes_all`                                               |
 | `expenses` · `expense_splits` | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `expenses_all` · `splits_all`                              |
+| `trip_guests` · `settlements` | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `trip_guests_all` · `settlements_all`                      |
 
 - **장소를 일정에 붙일 수 있는 조건**(`can_attach_place`): 내가 만든 장소, 또는 이 여행의 다른 일정이 이미 쓰는 장소(일행이 같은 곳을 한 번 더 담을 때).
   남의 보관함 장소 id 를 알아도 내 여행에 끌어와 읽을 수 없다
@@ -140,6 +151,7 @@ erDiagram
 | 장소 직접 추가(장소 입력 폼)    | 장소 정보(이름 · 카테고리 · 위치 · 운영시간 · 별점 · 대기 · 설명 · 링크)로 새 장소, 그날 끝에 일정(폼은 장소와 일정 아이콘만 받는다 — 함수는 일정 칸 `p_item` 의 상태 · 시간 · 메모 · 링크도 받지만 폼은 아이콘만 보낸다). 한 트랜잭션. 위치로 고른 구글 장소를 이미 가지면 그 장소에 적은 칸만 덮어쓴다(빈 칸은 기존 값)                                                                                                                                  | `create_place_schedule`                             |
 | 멤버가 나가기 · 내보내기        | 그 사람이 만든 장소 중 이 여행이 쓰는 것을 여행 소유자 사본으로 바꾼다(소유자가 같은 구글 장소를 가지면 그것). 원본은 그 사람의 다른 여행에 남는다. 소유자 자신이 나가면 아무것도 바꾸지 않는다 — 소유자가 자기 행을 지우는 것은 지금 클라이언트에서만 막는다(#72)                                                                                                                                                                                         | 트리거 `copy_places_on_leave`                       |
 | 일정을 다른 날로 옮기기(상세 ⋯) | 그 일정을 고른 날의 맨 끝으로 옮긴다(`day_index` · `position`). 대체 장소는 함께 옮겨진다(`follow_alternative_day`). 이동 기록은 지우지 않는다 — 앞뒤 일정이 달라져 보이지 않을 뿐이고, 같은 두 일정이 같은 순서로 다시 이웃하면 보인다                                                                                                                                                                                                                    | 클라이언트 update · 트리거 `follow_alternative_day` |
+| 정산 인원을 멤버로 합치기       | 그 인원의 결제 · 나눔 · 송금 기록이 멤버 것으로 바뀌고 인원이 지워진다                                                                                                                                                                                                                                                                                                                                                                                     | `merge_trip_guest`                                  |
 | 일정 편집 완료                  | 손댄 날마다 새 순서로 position 을 다시 매기고(다른 날로 옮긴 일정은 그날 목록에 포함), 고른 일정을 지우고, 바꾼 날의 하루 요약(`trips.day_summaries`)을 고친다. 대체 장소는 붙은 일정을 따라 날짜가 바뀐다. 한 트랜잭션                                                                                                                                                                                                                                    | `apply_schedule_edit`                               |
 | 대체 장소 바꾸기                | 대체 장소가 그 자리(날짜 · 순서 · 시간)에 들어가고 원래 일정은 그 대체 장소가 된다. 원래 일정의 다른 대체 장소 · 앞뒤 이동 기록도 새 줄로 옮긴다. 상태 · 링크 · 메모는 각자 줄에 남는다. 한 트랜잭션. 지출 연결은 줄을 따라가서, 대체 장소가 된 일정의 지출은 합계에서 빼고(`counted = false`) 올라온 일정의 지출은 다시 넣는다                                                                                                                            | `swap_alternative`                                  |
 | 일정 지우기                     | 그 일정의 이동 기록 · 대체 장소가 함께 지워지고, 연결된 지출은 연결만 끊긴다                                                                                                                                                                                                                                                                                                                                                                               | FK cascade · set null                               |
@@ -174,6 +186,7 @@ erDiagram
 | `keep_memo_author`           | 트리거 · invoker | —                                            | 메모 작성자는 넣을 때 나(`auth.uid()`)로 정하고 고칠 때 바뀌지 않는다(지우기만 된다 — 계정을 지우면 FK 가 null 로, 0028)                                                                                                                                             |
 | `apply_schedule_edit`        | invoker          | 허용(멤버)                                   | 일정 편집 「완료」 — 모아 둔 순서 바꾸기 · 다른 날로 옮기기 · 지우기 · 하루 요약(100자, 빈 글은 지움)을 한 트랜잭션으로. 날 번호는 여행 일수 안만(0032). 목록에 없는 그날 일정(그사이 일행이 넣은 것)은 뒤에 둔다                                                    |
 | `swap_alternative`           | invoker          | 허용(멤버)                                   | 대체 장소 「바꾸기」 — 자리 · 시간 · 이동 기록을 대체 장소로 옮기고 원래 일정을 대체 장소로. 원래 일정 줄을 잠가 같은 일정의 대체 장소를 동시에 바꾸면 뒤의 것은 거부된다(0025). 지출의 합계 포함 여부도 함께 바꾼다(0033)                                           |
+| `merge_trip_guest`           | invoker          | 허용(멤버)                                   | 정산 인원이 초대를 받아 들어왔을 때 — 그 인원의 결제 · 나눔 · 송금 기록을 멤버 id 로 옮기고 인원을 지운다. 멤버가 이미 그 비용에 있으면 인원 줄만 지운다(두 번 세지 않게)                                                                                            |
 | `check_schedule_alternative` | 트리거 · invoker | —                                            | 대체 장소는 타임라인 장소 줄에만 붙고 대체 장소의 대체 장소는 없다. 날짜는 붙은 일정을 따른다. 붙을 일정을 잠가 바꾸기 · 옮기기와 겹쳐도 끝난 뒤의 값을 본다(0026)                                                                                                   |
 | `follow_alternative_day`     | 트리거 · invoker | —                                            | 일정이 다른 날로 옮겨지면 대체 장소도 같은 날로                                                                                                                                                                                                                      |
 | `place_city_for_trip`        | invoker          | 허용(멤버)                                   | 장소를 둘 도시 — 여행 도시 중 가장 가까운 곳, 없으면 전체 도시 중 가장 가까운 곳. `add_schedule_place` · `create_place_schedule` 이 같이 쓴다                                                                                                                        |
@@ -186,10 +199,10 @@ erDiagram
 
 ## 실시간
 
-`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` 를 발행한다.
+`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` · `trip_guests` · `settlements` 를 발행한다.
 여행 화면은 여행 하나에 채널 하나를 열고(`features/trip/realtime-sync`) 변경이 오면 해당 쿼리를 다시 읽는다.
 
-- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
+- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places` · `trip_guests` · `settlements`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
 - **삭제 이벤트에는 RLS 가 적용되지 않는다**(지워진 행은 권한을 확인할 수 없다). 필터 없이 구독하는 `places` · `expense_splits` 는 남의 삭제 이벤트가 올 수 있어 확인이 필요하다(#73)
 - 근거: <https://supabase.com/docs/guides/realtime/postgres-changes> (2026-10-04 확인)
 - `places` · `expense_splits` 는 `trip_id` 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 행만 온다
