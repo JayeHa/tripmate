@@ -1,60 +1,41 @@
-import { type ExpenseFormValues, personKey } from "@/entities/expense";
+import { type ExpenseCategory, type ExpenseFormValues, personKey } from "@/entities/expense";
 import type { Trip } from "@/entities/trip";
-
-export type SplitMode = ExpenseFormValues["split_mode"];
-
-/** 이 폼이 칸으로 다루지 않고 그대로 들고 있다가 저장하는 값 — 환율 · 결제수단 · 합계 포함 · 결제 상태 */
-export type KeptValues = Pick<
-  ExpenseFormValues,
-  "rate" | "payment_method" | "counted" | "paid" | "due_date" | "split_each"
->;
 
 type StartOptions = {
   trip: Trip;
   currencies: string[];
-  /** 고를 수 있는 사람 키(멤버 · 정산 인원). `personKey` 로 만든다 */
-  memberIds: string[];
-  currentUserId: string;
+  /** 나의 사람 키 */
+  me: string;
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd. 없으면 여행 첫날 */
   defaultSpentOn?: string;
 };
 
-const KEPT_DEFAULTS: KeptValues = {
-  split_each: false,
-  rate: null,
-  payment_method: "cash",
-  counted: true,
-  paid: true,
-  due_date: null,
-};
-
 /**
- * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값(마지막 통화 · 내가 결제 · 모두 나눔 · 식비 · 고른 날 또는 여행 첫날).
- * 숫자는 입력 칸이 다루는 문자열로, 날짜는 여행준비(null)를 빈 글로 바꾼다.
+ * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값 —
+ * 마지막 통화 · 현금 · 결제 완료 · 합계 포함 · 내가 결제 · 모두와 나눔 · 고른 날 또는 여행 첫날.
+ * 함께한 사람의 null 은 「모두」 — 사람 목록을 따라간다(기기에 저장된 옛 목록으로 먼저 열려도 새로 읽은 사람이 빠지지 않게).
+ * 카테고리는 비워 두고 고르게 한다(필수 칸). 금액은 입력 칸이 다루는 문자열로, 날짜 없음(여행준비 · 예정일)은 빈 글로 바꾼다.
+ * 환율은 칸이 없어 처음 값을 들고만 있다
  */
-export function startValues({
-  trip,
-  currencies,
-  memberIds,
-  currentUserId,
-  initial,
-  defaultSpentOn,
-}: StartOptions) {
+export function startValues({ trip, currencies, me, initial, defaultSpentOn }: StartOptions) {
   if (initial) return savedValues(initial);
   return {
     name: "",
     amount: "",
     currency: currencies[currencies.length - 1],
-    payerId: currentUserId,
-    participants: memberIds,
-    splitMode: "equal" as SplitMode,
-    custom: {} as Record<string, string>,
-    category: "food" as ExpenseFormValues["category"],
+    rate: null as number | null,
+    paymentMethod: "cash" as ExpenseFormValues["payment_method"],
+    payer: me as string | null,
+    splitEach: false,
+    participants: null as string[] | null,
+    category: null as ExpenseCategory | null,
     memo: "",
     spentOn: defaultSpentOn ?? trip.start_date,
     itemId: "",
-    kept: KEPT_DEFAULTS,
+    paid: true,
+    dueDate: "",
+    counted: true,
   };
 }
 
@@ -64,23 +45,19 @@ function savedValues(initial: ExpenseFormValues) {
     name: initial.name,
     amount: String(initial.amount),
     currency: initial.currency,
-    payerId: initial.payer ? personKey(initial.payer) : "",
-    participants: initial.participants.map(personKey),
-    splitMode: initial.split_mode,
-    custom: Object.fromEntries(
-      Object.entries(initial.custom_shares ?? {}).map(([k, v]) => [k, String(v)]),
-    ),
-    category: initial.category,
+    rate: initial.rate,
+    paymentMethod: initial.payment_method,
+    payer: initial.payer ? personKey(initial.payer) : null,
+    splitEach: initial.split_each,
+    participants: initial.participants.map(personKey) as string[] | null,
+    category: initial.category as ExpenseCategory | null,
     memo: initial.memo ?? "",
     spentOn: initial.spent_on ?? "",
     itemId: initial.schedule_item_id ?? "",
-    kept: {
-      split_each: initial.split_each,
-      rate: initial.rate,
-      payment_method: initial.payment_method,
-      counted: initial.counted,
-      paid: initial.paid,
-      due_date: initial.due_date,
-    } satisfies KeptValues,
+    paid: initial.paid,
+    dueDate: initial.due_date ?? "",
+    counted: initial.counted,
   };
 }
+
+export type StartValues = ReturnType<typeof startValues>;

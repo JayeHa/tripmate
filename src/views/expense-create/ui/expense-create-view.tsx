@@ -2,50 +2,45 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { useCreateExpense } from "@/entities/expense";
+import { useCreateExpense, useTripGuests } from "@/entities/expense";
 import { useScheduleItems } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { ExpenseForm } from "@/features/expense/form";
-import { AppHeader } from "@/shared/ui/app-header";
 
 import { spentOnFromParam } from "../lib/spent-on-param";
 
 type ExpenseCreateViewProps = { tripId: string };
 
+/** 비용 추가 — 정산 인원까지 읽은 뒤 폼을 연다(새 비용은 모두와 나누는 게 기본이라 사람 목록이 처음 값이다) */
 export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const router = useRouter();
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
+  const { data: guests } = useTripGuests(tripId);
   const { data: items } = useScheduleItems(tripId);
   const { data: user } = useUser();
   const create = useCreateExpense(tripId);
   const period = useSearchParams().get("period");
+  const back = `/trips/${tripId}/expenses`;
 
+  if (!trip || !members || !guests || !user) return null;
   return (
-    <>
-      <AppHeader title="지출 추가" back={`/trips/${tripId}/expenses`} />
-      <main className="flex-1 p-4">
-        {trip && members && user && (
-          <ExpenseForm
-            trip={trip}
-            members={members}
-            items={items}
-            currentUserId={user.id}
-            defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
-            submitLabel="저장"
-            pending={create.isPending}
-            onSubmit={(values) =>
-              create.mutate(
-                { values, createdBy: user.id },
-                { onSuccess: () => router.replace(`/trips/${tripId}/expenses`) },
-              )
-            }
-          />
-        )}
-        {create.error && <p className="mt-3 text-sm text-destructive">{create.error.message}</p>}
-      </main>
-    </>
+    <ExpenseForm
+      title="비용 추가"
+      onClose={() => router.push(back)}
+      trip={trip}
+      members={members}
+      guests={guests}
+      items={items}
+      currentUserId={user.id}
+      defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
+      pending={create.isPending}
+      submitError={create.error?.message}
+      onSubmit={(values) =>
+        create.mutate({ values, createdBy: user.id }, { onSuccess: () => router.replace(back) })
+      }
+    />
   );
 }

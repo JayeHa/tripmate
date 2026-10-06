@@ -1,189 +1,177 @@
+import { CalendarDays, Check, ChevronDown } from "lucide-react";
+import { useState } from "react";
+
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_LABEL,
-  type ExpenseFormValues,
+  ExpenseCategoryIcon,
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHODS,
 } from "@/entities/expense";
 import { itemName, type ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
-import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
+import { dayIndexToDate } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
+import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
+import { Segmented } from "@/shared/ui/segmented";
+import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
+import { dayOptions, dayOptionText } from "../lib/day-options";
 import type { ExpenseFormState } from "../model/use-expense-form";
 
 type FormProps = { form: ExpenseFormState };
 
-/** 금액 + 통화. 통화가 하나뿐이면 고르는 칸 대신 글자로 */
-export function AmountField({ form, autoFocus }: FormProps & { autoFocus: boolean }) {
+type FieldLabelProps = { htmlFor?: string; required?: boolean; children: React.ReactNode };
+
+/** 칸 이름 — 13/700 #444, 필수 칸은 빨간 * */
+export function FieldLabel({ htmlFor, required, children }: FieldLabelProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label>금액</Label>
-      <div className="flex gap-2">
-        <Input
-          type="number"
-          inputMode="decimal"
-          step={form.decimals === 0 ? 1 : 0.01}
-          min={0}
-          value={form.amount}
-          onChange={(e) => form.setAmount(e.target.value)}
-          placeholder="0"
-          className="h-12 flex-1 text-2xl font-semibold"
-          autoFocus={autoFocus}
-        />
-        {form.currencies.length > 1 ? (
-          <select
-            className="h-12 w-24 rounded-lg border border-input bg-transparent px-2 text-base"
-            value={form.currency}
-            onChange={(e) => form.setCurrency(e.target.value)}
-          >
-            {form.currencies.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="flex h-12 items-center px-2 text-base text-muted-foreground">
-            {form.currency}
-          </span>
-        )}
-      </div>
-    </div>
+    <label htmlFor={htmlFor} className="text-[13px] font-bold text-ink-700">
+      {children}
+      {required && <span className="ml-0.5 text-destructive">*</span>}
+    </label>
   );
 }
 
-/** 지출 카테고리 하나 */
+const PAYMENT_OPTIONS = PAYMENT_METHODS.map((value) => ({
+  value,
+  label: PAYMENT_METHOD_LABEL[value],
+}));
+
+/** 카테고리 — 아이콘 칩(P2). 고른 칩은 잉크 바탕이라 아이콘도 흰색 */
 export function CategoryField({ form }: FormProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label>카테고리</Label>
-      <ToggleGroup
-        value={[form.category]}
-        onValueChange={(v) => v[0] && form.setCategory(v[0] as ExpenseFormValues["category"])}
-        className="flex-wrap justify-start"
-      >
+    <div role="group" aria-labelledby="expense-category" className="flex flex-col gap-3">
+      <span id="expense-category">
+        <FieldLabel required>카테고리</FieldLabel>
+      </span>
+      <div className="flex flex-wrap gap-1.5">
         {EXPENSE_CATEGORIES.map((c) => (
-          <ToggleGroupItem key={c} value={c} size="sm">
+          <FilterChip
+            key={c}
+            selected={form.category === c}
+            onClick={() => form.setCategory(c)}
+            className="gap-1.25 px-3"
+          >
+            <ExpenseCategoryIcon category={c} tone={false} className="size-3.5" />
             {EXPENSE_CATEGORY_LABEL[c]}
-          </ToggleGroupItem>
+          </FilterChip>
         ))}
-      </ToggleGroup>
+      </div>
     </div>
   );
 }
 
-/** 결제한 사람(하나) · 나눌 사람(여럿, 모두 선택/해제). 사람은 키로 고른다(멤버 · 정산 인원 공통) */
-export function PeopleFields({ form }: FormProps) {
-  const allIn = form.participants.length === form.memberIds.length;
+type DayFieldProps = FormProps & { trip: Trip };
+
+/** 날짜 — 44 상자(달력 아이콘 + 「day 2 · 11.1 (일)」), 누르면 여행준비 · day N 시트 */
+export function DayField({ form, trip }: DayFieldProps) {
+  const [open, setOpen] = useState(false);
+  const options = dayOptions(trip.start_date, trip.end_date);
   return (
-    <>
-      <div className="flex flex-col gap-1.5">
-        <Label>결제한 사람</Label>
-        <div className="flex flex-wrap gap-2">
-          {form.people.map((p) => (
-            <Chip
-              key={p.key}
-              active={form.payerId === p.key}
-              onClick={() => form.setPayerId(p.key)}
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="expense-day" required>
+        날짜
+      </FieldLabel>
+      <button
+        id="expense-day"
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex h-11 items-center gap-2 rounded-memo border border-input px-3 text-left"
+      >
+        <CalendarDays className="size-4 text-primary" aria-hidden="true" />
+        <span className="flex-1 text-[15px] font-bold text-ink-900">
+          {dayOptionText(options, form.spentOn)}
+        </span>
+        <ChevronDown className="size-4 text-ink-450" aria-hidden="true" />
+      </button>
+      <SheetDialog open={open} onClose={() => setOpen(false)} title="날짜 선택">
+        {options.map((o) => {
+          const on = o.value === form.spentOn;
+          return (
+            <button
+              key={o.value || "prep"}
+              type="button"
+              onClick={() => {
+                form.setSpentOn(o.value);
+                setOpen(false);
+              }}
+              className="flex h-13.5 w-full items-center gap-2 text-[17px]"
             >
-              {p.name}
-            </Chip>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <Label>나눌 사람</Label>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground underline"
-            onClick={form.toggleAllParticipants}
-          >
-            {allIn ? "모두 해제" : "모두 선택"}
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {form.people.map((p) => (
-            <Chip
-              key={p.key}
-              active={form.participants.includes(p.key)}
-              onClick={() => form.toggleParticipant(p.key)}
-            >
-              {p.name}
-            </Chip>
-          ))}
-        </div>
-      </div>
-    </>
+              <span className={cn("font-bold", on ? "text-primary" : "text-ink-900")}>
+                {o.label}
+              </span>
+              <span className="flex-1 text-left text-ink-400">{o.sub}</span>
+              {on && <Check className="size-6 text-primary" aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </SheetDialog>
+    </div>
   );
 }
 
-type DateItemFieldsProps = FormProps & { trip: Trip; items: ScheduleItem[] };
+type LinkFieldProps = FormProps & { trip: Trip; items: ScheduleItem[] };
 
-/** 날짜(여행준비 또는 여행 중 하루) + 그날 일정 중 연결할 것(선택) */
-export function DateItemFields({ form, trip, items }: DateItemFieldsProps) {
-  const days = Math.max(1, dayCount(trip.start_date, trip.end_date));
+/** 연결 일정(선택) — 그날 일정 중에서. 여행준비면 고를 일정이 없다 */
+export function LinkField({ form, trip, items }: LinkFieldProps) {
   const dayItems = items.filter(
     (it) => dayIndexToDate(trip.start_date, it.day_index) === form.spentOn,
   );
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="flex flex-col gap-1.5">
-        <Label>날짜</Label>
-        <select
-          className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
-          value={form.spentOn}
-          onChange={(e) => form.setSpentOn(e.target.value)}
-        >
-          <option value="">여행준비</option>
-          {Array.from({ length: days }, (_, i) => (
-            <option key={i} value={dayIndexToDate(trip.start_date, i)}>
-              Day {i + 1} · {dayLabel(trip.start_date, i)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label>연결 일정 (선택)</Label>
-        <select
-          className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
-          value={form.itemId}
-          onChange={(e) => form.setItemId(e.target.value)}
-        >
-          <option value="">없음</option>
-          {dayItems.map((it) => (
-            <option key={it.id} value={it.id}>
-              {itemName(it)}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="expense-link">
+        일정 연결 <span className="font-medium text-ink-350">(선택)</span>
+      </FieldLabel>
+      <select
+        id="expense-link"
+        className="h-11 rounded-memo border border-input bg-white px-3 text-[15px] font-semibold text-ink-900 disabled:text-ink-350"
+        value={form.itemId}
+        disabled={dayItems.length === 0}
+        onChange={(e) => form.setItemId(e.target.value)}
+      >
+        <option value="">{dayItems.length ? "연결 안 함" : "이 날짜에 일정이 없어요"}</option>
+        {dayItems.map((it) => (
+          <option key={it.id} value={it.id}>
+            {itemName(it)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
 
-type ChipProps = {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-};
-
-/** 사람 고르는 칩. 고르면 잉크 바탕 */
-function Chip({ active, onClick, children }: ChipProps) {
+/** 항목명 — 44 입력 칸 */
+export function NameField({ form }: FormProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full border px-3 py-1.5 text-sm transition-colors",
-        active
-          ? "border-foreground bg-foreground text-background"
-          : "bg-card text-muted-foreground",
-      )}
-    >
-      {children}
-    </button>
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel htmlFor="expense-name" required>
+        항목명
+      </FieldLabel>
+      <Input
+        id="expense-name"
+        value={form.name}
+        onChange={(e) => form.setName(e.target.value)}
+        maxLength={100}
+        placeholder="항목명을 입력해 주세요"
+      />
+    </div>
+  );
+}
+
+/** 결제수단 — 세 칸 세그먼트(현금 · 카드 · 교통카드), 시트 없이 바로 고른다 */
+export function PaymentField({ form }: FormProps) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel required>결제수단</FieldLabel>
+      <Segmented
+        aria-label="결제수단"
+        options={PAYMENT_OPTIONS}
+        value={form.paymentMethod}
+        onChange={form.setPaymentMethod}
+        fill
+      />
+    </div>
   );
 }
