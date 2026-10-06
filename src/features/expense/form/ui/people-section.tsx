@@ -1,27 +1,56 @@
-import { Check, Split, Users } from "lucide-react";
+import { Check, Split, UserPlus, Users } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
 import type { ExpenseFormState } from "../model/use-expense-form";
+import { useGuestEditor } from "../model/use-guest-editor";
 import type { FormPerson } from "../model/use-people-picker";
+import { GuestSheet } from "./guest-sheet";
 import { PersonChip } from "./person-chip";
 
 type PeopleSectionProps = { form: ExpenseFormState };
 
 /**
  * 「누가 내고, 누구와 나눴나요?」 — 결제한 사람(한 명 또는 「각자 냄」) · 함께한 사람(여러 명, 「모두」) · 미리보기.
- * 혼자 쓰는 가계부(사람이 나뿐)면 섹션 대신 「내가 결제했어요」 한 줄
+ * 혼자 쓰는 가계부(사람이 나뿐)면 섹션 대신 「내가 결제했어요」 카드. 둘 다 「+ 인원 추가」 로 정산 인원 시트를 연다.
+ * 결제 · 함께 두 줄 모두에 들어가는 사람이라 추가 버튼은 줄이 아니라 섹션 제목 옆에 둔다
  */
 export function PeopleSection({ form }: PeopleSectionProps) {
   const { picker, people } = form;
-  if (people.length === 1) return <SoloCard me={people[0]} />;
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const editor = useGuestEditor({
+    tripId: form.tripId,
+    onAdded: picker.include,
+    onRemoved: picker.forget,
+  });
+  const sheet = (
+    <GuestSheet
+      open={sheetOpen}
+      onClose={() => setSheetOpen(false)}
+      tripId={form.tripId}
+      people={people}
+      me={form.me}
+      editor={editor}
+    />
+  );
+  if (people.length === 1)
+    return (
+      <>
+        <SoloCard me={people[0]} onAdd={() => setSheetOpen(true)} />
+        {sheet}
+      </>
+    );
   return (
     <section className="flex flex-col gap-4 rounded-card bg-surface-sunken p-4">
-      <div className="flex flex-col gap-0.75">
-        <h2 className="text-[15px] font-extrabold text-ink-900">누가 내고, 누구와 나눴나요?</h2>
-        <p className="text-xs/normal text-ink-450">
-          나눠 낸 비용이면 함께한 사람을 모두 골라 주세요. 정산에 반영돼요.
-        </p>
+      <div className="flex items-start gap-2.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+          <h2 className="text-[15px] font-extrabold text-ink-900">누가 내고, 누구와 나눴나요?</h2>
+          <p className="text-xs/normal text-ink-450">
+            나눠 낸 비용이면 함께한 사람을 모두 골라 주세요. 정산에 반영돼요.
+          </p>
+        </div>
+        <AddPersonButton onClick={() => setSheetOpen(true)} />
       </div>
       <PeopleRow label="결제한 사람">
         <ToggleChip on={picker.splitEach} dark icon={Split} onClick={picker.toggleSplitEach}>
@@ -57,7 +86,24 @@ export function PeopleSection({ form }: PeopleSectionProps) {
           {form.preview.sub && <p className="text-xs/normal text-ink-500">{form.preview.sub}</p>}
         </div>
       )}
+      {sheet}
     </section>
+  );
+}
+
+type AddPersonButtonProps = { onClick: () => void };
+
+/** 「+ 인원 추가」 — 30 흰 pill, 블루 글자 */
+function AddPersonButton({ onClick }: AddPersonButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-7.5 shrink-0 items-center gap-1 rounded-full border border-line bg-white pr-2.5 pl-2 text-[13px] font-bold text-brand-text"
+    >
+      <UserPlus className="size-3.5 text-primary" aria-hidden="true" />
+      인원 추가
+    </button>
   );
 }
 
@@ -111,22 +157,28 @@ function ToggleChip({ on, dark = false, icon: Icon, onClick, children }: ToggleC
   );
 }
 
-type SoloCardProps = { me: FormPerson };
+type SoloCardProps = { me: FormPerson; onAdd: () => void };
 
-/** 혼자 쓰는 가계부 — 고를 사람이 없어 「내가 결제했어요」 만 알린다 */
-function SoloCard({ me }: SoloCardProps) {
+/** 혼자 쓰는 가계부 — 고를 사람이 없어 「내가 결제했어요」 를 알리고, 아래에 「누군가와 나눠 냈다면 + 인원 추가」 */
+function SoloCard({ me, onAdd }: SoloCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-card bg-surface-sunken px-4 py-3.5">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-extrabold text-white">
-        {me.name.slice(0, 1)}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[15px] font-bold text-ink-900">
-          {me.name}(나)이 결제했어요
+    <div className="flex flex-col gap-3 rounded-card bg-surface-sunken px-4 py-3.5">
+      <div className="flex items-center gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-extrabold text-white">
+          {me.name.slice(0, 1)}
         </span>
-        <span className="text-xs text-ink-450">
-          혼자 쓰는 가계부라 정산 없이 내 지출로 기록돼요
-        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-[15px] font-bold text-ink-900">
+            {me.name}(나)이 결제했어요
+          </span>
+          <span className="text-xs text-ink-450">
+            혼자 쓰는 가계부라 정산 없이 내 지출로 기록돼요
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 border-t border-divider pt-2.5">
+        <span className="flex-1 text-xs text-ink-450">누군가와 나눠 냈다면</span>
+        <AddPersonButton onClick={onAdd} />
       </div>
     </div>
   );

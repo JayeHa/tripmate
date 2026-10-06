@@ -57,6 +57,19 @@ export function usePeoplePicker({ people, me, start }: PeoplePickerOptions) {
     else if (participants.length > 1) setPicked(participants.filter((k) => k !== key));
   }
 
+  /** 새로 넣은 정산 인원을 함께한 사람에 더한다 — 「모두」(목록을 따라감)면 이미 들어 있다 */
+  function include(key: string) {
+    if (picked && !picked.includes(key)) setPicked(ordered([...picked, key]));
+  }
+
+  /** 뺀 정산 인원을 이 폼에서도 지운다 — 결제자였으면 나로, 함께한 사람이 비면 나만 */
+  function forget(key: string) {
+    if (chosenPayer === key) setChosenPayer(me);
+    if (!picked) return;
+    const rest = picked.filter((k) => k !== key);
+    setPicked(rest.length > 0 ? rest : [me]);
+  }
+
   /** 「모두」 — 켜져 있으면 나만 남기고, 아니면 모두 넣는다 */
   function toggleAll() {
     setPicked(allIn ? [me] : null);
@@ -71,6 +84,8 @@ export function usePeoplePicker({ people, me, start }: PeoplePickerOptions) {
     toggleSplitEach,
     toggleParticipant,
     toggleAll,
+    include,
+    forget,
   };
 }
 

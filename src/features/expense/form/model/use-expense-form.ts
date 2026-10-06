@@ -140,6 +140,7 @@ export function useExpenseForm({
   }
 
   return {
+    tripId: trip.id,
     currencies,
     people,
     me,
