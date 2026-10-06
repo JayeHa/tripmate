@@ -24,7 +24,8 @@ type ExpenseFormOptions = {
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
-  onSubmit: (values: ExpenseFormValues) => void;
+  /** 저장 — 수정이면 둘째 값으로 폼을 연 때의 값을 함께 준다(그때와 달라진 칸만 보내려고) */
+  onSubmit: (values: ExpenseFormValues, opened: ExpenseFormValues | undefined) => void;
 };
 
 /**
@@ -53,6 +54,8 @@ export function useExpenseForm({
       defaultSpentOn,
     }),
   );
+  // 연 때의 값. 열려 있는 동안 지출이 다시 읽혀도(일행이 고침) 바뀌지 않는다
+  const [opened] = useState(initial);
   const picker = usePeoplePicker({ people, me, start });
   const [name, setName] = useState(start.name);
   const [amount, setAmountDraft] = useState(start.amount);
@@ -130,7 +133,7 @@ export function useExpenseForm({
       return;
     }
     setError(null);
-    onSubmit(parsed.data);
+    onSubmit(parsed.data, opened);
   }
 
   return {

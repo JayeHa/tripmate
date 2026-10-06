@@ -35,10 +35,16 @@ export function insertColumns(values: ExpenseFormValues) {
 }
 
 /**
- * 수정할 때 보낼 칸 — 폼이 칸으로 다루는 값만. 칸이 없는 값(환율)을 폼을 연 때의 값으로 다시 쓰면 그 사이 바뀐 값을 되돌린다.
- * 통화를 바꿨으면 그 지출의 환율은 옛 통화 기준이라 비운다(여행 기본 환율로 돌아간다)
+ * 수정할 때 보낼 칸 — 폼이 칸으로 다루는 값 중 **연 때(`opened`)와 달라진 것만**.
+ * 폼이 열려 있는 동안 일행이 바꾼 값(대체 장소 「바꾸기」 의 `counted`, 목록의 「결제 완료로」)을
+ * 연 때의 값으로 되돌리지 않으려고. 통화를 바꿨으면 그 지출의 환율은 옛 통화 기준이라 비운다(여행 기본 환율로 돌아간다)
  */
-export function updateColumns(values: ExpenseFormValues, previousCurrency: string) {
-  const columns = formColumns(values);
-  return values.currency === previousCurrency ? columns : { ...columns, rate: null };
+export function updateColumns(values: ExpenseFormValues, opened: ExpenseFormValues) {
+  const next = formColumns(values);
+  const before = formColumns(opened);
+  const changed: Partial<ReturnType<typeof formColumns> & { rate: null }> = Object.fromEntries(
+    Object.entries(next).filter(([key, value]) => before[key as keyof typeof before] !== value),
+  );
+  if (values.currency !== opened.currency) changed.rate = null;
+  return changed;
 }

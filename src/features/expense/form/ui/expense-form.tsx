@@ -33,7 +33,8 @@ type ExpenseFormProps = {
   pending?: boolean;
   /** 저장 요청이 실패한 이유 */
   submitError?: string | null;
-  onSubmit: (values: ExpenseFormValues) => void;
+  /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값 */
+  onSubmit: (values: ExpenseFormValues, opened: ExpenseFormValues | undefined) => void;
 };
 
 /**

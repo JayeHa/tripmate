@@ -29,18 +29,19 @@ export function useCreateExpense(tripId: string) {
   });
 }
 
+/** 지출 고치기 — `opened` 는 수정 폼을 연 때의 값(그때와 달라진 칸만 보낸다) */
 export function useUpdateExpense(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
       expenseId,
       values,
-      previousCurrency,
+      opened,
     }: {
       expenseId: string;
       values: ExpenseFormValues;
-      previousCurrency: string;
-    }) => updateExpense(expenseId, values, previousCurrency),
+      opened: ExpenseFormValues;
+    }) => updateExpense(expenseId, values, opened),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
   });
 }

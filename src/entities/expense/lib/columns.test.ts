@@ -39,31 +39,32 @@ describe("insertColumns", () => {
 });
 
 describe("updateColumns", () => {
-  it("폼이 칸으로 다루는 값만 보낸다 — 칸이 없는 환율은 서버 값을 둔다", () => {
-    const cols = updateColumns(
-      { ...values, counted: false, paid: false, due_date: "2026-10-20" },
-      "JPY",
-    );
-    expect(cols).not.toHaveProperty("rate");
-    expect(cols).toMatchObject({
-      name: "돈키호테 시부야",
-      spent_on: null,
-      schedule_item_id: "s1",
-      payment_method: "card",
-      counted: false,
-      paid: false,
-      due_date: "2026-10-20",
-    });
+  it("연 때와 달라진 칸만 보낸다 — 칸이 없는 환율은 보내지 않는다", () => {
+    const cols = updateColumns({ ...values, memo: "웨이팅 30분", paid: false }, values);
+    expect(cols).toEqual({ memo: "웨이팅 30분", paid: false });
+  });
+
+  it("고치지 않은 칸은 보내지 않아, 그사이 일행이 바꾼 값을 되돌리지 않는다", () => {
+    // 연 뒤 일행이 「결제 완료로」 · 대체 장소 「바꾸기」 를 해도 폼 값은 연 때 그대로다
+    const opened = { ...values, paid: false, counted: true };
+    expect(updateColumns({ ...opened, name: "돈키호테" }, opened)).toEqual({ name: "돈키호테" });
   });
 
   it("통화를 바꿨으면 그 지출의 환율을 비운다", () => {
-    expect(updateColumns({ ...values, currency: "KRW" }, "JPY")).toMatchObject({ rate: null });
+    expect(updateColumns({ ...values, currency: "KRW" }, values)).toEqual({
+      currency: "KRW",
+      rate: null,
+    });
   });
 
-  it("「각자 냄」 과 결제자는 저장된 값 그대로 — 폼이 들고 있던 값을 보낸다", () => {
-    const each = updateColumns({ ...values, payer: null, split_each: true }, "JPY");
-    expect(each).toMatchObject({ split_each: true, payer_id: null, payer_guest_id: null });
-    const guest = updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, "JPY");
-    expect(guest).toMatchObject({ split_each: false, payer_id: null, payer_guest_id: "g1" });
+  it("결제자 · 각자 냄은 칸 단위로 — 결제자 두 칸 중 바뀐 것만", () => {
+    expect(updateColumns({ ...values, payer: null, split_each: true }, values)).toEqual({
+      payer_id: null,
+      split_each: true,
+    });
+    expect(updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, values)).toEqual({
+      payer_id: null,
+      payer_guest_id: "g1",
+    });
   });
 });

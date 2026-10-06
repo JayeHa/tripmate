@@ -75,19 +75,22 @@ export async function createExpense(
   return data.id;
 }
 
-/** 지출을 고친다. previousCurrency 는 고치기 전 통화 — 바뀌었으면 그 지출의 환율을 비운다 */
+/**
+ * 지출을 고친다. `opened` 는 폼을 연 때의 값 — 그때와 달라진 칸만 보낸다(`updateColumns`).
+ * 바뀐 칸이 없으면 지출 줄은 건드리지 않는다
+ */
 export async function updateExpense(
   expenseId: string,
   values: ExpenseFormValues,
-  previousCurrency: string,
+  opened: ExpenseFormValues,
 ): Promise<void> {
   const supabase = createClient();
   const shares = resolveShares(values);
-  const { error } = await supabase
-    .from("expenses")
-    .update(updateColumns(values, previousCurrency))
-    .eq("id", expenseId);
-  if (error) throw error;
+  const columns = updateColumns(values, opened);
+  if (Object.keys(columns).length > 0) {
+    const { error } = await supabase.from("expenses").update(columns).eq("id", expenseId);
+    if (error) throw error;
+  }
 
   const { error: delError } = await supabase
     .from("expense_splits")

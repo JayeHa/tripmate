@@ -32,7 +32,8 @@ import { AppHeader } from "@/shared/ui/app-header";
 type ExpenseEditViewProps = { tripId: string; expenseId: string };
 
 /**
- * 비용 수정. 폼은 지출 id 를 key 로 둔다 — 일행이 같은 지출을 고쳐 실시간으로 다시 읽어도 쓰던 값이 처음 값으로 돌아가지 않는다
+ * 비용 수정. 폼은 지출 id 를 key 로 둔다 — 일행이 같은 지출을 고쳐 실시간으로 다시 읽어도 쓰던 값이 처음 값으로 돌아가지 않는다.
+ * 대신 폼이 연 때의 값을 들고 있다가 달라진 칸만 보낸다 — 그사이 일행이 바꾼 칸을 되돌리지 않게
  */
 export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
   const router = useRouter();
@@ -76,9 +77,9 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
       initial={initial}
       pending={update.isPending}
       submitError={update.error?.message ?? remove.error?.message}
-      onSubmit={(values) =>
+      onSubmit={(values, opened) =>
         update.mutate(
-          { expenseId, values, previousCurrency: initial.currency },
+          { expenseId, values, opened: opened ?? initial },
           { onSuccess: () => router.replace(back) },
         )
       }
