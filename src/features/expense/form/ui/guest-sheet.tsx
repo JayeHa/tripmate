@@ -131,7 +131,9 @@ function NameInput({ editor }: NameInputProps) {
           <button
             type="button"
             onClick={editor.reset}
-            className="h-11 rounded-button bg-surface-muted px-3 text-[15px] font-semibold text-ink-700"
+            // 저장 중에 취소하면 끝난 저장이 새로 친 「추가」 칸을 비우거나 오류를 엉뚱한 칸에 띄운다
+            disabled={editor.pending}
+            className="h-11 rounded-button bg-surface-muted px-3 text-[15px] font-semibold text-ink-700 disabled:opacity-40"
           >
             취소
           </button>
