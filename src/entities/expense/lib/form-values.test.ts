@@ -8,6 +8,8 @@ const saved: ExpenseWithSplits = {
   trip_id: "t",
   schedule_item_id: "s1",
   payer_id: "a",
+  payer_guest_id: null,
+  split_each: false,
   amount: 12400,
   currency: "JPY",
   category: "shopping",
@@ -24,8 +26,8 @@ const saved: ExpenseWithSplits = {
   created_at: "",
   updated_at: "",
   splits: [
-    { expense_id: "e1", user_id: "a", share: 6200 },
-    { expense_id: "e1", user_id: "b", share: 6200 },
+    { id: "s1", expense_id: "e1", user_id: "a", guest_id: null, share: 6200 },
+    { id: "s2", expense_id: "e1", user_id: "b", guest_id: null, share: 6200 },
   ],
 };
 
@@ -37,8 +39,12 @@ describe("formValuesOf", () => {
       currency: "JPY",
       rate: 8.883,
       payment_method: "card",
-      payer_id: "a",
-      participant_ids: ["a", "b"],
+      payer: { kind: "member", id: "a" },
+      split_each: false,
+      participants: [
+        { kind: "member", id: "a" },
+        { kind: "member", id: "b" },
+      ],
       split_mode: "equal",
       custom_shares: undefined,
       category: "shopping",
@@ -56,11 +62,11 @@ describe("formValuesOf", () => {
       ...saved,
       split_mode: "custom",
       splits: [
-        { expense_id: "e1", user_id: "a", share: 7000 },
-        { expense_id: "e1", user_id: "b", share: 5400 },
+        { id: "s1", expense_id: "e1", user_id: "a", guest_id: null, share: 7000 },
+        { id: "s2", expense_id: "e1", user_id: "b", guest_id: null, share: 5400 },
       ],
     });
     expect(custom.split_mode).toBe("custom");
-    expect(custom.custom_shares).toEqual({ a: 7000, b: 5400 });
+    expect(custom.custom_shares).toEqual({ "m:a": 7000, "m:b": 5400 });
   });
 });

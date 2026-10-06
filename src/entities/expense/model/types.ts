@@ -3,6 +3,10 @@ import type { Tables } from "@/shared/api/supabase/database.types";
 export type Expense = Tables<"expenses">;
 export type ExpenseSplit = Tables<"expense_splits">;
 export type ExpenseWithSplits = Expense & { splits: ExpenseSplit[] };
+/** 앱에 초대하지 않고 가계부 정산에만 넣는 사람 */
+export type TripGuest = Tables<"trip_guests">;
+/** 정산에서 이미 보낸 돈 한 줄 */
+export type Settlement = Tables<"settlements">;
 
 /** 지출 카테고리 7개 — 고르는 칸 · 통계에 이 순서로 보인다 */
 export const EXPENSE_CATEGORIES = [

@@ -1,10 +1,20 @@
 import type { ExpenseFormValues } from "../model/schema";
+import type { PersonRef } from "./person";
+
+/** 결제자 두 칸 — 멤버면 payer_id, 정산 인원이면 payer_guest_id, 「각자 냄」 이면 둘 다 null */
+function payerColumns(payer: PersonRef | null) {
+  return {
+    payer_id: payer?.kind === "member" ? payer.id : null,
+    payer_guest_id: payer?.kind === "guest" ? payer.id : null,
+  };
+}
 
 /** 폼이 칸으로 다루는 값 — 수정할 때는 이것만 보낸다 */
 function formColumns(values: ExpenseFormValues) {
   return {
     name: values.name,
-    payer_id: values.payer_id,
+    ...payerColumns(values.payer),
+    split_each: values.split_each,
     amount: values.amount,
     currency: values.currency,
     category: values.category,
