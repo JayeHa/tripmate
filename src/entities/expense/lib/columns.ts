@@ -56,7 +56,16 @@ export function sharesChanged(values: ExpenseFormValues, opened: ExpenseFormValu
 }
 
 /**
- * 수정할 때 보낼 칸 — 폼이 다루는 값 중 **연 때(`opened`)와 달라진 것만**.
+ * DB 제약으로 묶인 칸 — 하나라도 달라지면 묶음 전체를 보낸다. 일부만 보내면 그사이 일행이 묶음의 다른 칸을 바꿨을 때
+ * 제약에 걸린다(결제자 셋은 `expenses_payer_chk`, 결제 상태 둘은 `expenses_due_date_chk`)
+ */
+const COLUMN_GROUPS = [
+  ["payer_id", "payer_guest_id", "split_each"],
+  ["paid", "due_date"],
+] as const;
+
+/**
+ * 수정할 때 보낼 칸 — 폼이 다루는 값 중 **연 때(`opened`)와 달라진 것만**. 제약으로 묶인 칸은 묶음 단위로(`COLUMN_GROUPS`).
  * 폼이 열려 있는 동안 일행이 바꾼 값(대체 장소 「바꾸기」 의 `counted`, 목록의 「결제 완료로」)을
  * 연 때의 값으로 되돌리지 않으려고.
  * 몫을 다시 쓰는 수정이면(`sharesChanged`) 금액 · 통화 · 환율 · 나눔 방식을 한 묶음으로 보낸다 — 몫은 이 금액 기준이라,
@@ -68,6 +77,10 @@ export function updateColumns(values: ExpenseFormValues, opened: ExpenseFormValu
   const changed: Partial<typeof next> = Object.fromEntries(
     Object.entries(next).filter(([key, value]) => before[key as keyof typeof before] !== value),
   );
+  for (const group of COLUMN_GROUPS) {
+    if (!group.some((key) => key in changed)) continue;
+    for (const key of group) Object.assign(changed, { [key]: next[key] });
+  }
   if (!sharesChanged(values, opened)) {
     delete changed.split_mode;
     return changed;

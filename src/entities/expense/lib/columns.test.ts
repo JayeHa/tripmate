@@ -41,7 +41,7 @@ describe("insertColumns", () => {
 describe("updateColumns", () => {
   it("연 때와 달라진 칸만 보낸다", () => {
     const cols = updateColumns({ ...values, memo: "웨이팅 30분", paid: false }, values);
-    expect(cols).toEqual({ memo: "웨이팅 30분", paid: false });
+    expect(cols).toEqual({ memo: "웨이팅 30분", paid: false, due_date: null });
   });
 
   it("고치지 않은 칸은 보내지 않아, 그사이 일행이 바꾼 값을 되돌리지 않는다", () => {
@@ -67,14 +67,24 @@ describe("updateColumns", () => {
     });
   });
 
-  it("결제자 · 각자 냄은 칸 단위로 — 결제자 두 칸 중 바뀐 것만", () => {
+  it("결제자 · 각자 냄은 한 묶음 — 하나만 바뀌어도 셋을 함께 보낸다(그사이 일행이 각자 냄으로 바꿔도 제약에 안 걸리게)", () => {
+    expect(updateColumns({ ...values, payer: { kind: "member", id: "b" } }, values)).toEqual({
+      payer_id: "b",
+      payer_guest_id: null,
+      split_each: false,
+    });
     expect(updateColumns({ ...values, payer: null, split_each: true }, values)).toEqual({
       payer_id: null,
+      payer_guest_id: null,
       split_each: true,
     });
-    expect(updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, values)).toEqual({
-      payer_id: null,
-      payer_guest_id: "g1",
+  });
+
+  it("결제 상태 · 예정일은 한 묶음 — 예정일만 고쳐도 결제 상태를 함께 보낸다", () => {
+    const planned = { ...values, paid: false, due_date: "2026-10-20" };
+    expect(updateColumns({ ...planned, due_date: "2026-10-25" }, planned)).toEqual({
+      paid: false,
+      due_date: "2026-10-25",
     });
   });
 });
