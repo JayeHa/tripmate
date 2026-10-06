@@ -185,7 +185,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - 부드러운 스크롤(`behavior: "smooth"`) · `requestAnimationFrame` · `ResizeObserver` · 닫히는 애니메이션 — 위치만 볼 때는 `scrollTo` 를 `instant` 로 바꿔 확인한다
 - 지도 타일 · 핀, 바깥 누르기 · blur · 끌기
 - **Chrome 은 스크롤 앵커링이 기본이라** 위쪽 내용이 길어져도 보던 자리를 지킨다. Safari 처럼 앵커링이 없는 브라우저의 동작을 재현하려면 스크롤 칸에 `overflow-anchor: none` 을 건다
-- 확인하느라 바꾼 것(DB 의 테스트 데이터 · localStorage 값)은 원래대로 돌려 놓는다
+- 확인하느라 바꾼 것(DB 의 테스트 데이터 · localStorage 값)은 원래대로 돌려 놓는다. 테스트 데이터는 **만들 때 받은 id 를 적어 두고 그 id 로만 지운다** — 이름 패턴(`like '테스트*'`)으로 지우면 같은 여행에서 사람이 직접 만든 데이터까지 지운다
 
 # 의존성
 
