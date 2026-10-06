@@ -95,6 +95,9 @@
   --color-cat-rest: #ec4899;
   --color-cat-cafe: #a16207;
   --color-cat-air: #3a8bff;
+  /* 가계부 카테고리에만 있는 둘 — 교통 · 기타 */
+  --color-cat-move: #6b7280;
+  --color-cat-etc: #9ca3af;
 
   /* 타임라인 — 임시(opt) 마커의 점선. 지도 핀은 지도 위에서 보이게 더 진하다 */
   --color-marker-opt: #aeb4bc;

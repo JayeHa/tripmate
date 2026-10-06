@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useCreateExpense } from "@/entities/expense";
 import { useScheduleItems } from "@/entities/schedule-item";
@@ -9,6 +9,8 @@ import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { ExpenseForm } from "@/features/expense/form";
 import { AppHeader } from "@/shared/ui/app-header";
+
+import { spentOnFromParam } from "../lib/spent-on-param";
 
 type ExpenseCreateViewProps = { tripId: string };
 
@@ -19,6 +21,7 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const { data: items } = useScheduleItems(tripId);
   const { data: user } = useUser();
   const create = useCreateExpense(tripId);
+  const period = useSearchParams().get("period");
 
   return (
     <>
@@ -30,6 +33,7 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
             members={members}
             items={items}
             currentUserId={user.id}
+            defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
             submitLabel="저장"
             pending={create.isPending}
             onSubmit={(values) =>
