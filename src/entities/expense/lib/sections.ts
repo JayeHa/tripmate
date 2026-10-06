@@ -1,3 +1,4 @@
+import { byCreatedAt } from "@/shared/lib/created-at";
 import { dateToDayIndex, dayCount } from "@/shared/lib/days";
 import type { ExchangeRates } from "@/shared/lib/money";
 
@@ -40,7 +41,7 @@ export function expenseSections(
     ...Array.from({ length: dayCount(trip.start_date, trip.end_date) }, (_, i) => i),
   ];
   const byPeriod = new Map<ExpensePeriod, ExpenseWithSplits[]>(periods.map((p) => [p, []]));
-  const ordered = [...expenses].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const ordered = [...expenses].sort(byCreatedAt);
   for (const e of ordered) byPeriod.get(periodOf(e, trip))?.push(e);
   return periods
     .filter((p) => filter === "all" || p === filter)

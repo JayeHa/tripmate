@@ -65,4 +65,16 @@ describe("expenseSections", () => {
     expect(expenseSections(list, trip, "prep").map((s) => s.period)).toEqual(["prep"]);
     expect(expenseSections(list, trip, 2).map((s) => s.period)).toEqual([2]);
   });
+
+  it("묶음 안 순서는 시각으로 — 소수 초가 빠진 시각도 바르게", () => {
+    const sections = expenseSections(
+      [
+        e("later", null, 1, "2026-10-06T10:00:05.5+00:00"),
+        e("first", null, 1, "2026-10-06T10:00:05+00:00"),
+      ],
+      trip,
+      "prep",
+    );
+    expect(sections[0].expenses.map((x) => x.id)).toEqual(["first", "later"]);
+  });
 });
