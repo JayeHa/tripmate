@@ -41,9 +41,10 @@ export function useExpenseList(tripId: string) {
     return members.find((m) => m.user_id === userId)?.profile.display_name ?? "알 수 없음";
   }
 
-  /** 아바타 사진 — 없으면 null(이니셜) */
+  /** 아바타 — 사진(없으면 null)과 이니셜에 쓸 표시 이름. 나도 「나」 가 아니라 내 이름 */
   function avatarOf(userId: string) {
-    return members.find((m) => m.user_id === userId)?.profile.avatar_url ?? null;
+    const profile = members.find((m) => m.user_id === userId)?.profile;
+    return { name: profile?.display_name ?? "", url: profile?.avatar_url ?? null };
   }
 
   /** 연결 일정 이름 */
