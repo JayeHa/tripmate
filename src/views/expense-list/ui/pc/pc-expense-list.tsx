@@ -94,7 +94,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
                   <div className="flex items-center justify-between border-b border-surface-muted py-3.5">
                     <span className="text-[13px] text-ink-350">아직 비용이 없어요</span>
                     <Link
-                      href={`${base}/new?day=${periodParam(s.period)}`}
+                      href={`${base}/new?period=${periodParam(s.period)}`}
                       className="text-[13px] font-bold text-primary"
                     >
                       + 비용 추가

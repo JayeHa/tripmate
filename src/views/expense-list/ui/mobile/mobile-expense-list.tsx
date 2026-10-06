@@ -75,7 +75,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
                 size="form"
                 className="mt-3.5 w-full"
                 nativeButton={false}
-                render={<Link href={`${base}/new?day=${periodParam(s.period)}`} />}
+                render={<Link href={`${base}/new?period=${periodParam(s.period)}`} />}
               >
                 비용 추가
               </Button>

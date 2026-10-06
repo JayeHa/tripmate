@@ -21,7 +21,7 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const { data: items } = useScheduleItems(tripId);
   const { data: user } = useUser();
   const create = useCreateExpense(tripId);
-  const day = useSearchParams().get("day");
+  const period = useSearchParams().get("period");
 
   return (
     <>
@@ -33,7 +33,7 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
             members={members}
             items={items}
             currentUserId={user.id}
-            defaultSpentOn={spentOnFromParam(day, trip.start_date, trip.end_date)}
+            defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
             submitLabel="저장"
             pending={create.isPending}
             onSubmit={(values) =>
