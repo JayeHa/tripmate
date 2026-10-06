@@ -36,7 +36,12 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
             <h1 className="text-2xl font-extrabold tracking-[-0.02em] text-ink-900">가계부</h1>
             <span className="text-[15px] text-ink-400">{list.count}건</span>
             <span className="flex-1" />
-            <Button size="pill" nativeButton={false} render={<Link href={`${base}/new`} />}>
+            <Button
+              variant="brand"
+              size="pill"
+              nativeButton={false}
+              render={<Link href={`${base}/new`} />}
+            >
               + 비용 추가
             </Button>
           </div>

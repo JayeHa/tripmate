@@ -32,7 +32,7 @@ export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-4.5 pb-6">
       {editing && (
-        <p className="flex items-start gap-2 rounded-card bg-status-wait-bg px-3.5 py-3 text-[13px]/relaxed font-semibold text-status-wait">
+        <p className="flex items-start gap-2 rounded-card bg-status-wait-bg px-3.5 py-3 text-[13px]/relaxed font-semibold text-status-wait-text">
           <Info className="mt-0.5 size-4 shrink-0" />이 장소를 쓰는 모든 일정과 홈 가이드에 같이
           반영돼요.
         </p>

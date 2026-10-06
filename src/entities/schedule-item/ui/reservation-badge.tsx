@@ -11,7 +11,7 @@ import { RESERVATION_STATUS_LABEL, type ReservationStatus } from "../model/reser
  */
 export const RESERVATION_TONE = {
   ok: { icon: CircleCheck, className: "bg-status-ok-bg text-status-ok" },
-  wait: { icon: CircleAlert, className: "bg-status-wait-bg text-status-wait" },
+  wait: { icon: CircleAlert, className: "bg-status-wait-bg text-status-wait-text" },
   opt: { icon: CircleDashed, className: "bg-status-opt-bg text-status-opt" },
 } satisfies Record<ReservationStatus, { icon: typeof CircleCheck; className: string }>;
 

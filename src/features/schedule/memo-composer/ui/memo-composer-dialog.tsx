@@ -132,7 +132,7 @@ function MemoFields({ form }: MemoFieldsProps) {
           className={cn(
             "flex h-8 items-center gap-1 rounded-full border px-3 text-[13px] font-bold",
             draft.starred
-              ? "border-important-line bg-status-wait-bg text-status-wait"
+              ? "border-important-line bg-important-bg text-important-text"
               : "border-line bg-white text-ink-500",
           )}
         >

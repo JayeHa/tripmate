@@ -42,7 +42,7 @@ export function AppHeader({ title, subtitle, back, right, dot }: Props) {
           className={cn(
             "flex items-center gap-5.5 text-ink-900",
             dot &&
-              "[&>*:last-child]:relative [&>*:last-child]:after:absolute [&>*:last-child]:after:-top-0.5 [&>*:last-child]:after:-right-0.75 [&>*:last-child]:after:size-1.75 [&>*:last-child]:after:rounded-full [&>*:last-child]:after:bg-cat-food [&>*:last-child]:after:content-['']",
+              "[&>*:last-child]:relative [&>*:last-child]:after:absolute [&>*:last-child]:after:-top-0.5 [&>*:last-child]:after:-right-0.75 [&>*:last-child]:after:size-1.75 [&>*:last-child]:after:rounded-full [&>*:last-child]:after:bg-notice-dot [&>*:last-child]:after:content-['']",
           )}
         >
           {right}

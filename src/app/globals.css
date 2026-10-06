@@ -82,22 +82,57 @@
   --color-line-dashed: #c9cdd2;
 
   /* Primary */
+  /*
+   * 역할로 나눈 파랑 — 지금은 값이 모두 같지만 쓰임이 다르다(핸드오프 「색 토큰 · 역할」).
+   * action = 저장 · 완료 · CTA, brand = 일행 초대 · D-day · 플로팅 추가 · 편집 테두리.
+   * 새 화면은 역할 토큰을 쓴다. 나중에 브랜드 색을 바꿀 때 action 은 그대로 두고 brand 만 바꾼다
+   */
+  --color-action: #3a8bff;
+  --color-on-action: #ffffff;
+  --color-brand: #3a8bff;
+  --color-brand-text: #1f6feb;
+  --color-brand-soft: #e8f1ff;
+  --color-brand-line: #c7d9f5;
+  --color-on-brand: #ffffff;
+
   --color-primary-pressed: #1f6feb;
   --color-primary-disabled: #c7d9f5;
   --color-primary-tint: #e8f1ff;
 
-  /* 장소 카테고리 (타임라인 마커 + 지도 핀) */
+  /*
+   * 카테고리 색 — 장소(타임라인 마커 · 지도 핀)와 가계부가 함께 쓴다.
+   * 2026-10-06 핸드오프에서 식비(앰버) · 쇼핑(레드)이 서로 바뀌었다.
+   * `-soft` 는 아이콘 타일 바탕(가계부 목록 · 장소 줄)
+   */
   --color-cat-sight: #8b5cf6;
+  --color-cat-sight-soft: #f1ecfe;
   --color-cat-stay: #14b8a6;
-  --color-cat-food: #f04452;
-  --color-cat-shop: #f59e0b;
+  --color-cat-stay-soft: #e0f5f2;
+  --color-cat-food: #f59e0b;
+  --color-cat-food-soft: #fef3dc;
+  --color-cat-shop: #f04452;
+  --color-cat-shop-soft: #fde8ea;
   /* 휴식(온천 · 스파 · 마사지). 시안에 색이 없어 정했다 */
   --color-cat-rest: #ec4899;
+  --color-cat-rest-soft: #fce7f1;
   --color-cat-cafe: #a16207;
+  --color-cat-cafe-soft: #f5edda;
   --color-cat-air: #3a8bff;
+  --color-cat-air-soft: #e8f1ff;
   /* 가계부 카테고리에만 있는 둘 — 교통 · 기타 */
   --color-cat-move: #6b7280;
+  --color-cat-move-soft: #eef0f2;
   --color-cat-etc: #9ca3af;
+  --color-cat-etc-soft: #f1f2f4;
+
+  /*
+   * 카테고리가 아닌 「빨강」 두 자리. 예전에는 cat-food 가 빨강이라 그것을 썼는데,
+   * 2026-10-06 에 식비가 앰버로 바뀌면서 뜻이 어긋나 전용 토큰으로 뺐다
+   */
+  /* 상단바 아이콘의 알림 점 */
+  --color-notice-dot: #f04452;
+  /* 구글맵 링크 칩의 핀 — 구글 지도의 빨간 핀을 따른다 */
+  --color-gmap-pin: #f04452;
 
   /* 타임라인 — 임시(opt) 마커의 점선. 지도 핀은 지도 위에서 보이게 더 진하다 */
   --color-marker-opt: #aeb4bc;
@@ -114,14 +149,19 @@
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
   --color-status-ok-bg: #e8f1ff;
-  --color-status-wait: #c2410c;
-  --color-status-wait-bg: #fff1e6;
+  /* 예약 필요: 채움(핀 · 번호 원)과 글자가 다른 색이다. 테두리는 배지 · 칩 */
+  --color-status-wait: #f06c33;
+  --color-status-wait-text: #c2410c;
+  --color-status-wait-bg: #feeee7;
+  --color-status-wait-line: #f9cdb8;
   --color-status-opt: #6b7280;
   --color-status-opt-bg: #f1f2f4;
 
-  /* ★ 중요 메모 — 칩 테두리 · 카드 글자(바탕은 status-wait-bg) */
-  --color-important-line: #fdd5b4;
-  --color-important-text: #9a3412;
+  /* ★ 중요 메모 — 예약 필요(status-wait)와 뜻이 달라 노랑-주황으로 분리했다(2026-10-06 핸드오프) */
+  --color-important: #f59e0b;
+  --color-important-bg: #fff6db;
+  --color-important-line: #f8dfa0;
+  --color-important-text: #b45309;
 
   /* 메모 태그 */
   --color-tag-tip: #1f6feb;

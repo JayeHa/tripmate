@@ -20,7 +20,7 @@ export function RowNotes({ row, onMarkPaid, paying }: RowNotesProps) {
         type="button"
         onClick={onMarkPaid}
         disabled={paying}
-        className="relative z-10 flex items-center gap-1 self-start text-xs font-bold text-status-wait disabled:opacity-50"
+        className="relative z-10 flex items-center gap-1 self-start text-xs font-bold text-status-wait-text disabled:opacity-50"
       >
         <CircleAlert className="size-3" />
         예정일 지남 · <span className="underline">결제 완료로</span>

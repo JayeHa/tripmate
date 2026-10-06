@@ -38,7 +38,7 @@ export function MemoCard({ memo, author, onClick }: MemoCardProps) {
           </Avatar>
         )}
         {memo.starred && (
-          <span className="flex items-center gap-0.5 text-[11px] font-extrabold text-status-wait">
+          <span className="flex items-center gap-0.5 text-[11px] font-extrabold text-important-text">
             <Star className="size-3 fill-current" />
             중요
           </span>
@@ -57,7 +57,7 @@ export function MemoCard({ memo, author, onClick }: MemoCardProps) {
   );
   const className = cn(
     "flex flex-col gap-1.5 rounded-memo px-3.5 py-3 text-left",
-    memo.starred ? "bg-status-wait-bg" : "bg-surface-memo",
+    memo.starred ? "bg-important-bg" : "bg-surface-memo",
   );
   return (
     <div className="flex flex-col gap-1.5">
