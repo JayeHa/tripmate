@@ -1487,15 +1487,27 @@ describe("정산 인원 · 각자 냄 · 송금 기록 (0034)", () => {
     const after = await db.query<{
       payer: string;
       splits: number;
+      share: string;
       from_user: string;
+      settlements: number;
       guests: number;
     }>(
       `select (select payer_id from public.expenses where id = '${expense}') payer,
               (select count(*)::int from public.expense_splits where expense_id = '${expense}') splits,
+              (select share::text from public.expense_splits where expense_id = '${expense}') share,
               (select from_user_id from public.settlements where trip_id = '${trip}') from_user,
+              (select count(*)::int from public.settlements where trip_id = '${trip}') settlements,
               (select count(*)::int from public.trip_guests where trip_id = '${trip}') guests`,
     );
-    expect(after.rows[0]).toEqual({ payer: B, splits: 1, from_user: B, guests: 0 });
+    // 인원의 몫 1 이 멤버 줄(1)에 더해져 한 줄 2 가 된다. B 에게 보낸 기록은 한 사람이 되어 지워지고 A 에게 보낸 것만 남는다
+    expect(after.rows[0]).toEqual({
+      payer: B,
+      splits: 1,
+      share: "2.00",
+      from_user: B,
+      settlements: 1,
+      guests: 0,
+    });
   });
 
   it("merge_trip_guest: 그 여행 멤버가 아니면 거부한다", async () => {
