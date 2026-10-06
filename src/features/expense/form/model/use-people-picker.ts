@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { liveParticipants, livePayer } from "../lib/live-people";
+
 /** 폼에서 고르는 사람 한 명 — 멤버 또는 정산 인원(guest) */
 export type FormPerson = {
   /** `personKey` 로 만든 키(`m:…` · `g:…`) */
@@ -29,8 +31,10 @@ export function usePeoplePicker({ people, me, start }: PeoplePickerOptions) {
   const [picked, setPicked] = useState(start.participants);
 
   const everyone = people.map((p) => p.key);
-  const participants = picked ?? everyone;
-  const payer = splitEach ? null : chosenPayer;
+  // 그사이 일행이 뺀 정산 인원은 고른 값에서 걸러 보인다(저장도 이 값) — 없는 인원으로 저장해 FK 에 걸리지 않게.
+  // 고른 값 자체는 두므로, 기기에 저장된 옛 목록으로 먼저 열렸다 새 목록이 와도 사라지지 않는다
+  const participants = picked ? liveParticipants(picked, everyone, me) : everyone;
+  const payer = splitEach ? null : livePayer(chosenPayer, everyone, me);
   const allIn = people.every((p) => participants.includes(p.key));
 
   /** 사람 순서대로 정리한다 — 목록에 없는 키(옛 기록)는 뒤에 둔다 */
