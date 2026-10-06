@@ -34,13 +34,26 @@ export function PeopleSection({ form }: PeopleSectionProps) {
       editor={editor}
     />
   );
-  if (people.length === 1)
-    return (
-      <>
-        <SoloCard me={people[0]} onAdd={() => setSheetOpen(true)} />
-        {sheet}
-      </>
-    );
+  // 시트는 두 갈래 모두 같은 자리(둘째 자식)에 둔다 — 첫 인원을 넣어 혼자 → 일행으로 바뀌어도
+  // 시트가 다시 마운트되지 않게(닫혔다 열리는 애니메이션 · 이름 칸 포커스 · 모바일 키보드가 끊기지 않게)
+  const openSheet = () => setSheetOpen(true);
+  return (
+    <>
+      {people.length === 1 ? (
+        <SoloCard me={people[0]} onAdd={openSheet} />
+      ) : (
+        <SharedSection form={form} onAdd={openSheet} />
+      )}
+      {sheet}
+    </>
+  );
+}
+
+type SharedSectionProps = { form: ExpenseFormState; onAdd: () => void };
+
+/** 일행이 있는 가계부의 섹션 — 제목 + 「+ 인원 추가」, 결제한 사람 줄, 함께한 사람 줄, 미리보기 */
+function SharedSection({ form, onAdd }: SharedSectionProps) {
+  const { picker, people } = form;
   return (
     <section className="flex flex-col gap-4 rounded-card bg-surface-sunken p-4">
       <div className="flex items-start gap-2.5">
@@ -50,7 +63,7 @@ export function PeopleSection({ form }: PeopleSectionProps) {
             나눠 낸 비용이면 함께한 사람을 모두 골라 주세요. 정산에 반영돼요.
           </p>
         </div>
-        <AddPersonButton onClick={() => setSheetOpen(true)} />
+        <AddPersonButton onClick={onAdd} />
       </div>
       <PeopleRow label="결제한 사람">
         <ToggleChip on={picker.splitEach} dark icon={Split} onClick={picker.toggleSplitEach}>
@@ -86,7 +99,6 @@ export function PeopleSection({ form }: PeopleSectionProps) {
           {form.preview.sub && <p className="text-xs/normal text-ink-500">{form.preview.sub}</p>}
         </div>
       )}
-      {sheet}
     </section>
   );
 }
