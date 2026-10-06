@@ -30,11 +30,14 @@ export function SettlementView({ tripId }: SettlementViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses } = useExpenses(tripId);
-  const { data: guests = [] } = useTripGuests(tripId);
-  const { data: settlements = [] } = useSettlements(tripId);
+  const guestsQuery = useTripGuests(tripId);
+  const settlementsQuery = useSettlements(tripId);
+  const guests = guestsQuery.data;
+  const settlements = settlementsQuery.data;
 
   const result = useMemo(() => {
-    if (!trip || !members || !expenses) return null;
+    // 정산 인원 · 이미 보낸 돈까지 다 읽은 뒤에 계산한다 — 먼저 그리면 보낸 돈을 빼지 않은 송금을 잠깐 보여 준다
+    if (!trip || !members || !expenses || !guests || !settlements) return null;
     try {
       const balances = computeNetBalances(
         expenses,
@@ -64,7 +67,7 @@ export function SettlementView({ tripId }: SettlementViewProps) {
   const name = (key: string) => {
     const person = personOfKey(key);
     if (person?.kind === "guest")
-      return guests.find((g) => g.id === person.id)?.name ?? "알 수 없음";
+      return guests?.find((g) => g.id === person.id)?.name ?? "알 수 없음";
     return member(key)?.profile.display_name ?? "알 수 없음";
   };
 
