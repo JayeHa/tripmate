@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { cleanAmount, fitAmountDraft, formatAmountDraft } from "./amount-draft";
+import {
+  caretAfter,
+  cleanAmount,
+  digitsBefore,
+  fitAmountDraft,
+  formatAmountDraft,
+} from "./amount-draft";
 
 describe("cleanAmount", () => {
   it("정수 통화는 숫자만 — 쉼표 · 글자를 버리고, 첫 점 뒤는 버린다(이어 붙이지 않는다)", () => {
@@ -43,5 +49,20 @@ describe("fitAmountDraft", () => {
   it("소수 통화끼리는 그 통화의 소수 자리까지, 정수는 그대로", () => {
     expect(fitAmountDraft("12.505", 2)).toBe("12.50");
     expect(fitAmountDraft("12000", 2)).toBe("12000");
+  });
+});
+
+describe("digitsBefore · caretAfter", () => {
+  it("가운데 숫자를 지워 쉼표가 옮겨 가도 커서는 같은 숫자 뒤에 남는다", () => {
+    // 「1,234,567」 에서 4 뒤(커서 5)의 4 를 지움 → 브라우저 값 「1,23,567」 · 커서 4
+    const before = digitsBefore("1,23,567", 4);
+    expect(before).toBe(3);
+    // 다시 쉼표를 넣은 「123,567」 에서 숫자 3개 뒤 = 3
+    expect(caretAfter("123,567", before)).toBe(3);
+  });
+
+  it("맨 앞이면 0, 숫자가 모자라면 끝", () => {
+    expect(caretAfter("1,234", 0)).toBe(0);
+    expect(caretAfter("1,234", 9)).toBe(5);
   });
 });

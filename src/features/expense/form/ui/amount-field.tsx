@@ -1,28 +1,40 @@
 import { Check, ChevronDown } from "lucide-react";
-import { type Ref, useState } from "react";
+import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
 import { currencyName, decimalsOf, formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
-import { formatAmountDraft } from "../lib/amount-draft";
+import { caretAfter, digitsBefore, formatAmountDraft } from "../lib/amount-draft";
 import type { ExpenseFormState } from "../model/use-expense-form";
 
 type AmountFieldProps = {
   form: ExpenseFormState;
-  inputRef: Ref<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
   autoFocus: boolean;
 };
 
 /**
  * 맨 위 금액 칸 — 가운데 큰 숫자(40/800, 쉼표) + 통화 이름, 오른쪽 통화 고르기(통화가 둘 이상일 때).
  * 밑줄은 비었을 때 블루, 채우면 회색. 기준 화폐가 아니면 아래에 「≈ 원화 · 엔 920 기준」.
- * 입력 칸 폭은 글자 수에 맞춘다 — 가운데 정렬에서 단위가 숫자에 붙어 있게
+ * 입력 칸 폭은 글자 수에 맞춘다 — 가운데 정렬에서 단위가 숫자에 붙어 있게.
+ * 쉼표를 다시 넣으면 값이 통째로 바뀌어 커서가 끝으로 간다. 그래서 커서 앞의 숫자 수를 기억했다가 같은 자리로 돌려놓는다
  */
 export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const text = formatAmountDraft(form.amount);
   const filled = form.numAmount > 0;
+  // 방금 입력에서 커서 앞에 있던 숫자 수. 그린 뒤 한 번 쓰고 비운다
+  const caret = useRef<number | null>(null);
+
+  // 의존 배열 없이 매번 — 걸러진 글자를 쳐서 값이 그대로여도 React 가 값을 다시 넣어 커서가 끝으로 가기 때문
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (caret.current === null || !input) return;
+    const at = caretAfter(input.value, caret.current);
+    input.setSelectionRange(at, at);
+    caret.current = null;
+  });
   return (
     <div className="flex flex-col items-center gap-2.5 border-b-8 border-surface-sunken px-5 pt-6.5 pb-5.5">
       <label htmlFor="expense-amount" className="text-[13px] font-bold text-ink-400">
@@ -42,7 +54,11 @@ export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
             autoComplete="off"
             autoFocus={autoFocus}
             value={text}
-            onChange={(e) => form.setAmount(e.target.value)}
+            onChange={(e) => {
+              const { value, selectionStart } = e.target;
+              caret.current = digitsBefore(value, selectionStart ?? value.length);
+              form.setAmount(value);
+            }}
             placeholder="0"
             style={{ width: `${Math.max(1, text.length) * 0.62 + 0.2}em` }}
             className="min-w-0 bg-transparent p-0 text-right text-[40px] font-extrabold tracking-tight text-ink-900 outline-none placeholder:text-ink-900"

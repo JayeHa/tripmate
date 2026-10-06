@@ -28,3 +28,19 @@ export function formatAmountDraft(draft: string): string {
   const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return fraction === undefined ? grouped : `${grouped}.${fraction}`;
 }
+
+/** 커서 앞에 있는 숫자 · 점의 수 — 쉼표를 다시 넣은 뒤에도 같은 자리로 커서를 돌려놓으려고 센다 */
+export function digitsBefore(text: string, caret: number): number {
+  return text.slice(0, caret).replace(/[^\d.]/g, "").length;
+}
+
+/** 쉼표를 넣은 글에서 숫자 · 점이 `count` 개 지난 자리. 모자라면 끝 */
+export function caretAfter(formatted: string, count: number): number {
+  if (count <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/[\d.]/.test(formatted[i])) seen++;
+    if (seen === count) return i + 1;
+  }
+  return formatted.length;
+}
