@@ -93,11 +93,14 @@ export function useExpenseForm({
     setAmountDraft(cleanAmount(input, decimals));
   }
 
-  /** 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자르고, 이 지출 환율을 비운다 */
+  /**
+   * 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자른다. 이 지출 환율은 옛 통화 기준이라 비우되,
+   * 연 때의 통화로 돌아오면 연 때의 환율을 되살린다 — 화면의 「엔 920 기준」 과 저장되는 환율이 어긋나지 않게
+   */
   function setCurrency(next: string) {
     setCurrencyState(next);
     setAmountDraft((draft) => fitAmountDraft(draft, decimalsOf(next)));
-    setRate(null);
+    setRate(next === opened?.currency ? opened.rate : null);
   }
 
   /** 날짜를 바꾸고 연결 일정을 비운다 */
