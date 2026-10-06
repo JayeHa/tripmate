@@ -23,10 +23,12 @@ import { expenseRowView } from "../lib/row";
  * 연결 일정 이름은 타임라인 일정과 대체 장소 줄에서 함께 찾는다(바꾸기로 대체 장소가 된 일정도 이름이 보이게)
  */
 export function useExpenseList(tripId: string) {
-  const { data: trip } = useTrip(tripId);
+  const tripQuery = useTrip(tripId);
+  const trip = tripQuery.data;
   const { data: members = [] } = useTripMembers(tripId);
   const { data: user } = useUser();
-  const { data: expenses, isPending } = useExpenses(tripId);
+  const expensesQuery = useExpenses(tripId);
+  const { data: expenses, isPending } = expensesQuery;
   const { data: items = [] } = useScheduleItems(tripId);
   const { data: alternatives = [] } = useAlternatives(tripId);
   const markPaid = useMarkExpensePaid(tripId);
@@ -50,7 +52,17 @@ export function useExpenseList(tripId: string) {
     return item ? itemName(item) : null;
   }
 
-  if (!trip || !expenses) return { trip, isPending, ready: false as const };
+  if (!trip || !expenses) {
+    return {
+      ready: false as const,
+      // 읽기에 실패했다 — 로딩과 구분해 안내 · 다시 시도를 보인다(오프라인 · 권한)
+      failed: tripQuery.isError || expensesQuery.isError,
+      retry: () => {
+        void tripQuery.refetch();
+        void expensesQuery.refetch();
+      },
+    };
+  }
 
   const ctx = {
     home: trip.home_currency,
