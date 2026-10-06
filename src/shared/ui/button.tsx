@@ -7,8 +7,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // 저장 · 완료 · CTA 는 action 역할(핸드오프 「색 토큰 · 역할」). 브랜드 색과 뜻이 다르다
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/80 disabled:bg-primary-disabled disabled:opacity-100",
+          "bg-action text-on-action hover:bg-action/80 disabled:bg-primary-disabled disabled:opacity-100",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -18,6 +19,8 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        // 브랜드 역할 — 일행 초대 · 「+ 일정」 · 「+ 비용 추가」 처럼 서비스를 드러내는 자리. 저장(action)과 토큰이 다르다
+        brand: "bg-brand text-on-brand hover:bg-primary-pressed disabled:bg-primary-disabled",
         // 디자인 시스템 Button: chip(회색 알약) / text(파란 텍스트 버튼)
         chip: "bg-surface-muted text-ink-700",
         text: "text-primary hover:text-primary-pressed",

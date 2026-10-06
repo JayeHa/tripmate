@@ -69,7 +69,7 @@ export function PcHeader({ tripId }: PcHeaderProps) {
       )}
       <div className="flex items-center gap-3.5">
         <AccountMenu profile={profile} showName={false} />
-        <Button size="pill" onClick={() => setInviteOpen(true)} disabled={!trip}>
+        <Button variant="brand" size="pill" onClick={() => setInviteOpen(true)} disabled={!trip}>
           + 일행초대
         </Button>
       </div>

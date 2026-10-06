@@ -18,6 +18,6 @@ export function FloatingAddFace({ open }: FloatingAddFaceProps) {
 export function floatingAddClass(open: boolean): string {
   return cn(
     "flex h-12 items-center gap-1.5 rounded-full pr-4.5 pl-3.5 text-white shadow-[0_6px_18px_rgba(58,139,255,0.35),0_2px_6px_rgba(0,0,0,0.12)]",
-    open ? "bg-ink-900" : "bg-primary",
+    open ? "bg-ink-900" : "bg-brand",
   );
 }
