@@ -27,8 +27,8 @@ const base = {
   counted: true,
   schedule_item_id: "s1",
   splits: [
-    { id: "s1", expense_id: "e1", user_id: "me", guest_id: null, share: 1600 },
-    { id: "s2", expense_id: "e1", user_id: "k", guest_id: null, share: 1600 },
+    { id: "s1", expense_id: "e1", trip_id: "t", user_id: "me", guest_id: null, share: 1600 },
+    { id: "s2", expense_id: "e1", trip_id: "t", user_id: "k", guest_id: null, share: 1600 },
   ],
 } as unknown as ExpenseWithSplits;
 

@@ -40,6 +40,7 @@ function expense(
     splits: splitEqual(amount, currency, participants).map((s) => ({
       id: `${id}:${s.userId}`,
       expense_id: id,
+      trip_id: "t",
       user_id: s.userId,
       guest_id: null,
       share: s.share,
@@ -160,8 +161,8 @@ describe("computeNetBalances", () => {
       payer_id: null,
       payer_guest_id: "g1",
       splits: [
-        { id: "s1", expense_id: "e1", user_id: "a", guest_id: null, share: 5000 },
-        { id: "s2", expense_id: "e1", user_id: null, guest_id: "g1", share: 5000 },
+        { id: "s1", expense_id: "e1", trip_id: "t", user_id: "a", guest_id: null, share: 5000 },
+        { id: "s2", expense_id: "e1", trip_id: "t", user_id: null, guest_id: "g1", share: 5000 },
       ],
     };
     const b = computeNetBalances([shared], people, "KRW", rates);

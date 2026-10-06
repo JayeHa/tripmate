@@ -26,8 +26,8 @@ const saved: ExpenseWithSplits = {
   created_at: "",
   updated_at: "",
   splits: [
-    { id: "s1", expense_id: "e1", user_id: "a", guest_id: null, share: 6200 },
-    { id: "s2", expense_id: "e1", user_id: "b", guest_id: null, share: 6200 },
+    { id: "s1", expense_id: "e1", trip_id: "t", user_id: "a", guest_id: null, share: 6200 },
+    { id: "s2", expense_id: "e1", trip_id: "t", user_id: "b", guest_id: null, share: 6200 },
   ],
 };
 
@@ -62,8 +62,8 @@ describe("formValuesOf", () => {
       ...saved,
       split_mode: "custom",
       splits: [
-        { id: "s1", expense_id: "e1", user_id: "a", guest_id: null, share: 7000 },
-        { id: "s2", expense_id: "e1", user_id: "b", guest_id: null, share: 5400 },
+        { id: "s1", expense_id: "e1", trip_id: "t", user_id: "a", guest_id: null, share: 7000 },
+        { id: "s2", expense_id: "e1", trip_id: "t", user_id: "b", guest_id: null, share: 5400 },
       ],
     });
     expect(custom.split_mode).toBe("custom");

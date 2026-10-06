@@ -54,7 +54,13 @@ function make(
     created_by: null,
     created_at: "",
     updated_at: "",
-    splits: splits.map((s) => ({ id: `${id}:${s.user_id}`, expense_id: id, guest_id: null, ...s })),
+    splits: splits.map((s) => ({
+      id: `${id}:${s.user_id}`,
+      expense_id: id,
+      trip_id: "t",
+      guest_id: null,
+      ...s,
+    })),
   };
 }
 const eq = (amount: number, cur: string, ids: string[]) =>

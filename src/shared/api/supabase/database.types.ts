@@ -525,6 +525,7 @@ export type Database = {
         Row: {
           id: string;
           expense_id: string;
+          trip_id: string;
           user_id: string | null;
           guest_id: string | null;
           share: number;
@@ -532,6 +533,8 @@ export type Database = {
         Insert: {
           id?: string;
           expense_id: string;
+          // 트리거(set_expense_split_trip)가 비용에서 채운다 — 넣지 않는다
+          trip_id?: string;
           user_id?: string | null;
           guest_id?: string | null;
           share: number;
@@ -539,6 +542,7 @@ export type Database = {
         Update: {
           id?: string;
           expense_id?: string;
+          trip_id?: string;
           user_id?: string | null;
           guest_id?: string | null;
           share?: number;
