@@ -7,6 +7,9 @@ import type { ExpenseTotals } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
+/** 합계 바 높이 — 이 화면의 토스트는 이만큼 더 올린다(하단 탭 위 바에 겹치지 않게) */
+export const TOTAL_BAR_HEIGHT = 64;
+
 type TotalBarProps = {
   total: ExpenseTotals;
   home: string;
@@ -41,7 +44,8 @@ export function TotalBar({ total, home }: TotalBarProps) {
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="flex h-16 flex-col items-center justify-center gap-0.5"
+          style={{ height: TOTAL_BAR_HEIGHT }}
+          className="flex flex-col items-center justify-center gap-0.5"
         >
           {open ? (
             <ChevronDown className="size-4.5 text-ink-350" />
