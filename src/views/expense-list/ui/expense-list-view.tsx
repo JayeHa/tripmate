@@ -3,6 +3,7 @@
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 import { AppHeader } from "@/shared/ui/app-header";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { Toast } from "@/shared/ui/toast";
 
 import { useExpenseList } from "../model/use-expense-list";
 import { MobileExpenseList } from "./mobile/mobile-expense-list";
@@ -29,9 +30,14 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
       </>
     );
   }
-  return isDesktop ? (
-    <PcExpenseList tripId={tripId} list={list} />
-  ) : (
-    <MobileExpenseList tripId={tripId} list={list} />
+  return (
+    <>
+      {isDesktop ? (
+        <PcExpenseList tripId={tripId} list={list} />
+      ) : (
+        <MobileExpenseList tripId={tripId} list={list} />
+      )}
+      <Toast message={list.toast} onDone={list.clearToast} />
+    </>
   );
 }

@@ -14,6 +14,7 @@ import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { todayISO } from "@/shared/lib/days";
+import type { ToastMessage } from "@/shared/ui/toast";
 
 import { expenseRowView } from "../lib/row";
 
@@ -30,6 +31,7 @@ export function useExpenseList(tripId: string) {
   const { data: alternatives = [] } = useAlternatives(tripId);
   const markPaid = useMarkExpensePaid(tripId);
   const [filter, setFilter] = useState<ExpensePeriod | "all">("all");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   /** 사람 이름 — 나는 「나」 */
   function nameOf(userId: string) {
@@ -70,7 +72,15 @@ export function useExpenseList(tripId: string) {
     sections,
     count: expenses.length,
     total: sumExpenses(expenses, trip.home_currency, trip.exchange_rates),
-    markPaid: (expenseId: string) => markPaid.mutate(expenseId),
+    /** 「결제 완료로」 — 실패하면 토스트로 알린다 */
+    markPaid: (expenseId: string) =>
+      markPaid.mutate(expenseId, {
+        onError: () => setToast({ text: "결제 완료로 바꾸지 못했어요", id: Date.now() }),
+      }),
+    /** 결제 완료로 바꾸는 중인 지출 — 그 줄의 버튼을 막는다 */
+    paying: markPaid.isPending ? markPaid.variables : null,
+    toast,
+    clearToast: () => setToast(null),
     avatarOf,
   };
 }

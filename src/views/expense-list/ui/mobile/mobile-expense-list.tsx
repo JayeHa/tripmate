@@ -67,6 +67,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
                   row={row}
                   href={`${base}/${row.id}`}
                   onMarkPaid={() => list.markPaid(row.id)}
+                  paying={list.paying === row.id}
                 />
               ))}
               <Button

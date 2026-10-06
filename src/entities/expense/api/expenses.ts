@@ -87,14 +87,19 @@ export async function deleteExpense(expenseId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** 결제 예정인 지출을 결제 완료로 — 예정일도 비운다. 다른 칸은 건드리지 않는다 */
+/**
+ * 결제 예정인 지출을 결제 완료로 — 예정일도 비운다. 다른 칸은 건드리지 않는다.
+ * 0행이면(그사이 지워졌거나 권한이 없다 — RLS 는 오류 없이 0행으로 끝난다) 던진다
+ */
 export async function markExpensePaid(expenseId: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("expenses")
     .update({ paid: true, due_date: null })
-    .eq("id", expenseId);
+    .eq("id", expenseId)
+    .select("id");
   if (error) throw error;
+  if (data.length === 0) throw new Error("expense not found");
 }
 
 /** date 이후(포함)의 지출 수. 기간을 줄일 때 마지막 날로 모일 지출을 미리 센다. 여행준비(날짜 없음)는 세지 않는다 */

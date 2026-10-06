@@ -86,6 +86,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
                     row={row}
                     href={`${base}/${row.id}`}
                     onMarkPaid={() => list.markPaid(row.id)}
+                    paying={list.paying === row.id}
                     avatarOf={list.avatarOf}
                   />
                 ))}

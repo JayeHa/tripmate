@@ -12,11 +12,13 @@ type ExpenseTableRowProps = {
   row: ExpenseRowView;
   href: string;
   onMarkPaid: () => void;
+  /** 결제 완료로 바꾸는 중 */
+  paying: boolean;
   avatarOf: (userId: string) => string | null;
 };
 
 /** PC 가계부 표 한 줄 — 카테고리 | 이름(+ 배지 · 연결 일정) | 결제한 사람 | 함께한 사람(아바타 겹침) | 금액(+ 근사치 · 환율) */
-export function ExpenseTableRow({ row, href, onMarkPaid, avatarOf }: ExpenseTableRowProps) {
+export function ExpenseTableRow({ row, href, onMarkPaid, paying, avatarOf }: ExpenseTableRowProps) {
   return (
     <div
       className={cn(
@@ -42,7 +44,7 @@ export function ExpenseTableRow({ row, href, onMarkPaid, avatarOf }: ExpenseTabl
           </Link>
           {row.excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
         </div>
-        <RowNotes row={row} onMarkPaid={onMarkPaid} />
+        <RowNotes row={row} onMarkPaid={onMarkPaid} paying={paying} />
       </div>
       <span className="flex min-w-0 items-center gap-1.5 text-sm text-ink-600">
         <PersonAvatar name={row.payer} avatarUrl={avatarOf(row.payerId)} />
