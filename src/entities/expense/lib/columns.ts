@@ -9,7 +9,10 @@ function payerColumns(payer: PersonRef | null) {
   };
 }
 
-/** 폼이 칸으로 다루는 값 — 수정할 때는 이것만 보낸다. 결제 완료면 예정일을 비운다 */
+/**
+ * 폼이 다루는 값 — 수정할 때는 이 중 달라진 것만 보낸다. 결제 완료면 예정일을 비운다.
+ * 환율은 칸이 아직 없지만 폼이 들고 있다(통화를 바꾸면 비우고, 연 때의 통화로 돌아오면 되살린다)
+ */
 function formColumns(values: ExpenseFormValues) {
   return {
     name: values.name,
@@ -17,6 +20,7 @@ function formColumns(values: ExpenseFormValues) {
     split_each: values.split_each,
     amount: values.amount,
     currency: values.currency,
+    rate: values.rate,
     payment_method: values.payment_method,
     category: values.category,
     memo: values.memo || null,
@@ -29,9 +33,9 @@ function formColumns(values: ExpenseFormValues) {
   };
 }
 
-/** 새 지출의 칸 — 폼에 칸이 없는 환율도 처음 값으로 넣는다 */
+/** 새 지출의 칸 */
 export function insertColumns(values: ExpenseFormValues) {
-  return { ...formColumns(values), rate: values.rate };
+  return formColumns(values);
 }
 
 /** 함께한 사람을 순서 없이 비교하려고 키를 정렬해 잇는다 */
@@ -52,18 +56,22 @@ export function sharesChanged(values: ExpenseFormValues, opened: ExpenseFormValu
 }
 
 /**
- * 수정할 때 보낼 칸 — 폼이 칸으로 다루는 값 중 **연 때(`opened`)와 달라진 것만**.
+ * 수정할 때 보낼 칸 — 폼이 다루는 값 중 **연 때(`opened`)와 달라진 것만**.
  * 폼이 열려 있는 동안 일행이 바꾼 값(대체 장소 「바꾸기」 의 `counted`, 목록의 「결제 완료로」)을
- * 연 때의 값으로 되돌리지 않으려고. 통화를 바꿨으면 그 지출의 환율은 옛 통화 기준이라 비운다(여행 기본 환율로 돌아간다)
+ * 연 때의 값으로 되돌리지 않으려고.
+ * 몫을 다시 쓰는 수정이면(`sharesChanged`) 금액 · 통화 · 환율 · 나눔 방식을 한 묶음으로 보낸다 — 몫은 이 금액 기준이라,
+ * 그사이 일행이 금액을 바꿨어도 줄의 금액과 몫의 합이 어긋나지 않게. 아니면 나눔 방식은 그대로 둔다(예전 직접 나누기)
  */
 export function updateColumns(values: ExpenseFormValues, opened: ExpenseFormValues) {
   const next = formColumns(values);
   const before = formColumns(opened);
-  const changed: Partial<ReturnType<typeof formColumns> & { rate: null }> = Object.fromEntries(
+  const changed: Partial<typeof next> = Object.fromEntries(
     Object.entries(next).filter(([key, value]) => before[key as keyof typeof before] !== value),
   );
-  // 몫을 다시 쓰지 않으면 나눔 방식도 그대로 둔다 — 예전 직접 나누기가 「균등」 으로 표시만 바뀌지 않게
-  if (!sharesChanged(values, opened)) delete changed.split_mode;
-  if (values.currency !== opened.currency) changed.rate = null;
-  return changed;
+  if (!sharesChanged(values, opened)) {
+    delete changed.split_mode;
+    return changed;
+  }
+  const { amount, currency, rate, split_mode } = next;
+  return { ...changed, amount, currency, rate, split_mode };
 }

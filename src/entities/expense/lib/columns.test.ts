@@ -39,7 +39,7 @@ describe("insertColumns", () => {
 });
 
 describe("updateColumns", () => {
-  it("연 때와 달라진 칸만 보낸다 — 칸이 없는 환율은 보내지 않는다", () => {
+  it("연 때와 달라진 칸만 보낸다", () => {
     const cols = updateColumns({ ...values, memo: "웨이팅 30분", paid: false }, values);
     expect(cols).toEqual({ memo: "웨이팅 30분", paid: false });
   });
@@ -50,8 +50,18 @@ describe("updateColumns", () => {
     expect(updateColumns({ ...opened, name: "돈키호테" }, opened)).toEqual({ name: "돈키호테" });
   });
 
-  it("통화를 바꿨으면 그 지출의 환율을 비운다", () => {
-    expect(updateColumns({ ...values, currency: "KRW" }, values)).toEqual({
+  it("몫을 다시 쓰면 금액 · 통화 · 환율 · 나눔 방식을 한 묶음으로 — 그사이 일행이 바꾼 금액과 몫이 어긋나지 않게", () => {
+    const fewer = { ...values, participants: [values.participants[0]] };
+    expect(updateColumns(fewer, values)).toEqual({
+      amount: 12400,
+      currency: "JPY",
+      rate: 8.883,
+      split_mode: "equal",
+    });
+  });
+
+  it("통화를 바꾸며 폼이 비운 환율도 함께 보낸다", () => {
+    expect(updateColumns({ ...values, currency: "KRW", rate: null }, values)).toMatchObject({
       currency: "KRW",
       rate: null,
     });
