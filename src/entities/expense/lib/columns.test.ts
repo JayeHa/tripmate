@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ExpenseFormValues } from "../model/schema";
-import { insertColumns, updateColumns } from "./columns";
+import { insertColumns, sharesChanged, updateColumns } from "./columns";
 
 const values: ExpenseFormValues = {
   name: "돈키호테 시부야",
@@ -65,6 +65,43 @@ describe("updateColumns", () => {
     expect(updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, values)).toEqual({
       payer_id: null,
       payer_guest_id: "g1",
+    });
+  });
+});
+
+describe("sharesChanged", () => {
+  const custom: ExpenseFormValues = {
+    ...values,
+    split_mode: "custom",
+    custom_shares: { "m:a": 8000, "m:b": 4400 },
+  };
+
+  it("금액 · 통화 · 함께한 사람이 그대로면 몫을 다시 쓰지 않는다 — 함께한 사람 순서는 보지 않는다", () => {
+    const reordered = {
+      ...values,
+      split_mode: "equal" as const,
+      participants: [...custom.participants].reverse(),
+      memo: "메모",
+    };
+    expect(sharesChanged(reordered, custom)).toBe(false);
+  });
+
+  it("셋 중 하나라도 바뀌면 다시 쓴다", () => {
+    expect(sharesChanged({ ...values, amount: 13000 }, values)).toBe(true);
+    expect(sharesChanged({ ...values, currency: "KRW" }, values)).toBe(true);
+    expect(sharesChanged({ ...values, participants: [values.participants[0]] }, values)).toBe(true);
+  });
+
+  it("예전 직접 나누기 지출 — 몫을 안 건드리는 수정이면 나눔 방식도 보내지 않는다", () => {
+    const edit = {
+      ...custom,
+      split_mode: "equal" as const,
+      custom_shares: undefined,
+      memo: "메모",
+    };
+    expect(updateColumns(edit, custom)).toEqual({ memo: "메모" });
+    expect(updateColumns({ ...edit, amount: 13000 }, custom)).toMatchObject({
+      split_mode: "equal",
     });
   });
 });
