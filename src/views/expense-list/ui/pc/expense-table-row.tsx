@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ExpenseBadge, ExpenseCategoryIcon, personKey, type PersonRef } from "@/entities/expense";
+import { ExpenseBadge, ExpenseCategoryTile, personKey, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
 import type { ExpenseRowView } from "../../lib/row";
@@ -28,9 +28,7 @@ export function ExpenseTableRow({ row, href, onMarkPaid, paying, avatarOf }: Exp
       )}
     >
       <div className="flex min-w-0 items-center gap-2">
-        <span className="flex size-7.5 shrink-0 items-center justify-center rounded-button bg-surface-sunken">
-          <ExpenseCategoryIcon category={row.category} className="size-4" />
-        </span>
+        <ExpenseCategoryTile category={row.category} size="sm" />
         <span className="text-[13px] text-ink-500">{row.categoryLabel}</span>
       </div>
       <div className="flex min-w-0 flex-col gap-0.75">
