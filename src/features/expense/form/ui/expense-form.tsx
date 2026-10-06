@@ -58,8 +58,8 @@ export function ExpenseForm({
         />
       </div>
       <CategoryField form={form} />
-      <PeopleFields form={form} members={members} />
-      <SplitField form={form} members={members} />
+      <PeopleFields form={form} />
+      <SplitField form={form} />
       <DateItemFields form={form} trip={trip} items={items} />
       <div className="flex flex-col gap-1.5">
         <Label>메모 (선택)</Label>

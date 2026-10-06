@@ -40,8 +40,17 @@ export function useExpenseForm({
     () => [trip.home_currency, ...Object.keys(trip.exchange_rates)],
     [trip],
   );
-  // 사람은 멤버 · 정산 인원을 함께 다루려고 키(`m:…`)로 고른다. 저장할 때 다시 사람으로 되돌린다
-  const memberIds = members.map((m) => personKey({ kind: "member", id: m.user_id }));
+  // 사람은 멤버 · 정산 인원을 함께 다루려고 키(`m:…`)로 고른다. 저장할 때 다시 사람으로 되돌린다.
+  // 칩 · 미리보기는 이 목록만 보고 그린다 — ⑥ 에서 정산 인원이 생기면 여기에 더하면 된다
+  const people = useMemo(
+    () =>
+      members.map((m) => ({
+        key: personKey({ kind: "member", id: m.user_id }),
+        name: m.profile.display_name ?? "이름 없음",
+      })),
+    [members],
+  );
+  const memberIds = useMemo(() => people.map((p) => p.key), [people]);
 
   const [start] = useState(() =>
     startValues({
@@ -138,8 +147,15 @@ export function useExpenseForm({
     );
   }
 
+  /** 사람 키 → 이름. 모르는 키면 빈 글 */
+  function nameOf(key: string) {
+    return people.find((p) => p.key === key)?.name ?? "";
+  }
+
   return {
     currencies,
+    people,
+    nameOf,
     memberIds,
     name,
     setName,

@@ -5,7 +5,6 @@ import {
 } from "@/entities/expense";
 import { itemName, type ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
-import type { TripMember } from "@/entities/trip-member";
 import { dayCount, dayIndexToDate, dayLabel } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Input } from "@/shared/ui/input";
@@ -75,23 +74,21 @@ export function CategoryField({ form }: FormProps) {
   );
 }
 
-type PeopleFieldsProps = FormProps & { members: TripMember[] };
-
-/** 결제한 사람(하나) · 나눌 사람(여럿, 모두 선택/해제) */
-export function PeopleFields({ form, members }: PeopleFieldsProps) {
+/** 결제한 사람(하나) · 나눌 사람(여럿, 모두 선택/해제). 사람은 키로 고른다(멤버 · 정산 인원 공통) */
+export function PeopleFields({ form }: FormProps) {
   const allIn = form.participants.length === form.memberIds.length;
   return (
     <>
       <div className="flex flex-col gap-1.5">
         <Label>결제한 사람</Label>
         <div className="flex flex-wrap gap-2">
-          {members.map((m) => (
+          {form.people.map((p) => (
             <Chip
-              key={m.user_id}
-              active={form.payerId === m.user_id}
-              onClick={() => form.setPayerId(m.user_id)}
+              key={p.key}
+              active={form.payerId === p.key}
+              onClick={() => form.setPayerId(p.key)}
             >
-              {m.profile.display_name ?? "이름 없음"}
+              {p.name}
             </Chip>
           ))}
         </div>
@@ -108,13 +105,13 @@ export function PeopleFields({ form, members }: PeopleFieldsProps) {
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
-          {members.map((m) => (
+          {form.people.map((p) => (
             <Chip
-              key={m.user_id}
-              active={form.participants.includes(m.user_id)}
-              onClick={() => form.toggleParticipant(m.user_id)}
+              key={p.key}
+              active={form.participants.includes(p.key)}
+              onClick={() => form.toggleParticipant(p.key)}
             >
-              {m.profile.display_name ?? "이름 없음"}
+              {p.name}
             </Chip>
           ))}
         </div>

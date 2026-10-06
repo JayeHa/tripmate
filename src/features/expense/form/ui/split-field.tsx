@@ -1,4 +1,3 @@
-import type { TripMember } from "@/entities/trip-member";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { Input } from "@/shared/ui/input";
@@ -9,13 +8,12 @@ import type { SplitMode } from "../lib/start-values";
 import type { ExpenseFormState } from "../model/use-expense-form";
 
 type SplitFieldProps = {
-  members: TripMember[];
   form: ExpenseFormState;
 };
 
-/** 분배 방식 — n빵이면 나눈 몫 미리보기, 직접 입력이면 사람마다 금액 칸과 합계 차이 */
-export function SplitField({ members, form }: SplitFieldProps) {
-  const nameOf = (id: string) => members.find((m) => m.user_id === id)?.profile.display_name;
+/** 분배 방식 — n빵이면 나눈 몫 미리보기, 직접 입력이면 사람마다 금액 칸과 합계 차이. 사람은 키로 다룬다 */
+export function SplitField({ form }: SplitFieldProps) {
+  const { nameOf } = form;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -45,7 +43,7 @@ export function SplitField({ members, form }: SplitFieldProps) {
 }
 
 type CustomSharesProps = {
-  nameOf: (id: string) => string | null | undefined;
+  nameOf: (key: string) => string;
   form: ExpenseFormState;
 };
 
