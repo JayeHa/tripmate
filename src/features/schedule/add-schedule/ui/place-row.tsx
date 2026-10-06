@@ -15,15 +15,15 @@ import {
 import type { PlaceCategory } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
-/** 카테고리 썸네일: 아이콘과 옅은 바탕 · 진한 아이콘색. 카테고리를 모르면(구글 결과) 회색 핀 */
+/** 카테고리 썸네일: 아이콘과 옅은 바탕(`-soft`) · 진한 아이콘색. 카테고리를 모르면(구글 결과) 회색 핀 */
 const CATEGORY_THUMB = {
-  sight: { icon: Landmark, tone: "bg-[#F1ECFE] text-cat-sight" },
-  food: { icon: UtensilsCrossed, tone: "bg-[#FDE8EA] text-cat-food" },
-  cafe: { icon: Coffee, tone: "bg-[#F5EEE3] text-cat-cafe" },
-  shop: { icon: ShoppingBag, tone: "bg-[#FEF3DC] text-cat-shop" },
-  rest: { icon: Bath, tone: "bg-[#FCE7F3] text-cat-rest" },
-  stay: { icon: BedDouble, tone: "bg-[#E3F6F3] text-cat-stay" },
-  air: { icon: Plane, tone: "bg-[#E8F1FF] text-cat-air" },
+  sight: { icon: Landmark, tone: "bg-cat-sight-soft text-cat-sight" },
+  food: { icon: UtensilsCrossed, tone: "bg-cat-food-soft text-cat-food" },
+  cafe: { icon: Coffee, tone: "bg-cat-cafe-soft text-cat-cafe" },
+  shop: { icon: ShoppingBag, tone: "bg-cat-shop-soft text-cat-shop" },
+  rest: { icon: Bath, tone: "bg-cat-rest-soft text-cat-rest" },
+  stay: { icon: BedDouble, tone: "bg-cat-stay-soft text-cat-stay" },
+  air: { icon: Plane, tone: "bg-cat-air-soft text-cat-air" },
 } satisfies Record<PlaceCategory, { icon: LucideIcon; tone: string }>;
 
 const UNKNOWN_THUMB = { icon: MapPin, tone: "bg-surface-muted text-ink-400" };

@@ -94,7 +94,7 @@ function DayMemoBody({
         className={cn(
           "flex h-8 items-center gap-1 self-start rounded-full border px-3 text-[13px] font-bold",
           form.starred
-            ? "border-important-line bg-status-wait-bg text-status-wait"
+            ? "border-important-line bg-important-bg text-important-text"
             : "border-line bg-white text-ink-500",
         )}
       >
