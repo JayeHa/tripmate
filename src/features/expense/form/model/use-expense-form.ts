@@ -9,7 +9,7 @@ import {
 import type { Trip } from "@/entities/trip";
 import { decimalsOf } from "@/shared/lib/money";
 
-import { cleanAmount } from "../lib/amount-draft";
+import { cleanAmount, fitAmountDraft } from "../lib/amount-draft";
 import { missingText } from "../lib/missing";
 import { homeAmountOrNull, rateLine } from "../lib/rate-line";
 import { splitPreview } from "../lib/split-preview";
@@ -90,10 +90,10 @@ export function useExpenseForm({
     setAmountDraft(cleanAmount(input, decimals));
   }
 
-  /** 통화를 바꾸고, 소수 자리를 새 통화에 맞추고, 이 지출 환율을 비운다 */
+  /** 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자르고, 이 지출 환율을 비운다 */
   function setCurrency(next: string) {
     setCurrencyState(next);
-    setAmountDraft((draft) => cleanAmount(draft, decimalsOf(next)));
+    setAmountDraft((draft) => fitAmountDraft(draft, decimalsOf(next)));
     setRate(null);
   }
 

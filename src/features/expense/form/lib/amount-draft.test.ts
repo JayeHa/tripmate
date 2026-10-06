@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cleanAmount, formatAmountDraft } from "./amount-draft";
+import { cleanAmount, fitAmountDraft, formatAmountDraft } from "./amount-draft";
 
 describe("cleanAmount", () => {
   it("정수 통화는 숫자만 — 쉼표 · 점 · 글자를 버린다", () => {
@@ -29,5 +29,18 @@ describe("formatAmountDraft", () => {
     expect(formatAmountDraft("12000.5")).toBe("12,000.5");
     expect(formatAmountDraft("12.")).toBe("12.");
     expect(formatAmountDraft("")).toBe("");
+  });
+});
+
+describe("fitAmountDraft", () => {
+  it("정수 통화로 바꾸면 소수부를 자른다 — 점을 지우고 이어 붙이지 않는다", () => {
+    expect(fitAmountDraft("12.5", 0)).toBe("12");
+    expect(fitAmountDraft("12.05", 0)).toBe("12");
+    expect(fitAmountDraft("12.", 0)).toBe("12");
+  });
+
+  it("소수 통화끼리는 그 통화의 소수 자리까지, 정수는 그대로", () => {
+    expect(fitAmountDraft("12.505", 2)).toBe("12.50");
+    expect(fitAmountDraft("12000", 2)).toBe("12000");
   });
 });

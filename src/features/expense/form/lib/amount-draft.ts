@@ -13,6 +13,16 @@ export function cleanAmount(input: string, decimals: number): string {
   return `${int || "0"}.${rest.join("").slice(0, decimals)}`;
 }
 
+/**
+ * 통화를 바꿀 때 초안을 새 통화의 소수 자리에 맞춘다 — 소수부를 자른다(「12.5」 달러 → 엔이면 「12」).
+ * 타자용 `cleanAmount` 에 넘기면 정수 통화에서 점을 지우고 숫자를 이어 붙여 「125」 가 된다
+ */
+export function fitAmountDraft(draft: string, decimals: number): string {
+  const [int, fraction] = draft.split(".");
+  if (fraction === undefined) return int;
+  return decimals === 0 ? int : `${int}.${fraction.slice(0, decimals)}`;
+}
+
 /** 초안에 천 단위 쉼표를 넣는다 — 「12000.5」 → 「12,000.5」 */
 export function formatAmountDraft(draft: string): string {
   const [int, fraction] = draft.split(".");
