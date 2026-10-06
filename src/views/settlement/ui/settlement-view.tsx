@@ -4,7 +4,16 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
-import { computeNetBalances, minimizeTransfers, useExpenses } from "@/entities/expense";
+import {
+  computeNetBalances,
+  minimizeTransfers,
+  peopleOf,
+  personKey,
+  personOfKey,
+  useExpenses,
+  useSettlements,
+  useTripGuests,
+} from "@/entities/expense";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { decimalsOf, formatMoney, MissingRateError } from "@/shared/lib/money";
@@ -21,15 +30,21 @@ export function SettlementView({ tripId }: SettlementViewProps) {
   const { data: trip } = useTrip(tripId);
   const { data: members } = useTripMembers(tripId);
   const { data: expenses } = useExpenses(tripId);
+  const { data: guests = [] } = useTripGuests(tripId);
+  const { data: settlements = [] } = useSettlements(tripId);
 
   const result = useMemo(() => {
     if (!trip || !members || !expenses) return null;
     try {
       const balances = computeNetBalances(
         expenses,
-        members.map((m) => m.user_id),
+        peopleOf(
+          members.map((m) => m.user_id),
+          guests,
+        ),
         trip.home_currency,
         trip.exchange_rates,
+        settlements,
       );
       const transfers = minimizeTransfers(balances.net, decimalsOf(trip.home_currency));
       return { balances, transfers, missing: null as string | null };
@@ -38,10 +53,20 @@ export function SettlementView({ tripId }: SettlementViewProps) {
         return { balances: null, transfers: [], missing: e.currency };
       throw e;
     }
-  }, [trip, members, expenses]);
+  }, [trip, members, expenses, guests, settlements]);
 
-  const member = (id: string) => members?.find((m) => m.user_id === id);
-  const name = (id: string) => member(id)?.profile.display_name ?? "알 수 없음";
+  /** 사람 키 → 멤버(정산 인원이면 undefined) */
+  const member = (key: string) => {
+    const person = personOfKey(key);
+    return person?.kind === "member" ? members?.find((m) => m.user_id === person.id) : undefined;
+  };
+  /** 사람 키 → 이름. 정산 인원은 이름만 있다 */
+  const name = (key: string) => {
+    const person = personOfKey(key);
+    if (person?.kind === "guest")
+      return guests.find((g) => g.id === person.id)?.name ?? "알 수 없음";
+    return member(key)?.profile.display_name ?? "알 수 없음";
+  };
 
   return (
     <>
@@ -94,14 +119,12 @@ export function SettlementView({ tripId }: SettlementViewProps) {
               </p>
               <ul className="mt-3 flex flex-col divide-y">
                 {members.map((m) => {
-                  const net = result.balances.net[m.user_id] ?? 0;
-                  const paidBy = result.balances.paidByCurrency[m.user_id] ?? {};
+                  const key = personKey({ kind: "member", id: m.user_id });
+                  const net = result.balances.net[key] ?? 0;
+                  const paidBy = result.balances.paidByCurrency[key] ?? {};
                   return (
                     <li key={m.user_id} className="flex items-center gap-3 py-2.5">
-                      <Person
-                        name={name(m.user_id)}
-                        avatarUrl={member(m.user_id)?.profile.avatar_url}
-                      />
+                      <Person name={name(key)} avatarUrl={member(key)?.profile.avatar_url} />
                       <div className="ml-auto text-right">
                         <p className={cn("text-sm font-semibold", NET_TONE[Math.sign(net)])}>
                           {net > 0 ? "+" : ""}

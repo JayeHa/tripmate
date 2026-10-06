@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 
-import { expenseFormSchema, type ExpenseFormValues } from "@/entities/expense";
+import {
+  expenseFormSchema,
+  type ExpenseFormValues,
+  personKey,
+  personOfKey,
+} from "@/entities/expense";
 import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 import { decimalsOf, splitEqual, validateCustomShares } from "@/shared/lib/money";
@@ -35,10 +40,18 @@ export function useExpenseForm({
     () => [trip.home_currency, ...Object.keys(trip.exchange_rates)],
     [trip],
   );
-  const memberIds = members.map((m) => m.user_id);
+  // 사람은 멤버 · 정산 인원을 함께 다루려고 키(`m:…`)로 고른다. 저장할 때 다시 사람으로 되돌린다
+  const memberIds = members.map((m) => personKey({ kind: "member", id: m.user_id }));
 
   const [start] = useState(() =>
-    startValues({ trip, currencies, memberIds, currentUserId, initial, defaultSpentOn }),
+    startValues({
+      trip,
+      currencies,
+      memberIds,
+      currentUserId: personKey({ kind: "member", id: currentUserId }),
+      initial,
+      defaultSpentOn,
+    }),
   );
   const [name, setName] = useState(start.name);
   const [amount, setAmount] = useState(start.amount);
@@ -93,8 +106,9 @@ export function useExpenseForm({
       name,
       amount: numAmount,
       currency,
-      payer_id: payerId,
-      participant_ids: participants,
+      payer: personOfKey(payerId),
+      split_each: false,
+      participants: participants.flatMap((key) => personOfKey(key) ?? []),
       split_mode: splitMode,
       custom_shares: splitMode === "custom" ? customShares() : undefined,
       category,

@@ -1,4 +1,4 @@
-import type { ExpenseFormValues } from "@/entities/expense";
+import { type ExpenseFormValues, personKey } from "@/entities/expense";
 import type { Trip } from "@/entities/trip";
 
 export type SplitMode = ExpenseFormValues["split_mode"];
@@ -12,6 +12,7 @@ export type KeptValues = Pick<
 type StartOptions = {
   trip: Trip;
   currencies: string[];
+  /** 고를 수 있는 사람 키(멤버 · 정산 인원). `personKey` 로 만든다 */
   memberIds: string[];
   currentUserId: string;
   initial?: ExpenseFormValues;
@@ -62,8 +63,8 @@ function savedValues(initial: ExpenseFormValues) {
     name: initial.name,
     amount: String(initial.amount),
     currency: initial.currency,
-    payerId: initial.payer_id,
-    participants: initial.participant_ids,
+    payerId: initial.payer ? personKey(initial.payer) : "",
+    participants: initial.participants.map(personKey),
     splitMode: initial.split_mode,
     custom: Object.fromEntries(
       Object.entries(initial.custom_shares ?? {}).map(([k, v]) => [k, String(v)]),

@@ -45,7 +45,7 @@ export function ExpenseRow({ row, href, onMarkPaid, paying }: ExpenseRowProps) {
         {row.approxText && <span className="text-xs text-ink-400">{row.approxText}</span>}
         {row.rateText && <span className="text-[11px] text-ink-350">{row.rateText}</span>}
         <span className="text-xs text-ink-350">
-          결제 : {row.payer} | 함께 : {row.together}
+          {row.splitEach ? "각자 냄" : `결제 : ${row.payer?.name ?? "-"}`} | 함께 : {row.together}
         </span>
       </div>
     </div>
