@@ -26,14 +26,21 @@ export async function addTripGuest(tripId: string, name: string): Promise<TripGu
   return data;
 }
 
-/** 이름을 바꾼다 */
+/** 그 사이 일행이 이 인원을 뺐다 — 부른 쪽이 이 문구를 그대로 보인다 */
+export const GUEST_GONE = "이미 빠진 인원이에요";
+
+/**
+ * 이름을 바꾼다. 0행이면(그사이 빠졌거나 권한이 없다 — RLS 는 오류 없이 0행으로 끝난다) GUEST_GONE 을 던진다
+ */
 export async function renameTripGuest(guestId: string, name: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("trip_guests")
     .update({ name: name.trim() })
-    .eq("id", guestId);
+    .eq("id", guestId)
+    .select("id");
   if (error) throw error;
+  if (data.length === 0) throw new Error(GUEST_GONE);
 }
 
 /** 그 사이 일행이 이 인원을 비용에 넣어 뺄 수 없다 — 부른 쪽이 이 문구를 그대로 보인다 */

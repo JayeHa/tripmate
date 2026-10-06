@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { personKey, useTripGuestActions } from "@/entities/expense";
+import { GUEST_GONE, personKey, useTripGuestActions } from "@/entities/expense";
 
 type GuestEditorOptions = {
   tripId: string;
@@ -54,7 +54,14 @@ export function useGuestEditor({ tripId, onAdded, onRemoved }: GuestEditorOption
     if (editing) {
       actions.rename.mutate(
         { guestId: editing.id, name: trimmed },
-        { onSuccess: reset, onError: fail },
+        {
+          onSuccess: reset,
+          // 그사이 빠진 인원이면 「추가」 로 되돌리고 이유만 남긴다
+          onError: (e) => {
+            if (e.message === GUEST_GONE) reset();
+            fail(e);
+          },
+        },
       );
       return;
     }
