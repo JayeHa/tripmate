@@ -31,13 +31,25 @@ function iconOf(category: ExpenseCategory) {
 
 type ExpenseCategoryIconProps = {
   category: ExpenseCategory;
+  /** false 면 카테고리 색 대신 글자 색을 따른다 — 고르는 칩처럼 바탕이 바뀌는 곳 */
+  tone?: boolean;
   className?: string;
 };
 
 /** 지출 카테고리 아이콘 — 색은 카테고리마다 정해져 있고 크기는 부른 쪽이 정한다 */
-export function ExpenseCategoryIcon({ category, className }: ExpenseCategoryIconProps) {
-  const { Icon, tone } = iconOf(category);
-  return <Icon aria-hidden="true" strokeWidth={2} className={cn("shrink-0", tone, className)} />;
+export function ExpenseCategoryIcon({
+  category,
+  tone = true,
+  className,
+}: ExpenseCategoryIconProps) {
+  const icon = iconOf(category);
+  return (
+    <icon.Icon
+      aria-hidden="true"
+      strokeWidth={2}
+      className={cn("shrink-0", tone && icon.tone, className)}
+    />
+  );
 }
 
 /** 타일 크기 — 목록 38 · r11 · 아이콘 19 / 카드(통계 · 표) 28 · r8 · 아이콘 15 */

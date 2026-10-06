@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ExpenseFormValues } from "../model/schema";
-import { insertColumns, updateColumns } from "./columns";
+import { insertColumns, sharesChanged, updateColumns } from "./columns";
 
 const values: ExpenseFormValues = {
   name: "돈키호테 시부야",
@@ -26,7 +26,7 @@ const values: ExpenseFormValues = {
 };
 
 describe("insertColumns", () => {
-  it("폼이 다루지 않는 값도 넣는다 — 빈 메모는 null, 결제 완료면 예정일을 비운다", () => {
+  it("칸이 없는 환율도 넣는다 — 빈 메모는 null, 결제 완료면 예정일을 비운다", () => {
     expect(insertColumns({ ...values, due_date: "2026-10-20" })).toMatchObject({
       memo: null,
       rate: 8.883,
@@ -39,22 +39,89 @@ describe("insertColumns", () => {
 });
 
 describe("updateColumns", () => {
-  it("폼이 칸으로 다루는 값만 보낸다 — 합계 포함 · 결제 상태 · 결제수단 · 환율은 서버 값을 둔다", () => {
-    const cols = updateColumns(values, "JPY");
-    for (const key of ["counted", "paid", "due_date", "payment_method", "rate"]) {
-      expect(cols).not.toHaveProperty(key);
-    }
-    expect(cols).toMatchObject({ name: "돈키호테 시부야", spent_on: null, schedule_item_id: "s1" });
+  it("연 때와 달라진 칸만 보낸다", () => {
+    const cols = updateColumns({ ...values, memo: "웨이팅 30분", paid: false }, values);
+    expect(cols).toEqual({ memo: "웨이팅 30분", paid: false, due_date: null });
   });
 
-  it("통화를 바꿨으면 그 지출의 환율을 비운다", () => {
-    expect(updateColumns({ ...values, currency: "KRW" }, "JPY")).toMatchObject({ rate: null });
+  it("고치지 않은 칸은 보내지 않아, 그사이 일행이 바꾼 값을 되돌리지 않는다", () => {
+    // 연 뒤 일행이 「결제 완료로」 · 대체 장소 「바꾸기」 를 해도 폼 값은 연 때 그대로다
+    const opened = { ...values, paid: false, counted: true };
+    expect(updateColumns({ ...opened, name: "돈키호테" }, opened)).toEqual({ name: "돈키호테" });
   });
 
-  it("「각자 냄」 과 결제자는 저장된 값 그대로 — 폼이 들고 있던 값을 보낸다", () => {
-    const each = updateColumns({ ...values, payer: null, split_each: true }, "JPY");
-    expect(each).toMatchObject({ split_each: true, payer_id: null, payer_guest_id: null });
-    const guest = updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, "JPY");
-    expect(guest).toMatchObject({ split_each: false, payer_id: null, payer_guest_id: "g1" });
+  it("몫을 다시 쓰면 금액 · 통화 · 환율 · 나눔 방식을 한 묶음으로 — 그사이 일행이 바꾼 금액과 몫이 어긋나지 않게", () => {
+    const fewer = { ...values, participants: [values.participants[0]] };
+    expect(updateColumns(fewer, values)).toEqual({
+      amount: 12400,
+      currency: "JPY",
+      rate: 8.883,
+      split_mode: "equal",
+    });
+  });
+
+  it("통화를 바꾸며 폼이 비운 환율도 함께 보낸다", () => {
+    expect(updateColumns({ ...values, currency: "KRW", rate: null }, values)).toMatchObject({
+      currency: "KRW",
+      rate: null,
+    });
+  });
+
+  it("결제자 · 각자 냄은 한 묶음 — 하나만 바뀌어도 셋을 함께 보낸다(그사이 일행이 각자 냄으로 바꿔도 제약에 안 걸리게)", () => {
+    expect(updateColumns({ ...values, payer: { kind: "member", id: "b" } }, values)).toEqual({
+      payer_id: "b",
+      payer_guest_id: null,
+      split_each: false,
+    });
+    expect(updateColumns({ ...values, payer: null, split_each: true }, values)).toEqual({
+      payer_id: null,
+      payer_guest_id: null,
+      split_each: true,
+    });
+  });
+
+  it("결제 상태 · 예정일은 한 묶음 — 예정일만 고쳐도 결제 상태를 함께 보낸다", () => {
+    const planned = { ...values, paid: false, due_date: "2026-10-20" };
+    expect(updateColumns({ ...planned, due_date: "2026-10-25" }, planned)).toEqual({
+      paid: false,
+      due_date: "2026-10-25",
+    });
+  });
+});
+
+describe("sharesChanged", () => {
+  const custom: ExpenseFormValues = {
+    ...values,
+    split_mode: "custom",
+    custom_shares: { "m:a": 8000, "m:b": 4400 },
+  };
+
+  it("금액 · 통화 · 함께한 사람이 그대로면 몫을 다시 쓰지 않는다 — 함께한 사람 순서는 보지 않는다", () => {
+    const reordered = {
+      ...values,
+      split_mode: "equal" as const,
+      participants: [...custom.participants].reverse(),
+      memo: "메모",
+    };
+    expect(sharesChanged(reordered, custom)).toBe(false);
+  });
+
+  it("셋 중 하나라도 바뀌면 다시 쓴다", () => {
+    expect(sharesChanged({ ...values, amount: 13000 }, values)).toBe(true);
+    expect(sharesChanged({ ...values, currency: "KRW" }, values)).toBe(true);
+    expect(sharesChanged({ ...values, participants: [values.participants[0]] }, values)).toBe(true);
+  });
+
+  it("예전 직접 나누기 지출 — 몫을 안 건드리는 수정이면 나눔 방식도 보내지 않는다", () => {
+    const edit = {
+      ...custom,
+      split_mode: "equal" as const,
+      custom_shares: undefined,
+      memo: "메모",
+    };
+    expect(updateColumns(edit, custom)).toEqual({ memo: "메모" });
+    expect(updateColumns({ ...edit, amount: 13000 }, custom)).toMatchObject({
+      split_mode: "equal",
+    });
   });
 });

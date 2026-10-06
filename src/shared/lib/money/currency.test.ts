@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatMoney, MissingRateError, roundTo, toHome } from "./currency";
+import { currencyName, formatMoney, MissingRateError, roundTo, toHome } from "./currency";
 
 const rates = { JPY: { unit: 100, value: 900 }, USD: { unit: 1, value: 1350 } };
 
@@ -30,5 +30,13 @@ describe("formatMoney", () => {
     expect(formatMoney(12345, "KRW")).toBe("₩12,345");
     expect(formatMoney(1000, "JPY")).toBe("¥1,000");
     expect(formatMoney(3.5, "USD")).toBe("$3.50");
+  });
+});
+
+describe("currencyName", () => {
+  it("아는 통화는 이름, 모르는 통화는 코드", () => {
+    expect(currencyName("JPY")).toBe("엔");
+    expect(currencyName("KRW")).toBe("원");
+    expect(currencyName("CHF")).toBe("CHF");
   });
 });
