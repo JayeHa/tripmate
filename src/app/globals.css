@@ -125,6 +125,15 @@
   --color-cat-etc: #9ca3af;
   --color-cat-etc-soft: #f1f2f4;
 
+  /*
+   * 카테고리가 아닌 「빨강」 두 자리. 예전에는 cat-food 가 빨강이라 그것을 썼는데,
+   * 2026-10-06 에 식비가 앰버로 바뀌면서 뜻이 어긋나 전용 토큰으로 뺐다
+   */
+  /* 상단바 아이콘의 알림 점 */
+  --color-notice-dot: #f04452;
+  /* 구글맵 링크 칩의 핀 — 구글 지도의 빨간 핀을 따른다 */
+  --color-gmap-pin: #f04452;
+
   /* 타임라인 — 임시(opt) 마커의 점선. 지도 핀은 지도 위에서 보이게 더 진하다 */
   --color-marker-opt: #aeb4bc;
   --color-pin-opt: #8b929b;
