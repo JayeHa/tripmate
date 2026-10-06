@@ -9,8 +9,12 @@ const values: ExpenseFormValues = {
   currency: "JPY",
   rate: 8.883,
   payment_method: "card",
-  payer_id: "a",
-  participant_ids: ["a", "b"],
+  payer: { kind: "member", id: "a" },
+  split_each: false,
+  participants: [
+    { kind: "member", id: "a" },
+    { kind: "member", id: "b" },
+  ],
   split_mode: "equal",
   category: "shopping",
   memo: "",
@@ -45,5 +49,12 @@ describe("updateColumns", () => {
 
   it("통화를 바꿨으면 그 지출의 환율을 비운다", () => {
     expect(updateColumns({ ...values, currency: "KRW" }, "JPY")).toMatchObject({ rate: null });
+  });
+
+  it("「각자 냄」 과 결제자는 저장된 값 그대로 — 폼이 들고 있던 값을 보낸다", () => {
+    const each = updateColumns({ ...values, payer: null, split_each: true }, "JPY");
+    expect(each).toMatchObject({ split_each: true, payer_id: null, payer_guest_id: null });
+    const guest = updateColumns({ ...values, payer: { kind: "guest", id: "g1" } }, "JPY");
+    expect(guest).toMatchObject({ split_each: false, payer_id: null, payer_guest_id: "g1" });
   });
 });

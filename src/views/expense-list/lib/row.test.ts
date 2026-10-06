@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExpenseWithSplits } from "@/entities/expense";
+import type { ExpenseWithSplits, PersonRef } from "@/entities/expense";
 
 import { expenseRowView } from "./row";
 
@@ -8,7 +8,7 @@ const ctx = {
   home: "KRW",
   rates: { JPY: { unit: 100, value: 920 } },
   today: "2026-10-05",
-  nameOf: (id: string) => ({ me: "나", k: "김동규" })[id] ?? "알 수 없음",
+  nameOf: (person: PersonRef) => ({ me: "나", k: "김동규" })[person.id] ?? "알 수 없음",
   linkNameOf: (id: string) => (id === "s1" ? "텐동 카네코 한노스케" : null),
 };
 
@@ -20,13 +20,15 @@ const base = {
   currency: "JPY",
   rate: null,
   payer_id: "k",
+  payer_guest_id: null,
+  split_each: false,
   paid: true,
   due_date: null,
   counted: true,
   schedule_item_id: "s1",
   splits: [
-    { expense_id: "e1", user_id: "me", share: 1600 },
-    { expense_id: "e1", user_id: "k", share: 1600 },
+    { id: "s1", expense_id: "e1", trip_id: "t", user_id: "me", guest_id: null, share: 1600 },
+    { id: "s2", expense_id: "e1", trip_id: "t", user_id: "k", guest_id: null, share: 1600 },
   ],
 } as unknown as ExpenseWithSplits;
 
@@ -38,11 +40,11 @@ describe("expenseRowView", () => {
       amountText: "¥3,200",
       approxText: "≈ ₩29,440",
       rateText: "(¥100 = ₩920)",
-      payer: "김동규",
+      payer: { person: { kind: "member", id: "k" }, name: "김동규" },
       together: "나, 김동규",
       togetherPeople: [
-        { id: "me", name: "나" },
-        { id: "k", name: "김동규" },
+        { person: { kind: "member", id: "me" }, name: "나" },
+        { person: { kind: "member", id: "k" }, name: "김동규" },
       ],
       planned: false,
       overdue: false,

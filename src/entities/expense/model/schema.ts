@@ -2,6 +2,12 @@ import { z } from "zod";
 
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "./types";
 
+/** 가계부에 나오는 사람 — 멤버이거나 초대 없이 넣은 정산 인원 */
+const personSchema = z.object({
+  kind: z.enum(["member", "guest"]),
+  id: z.string().min(1),
+});
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export const expenseFormSchema = z
@@ -13,8 +19,11 @@ export const expenseFormSchema = z
     /** 이 지출에만 쓰는 환율(기준 화폐 / 통화 1단위). null 이면 여행 기본 환율 */
     rate: z.number().positive().nullable(),
     payment_method: z.enum(PAYMENT_METHODS),
-    payer_id: z.string().min(1, "결제한 사람을 선택하세요"),
-    participant_ids: z.array(z.string()).min(1, "나눌 사람을 1명 이상 선택하세요"),
+    /** 결제한 사람. 「각자 냄」 이면 null */
+    payer: personSchema.nullable(),
+    /** 각자 자기 몫을 냈다 — 결제자가 없고 정산에서 빠진다 */
+    split_each: z.boolean(),
+    participants: z.array(personSchema).min(1, "나눌 사람을 1명 이상 선택하세요"),
     split_mode: z.enum(["equal", "custom"]),
     /** custom 일 때만 사용. user_id → share */
     custom_shares: z.record(z.string(), z.number().nonnegative()).optional(),
@@ -33,6 +42,10 @@ export const expenseFormSchema = z
   .refine((v) => !v.paid || v.due_date === null, {
     message: "결제 예정일은 결제 예정일 때만 적어요",
     path: ["due_date"],
+  })
+  .refine((v) => v.split_each === (v.payer === null), {
+    message: "각자 냄이 아니면 결제한 사람을 선택하세요",
+    path: ["payer"],
   });
 
 export type ExpenseFormValues = z.infer<typeof expenseFormSchema>;

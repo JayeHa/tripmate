@@ -2,6 +2,9 @@ import {
   EXPENSE_CATEGORY_LABEL,
   type ExpenseCategory,
   type ExpenseWithSplits,
+  payerOf,
+  type PersonRef,
+  splitPerson,
   toHomeFor,
 } from "@/entities/expense";
 import {
@@ -24,12 +27,13 @@ export type ExpenseRowView = {
   approxText: string | null;
   /** 외화면 쓴 환율 「(¥100 = ₩920)」. 기준 화폐 · 환율 없음이면 null */
   rateText: string | null;
-  /** 결제한 사람 */
-  payerId: string;
-  payer: string;
-  /** 함께한 사람 — 아바타용 id · 이름, 글로 이은 것 */
-  togetherPeople: { id: string; name: string }[];
+  /** 결제한 사람. 「각자 냄」 이면 null */
+  payer: { person: PersonRef; name: string } | null;
+  /** 함께한 사람 — 아바타용 사람 · 이름, 글로 이은 것 */
+  togetherPeople: { person: PersonRef; name: string }[];
   together: string;
+  /** 각자 자기 몫을 낸 비용 — 결제한 사람 대신 「각자 냄」 */
+  splitEach: boolean;
   planned: boolean;
   /** 결제 예정인데 예정일이 지났다 */
   overdue: boolean;
@@ -45,7 +49,7 @@ type RowContext = {
   /** yyyy-MM-dd */
   today: string;
   /** 사람 이름 — 나는 「나」 */
-  nameOf: (userId: string) => string;
+  nameOf: (person: PersonRef) => string;
   /** 연결한 일정의 이름. 일정이 없어졌거나 아직 못 읽었으면 null */
   linkNameOf: (itemId: string) => string | null;
 };
@@ -69,8 +73,17 @@ function foreignTexts(e: ExpenseWithSplits, ctx: RowContext) {
 
 /** 함께한 사람 — 나눈 순서대로 */
 function togetherOf(e: ExpenseWithSplits, ctx: RowContext) {
-  const togetherPeople = e.splits.map((s) => ({ id: s.user_id, name: ctx.nameOf(s.user_id) }));
+  const togetherPeople = e.splits.flatMap((s) => {
+    const person = splitPerson(s);
+    return person ? [{ person, name: ctx.nameOf(person) }] : [];
+  });
   return { togetherPeople, together: togetherPeople.map((p) => p.name).join(", ") };
+}
+
+/** 결제한 사람. 「각자 냄」 이면 null */
+function payerViewOf(e: ExpenseWithSplits, ctx: RowContext) {
+  const person = payerOf(e);
+  return person ? { person, name: ctx.nameOf(person) } : null;
 }
 
 /** 지출 한 줄을 목록에 보일 글로 */
@@ -83,9 +96,9 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     categoryLabel: EXPENSE_CATEGORY_LABEL[category] ?? "기타",
     amountText: formatMoney(Number(e.amount), e.currency),
     ...foreignTexts(e, ctx),
-    payerId: e.payer_id,
-    payer: ctx.nameOf(e.payer_id),
+    payer: payerViewOf(e, ctx),
     ...togetherOf(e, ctx),
+    splitEach: e.split_each,
     planned: !e.paid,
     overdue: !e.paid && e.due_date !== null && e.due_date < ctx.today,
     excluded: !e.counted,

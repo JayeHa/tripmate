@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ExpenseBadge, ExpenseCategoryIcon } from "@/entities/expense";
+import { ExpenseBadge, ExpenseCategoryIcon, personKey, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
 import type { ExpenseRowView } from "../../lib/row";
@@ -14,7 +14,7 @@ type ExpenseTableRowProps = {
   onMarkPaid: () => void;
   /** 결제 완료로 바꾸는 중 */
   paying: boolean;
-  avatarOf: (userId: string) => { name: string; url: string | null };
+  avatarOf: (person: PersonRef) => { name: string; url: string | null };
 };
 
 /** PC 가계부 표 한 줄 — 카테고리 | 이름(+ 배지 · 연결 일정) | 결제한 사람 | 함께한 사람(아바타 겹침) | 금액(+ 근사치 · 환율) */
@@ -47,13 +47,13 @@ export function ExpenseTableRow({ row, href, onMarkPaid, paying, avatarOf }: Exp
         <RowNotes row={row} onMarkPaid={onMarkPaid} paying={paying} />
       </div>
       <span className="flex min-w-0 items-center gap-1.5 text-sm text-ink-600">
-        <PersonAvatar {...avatarOf(row.payerId)} />
-        <span className="truncate">{row.payer}</span>
+        {row.payer && <PersonAvatar {...avatarOf(row.payer.person)} />}
+        <span className="truncate">{row.splitEach ? "각자 냄" : (row.payer?.name ?? "-")}</span>
       </span>
       <div className="flex min-w-0 items-center gap-2">
         <div className="flex shrink-0 -space-x-1.5">
           {row.togetherPeople.map((p) => (
-            <PersonAvatar key={p.id} {...avatarOf(p.id)} />
+            <PersonAvatar key={personKey(p.person)} {...avatarOf(p.person)} />
           ))}
         </div>
         <span className="truncate text-sm text-ink-600">{row.together}</span>

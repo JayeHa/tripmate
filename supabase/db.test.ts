@@ -1362,6 +1362,212 @@ describe("지출 칸 (0033)", () => {
   });
 });
 
+describe("정산 인원 · 각자 냄 · 송금 기록 (0034)", () => {
+  /** 여행 하나와 guest 한 명 */
+  async function setup(start: string, end: string, name = "서연") {
+    await as(A);
+    const trip = await newTrip(start, end);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.trip_guests (trip_id, name) values ('${trip}', '${name}') returning id`,
+    );
+    return { trip, guest: rows[0].id };
+  }
+
+  it("결제자는 멤버거나 guest 거나 — 둘 다거나 둘 다 없으면 거부한다", async () => {
+    const { trip, guest } = await setup("2027-11-01", "2027-11-02");
+    const values = (payer: string) =>
+      `insert into public.expenses (trip_id, amount, currency, name, ${payer}) values ('${trip}', 1, 'KRW', '라멘', ${payer === "payer_id" ? `'${A}'` : `'${guest}'`})`;
+    await db.query(values("payer_id"));
+    await db.query(values("payer_guest_id"));
+    expect(
+      await rejects(
+        `insert into public.expenses (trip_id, amount, currency, name, payer_id, payer_guest_id)
+         values ('${trip}', 1, 'KRW', 'x', '${A}', '${guest}')`,
+      ),
+    ).toMatch(/expenses_payer_chk/);
+    expect(
+      await rejects(
+        `insert into public.expenses (trip_id, amount, currency, name) values ('${trip}', 1, 'KRW', 'x')`,
+      ),
+    ).toMatch(/expenses_payer_chk/);
+  });
+
+  it("「각자 냄」 은 결제자가 없어야 한다", async () => {
+    const { trip } = await setup("2027-11-04", "2027-11-05");
+    await db.query(
+      `insert into public.expenses (trip_id, amount, currency, name, split_each) values ('${trip}', 1, 'KRW', '각자', true)`,
+    );
+    expect(
+      await rejects(
+        `insert into public.expenses (trip_id, amount, currency, name, split_each, payer_id)
+         values ('${trip}', 1, 'KRW', 'x', true, '${A}')`,
+      ),
+    ).toMatch(/expenses_payer_chk/);
+  });
+
+  it("나눌 사람도 멤버 또는 guest 하나, 같은 비용에 같은 사람은 한 줄", async () => {
+    const { trip, guest } = await setup("2027-11-07", "2027-11-08");
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, amount, currency, name, payer_id) values ('${trip}', 2, 'KRW', '저녁', '${A}') returning id`,
+    );
+    const expense = rows[0].id;
+    await db.exec(`
+      insert into public.expense_splits (expense_id, user_id, share) values ('${expense}', '${A}', 1);
+      insert into public.expense_splits (expense_id, guest_id, share) values ('${expense}', '${guest}', 1);
+    `);
+    expect(
+      await rejects(
+        `insert into public.expense_splits (expense_id, user_id, guest_id, share) values ('${expense}', '${A}', '${guest}', 1)`,
+      ),
+    ).toMatch(/expense_splits_person_chk/);
+    expect(
+      await rejects(
+        `insert into public.expense_splits (expense_id, user_id, share) values ('${expense}', '${A}', 1)`,
+      ),
+    ).toMatch(/expense_splits_member_idx/);
+    expect(
+      await rejects(
+        `insert into public.expense_splits (expense_id, guest_id, share) values ('${expense}', '${guest}', 1)`,
+      ),
+    ).toMatch(/expense_splits_guest_idx/);
+  });
+
+  it("쓰고 있는 guest 는 지울 수 없다 — 비용에서 뺀 뒤에 지운다", async () => {
+    const { trip, guest } = await setup("2027-11-10", "2027-11-11");
+    await db.query(
+      `insert into public.expenses (trip_id, amount, currency, name, payer_guest_id) values ('${trip}', 1, 'KRW', '택시', '${guest}')`,
+    );
+    expect(await rejects(`delete from public.trip_guests where id = '${guest}'`)).toMatch(
+      /foreign key/,
+    );
+  });
+
+  it("송금 기록은 보내는 쪽 · 받는 쪽이 각각 멤버 또는 guest 하나", async () => {
+    const { trip, guest } = await setup("2027-11-13", "2027-11-14");
+    await db.query(
+      `insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values ('${trip}', '${guest}', '${A}', 5000)`,
+    );
+    expect(
+      await rejects(
+        `insert into public.settlements (trip_id, from_user_id, from_guest_id, to_user_id, amount)
+         values ('${trip}', '${A}', '${guest}', '${A}', 1)`,
+      ),
+    ).toMatch(/settlements_from_chk/);
+    expect(
+      await rejects(
+        `insert into public.settlements (trip_id, from_user_id, to_user_id, amount) values ('${trip}', '${A}', '${A}', 1)`,
+      ),
+    ).toMatch(/settlements_self_chk/);
+    expect(
+      await rejects(
+        `insert into public.settlements (trip_id, from_user_id, to_user_id, amount) values ('${trip}', '${A}', '${A}', 0)`,
+      ),
+    ).toMatch(/settlements_amount_check|violates check/);
+  });
+
+  it("송금 기록에만 있는 정산 인원도 뺄 수 없다 (0035)", async () => {
+    const { trip, guest } = await setup("2027-11-22", "2027-11-23");
+    await db.query(
+      `insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values ('${trip}', '${guest}', '${A}', 100)`,
+    );
+    expect(await rejects(`delete from public.trip_guests where id = '${guest}'`)).toMatch(
+      /foreign key/,
+    );
+  });
+
+  it("다른 여행의 정산 인원은 결제자 · 나눌 사람 · 송금에 쓸 수 없다 (0036)", async () => {
+    const other = await setup("2027-12-01", "2027-12-02", "다른 여행 인원");
+    const { trip } = await setup("2027-12-04", "2027-12-05");
+    expect(
+      await rejects(
+        `insert into public.expenses (trip_id, amount, currency, name, payer_guest_id)
+         values ('${trip}', 1, 'KRW', 'x', '${other.guest}')`,
+      ),
+    ).toMatch(/foreign key/);
+
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, amount, currency, name, payer_id) values ('${trip}', 1, 'KRW', '저녁', '${A}') returning id`,
+    );
+    expect(
+      await rejects(
+        `insert into public.expense_splits (expense_id, guest_id, share) values ('${rows[0].id}', '${other.guest}', 1)`,
+      ),
+    ).toMatch(/foreign key/);
+    expect(
+      await rejects(
+        `insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values ('${trip}', '${other.guest}', '${A}', 1)`,
+      ),
+    ).toMatch(/foreign key/);
+  });
+
+  it("나눔 줄의 여행은 비용에서 채운다 (0036)", async () => {
+    const { trip, guest } = await setup("2027-12-07", "2027-12-08");
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, amount, currency, name, payer_id) values ('${trip}', 2, 'KRW', '점심', '${A}') returning id`,
+    );
+    await db.query(
+      `insert into public.expense_splits (expense_id, guest_id, share) values ('${rows[0].id}', '${guest}', 2)`,
+    );
+    const { rows: splits } = await db.query<{ trip_id: string }>(
+      `select trip_id from public.expense_splits where expense_id = '${rows[0].id}'`,
+    );
+    expect(splits[0].trip_id).toBe(trip);
+  });
+
+  it("merge_trip_guest: 기록을 멤버로 옮기고 인원을 지운다 — 몫은 더하고, 그 멤버와 주고받은 송금은 지운다 (0035)", async () => {
+    const { trip, guest } = await setup("2027-11-16", "2027-11-17");
+    // 멤버 추가는 초대로만 되므로(RLS) 테스트에서는 역할을 풀고 직접 넣는다
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, amount, currency, name, payer_guest_id) values ('${trip}', 2, 'KRW', '저녁', '${guest}') returning id`,
+    );
+    const expense = rows[0].id;
+    await db.exec(`
+      insert into public.expense_splits (expense_id, guest_id, share) values ('${expense}', '${guest}', 1);
+      insert into public.expense_splits (expense_id, user_id, share) values ('${expense}', '${B}', 1);
+      insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values ('${trip}', '${guest}', '${A}', 100);
+      insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values ('${trip}', '${guest}', '${B}', 50);
+    `);
+
+    await db.query(`select public.merge_trip_guest('${guest}', '${B}')`);
+
+    const after = await db.query<{
+      payer: string;
+      splits: number;
+      share: string;
+      from_user: string;
+      settlements: number;
+      guests: number;
+    }>(
+      `select (select payer_id from public.expenses where id = '${expense}') payer,
+              (select count(*)::int from public.expense_splits where expense_id = '${expense}') splits,
+              (select share::text from public.expense_splits where expense_id = '${expense}') share,
+              (select from_user_id from public.settlements where trip_id = '${trip}') from_user,
+              (select count(*)::int from public.settlements where trip_id = '${trip}') settlements,
+              (select count(*)::int from public.trip_guests where trip_id = '${trip}') guests`,
+    );
+    // 인원의 몫 1 이 멤버 줄(1)에 더해져 한 줄 2 가 된다. B 에게 보낸 기록은 한 사람이 되어 지워지고 A 에게 보낸 것만 남는다
+    expect(after.rows[0]).toEqual({
+      payer: B,
+      splits: 1,
+      share: "2.00",
+      from_user: B,
+      settlements: 1,
+      guests: 0,
+    });
+  });
+
+  it("merge_trip_guest: 그 여행 멤버가 아니면 거부한다", async () => {
+    const { guest } = await setup("2027-11-19", "2027-11-20");
+    expect(await rejects(`select public.merge_trip_guest('${guest}', '${B}')`)).toMatch(
+      /not a trip member/,
+    );
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");

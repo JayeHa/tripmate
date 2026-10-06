@@ -1,67 +1,85 @@
 import { decimalsOf, type ExchangeRates, roundTo } from "@/shared/lib/money";
 
-import type { ExpenseWithSplits } from "../model/types";
+import type { ExpenseWithSplits, Settlement } from "../model/types";
 import { toHomeFor } from "./amounts";
+import { payerOf, type PersonKey, personKey, type PersonRef, splitPerson } from "./person";
 
 export type Balances = {
-  /** 홈 화폐 기준 낸 금액 */
-  paid: Record<string, number>;
-  /** 홈 화폐 기준 내 몫 */
-  owed: Record<string, number>;
-  /** paid - owed. 양수면 받아야 함, 음수면 내야 함. 합은 정확히 0 */
-  net: Record<string, number>;
-  /** 원본 화폐별 낸 금액 (UI 표시용) */
-  paidByCurrency: Record<string, Record<string, number>>;
-  /** 화폐별 총 지출 */
+  /** 기준 화폐로 결제한 돈 */
+  paid: Record<PersonKey, number>;
+  /** 기준 화폐로 쓴 돈(내 몫) */
+  spent: Record<PersonKey, number>;
+  /** paid − spent. 양수면 받을 돈, 음수면 낼 돈. 합은 정확히 0 */
+  net: Record<PersonKey, number>;
+  /** 쓴 통화별로 결제한 돈 (표시용) */
+  paidByCurrency: Record<PersonKey, Record<string, number>>;
+  /** 통화별 총 지출 */
   totalByCurrency: Record<string, number>;
-  /** 홈 화폐 총 지출 */
+  /** 기준 화폐 총 지출 */
   totalHome: number;
 };
 
 /**
- * 멤버별 낸 돈 · 내 몫 · 차액. 합계에서 뺀 지출(counted = false)은 쓰지 않은 돈이라 정산에도 넣지 않는다.
+ * 사람별 결제한 돈 · 쓴 돈 · 차액. 합계에서 뺀 지출(counted = false)은 쓰지 않은 돈이라 정산에도 넣지 않는다.
+ *
+ * **「각자 냄」**(split_each)은 각자 자기 몫을 낸 비용이라 차액을 만들지 않는다 — 쓴 돈에는 들어가지만
+ * 결제한 돈에도 같은 금액이 들어가 net 이 0 이다. **이미 보낸 돈**(settlements)은 차액에서 뺀다.
  * 환율은 지출에 적은 것이 먼저고, 없으면 여행 기본 환율이다. 그것도 없으면 MissingRateError
  */
 export function computeNetBalances(
   expenses: ExpenseWithSplits[],
-  memberIds: string[],
+  people: PersonRef[],
   home: string,
   rates: ExchangeRates,
+  settlements: Settlement[] = [],
 ): Balances {
-  const ids = new Set(memberIds);
-  const paid: Record<string, number> = {};
-  const owed: Record<string, number> = {};
-  const paidByCurrency: Record<string, Record<string, number>> = {};
+  const keys = new Set(people.map(personKey));
+  const paid: Record<PersonKey, number> = {};
+  const spent: Record<PersonKey, number> = {};
+  const paidByCurrency: Record<PersonKey, Record<string, number>> = {};
   const totalByCurrency: Record<string, number> = {};
   let totalHome = 0;
 
-  const ensure = (id: string) => {
-    ids.add(id);
-    paid[id] ??= 0;
-    owed[id] ??= 0;
-    paidByCurrency[id] ??= {};
+  /** 사람 칸을 만든다 — 목록에 없던 사람(나간 멤버 등)도 계산에는 넣는다 */
+  const ensure = (key: PersonKey) => {
+    keys.add(key);
+    paid[key] ??= 0;
+    spent[key] ??= 0;
+    paidByCurrency[key] ??= {};
+    return key;
   };
-  memberIds.forEach(ensure);
+  keys.forEach(ensure);
+
+  /** 그 사람이 결제한 돈에 더한다(기준 화폐 · 쓴 통화 둘 다) */
+  const addPaid = (key: PersonKey, homeAmount: number, currency: string, amount: number) => {
+    paid[key] += homeAmount;
+    paidByCurrency[key][currency] = (paidByCurrency[key][currency] ?? 0) + amount;
+  };
 
   for (const e of expenses) {
     if (!e.counted) continue;
     const amount = Number(e.amount);
-    ensure(e.payer_id);
     const homeAmount = toHomeFor(e, amount, home, rates);
-    paid[e.payer_id] += homeAmount;
-    paidByCurrency[e.payer_id][e.currency] = (paidByCurrency[e.payer_id][e.currency] ?? 0) + amount;
     totalByCurrency[e.currency] = (totalByCurrency[e.currency] ?? 0) + amount;
     totalHome += homeAmount;
 
+    const payer = payerOf(e);
+    if (payer) addPaid(ensure(personKey(payer)), homeAmount, e.currency, amount);
+
     for (const s of e.splits) {
-      ensure(s.user_id);
-      owed[s.user_id] += toHomeFor(e, Number(s.share), home, rates);
+      const person = splitPerson(s);
+      if (!person) continue;
+      const key = ensure(personKey(person));
+      const share = toHomeFor(e, Number(s.share), home, rates);
+      spent[key] += share;
+      // 각자 냄 — 자기 몫을 자기가 냈다. 결제한 돈에도 넣어 차액을 0 으로 둔다
+      if (e.split_each) addPaid(key, share, e.currency, Number(s.share));
     }
   }
 
   const d = decimalsOf(home);
-  const net: Record<string, number> = {};
-  for (const id of ids) net[id] = roundTo(paid[id] - owed[id], d);
+  const net: Record<PersonKey, number> = {};
+  for (const key of keys) net[key] = roundTo(paid[key] - spent[key], d);
 
   // 반올림 드리프트 보정: |net| 이 가장 큰 사람에게 몰아서 합계를 정확히 0으로
   const drift = roundTo(
@@ -73,5 +91,33 @@ export function computeNetBalances(
     if (target) net[target] = roundTo(net[target] - drift, d);
   }
 
-  return { paid, owed, net, paidByCurrency, totalByCurrency, totalHome: roundTo(totalHome, d) };
+  applySettlements(net, settlements, d, ensure);
+
+  return { paid, spent, net, paidByCurrency, totalByCurrency, totalHome: roundTo(totalHome, d) };
+}
+
+/** 송금 기록의 한쪽 — 멤버 또는 정산 인원 */
+function settlementPerson(userId: string | null, guestId: string | null): PersonRef | null {
+  if (userId) return { kind: "member", id: userId };
+  if (guestId) return { kind: "guest", id: guestId };
+  return null;
+}
+
+/** 이미 보낸 돈을 차액에서 뺀다 — 보낸 사람은 낼 돈이 줄고, 받은 사람은 받을 돈이 준다 */
+function applySettlements(
+  net: Record<PersonKey, number>,
+  settlements: Settlement[],
+  decimals: number,
+  ensure: (key: PersonKey) => PersonKey,
+) {
+  for (const s of settlements) {
+    const from = settlementPerson(s.from_user_id, s.from_guest_id);
+    const to = settlementPerson(s.to_user_id, s.to_guest_id);
+    if (!from || !to) continue;
+    const amount = Number(s.amount);
+    const fromKey = ensure(personKey(from));
+    const toKey = ensure(personKey(to));
+    net[fromKey] = roundTo((net[fromKey] ?? 0) + amount, decimals);
+    net[toKey] = roundTo((net[toKey] ?? 0) - amount, decimals);
+  }
 }

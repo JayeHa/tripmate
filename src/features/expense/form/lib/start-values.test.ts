@@ -14,8 +14,12 @@ const saved: ExpenseFormValues = {
   currency: "KRW",
   rate: null,
   payment_method: "card",
-  payer_id: "b",
-  participant_ids: ["a", "b"],
+  payer: { kind: "member", id: "b" },
+  split_each: false,
+  participants: [
+    { kind: "member", id: "a" },
+    { kind: "member", id: "b" },
+  ],
   split_mode: "custom",
   custom_shares: { a: 200000, b: 266240 },
   category: "lodging",
@@ -41,7 +45,14 @@ describe("startValues", () => {
       memo: "",
       spentOn: "2026-10-31",
       itemId: "",
-      kept: { rate: null, payment_method: "cash", counted: true, paid: true, due_date: null },
+      kept: {
+        split_each: false,
+        rate: null,
+        payment_method: "cash",
+        counted: true,
+        paid: true,
+        due_date: null,
+      },
     });
   });
 
@@ -50,8 +61,8 @@ describe("startValues", () => {
       name: "숙소",
       amount: "466240",
       currency: "KRW",
-      payerId: "b",
-      participants: ["a", "b"],
+      payerId: "m:b",
+      participants: ["m:a", "m:b"],
       splitMode: "custom",
       custom: { a: "200000", b: "266240" },
       category: "lodging",
@@ -59,6 +70,7 @@ describe("startValues", () => {
       spentOn: "",
       itemId: "",
       kept: {
+        split_each: false,
         rate: null,
         payment_method: "card",
         counted: false,

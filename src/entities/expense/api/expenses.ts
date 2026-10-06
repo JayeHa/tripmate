@@ -2,6 +2,7 @@ import { createClient } from "@/shared/api/supabase/client";
 import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
 import { insertColumns, updateColumns } from "../lib/columns";
+import { personKey, personOfKey, type PersonRef } from "../lib/person";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
 
@@ -17,18 +18,36 @@ export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]
   return data;
 }
 
-/** 폼 값 → 분배 행. custom 이면 검증 후 사용 */
-export function resolveShares(values: ExpenseFormValues): Share[] {
-  if (values.split_mode === "custom") {
-    const shares = values.participant_ids.map((userId) => ({
-      userId,
-      share: values.custom_shares?.[userId] ?? 0,
-    }));
-    const result = validateCustomShares(values.amount, values.currency, shares);
-    if (!result.ok) throw new Error(result.error);
-    return result.shares;
-  }
-  return splitEqual(values.amount, values.currency, values.participant_ids);
+/**
+ * 폼 값 → 나눠 낸 몫. 사람은 멤버이거나 정산 인원이라 키(`m:…` · `g:…`)로 나눈 뒤 다시 사람으로 되돌린다.
+ * custom 이면 검증 후 사용
+ */
+export function resolveShares(values: ExpenseFormValues): { person: PersonRef; share: number }[] {
+  const keys = values.participants.map(personKey);
+  const shares = sharesOf(values, keys);
+  return shares.flatMap((s) => {
+    const person = personOfKey(s.userId);
+    return person ? [{ person, share: s.share }] : [];
+  });
+}
+
+/** 키마다의 몫 — 직접 나누기면 적은 값을 검증하고, 아니면 똑같이 나눈다 */
+function sharesOf(values: ExpenseFormValues, keys: string[]): Share[] {
+  if (values.split_mode !== "custom") return splitEqual(values.amount, values.currency, keys);
+  const shares = keys.map((key) => ({ userId: key, share: values.custom_shares?.[key] ?? 0 }));
+  const result = validateCustomShares(values.amount, values.currency, shares);
+  if (!result.ok) throw new Error(result.error);
+  return result.shares;
+}
+
+/** 나눠 낸 몫 한 줄 — 멤버면 user_id, 정산 인원이면 guest_id */
+function splitRow(expenseId: string, s: { person: PersonRef; share: number }) {
+  return {
+    expense_id: expenseId,
+    user_id: s.person.kind === "member" ? s.person.id : null,
+    guest_id: s.person.kind === "guest" ? s.person.id : null,
+    share: s.share,
+  };
 }
 
 export async function createExpense(
@@ -47,7 +66,7 @@ export async function createExpense(
 
   const { error: splitError } = await supabase
     .from("expense_splits")
-    .insert(shares.map((s) => ({ expense_id: data.id, user_id: s.userId, share: s.share })));
+    .insert(shares.map((s) => splitRow(data.id, s)));
   if (splitError) {
     // 분배 저장 실패 시 지출도 되돌림
     await supabase.from("expenses").delete().eq("id", data.id);
@@ -77,7 +96,7 @@ export async function updateExpense(
   if (delError) throw delError;
   const { error: insError } = await supabase
     .from("expense_splits")
-    .insert(shares.map((s) => ({ expense_id: expenseId, user_id: s.userId, share: s.share })));
+    .insert(shares.map((s) => splitRow(expenseId, s)));
   if (insError) throw insError;
 }
 

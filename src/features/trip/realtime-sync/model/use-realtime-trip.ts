@@ -53,6 +53,17 @@ export function useRealtimeTrip(tripId: string) {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "trip_guests", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.tripGuests(tripId) }),
+      )
+      // 일행이 「받았어요 · 보냈어요」 를 기록하면 바로 반영한다 — 모르면 같은 돈을 또 보낼 수 있다
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "settlements", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.settlements(tripId) }),
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "trip_members", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.trips.members(tripId) }),
       )

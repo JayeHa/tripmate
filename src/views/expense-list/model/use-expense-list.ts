@@ -5,9 +5,11 @@ import { useState } from "react";
 import {
   type ExpensePeriod,
   expenseSections,
+  type PersonRef,
   sumExpenses,
   useExpenses,
   useMarkExpensePaid,
+  useTripGuests,
 } from "@/entities/expense";
 import { itemName, useAlternatives, useScheduleItems } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
@@ -29,21 +31,27 @@ export function useExpenseList(tripId: string) {
   const { data: user } = useUser();
   const expensesQuery = useExpenses(tripId);
   const { data: expenses, isPending } = expensesQuery;
+  const { data: guests = [] } = useTripGuests(tripId);
   const { data: items = [] } = useScheduleItems(tripId);
   const { data: alternatives = [] } = useAlternatives(tripId);
   const markPaid = useMarkExpensePaid(tripId);
   const [filter, setFilter] = useState<ExpensePeriod | "all">("all");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  /** 사람 이름 — 나는 「나」 */
-  function nameOf(userId: string) {
-    if (userId === user?.id) return "나";
-    return members.find((m) => m.user_id === userId)?.profile.display_name ?? "알 수 없음";
+  /** 사람 이름 — 나는 「나」. 정산 인원은 이름만 있다 */
+  function nameOf(person: PersonRef) {
+    if (person.kind === "guest")
+      return guests.find((g) => g.id === person.id)?.name ?? "알 수 없음";
+    if (person.id === user?.id) return "나";
+    return members.find((m) => m.user_id === person.id)?.profile.display_name ?? "알 수 없음";
   }
 
   /** 아바타 — 사진(없으면 null)과 이니셜에 쓸 표시 이름. 나도 「나」 가 아니라 내 이름 */
-  function avatarOf(userId: string) {
-    const profile = members.find((m) => m.user_id === userId)?.profile;
+  function avatarOf(person: PersonRef) {
+    if (person.kind === "guest") {
+      return { name: guests.find((g) => g.id === person.id)?.name ?? "", url: null };
+    }
+    const profile = members.find((m) => m.user_id === person.id)?.profile;
     return { name: profile?.display_name ?? "", url: profile?.avatar_url ?? null };
   }
 

@@ -4,6 +4,7 @@ import { decimalsOf, splitEqual } from "@/shared/lib/money";
 
 import type { ExpenseWithSplits } from "../model/types";
 import { computeNetBalances } from "./balances";
+import { peopleOf, personKey } from "./person";
 import { minimizeTransfers } from "./settle";
 
 /**
@@ -19,7 +20,10 @@ const rates = { JPY: { unit: 100, value: 900 } };
 const M = "m";
 const J = "j";
 const H = "h";
-const members = [M, J, H];
+const memberIds = [M, J, H];
+const members = peopleOf(memberIds, []);
+/** 멤버 id → 계산에서 쓰는 사람 키 */
+const key = (id: string) => personKey({ kind: "member", id });
 
 function make(
   id: string,
@@ -38,6 +42,8 @@ function make(
     category: "other",
     name: id,
     memo: null,
+    payer_guest_id: null,
+    split_each: false,
     payment_method: "cash",
     rate: null,
     counted: true,
@@ -48,22 +54,28 @@ function make(
     created_by: null,
     created_at: "",
     updated_at: "",
-    splits: splits.map((s) => ({ expense_id: id, ...s })),
+    splits: splits.map((s) => ({
+      id: `${id}:${s.user_id}`,
+      expense_id: id,
+      trip_id: "t",
+      guest_id: null,
+      ...s,
+    })),
   };
 }
 const eq = (amount: number, cur: string, ids: string[]) =>
   splitEqual(amount, cur, ids).map((s) => ({ user_id: s.userId, share: s.share }));
 
 const expenses = [
-  make("1", M, 30000, "JPY", eq(30000, "JPY", members)),
-  make("2", J, 9000, "JPY", eq(9000, "JPY", members)),
-  make("3", H, 45000, "KRW", eq(45000, "KRW", members)),
+  make("1", M, 30000, "JPY", eq(30000, "JPY", memberIds)),
+  make("2", J, 9000, "JPY", eq(9000, "JPY", memberIds)),
+  make("3", H, 45000, "KRW", eq(45000, "KRW", memberIds)),
   make("4", M, 4500, "JPY", eq(4500, "JPY", [M, J])),
   make("5", J, 1200, "JPY", [
     { user_id: J, share: 700 },
     { user_id: H, share: 500 },
   ]),
-  make("6", H, 2000, "JPY", eq(2000, "JPY", members)),
+  make("6", H, 2000, "JPY", eq(2000, "JPY", memberIds)),
 ];
 
 describe("integration: 3 members, mixed currencies", () => {
@@ -71,9 +83,9 @@ describe("integration: 3 members, mixed currencies", () => {
     const b = computeNetBalances(expenses, members, "KRW", rates);
 
     // paid (KRW): m = 270,000 + 40,500 = 310,500 ; j = 81,000 + 10,800 = 91,800 ; h = 45,000 + 18,000 = 63,000
-    expect(b.paid[M]).toBeCloseTo(310500);
-    expect(b.paid[J]).toBeCloseTo(91800);
-    expect(b.paid[H]).toBeCloseTo(63000);
+    expect(b.paid[key(M)]).toBeCloseTo(310500);
+    expect(b.paid[key(J)]).toBeCloseTo(91800);
+    expect(b.paid[key(H)]).toBeCloseTo(63000);
     expect(b.totalHome).toBe(465300);
 
     // owed (KRW):
@@ -83,15 +95,15 @@ describe("integration: 3 members, mixed currencies", () => {
     const owedM = 90000 + 27000 + 15000 + 20250 + 5994;
     const owedJ = 90000 + 27000 + 15000 + 20250 + 6300 + 6003;
     const owedH = 90000 + 27000 + 15000 + 4500 + 6003;
-    expect(b.net[M]).toBe(310500 - owedM); // 152,256
-    expect(b.net[J]).toBe(91800 - owedJ); // -72,753
-    expect(b.net[H]).toBe(63000 - owedH); // -79,503
+    expect(b.net[key(M)]).toBe(310500 - owedM); // 152,256
+    expect(b.net[key(J)]).toBe(91800 - owedJ); // -72,753
+    expect(b.net[key(H)]).toBe(63000 - owedH); // -79,503
     expect(Object.values(b.net).reduce((a, c) => a + c, 0)).toBe(0);
 
     const ts = minimizeTransfers(b.net, decimalsOf("KRW"));
     expect(ts).toEqual([
-      { from: H, to: M, amount: 79503 },
-      { from: J, to: M, amount: 72753 },
+      { from: key(H), to: key(M), amount: 79503 },
+      { from: key(J), to: key(M), amount: 72753 },
     ]);
   });
 });
