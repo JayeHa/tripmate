@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import { cleanAmount, fitAmountDraft, formatAmountDraft } from "./amount-draft";
 
 describe("cleanAmount", () => {
-  it("정수 통화는 숫자만 — 쉼표 · 점 · 글자를 버린다", () => {
+  it("정수 통화는 숫자만 — 쉼표 · 글자를 버리고, 첫 점 뒤는 버린다(이어 붙이지 않는다)", () => {
     expect(cleanAmount("12,000", 0)).toBe("12000");
-    expect(cleanAmount("1.5", 0)).toBe("15");
+    expect(cleanAmount("1,234.56", 0)).toBe("1234");
+    expect(cleanAmount("12.", 0)).toBe("12");
     expect(cleanAmount("3천", 0)).toBe("3");
   });
 
