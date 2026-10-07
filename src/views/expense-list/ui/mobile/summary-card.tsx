@@ -23,7 +23,8 @@ type SummaryCardProps = {
 
 /**
  * 맨 위 요약 — 「총 지출 · N명 ⌄」 26/800 금액 · 결제 예정 줄, 오른쪽 「내가 쓴 돈」.
- * 금액을 누르면 통화별 합계(외화는 ≈ 원화)와 「지출내역 보기 ›」 가 펼쳐진다
+ * 금액을 누르면 통화별 합계(외화는 ≈ 원화)와 「지출내역 보기 ›」 가 펼쳐진다.
+ * 환율이 없는 통화가 있으면 합계 · 내가 쓴 돈이 그만큼 빠지거나 보이지 않아, 그 이유를 카드 안에 한 줄로 알린다
  */
 export function SummaryCard({ total, home, rates, people, mySpent, statsHref }: SummaryCardProps) {
   const [open, setOpen] = useState(false);
@@ -59,6 +60,12 @@ export function SummaryCard({ total, home, rates, people, mySpent, statsHref }: 
           </div>
         )}
       </div>
+      {/* 환율이 없는 통화는 합계 · 내가 쓴 돈에서 빠진다 — 접혀 있어도 이유를 알린다 */}
+      {total.missing.length > 0 && (
+        <p className="text-xs text-destructive">
+          {total.missing.join(" · ")} 환율이 없어 합계에서 빠졌어요. 설정에서 환율을 넣어 주세요.
+        </p>
+      )}
       {open && (
         <div className="flex flex-col border-t border-line-card">
           {sortedCurrencies(total.byCurrency, home).map(([code, amount]) => (
