@@ -51,6 +51,8 @@ export function useCalendarScroll(keys: string[]) {
       if (current !== undefined) setSelected(current);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
+    // 마운트할 때 이미 내려가 있을 수 있다(뒤로 가기 복원 · PC → 모바일 재마운트) — 지금 위치로 한 번 맞춘다
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
