@@ -4,7 +4,9 @@ import type { PointerDragHandlers } from "@/shared/lib/use-pointer-drag";
 import { cn } from "@/shared/lib/utils";
 
 type SplitHandleProps = {
-  /** 목록 너비와 범위. 스크린리더가 읽는다 */
+  /** 스크린리더가 읽는 이름 — 「일정 목록 너비 (←/→ 로 조절, Enter 는 기본 너비)」 */
+  label: string;
+  /** 쥔 칸의 너비와 범위. 스크린리더가 읽는다 */
   width: number;
   minWidth: number;
   maxWidth: number;
@@ -12,12 +14,15 @@ type SplitHandleProps = {
   dragging: boolean;
   /** usePointerDrag 의 핸들러. pointer capture 로 드래그 시작부터 끝까지 이 요소가 받는다 */
   dragHandlers: PointerDragHandlers;
-  /** 더블클릭하면 기본 너비(440)로 */
+  /** 더블클릭하면 기본 너비로 */
   onReset: () => void;
+  /** 쉴 때도 세로 선을 그린다. 칸이 카드처럼 떨어져 있는 화면은 끄고, 끌거나 포커스할 때만 파란 선 */
+  line?: boolean;
 };
 
-/** 목록과 지도 사이 12px 경계선. 끌어서 너비를 바꾸고, 드래그 중엔 선이 파랗다 */
+/** PC 3분할의 두 칸 사이 12px 경계선(자리는 차지하지 않는다). 끌어서 너비를 바꾸고, 드래그 중엔 선이 파랗다 */
 export function SplitHandle({
+  label,
   width,
   minWidth,
   maxWidth,
@@ -25,12 +30,13 @@ export function SplitHandle({
   dragging,
   dragHandlers,
   onReset,
+  line = true,
 }: SplitHandleProps) {
   return (
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="일정 목록 너비 (←/→ 로 조절, Enter 는 기본 너비)"
+      aria-label={label}
       aria-valuenow={width}
       aria-valuemin={minWidth}
       aria-valuemax={maxWidth}
@@ -44,7 +50,8 @@ export function SplitHandle({
         // 드래그 중이거나 키보드로 포커스했을 때 파랗게
         className={cn(
           "absolute inset-y-0 left-1.5 w-px",
-          dragging ? "bg-primary" : "bg-divider group-focus-visible:bg-primary",
+          dragging ? "bg-primary" : "group-focus-visible:bg-primary",
+          !dragging && line && "bg-divider",
         )}
       />
       <span className="relative h-10 w-1.5 rounded-[3px] border border-line-strong bg-white shadow-card" />

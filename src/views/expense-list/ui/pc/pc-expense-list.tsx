@@ -12,7 +12,10 @@ import {
   sumExpenses,
 } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
+import type { SplitConfig } from "@/shared/lib/split";
+import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { Button } from "@/shared/ui/button";
+import { SplitHandle } from "@/shared/ui/split-handle";
 
 import { baseRateLine } from "../../lib/base-rate";
 import { calendarCells } from "../../lib/calendar";
@@ -29,6 +32,20 @@ import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
 
+/**
+ * [날짜 레일 200 | 표 | 오른쪽 패널] — 오른쪽 패널 너비를 쥔다(328~480, 처음 328). 창을 넓히면 표가 늘어난다.
+ * 패널은 시안 너비(328)보다 좁히지 않는다 — 요약 · 상세 카드가 그 너비로 짜여 있고, 좁은 화면에서는 지금처럼 328 그대로다.
+ * 고정 268 = 레일 200 + 좌우 여백 48 + 칸 사이 20. 표에는 640 을 남긴다 — 열 합(약 730)까지 지키면 1280 화면에서 패널을 넓힐 수 없다
+ */
+const EXPENSE_SPLIT: SplitConfig = {
+  fixed: 268,
+  min: 328,
+  max: 480,
+  defaultWidth: 328,
+  otherMin: 640,
+  side: "second",
+};
+
 type PcExpenseListProps = { tripId: string; list: ExpenseList };
 
 const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({
@@ -40,13 +57,14 @@ const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_ME
 /**
  * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
  * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다.
- * 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
+ * 표와 오른쪽 사이 경계선을 끌어 오른쪽 너비를 바꾼다. 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
  * 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
 export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
   const pc = usePcList();
+  const split = useSplitWidth(EXPENSE_SPLIT);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [modal, setModal] = useState<ExpenseModalTarget | null>(null);
   const active = filtersActive(pc.filters);
@@ -74,7 +92,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
         selected={scroll.selected}
         onSelect={scroll.go}
       />
-      <div className="flex min-w-0 flex-1 gap-5 px-6 py-5.5">
+      <div className="flex min-w-0 flex-1 gap-2.5 px-6 py-5.5">
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <div className="flex shrink-0 items-center gap-3">
             <h1 className="text-[22px] font-extrabold text-ink-900">가계부</h1>
@@ -113,7 +131,21 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
             keys={cells.map((c) => c.key)}
           />
         </div>
-        <aside className="flex w-82 shrink-0 flex-col gap-3 overflow-y-auto">
+        <SplitHandle
+          label="오른쪽 패널 너비 (←/→ 로 조절, Enter 는 기본 너비)"
+          line={false}
+          dragging={split.dragging}
+          dragHandlers={split.dragHandlers}
+          width={split.width}
+          minWidth={split.minWidth}
+          maxWidth={split.maxWidth}
+          onKeyDown={split.onKeyDown}
+          onReset={split.reset}
+        />
+        <aside
+          className="flex shrink-0 flex-col gap-3 overflow-y-auto"
+          style={{ width: split.width }}
+        >
           {selectedRow && selectedExpense ? (
             <ExpenseDetailPanel
               row={selectedRow}

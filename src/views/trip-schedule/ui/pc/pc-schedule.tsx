@@ -5,14 +5,16 @@ import { useRef } from "react";
 import { ScheduleMap } from "@/entities/schedule-item";
 import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
+import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { cn } from "@/shared/lib/utils";
+import { SplitHandle } from "@/shared/ui/split-handle";
 
 import { mapDayOf } from "../../lib/focus";
+import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
 import { usePcDayView } from "../../model/use-pc-day-view";
 import { useScrollFocus } from "../../model/use-scroll-focus";
-import { useSplitWidth } from "../../model/use-split-width";
 import { useVisibleDay } from "../../model/use-visible-day";
 import { DayList } from "../day-list";
 import { PcFloatingAdd } from "../floating-add/pc-floating-add";
@@ -20,7 +22,6 @@ import type { ScheduleLayoutProps } from "../schedule-layout";
 import { DayPager } from "./day-pager";
 import { DayRail } from "./day-rail";
 import { DayViewToggle } from "./day-view-toggle";
-import { SplitHandle } from "./split-handle";
 import { SplitPresets } from "./split-presets";
 
 /**
@@ -68,7 +69,7 @@ export function PcSchedule({
   onGuide,
   ...body
 }: PcScheduleProps) {
-  const split = useSplitWidth();
+  const split = useSplitWidth(SCHEDULE_SPLIT);
   // 지도 폭이 200ms 동안 그대로일 때만 핀을 다시 맞춘다. 키보드 연타 · 창 크기 조절마다 맞추면 지도가 흔들린다
   const fitKey = useDebouncedValue(split.settledWidth, 200);
   const view = usePcDayView(onGuide);
@@ -165,6 +166,7 @@ export function PcSchedule({
         />
       </div>
       <SplitHandle
+        label="일정 목록 너비 (←/→ 로 조절, Enter 는 기본 너비)"
         dragging={split.dragging}
         dragHandlers={split.dragHandlers}
         width={split.width}
@@ -181,7 +183,11 @@ export function PcSchedule({
           pinSize="lg"
           fitKey={fitKey}
         />
-        <SplitPresets presets={split.presets} width={split.width} onSelect={split.setWidth} />
+        <SplitPresets
+          presets={splitPresets(split.viewport)}
+          width={split.width}
+          onSelect={split.setWidth}
+        />
       </div>
     </div>
   );
