@@ -84,6 +84,7 @@ export function useExpenseForm({
     alternatives,
     startItemId: start.itemId,
     editing: !!initial,
+    dayPreset: defaultSpentOn !== undefined,
     fields: {
       spentOn,
       setSpentOn,

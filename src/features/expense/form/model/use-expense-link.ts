@@ -30,6 +30,8 @@ type ExpenseLinkOptions = {
   startItemId: string;
   /** 수정이면 true — 저장된 날짜 · 카테고리를 연결이 덮지 않고, 연결이 없으면 「연결 안 함」 으로 보인다 */
   editing: boolean;
+  /** 날짜를 미리 골라 열었다(가계부의 날짜 묶음에서 「비용 추가」 — 여행준비 포함). 연결이 덮지 않는다 */
+  dayPreset: boolean;
   fields: LinkedFields;
 };
 
@@ -55,11 +57,12 @@ export function useExpenseLink({
   alternatives,
   startItemId,
   editing,
+  dayPreset,
   fields,
 }: ExpenseLinkOptions) {
   const [itemId, setItemId] = useState(startItemId);
   const [noneChosen, setNoneChosen] = useState(editing && !startItemId);
-  const [dayTouched, setDayTouched] = useState(editing);
+  const [dayTouched, setDayTouched] = useState(editing || dayPreset);
   const [categoryTouched, setCategoryTouched] = useState(editing);
   const [pending, setPending] = useState<ScheduleItem | null>(null);
   const findItem = (id: string) =>
