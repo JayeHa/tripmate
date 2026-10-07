@@ -20,12 +20,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
-import { AppHeader } from "@/shared/ui/app-header";
 
 import { spentOnFromParam } from "../lib/spent-on-param";
 import { useExpenseFormData } from "../model/use-expense-form-data";
 import { ExpenseForm, type ExpenseFormLayout } from "./expense-form";
-import { FormLoadError } from "./form-load-error";
+import { EditorHeader, FormLoadError } from "./form-load-error";
 
 type EditorCommon = {
   tripId: string;
@@ -34,7 +33,7 @@ type EditorCommon = {
   onClose: () => void;
   /** 저장 · 삭제가 끝났다 */
   onDone: () => void;
-  /** 페이지일 때 머리의 뒤로 가기(읽기 실패 · 못 찾음 안내). 모달은 창의 ✕ 가 대신해 비운다 */
+  /** 페이지일 때 머리의 뒤로 가기(읽기 실패 · 못 찾음 안내). 창이면 비우고, 그 화면들에 ✕(onClose) 머리를 둔다 */
   back?: string;
 };
 
@@ -57,7 +56,8 @@ export function CreateExpense({
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
-  if (loaded.failed) return <FormLoadError title="비용 추가" back={back} onRetry={loaded.retry} />;
+  if (loaded.failed)
+    return <FormLoadError title="비용 추가" back={back} onClose={onClose} onRetry={loaded.retry} />;
   if (!loaded.data) return null;
   const { trip, currentUserId } = loaded.data;
   return (
@@ -100,11 +100,12 @@ export function EditExpense({
   if (expenses && !expense)
     return (
       <>
-        {back && <AppHeader title="비용 수정" back={back} />}
+        <EditorHeader title="비용 수정" back={back} onClose={onClose} />
         <p className="p-4 text-sm text-muted-foreground">지출을 찾을 수 없어요.</p>
       </>
     );
-  if (loaded.failed) return <FormLoadError title="비용 수정" back={back} onRetry={loaded.retry} />;
+  if (loaded.failed)
+    return <FormLoadError title="비용 수정" back={back} onClose={onClose} onRetry={loaded.retry} />;
   if (!loaded.data || !initial) return null;
   return (
     <ExpenseForm
