@@ -38,7 +38,8 @@ export function RateDialog({ form }: RateDialogProps) {
 /** 창 안 — 열 때마다 지금 환율로 칸을 채운다 */
 function RateBody({ form }: RateDialogProps) {
   const { currency, home, tripRates } = form;
-  const [draft, setDraft] = useState(() => rateDraftOf(currency, tripRates, form.rate));
+  const [initial] = useState(() => rateDraftOf(currency, tripRates, form.rate));
+  const [draft, setDraft] = useState(initial);
   const locked = currency === home;
   const next = rateFromDraft(draft, currency, tripRates);
   const base = tripRates[currency];
@@ -105,7 +106,8 @@ function RateBody({ form }: RateDialogProps) {
           type="button"
           disabled={!locked && next === undefined}
           onClick={() => {
-            if (!locked && next !== undefined) form.setRate(next);
+            // 칸을 고치지 않았으면 지금 환율 그대로 — 화면 값에서 거꾸로 계산하면 자릿수가 바뀌어 고친 칸으로 저장된다
+            if (!locked && next !== undefined && draft !== initial) form.setRate(next);
             form.closeRate();
           }}
           className="h-13 text-base font-bold text-primary disabled:text-primary-disabled"

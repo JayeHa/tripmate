@@ -27,6 +27,10 @@ describe("rateFromDraft", () => {
     expect(rateFromDraft("1,450.5", "USD", rates)).toBe(1450.5);
   });
 
+  it("1단위로 나눈 값은 소수 8자리까지 지킨다(저장 칸과 같은 자리)", () => {
+    expect(rateFromDraft("0.67123", "JPY", rates)).toBe(0.0067123);
+  });
+
   it("여행 기본과 같으면 null(기본을 따른다)", () => {
     expect(rateFromDraft("920", "JPY", rates)).toBeNull();
   });

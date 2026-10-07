@@ -10,9 +10,9 @@ export function perUnitLabel(currency: string, rates: ExchangeRates): string {
   return `${rateUnit(currency, rates)}${currencyName(currency)} 당`;
 }
 
-/** 소수 계산 찌꺼기(920.0000001)를 지운다 */
+/** 소수 계산 찌꺼기(920.0000001)를 지운다 — 저장 칸(`expenses.rate`, numeric(18, 8))과 같은 8자리 */
 function clean(value: number): number {
-  return Number(value.toFixed(6));
+  return Number(value.toFixed(8));
 }
 
 /**
