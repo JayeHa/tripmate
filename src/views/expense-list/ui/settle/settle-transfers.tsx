@@ -33,7 +33,9 @@ export function SettleTransfers({ list, settle, person, avatarOf }: SettleTransf
   const [all, setAll] = useState(false);
   const actions = useSettlementActions(list.trip.id);
   const pending = actions.add.isPending || actions.remove.isPending;
-  const failed = actions.add.isError || actions.remove.isError;
+  // 마지막으로 시도한 기록의 실패만 알린다 — mutation 마다 isError 를 보면 다른 동작이 성공해도 지난 실패가 남는다
+  const [failed, setFailed] = useState(false);
+  const done = { onSuccess: () => setFailed(false), onError: () => setFailed(true) };
   const home = list.trip.home_currency;
   const rows = transferRows(settle.remaining, settle.sent, settle.me);
   const name = avatarOf(personOfKey(person) ?? { kind: "member", id: "" }).name;
@@ -41,13 +43,13 @@ export function SettleTransfers({ list, settle, person, avatarOf }: SettleTransf
   /** 남은 송금은 보낸 돈으로 적고, 적은 줄은 지운다 */
   function toggle(t: TransferRow) {
     if (t.done) {
-      actions.remove.mutate(t.key);
+      actions.remove.mutate(t.key, done);
       return;
     }
     const from = personOfKey(t.from);
     const to = personOfKey(t.to);
     if (!from || !to || !list.meId) return;
-    actions.add.mutate({ from, to, amount: t.amount, createdBy: list.meId });
+    actions.add.mutate({ from, to, amount: t.amount, createdBy: list.meId }, done);
   }
 
   return (
