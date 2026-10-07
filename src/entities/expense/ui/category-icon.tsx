@@ -52,8 +52,9 @@ export function ExpenseCategoryIcon({
   );
 }
 
-/** 타일 크기 — 목록 38 · r11 · 아이콘 19 / 카드(통계 · 표) 28 · r8 · 아이콘 15 */
+/** 타일 크기 — 상세 패널 44 · r12 · 아이콘 22 / 목록 38 · r11 · 아이콘 19 / 카드(통계 · 표) 28 · r8 · 아이콘 15 */
 const TILE = {
+  lg: { box: "size-11 rounded-card", icon: "size-5.5" },
   md: { box: "size-9.5 rounded-[11px]", icon: "size-4.75" },
   sm: { box: "size-7 rounded-button", icon: "size-3.75" },
 } as const;

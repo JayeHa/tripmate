@@ -13,8 +13,10 @@ import { ExpenseTableRow } from "./expense-table-row";
 type ExpenseTableProps = {
   sections: ExpenseListSection[];
   list: ExpenseList;
-  /** 줄을 눌렀다 — 그 비용 수정 창을 연다 */
-  onOpen: (expenseId: string) => void;
+  /** 고른 줄(오른쪽에 상세가 열린 비용) */
+  selected: string | null;
+  /** 줄을 눌렀다 — 오른쪽에 그 비용 상세를 연다 */
+  onSelect: (expenseId: string) => void;
   mode: AmountMode;
   onModeChange: (mode: AmountMode) => void;
   /** 「엔 920 기준」. 외화가 없으면 null */
@@ -40,7 +42,8 @@ export function ExpenseTable(props: ExpenseTableProps) {
   const {
     sections,
     list,
-    onOpen,
+    selected,
+    onSelect,
     mode,
     onModeChange,
     rateLine,
@@ -94,7 +97,8 @@ export function ExpenseTable(props: ExpenseTableProps) {
                     <ExpenseTableRow
                       key={row.id}
                       row={row}
-                      onOpen={() => onOpen(row.id)}
+                      selected={selected === row.id}
+                      onSelect={() => onSelect(row.id)}
                       onMarkPaid={() => list.markPaid(row.id)}
                       paying={list.paying === row.id}
                       mode={mode}

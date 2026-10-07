@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import {
+  amountLines,
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_LABEL,
   PAYMENT_METHOD_LABEL,
@@ -15,12 +16,15 @@ import { Button } from "@/shared/ui/button";
 
 import { baseRateLine } from "../../lib/base-rate";
 import { calendarCells } from "../../lib/calendar";
+import { detailFields } from "../../lib/detail-fields";
 import { filtersActive, matchesFilters } from "../../lib/filters";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { usePcList } from "../../model/use-pc-list";
+import { useRowSelection } from "../../model/use-row-selection";
 import { SummaryCard } from "../mobile/summary-card";
 import { DateRail } from "./date-rail";
+import { ExpenseDetailPanel } from "./expense-detail-panel";
 import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
@@ -36,7 +40,8 @@ const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_ME
 /**
  * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
  * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다.
- * 「+ 비용 추가」 · 줄 누르기는 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
+ * 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
+ * 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
 export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
   const { trip } = list;
@@ -54,6 +59,12 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
     { scroller: scrollerRef, topKey: "all" },
   );
   const filtered = sections.flatMap((s) => s.expenses);
+  const selection = useRowSelection(
+    filtered.map((e) => e.id),
+    modal !== null,
+  );
+  const selectedRow = sections.flatMap((s) => s.rows).find((r) => r.id === selection.selected);
+  const selectedExpense = filtered.find((e) => e.id === selection.selected);
   const filteredTotal = sumExpenses(filtered, trip.home_currency, trip.exchange_rates);
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
@@ -87,7 +98,8 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
           <ExpenseTable
             sections={sections}
             list={list}
-            onOpen={(expenseId) => setModal({ kind: "edit", expenseId })}
+            selected={selection.selected}
+            onSelect={selection.select}
             mode={pc.mode}
             onModeChange={pc.setMode}
             rateLine={baseRateLine(
@@ -102,16 +114,31 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
           />
         </div>
         <aside className="flex w-82 shrink-0 flex-col gap-3 overflow-y-auto">
-          <div className="overflow-hidden rounded-[16px] border border-divider">
-            <SummaryCard
-              total={list.total}
-              home={trip.home_currency}
-              rates={trip.exchange_rates}
-              people={list.solo ? null : list.everyone}
-              mySpent={list.mySpent}
-              statsHref={`${base}/settlement`}
+          {selectedRow && selectedExpense ? (
+            <ExpenseDetailPanel
+              row={selectedRow}
+              amount={amountLines(selectedRow, pc.mode)}
+              fields={detailFields(selectedExpense, selectedRow, {
+                trip,
+                displayNameOf: list.displayNameOf,
+                everyone: list.everyone,
+                meId: list.meId,
+              })}
+              onEdit={() => setModal({ kind: "edit", expenseId: selectedRow.id })}
+              onClose={selection.clear}
             />
-          </div>
+          ) : (
+            <div className="overflow-hidden rounded-[16px] border border-divider">
+              <SummaryCard
+                total={list.total}
+                home={trip.home_currency}
+                rates={trip.exchange_rates}
+                people={list.solo ? null : list.everyone}
+                mySpent={list.mySpent}
+                statsHref={`${base}/settlement`}
+              />
+            </div>
+          )}
         </aside>
       </div>
       <ExpenseModal tripId={tripId} target={modal} onClose={() => setModal(null)} />

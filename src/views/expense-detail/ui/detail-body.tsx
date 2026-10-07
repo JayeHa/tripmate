@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 
 import {
+  detailDateText,
   ExpenseBadge,
   ExpenseCategoryIcon,
   type ExpenseRowView,
   type ExpenseWithSplits,
+  paymentStatusText,
   type PersonRef,
 } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
-
-import { detailDateText, paymentStatusText } from "../lib/detail";
 
 type DetailBodyProps = {
   expense: ExpenseWithSplits;

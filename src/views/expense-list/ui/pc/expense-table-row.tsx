@@ -15,8 +15,10 @@ import { TABLE_COLUMNS } from "./columns";
 
 type ExpenseTableRowProps = {
   row: ExpenseRowView;
-  /** 줄을 눌렀다 — 수정 창을 연다 */
-  onOpen: () => void;
+  /** 오른쪽에 상세가 열린 줄 — 연한 파랑 */
+  selected: boolean;
+  /** 줄을 눌렀다 — 오른쪽에 상세를 연다 */
+  onSelect: () => void;
   onMarkPaid: () => void;
   /** 결제 완료로 바꾸는 중 */
   paying: boolean;
@@ -37,7 +39,8 @@ function avatarTone(person: PersonRef | null) {
  */
 export function ExpenseTableRow({
   row,
-  onOpen,
+  selected,
+  onSelect,
   onMarkPaid,
   paying,
   mode,
@@ -48,10 +51,13 @@ export function ExpenseTableRow({
   const payer = row.splitEach ? null : row.payer;
   const avatarPerson = payer?.person ?? null;
   return (
+    // scroll-mt — ↑↓ 로 옮겨 위로 스크롤할 때 붙는 열 머리(38)에 가리지 않게
     <div
+      data-expense-id={row.id}
       className={cn(
-        "relative py-2.75 hover:bg-[#FAFBFC]",
+        "relative scroll-mt-10 py-2.75",
         TABLE_COLUMNS,
+        selected ? "bg-surface-selected" : "hover:bg-[#FAFBFC]",
         row.excluded && "opacity-55",
       )}
     >
@@ -64,7 +70,8 @@ export function ExpenseTableRow({
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
           <button
             type="button"
-            onClick={onOpen}
+            onClick={onSelect}
+            aria-pressed={selected}
             className="min-w-0 truncate text-left text-sm font-semibold text-ink-800 after:absolute after:inset-0"
           >
             {row.name}

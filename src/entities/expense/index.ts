@@ -4,6 +4,7 @@ export * from "./api/settlements";
 export * from "./lib/amounts";
 export * from "./lib/balances";
 export * from "./lib/columns";
+export * from "./lib/detail-text";
 export * from "./lib/form-values";
 export * from "./lib/person";
 export * from "./lib/row";
