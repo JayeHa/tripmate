@@ -26,8 +26,9 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
   const list = `/trips/${tripId}/expenses`;
   const detail = useExpenseDetail(tripId, expenseId);
   const remove = useDeleteExpense(tripId);
-  // 지운 뒤 가계부로 가는 동안 목록을 다시 읽어 「찾을 수 없어요」 가 비치지 않게
-  if (remove.isSuccess) return null;
+  // 지운 뒤 가계부로 가는 동안 「찾을 수 없어요」 가 비치지 않게. 삭제는 다시 읽기(invalidate)가 끝나야 성공이 되므로
+  // 그 전에 다시 읽은 목록 · 실시간 갱신에서 지출이 먼저 빠질 수 있다 — 요청 중에 사라진 것도 지운 것으로 본다
+  if (remove.isSuccess || (remove.isPending && detail.state === "missing")) return null;
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1">
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
