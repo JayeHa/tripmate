@@ -125,6 +125,8 @@ export function useExpenseList(tripId: string) {
     people,
     /** 여행의 사람 수 — 「N명 모두」 를 가린다 */
     everyone: people.length,
+    /** 나 — PC 상세의 「정원 (나)」. 아직 모르면 null */
+    meId: me?.id ?? null,
     /** 내가 쓴 돈. 아직 나를 모르거나 환율이 없으면 null */
     mySpent: me ? spentBy(me, people, expenses, trip.home_currency, trip.exchange_rates) : null,
     /** 표시 이름 — 목록의 「나」 가 아니라 내 이름(「정원 결제」) */

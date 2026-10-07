@@ -71,6 +71,8 @@
   --color-surface-sunken: #f7f8fa;
   --color-surface-muted: #f2f3f5;
   --color-surface-memo: #f4f8ff;
+  /* 고른 줄(PC 가계부 표에서 상세를 연 비용) */
+  --color-surface-selected: #eef4ff;
   /* 모달 · 시트 뒤를 덮는 스크림. 블러는 쓰지 않는다 */
   --color-scrim: rgb(17 17 17 / 0.45);
   --color-line: #e3e5e8;

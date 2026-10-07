@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { detailDateText, paymentStatusText } from "./detail";
+import { detailDateText, paymentStatusText } from "./detail-text";
 
 const trip = { start_date: "2026-10-29", end_date: "2026-11-02" };
 
