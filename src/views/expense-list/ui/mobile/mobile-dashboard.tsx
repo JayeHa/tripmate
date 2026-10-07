@@ -20,7 +20,8 @@ const SECTION = "flex flex-col gap-3 border-t-8 border-surface-sunken px-5 py-4.
 
 /**
  * 모바일 가계부 「지출 · 정산」 — 총 지출(+ 내가 쓴 돈) · 정산 띠 → 카테고리 → 정산(사람별 · 남은 송금).
- * 혼자 쓰는 가계부는 내가 쓴 돈 · 정산 띠 · 정산 칸이 없다. 정산 띠 · 「자세히 보기」 는 정산 화면으로 간다
+ * 혼자 쓰는 가계부는 내가 쓴 돈 · 정산 띠 · 정산 칸이 없다. 카테고리 줄 · 「전체 보기」 는 카테고리 상세로,
+ * 정산 띠 · 「자세히 보기」 는 정산 화면으로 간다
  */
 export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
   const router = useRouter();
@@ -63,7 +64,11 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
           )}
         </div>
         <section className={SECTION}>
-          <CategoryCard shares={dash.categories} home={home} />
+          <CategoryCard
+            shares={dash.categories}
+            home={home}
+            onOpen={(pick) => router.push(`${base}/categories?c=${pick}`)}
+          />
         </section>
         {!list.solo && dash.settleFailed && (
           <section className={SECTION}>
