@@ -30,10 +30,12 @@ async function seedTrip(supabase: Client, tripId: string) {
     cityId: TOKYO_SEED.cityIds[0],
     newId: () => crypto.randomUUID(),
   });
-  const { error: placesError } = await supabase.from("places").insert(rows.places);
+  // 행마다 키가 다르다(대체 장소가 붙은 일정만 id 를 미리 만들고, 시드 줄마다 장소 칸이 다르다). supabase-js 배열 insert 는
+  // 키를 합쳐 보내고 기본값이 defaultToNull 이라, 끄지 않으면 키가 없는 행의 칸이 기본값 대신 NULL 로 가서 전체가 실패한다
+  const { error: placesError } = await supabase
+    .from("places")
+    .insert(rows.places, { defaultToNull: false });
   if (placesError) return console.error("샘플 장소 삽입 실패", placesError);
-  // 행마다 키가 다르다(대체 장소가 붙은 일정만 id 를 미리 만든다). supabase-js 배열 insert 는 키를 합쳐 보내고
-  // 기본값이 defaultToNull 이라, 끄지 않으면 키가 없는 행의 id 가 기본값 대신 NULL 로 가서 전체가 실패한다
   const { error: itemsError } = await supabase
     .from("schedule_items")
     .insert(rows.items, { defaultToNull: false });
