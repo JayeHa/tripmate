@@ -1,10 +1,9 @@
 "use client";
 
 import { ChevronRight, CircleCheck } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
-import { personKey, type PersonRef } from "@/entities/expense";
+import { type PersonKey, personKey, type PersonRef } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
@@ -27,8 +26,8 @@ type SettleCardProps = {
   home: string;
   /** 표시 이름 · 사진 */
   avatarOf: (person: PersonRef) => { name: string; url: string | null };
-  /** 「자세히 보기 ›」 · 사람 줄이 갈 곳 */
-  detailHref: string;
+  /** 정산 상세를 연다 — 사람 줄은 그 사람, 「자세히 보기」 · 「더 보기」 는 null(나부터) */
+  onOpen: (person: PersonKey | null) => void;
   size?: keyof typeof SIZE;
 };
 
@@ -37,7 +36,7 @@ type SettleCardProps = {
  * 송금이 3줄을 넘으면 모바일은 「+ N건 더 보기」 가 정산 화면으로, PC 는 그 자리에서 펼친다(PC 는 나와 주고받는 줄을 먼저).
  * 주고받을 송금이 없으면 「각자 낸 만큼 썼어요」. 환율이 없는 비용이 있으면 계산하지 않고 그 통화를 알린다
  */
-export function SettleCard({ settle, home, avatarOf, detailHref, size = "md" }: SettleCardProps) {
+export function SettleCard({ settle, home, avatarOf, onOpen, size = "md" }: SettleCardProps) {
   const s = SIZE[size];
   const pc = size === "sm";
   const [open, setOpen] = useState(false);
@@ -48,13 +47,14 @@ export function SettleCard({ settle, home, avatarOf, detailHref, size = "md" }: 
     <>
       <div className="flex items-center">
         <h2 className={cn("flex-1 font-extrabold text-ink-900", s.title)}>정산</h2>
-        <Link
-          href={detailHref}
+        <button
+          type="button"
+          onClick={() => onOpen(null)}
           className="flex items-center gap-px text-[13px] font-bold whitespace-nowrap text-brand-text"
         >
           자세히 보기
           <ChevronRight aria-hidden="true" className="size-3.5" />
-        </Link>
+        </button>
       </div>
       {settle.missing ? (
         <p className="text-[13px] text-ink-400">
@@ -67,7 +67,12 @@ export function SettleCard({ settle, home, avatarOf, detailHref, size = "md" }: 
             const a = avatarOf(person);
             const me = personKey(person) === settle.me;
             return (
-              <Link key={personKey(person)} href={detailHref} className="flex items-center gap-2.5">
+              <button
+                type="button"
+                key={personKey(person)}
+                onClick={() => onOpen(personKey(person))}
+                className="flex items-center gap-2.5 text-left"
+              >
                 <PersonAvatar person={person} name={a.name} url={a.url} className={s.avatar} />
                 <span className={cn("min-w-0 flex-1 truncate font-semibold text-ink-700", s.name)}>
                   {a.name}
@@ -79,7 +84,7 @@ export function SettleCard({ settle, home, avatarOf, detailHref, size = "md" }: 
                   </span>
                   <span className="text-[11px] text-ink-400">결제 {formatMoney(paid, home)}</span>
                 </span>
-              </Link>
+              </button>
             );
           })}
           {rows.length === 0 ? (
@@ -104,8 +109,7 @@ export function SettleCard({ settle, home, avatarOf, detailHref, size = "md" }: 
               {rows.length > SHOWN && !open && (
                 <MoreTransfers
                   count={rows.length - SHOWN}
-                  href={pc ? null : detailHref}
-                  onOpen={() => setOpen(true)}
+                  onClick={() => (pc ? setOpen(true) : onOpen(null))}
                 />
               )}
             </div>
