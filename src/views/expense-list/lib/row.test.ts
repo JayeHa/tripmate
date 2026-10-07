@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits, PersonRef } from "@/entities/expense";
 
-import { expenseRowView, whoOf } from "./row";
+import { amountLines, expenseRowView, whoOf, withLine } from "./row";
 
 const ctx = {
   home: "KRW",
@@ -57,6 +57,13 @@ describe("expenseRowView", () => {
     const row = expenseRowView({ ...base, amount: 12400, rate: 8.883 }, ctx);
     expect(row.approxText).toBe("≈ ₩110,149");
     expect(row.rateText).toBe("(¥100 = ₩888)");
+    expect(row.ownRateText).toBe("엔 888.3");
+    expect(row.homeText).toBe("₩110,149");
+  });
+
+  it("지출 환율이 여행 기본과 같으면 「이 비용만」 환율을 보이지 않는다", () => {
+    expect(expenseRowView({ ...base, rate: 9.2 }, ctx).ownRateText).toBeNull();
+    expect(expenseRowView(base, ctx).ownRateText).toBeNull();
   });
 
   it("기준 화폐면 근사치 · 환율이 없다, 환율을 모르면 「환율 없음」", () => {
@@ -115,5 +122,54 @@ describe("whoOf", () => {
       person: me,
       text: "각자 냄 · 2명",
     });
+  });
+});
+
+describe("withLine · amountLines", () => {
+  const me = { kind: "member" as const, id: "me" };
+  const a = { kind: "member" as const, id: "a" };
+  const b = { kind: "member" as const, id: "b" };
+  const names: Record<string, string> = { me: "정원", a: "동규", b: "서연" };
+  const display = (p: { id: string }) => names[p.id];
+  const together = (...ps: (typeof me)[]) => ps.map((person) => ({ person, name: "" }));
+  const payer = { person: me, name: "나" };
+
+  it("혼자 · N명 모두 · 함께 · 외 N, 각자 냄은 이름들", () => {
+    expect(withLine({ splitEach: false, payer, togetherPeople: together(me) }, display, 3)).toBe(
+      "혼자",
+    );
+    expect(
+      withLine({ splitEach: false, payer, togetherPeople: together(me, a, b) }, display, 3),
+    ).toBe("3명 모두");
+    expect(withLine({ splitEach: false, payer, togetherPeople: together(me, a) }, display, 3)).toBe(
+      "함께 · 정원, 동규",
+    );
+    expect(
+      withLine({ splitEach: false, payer, togetherPeople: together(me, a, b) }, display, 4),
+    ).toBe("함께 · 정원, 동규 외 1");
+    expect(
+      withLine({ splitEach: true, payer: null, togetherPeople: together(me, a) }, display, 3),
+    ).toBe("정원, 동규");
+  });
+
+  it("현지 금액 / 원화 — 외화만 두 줄, 이 비용만 다른 환율은 작은 줄 끝에", () => {
+    const fx = {
+      amountText: "¥3,200",
+      approxText: "≈ ₩29,440",
+      homeText: "₩29,440",
+      ownRateText: null,
+    };
+    expect(amountLines(fx, "local")).toEqual({ big: "¥3,200", small: "≈ ₩29,440" });
+    expect(amountLines(fx, "home")).toEqual({ big: "₩29,440", small: "¥3,200" });
+    expect(amountLines({ ...fx, ownRateText: "엔 905" }, "home")).toEqual({
+      big: "₩29,440",
+      small: "¥3,200 · 엔 905",
+    });
+    expect(
+      amountLines(
+        { amountText: "₩5,000", approxText: null, homeText: null, ownRateText: null },
+        "home",
+      ),
+    ).toEqual({ big: "₩5,000", small: null });
   });
 });

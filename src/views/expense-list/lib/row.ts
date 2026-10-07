@@ -3,11 +3,14 @@ import {
   type ExpenseCategory,
   type ExpenseWithSplits,
   payerOf,
+  PAYMENT_METHOD_LABEL,
+  type PaymentMethod,
   type PersonRef,
   splitPerson,
   toHomeFor,
 } from "@/entities/expense";
 import {
+  currencyName,
   decimalsOf,
   type ExchangeRates,
   formatMoney,
@@ -27,6 +30,14 @@ export type ExpenseRowView = {
   approxText: string | null;
   /** 외화면 쓴 환율 「(¥100 = ₩920)」. 기준 화폐 · 환율 없음이면 null */
   rateText: string | null;
+  /** 외화의 기준 화폐 금액 「₩29,440」(≈ 없이). 기준 화폐 · 환율 없음이면 null */
+  homeText: string | null;
+  /** 이 비용에만 적은 환율이 여행 기본과 다를 때 「엔 905」. 아니면 null */
+  ownRateText: string | null;
+  /** 결제수단 이름 — 「카드」 */
+  methodLabel: string;
+  /** 메모가 있다 — PC 표에 메모 아이콘 */
+  hasMemo: boolean;
   /** 결제한 사람. 「각자 냄」 이면 null */
   payer: { person: PersonRef; name: string } | null;
   /** 함께한 사람 — 아바타용 사람 · 이름, 글로 이은 것 */
@@ -54,21 +65,34 @@ type RowContext = {
   linkNameOf: (itemId: string) => string | null;
 };
 
-/** 외화 지출의 근사치 · 환율 글. 기준 화폐면 둘 다 null */
+/** 외화 지출의 근사치 · 환율 글. 기준 화폐면 모두 null */
 function foreignTexts(e: ExpenseWithSplits, ctx: RowContext) {
-  if (e.currency === ctx.home) return { approxText: null, rateText: null };
+  const none = { approxText: null, rateText: null, homeText: null, ownRateText: null };
+  if (e.currency === ctx.home) return none;
   try {
-    const home = toHomeFor(e, Number(e.amount), ctx.home, ctx.rates);
+    const home = formatMoney(
+      roundTo(toHomeFor(e, Number(e.amount), ctx.home, ctx.rates), decimalsOf(ctx.home)),
+      ctx.home,
+    );
     const unit = ctx.rates[e.currency]?.unit ?? 1;
     const value = toHomeFor(e, unit, ctx.home, ctx.rates);
     return {
-      approxText: `≈ ${formatMoney(roundTo(home, decimalsOf(ctx.home)), ctx.home)}`,
+      approxText: `≈ ${home}`,
       rateText: `(${formatMoney(unit, e.currency)} = ${formatMoney(value, ctx.home)})`,
+      homeText: home,
+      ownRateText: ownRate(e, ctx, unit, value),
     };
   } catch (err) {
     if (!(err instanceof MissingRateError)) throw err;
-    return { approxText: "환율 없음", rateText: null };
+    return { ...none, approxText: "환율 없음" };
   }
+}
+
+/** 이 비용만 다른 환율이면 「엔 905」 — 여행 기본과 같으면 null(목록에는 다를 때만 보인다) */
+function ownRate(e: ExpenseWithSplits, ctx: RowContext, unit: number, value: number) {
+  const base = ctx.rates[e.currency];
+  if (e.rate === null || (base && Math.abs(base.value - value) < 1e-6)) return null;
+  return `${currencyName(e.currency)} ${value.toLocaleString("ko-KR", { maximumFractionDigits: 2 })}`;
 }
 
 /** 함께한 사람 — 나눈 순서대로 */
@@ -96,6 +120,8 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     categoryLabel: EXPENSE_CATEGORY_LABEL[category] ?? "기타",
     amountText: formatMoney(Number(e.amount), e.currency),
     ...foreignTexts(e, ctx),
+    methodLabel: PAYMENT_METHOD_LABEL[e.payment_method as PaymentMethod] ?? e.payment_method,
+    hasMemo: !!e.memo?.trim(),
     payer: payerViewOf(e, ctx),
     ...togetherOf(e, ctx),
     splitEach: e.split_each,
@@ -128,4 +154,37 @@ export function whoOf(
     person: row.payer.person,
     text: `${displayName(row.payer.person)} 결제 · ${countText(count, everyone)}`,
   };
+}
+
+/**
+ * PC 표의 「함께」 줄 — 각자 냄이면 이름들, 결제한 사람 혼자면 「혼자」, 여행의 모두면 「N명 모두」,
+ * 그 밖엔 「함께 · 동규, 서연」(3명 이상은 「함께 · 동규, 서연 외 1」)
+ */
+export function withLine(
+  row: Pick<ExpenseRowView, "splitEach" | "payer" | "togetherPeople">,
+  displayName: (person: PersonRef) => string,
+  everyone: number,
+): string {
+  const names = row.togetherPeople.map((p) => displayName(p.person));
+  if (row.splitEach) return names.join(", ");
+  const alone =
+    row.togetherPeople.length === 1 &&
+    row.payer !== null &&
+    row.togetherPeople[0].person.id === row.payer.person.id;
+  if (alone) return "혼자";
+  if (names.length === everyone) return `${names.length}명 모두`;
+  const shown = names.slice(0, 2).join(", ");
+  return `함께 · ${shown}${names.length > 2 ? ` 외 ${names.length - 2}` : ""}`;
+}
+
+/** PC 금액 칸 두 줄 — 「현지 금액」 이면 쓴 통화가 크게 + ≈ 원화, 「원화」 면 원화가 크게 + 쓴 통화. 이 비용만 다른 환율은 작은 줄 끝에 */
+export function amountLines(
+  row: Pick<ExpenseRowView, "amountText" | "approxText" | "homeText" | "ownRateText">,
+  mode: "local" | "home",
+): { big: string; small: string | null } {
+  if (!row.approxText) return { big: row.amountText, small: null };
+  const rate = row.ownRateText ? ` · ${row.ownRateText}` : "";
+  if (mode === "home" && row.homeText)
+    return { big: row.homeText, small: `${row.amountText}${rate}` };
+  return { big: row.amountText, small: `${row.approxText}${rate}` };
 }
