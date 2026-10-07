@@ -8,9 +8,9 @@ import {
   PAYMENT_METHOD_LABEL,
   PAYMENT_METHODS,
 } from "@/entities/expense";
-import { itemName, type ScheduleItem } from "@/entities/schedule-item";
+import { itemName } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
-import { dayIndexToDate } from "@/shared/lib/days";
+import { ieyo } from "@/shared/lib/josa";
 import { cn } from "@/shared/lib/utils";
 import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
@@ -65,7 +65,7 @@ export function CategoryField({ form }: FormProps) {
 
 type DayFieldProps = FormProps & { trip: Trip };
 
-/** 날짜 — 44 상자(달력 아이콘 + 「day 2 · 11.1 (일)」), 누르면 여행준비 · day N 시트 */
+/** 날짜 — 44 상자(달력 아이콘 + 「day 2 · 11.1 (일)」), 누르면 여행준비 · day N 시트. 연결 일정과 날이 다르면 아래에 알린다 */
 export function DayField({ form, trip }: DayFieldProps) {
   const [open, setOpen] = useState(false);
   const options = dayOptions(trip.start_date, trip.end_date);
@@ -86,6 +86,12 @@ export function DayField({ form, trip }: DayFieldProps) {
         </span>
         <ChevronDown className="size-4 text-ink-450" aria-hidden="true" />
       </button>
+      {form.link.dayMismatch && (
+        <span className="text-xs font-semibold text-status-wait-text">
+          연결된 일정은 {form.link.dayMismatch}
+          {ieyo(form.link.dayMismatch)}
+        </span>
+      )}
       <SheetDialog open={open} onClose={() => setOpen(false)} title="날짜 선택">
         {options.map((o) => {
           const on = o.value === form.spentOn;
@@ -112,37 +118,7 @@ export function DayField({ form, trip }: DayFieldProps) {
   );
 }
 
-type LinkFieldProps = FormProps & { trip: Trip; items: ScheduleItem[] };
-
-/** 연결 일정(선택) — 그날 일정 중에서. 여행준비면 고를 일정이 없다 */
-export function LinkField({ form, trip, items }: LinkFieldProps) {
-  const dayItems = items.filter(
-    (it) => dayIndexToDate(trip.start_date, it.day_index) === form.spentOn,
-  );
-  return (
-    <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor="expense-link">
-        일정 연결 <span className="font-medium text-ink-350">(선택)</span>
-      </FieldLabel>
-      <select
-        id="expense-link"
-        className="h-11 rounded-memo border border-input bg-white px-3 text-[15px] font-semibold text-ink-900 disabled:text-ink-350"
-        value={form.itemId}
-        disabled={dayItems.length === 0}
-        onChange={(e) => form.setItemId(e.target.value)}
-      >
-        <option value="">{dayItems.length ? "연결 안 함" : "이 날짜에 일정이 없어요"}</option>
-        {dayItems.map((it) => (
-          <option key={it.id} value={it.id}>
-            {itemName(it)}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-/** 항목명 — 44 입력 칸 */
+/** 항목명 — 44 입력 칸. 일정에 연결했으면 비워 둬도 되고, 그 일정 이름이 자리 글자로 보인다(저장도 그 이름) */
 export function NameField({ form }: FormProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -154,7 +130,7 @@ export function NameField({ form }: FormProps) {
         value={form.name}
         onChange={(e) => form.setName(e.target.value)}
         maxLength={100}
-        placeholder="항목명을 입력해 주세요"
+        placeholder={form.link.linked ? itemName(form.link.linked) : "항목명을 입력해 주세요"}
       />
     </div>
   );

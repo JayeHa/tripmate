@@ -93,6 +93,8 @@
   --color-brand-text: #1f6feb;
   --color-brand-soft: #e8f1ff;
   --color-brand-line: #c7d9f5;
+  /* 고른 것 · 연결된 것의 아주 옅은 바탕(비용의 일정 연결 칸 · 일정 고르기의 고른 줄) */
+  --color-brand-faint: #f4f8ff;
   --color-on-brand: #ffffff;
 
   --color-primary-pressed: #1f6feb;

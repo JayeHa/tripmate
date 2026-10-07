@@ -3,16 +3,23 @@
 import { CircleAlert, X } from "lucide-react";
 import { useRef } from "react";
 
-import { type ExpenseFormValues, personKey, type TripGuest } from "@/entities/expense";
+import {
+  type ExpenseFormValues,
+  type ExpenseWithSplits,
+  personKey,
+  type TripGuest,
+} from "@/entities/expense";
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 import { Button } from "@/shared/ui/button";
 
+import { linkCosts } from "../lib/link-costs";
 import { formPeople } from "../lib/people";
 import { type ExpenseFormState, useExpenseForm } from "../model/use-expense-form";
 import { AmountField } from "./amount-field";
-import { CategoryField, DayField, LinkField, NameField, PaymentField } from "./expense-fields";
+import { CategoryField, DayField, NameField, PaymentField } from "./expense-fields";
+import { LinkField } from "./link-field";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
 
@@ -25,7 +32,13 @@ type ExpenseFormProps = {
   trip: Trip;
   members: TripMember[];
   guests: TripGuest[];
+  /** 연결할 수 있는 일정 — 타임라인 일정과 대체 장소 줄 */
   items?: ScheduleItem[];
+  alternatives?: ScheduleItem[];
+  /** 여행의 비용 — 일정마다 이미 쓴 돈을 보이려고 */
+  expenses?: ExpenseWithSplits[];
+  /** 고치는 비용의 id — 이미 쓴 돈에서 뺀다 */
+  expenseId?: string;
   currentUserId: string;
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
@@ -39,7 +52,7 @@ type ExpenseFormProps = {
 
 /**
  * 비용 추가 · 수정 화면. 모바일은 탭 위를 덮는 전체 화면, PC 는 가운데 440 칸.
- * 금액(맨 위) → 카테고리 → 날짜 → 일정 연결 → 항목명 → 결제수단 → 누가 내고 누구와 나눴나 → 추가 정보, 아래에 완료.
+ * 금액(맨 위) → 일정 연결 → 카테고리 → 날짜 → 항목명 → 결제수단 → 누가 내고 누구와 나눴나 → 추가 정보, 아래에 완료.
  * 새 비용은 금액을 넣기 전까지 아래 칸을 흐리게 덮고, 누르면 금액 칸으로 보낸다
  */
 export function ExpenseForm({
@@ -50,6 +63,9 @@ export function ExpenseForm({
   members,
   guests,
   items = [],
+  alternatives = [],
+  expenses = [],
+  expenseId,
   currentUserId,
   initial,
   defaultSpentOn,
@@ -62,10 +78,15 @@ export function ExpenseForm({
     trip,
     people: formPeople(members, guests, currentUserId),
     me,
+    items,
+    alternatives,
     initial,
     defaultSpentOn,
     onSubmit,
   });
+  const costs = linkCosts(expenses, trip.home_currency, trip.exchange_rates, expenseId);
+  // 지금 날짜의 day 순번(0 부터). 여행준비(빈 글)면 null — 날짜 옵션의 첫 줄이 여행준비라 하나 뺀다
+  const dayIndex = form.link.days.findIndex((o) => o.value === form.spentOn) - 1;
   const amountRef = useRef<HTMLInputElement>(null);
   return (
     <form
@@ -82,9 +103,16 @@ export function ExpenseForm({
       <div className="min-h-0 flex-1 overflow-y-auto lg:overflow-visible">
         <AmountField form={form} inputRef={amountRef} autoFocus={!initial} />
         <div className="relative flex flex-col gap-7 px-5 pt-6 pb-8">
+          <LinkField
+            link={form.link}
+            items={items}
+            alternatives={alternatives}
+            costs={costs}
+            home={trip.home_currency}
+            dayIndex={dayIndex >= 0 ? dayIndex : null}
+          />
           <CategoryField form={form} />
           <DayField form={form} trip={trip} />
-          <LinkField form={form} trip={trip} items={items} />
           <NameField form={form} />
           <PaymentField form={form} />
           <PeopleSection form={form} />
