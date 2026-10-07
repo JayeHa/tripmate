@@ -17,8 +17,8 @@ type SummaryCardProps = {
   people: number | null;
   /** 내가 쓴 돈. 환율이 없어 셀 수 없으면 null */
   mySpent: number | null;
-  /** 「지출내역 보기 ›」 가 갈 곳 */
-  statsHref: string;
+  /** 「지출내역 보기 ›」 가 갈 곳(모바일 「지출 · 정산」 탭). PC 는 카테고리 · 정산 카드가 바로 아래라 비운다 — 링크 없음 */
+  statsHref?: string;
   /** 카드 아래에 붙이는 것 — PC 의 정산 띠 */
   children?: ReactNode;
 };
@@ -81,13 +81,15 @@ export function SummaryCard({
           {sortedCurrencies(total.byCurrency, home).map(([code, amount]) => (
             <CurrencyLine key={code} code={code} amount={amount} home={home} rates={rates} />
           ))}
-          <Link
-            href={statsHref}
-            className="flex h-10 items-center justify-center gap-1 border-t border-surface-sunken text-[13px] font-bold text-primary"
-          >
-            지출내역 보기
-            <ChevronRight className="size-3.75" aria-hidden="true" />
-          </Link>
+          {statsHref && (
+            <Link
+              href={statsHref}
+              className="flex h-10 items-center justify-center gap-1 border-t border-surface-sunken text-[13px] font-bold text-primary"
+            >
+              지출내역 보기
+              <ChevronRight className="size-3.75" aria-hidden="true" />
+            </Link>
+          )}
         </div>
       )}
       {children}

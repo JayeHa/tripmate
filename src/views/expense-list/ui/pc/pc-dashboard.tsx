@@ -26,7 +26,6 @@ const CARD = "flex shrink-0 flex-col gap-3 rounded-[16px] border border-divider 
  */
 export function PcDashboard({ tripId, list }: PcDashboardProps) {
   const { trip } = list;
-  const settleHref = `/trips/${tripId}/expenses/settlement`;
   const dash = useDashboard(tripId, list);
   const [category, setCategory] = useState<CategoryPick | null>(null);
   // 정산 창 — undefined 면 닫힘, null 이면 나부터
@@ -41,7 +40,6 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
           rates={trip.exchange_rates}
           people={list.solo ? null : list.everyone}
           mySpent={list.mySpent}
-          statsHref={settleHref}
         >
           {!list.solo && dash.settle?.band && (
             <SettleBand
