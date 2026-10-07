@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appliedFactor, rebaseFactor, rebaseRates } from "./rebase";
+import { appliedFactor, displayRateValue, rebaseFactor, rebaseRates } from "./rebase";
 
 const KRW_RATES = { JPY: { unit: 100, value: 855 }, USD: { unit: 1, value: 1400 } };
 
@@ -46,5 +46,21 @@ describe("appliedFactor", () => {
     // ₩1,000,000 원화 지출(여행 환율로 계산) = 같은 금액의 송금 기록(÷ f)
     const expense = (1_000_000 * rebased.KRW.value) / rebased.KRW.unit;
     expect(1_000_000 / f).toBeCloseTo(expense, 6);
+  });
+});
+
+describe("displayRateValue", () => {
+  it("유효 숫자 6자리 — 바꿨다 되돌린 끝자리를 정리한다", () => {
+    expect(displayRateValue(8.4999999)).toBe(8.5);
+    expect(displayRateValue(11.764706)).toBe(11.7647);
+    expect(displayRateValue(0.000039285714)).toBe(0.0000392857);
+    expect(displayRateValue(920)).toBe(920);
+  });
+
+  it("원 → 엔 → 원 왕복 뒤 칸에는 처음 값이 보인다", () => {
+    const krw = { JPY: { unit: 1, value: 8.5 } };
+    const jpy = rebaseRates(krw, "KRW", "JPY", 8.5);
+    const back = rebaseRates(jpy, "JPY", "KRW", appliedFactor(jpy, "KRW") ** -1);
+    expect(displayRateValue(back.JPY.value)).toBe(8.5);
   });
 });

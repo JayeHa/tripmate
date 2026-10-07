@@ -47,3 +47,11 @@ export function appliedFactor(rebased: ExchangeRates, oldHome: string): number {
   const r = rebased[oldHome];
   return r.unit / r.value;
 }
+
+/**
+ * 환율 칸에 보일 값 — 유효 숫자 6자리(8.4999999 → 8.5, 11.764706 → 11.7647).
+ * 기준 화폐를 바꿨다 되돌리면 반올림이 두 번 겹쳐 저장값 끝자리가 흔들린다. 저장값(계산용 8자리)은 그대로 두고 보일 때만 정리한다
+ */
+export function displayRateValue(value: number): number {
+  return Number(value.toPrecision(6));
+}
