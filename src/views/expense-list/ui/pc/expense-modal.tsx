@@ -21,6 +21,15 @@ type ExpenseModalProps = {
  */
 export function ExpenseModal({ tripId, target, onClose }: ExpenseModalProps) {
   const [busy, setBusy] = useState(false);
+  // 닫히는 동안(페이드 아웃)에도 내용을 그리도록 마지막으로 연 대상을 붙잡아 둔다 — 비우면 빈 흰 상자가 잠깐 남는다.
+  // 렌더 중에 이전 값에서 조정한다(이펙트를 거치면 한 프레임 비어 보인다)
+  // 열 때마다 폼을 새로 그린다 — 붙잡아 둔 내용 때문에 닫았다 다시 연 「비용 추가」 가 지난 입력을 이어받지 않게
+  const [shown, setShown] = useState(target);
+  const [opened, setOpened] = useState(0);
+  if (target !== null && target !== shown) {
+    setShown(target);
+    setOpened((n) => n + 1);
+  }
   /** 요청 중이 아니면 닫는다 */
   const close = () => {
     if (!busy) onClose();
@@ -32,10 +41,11 @@ export function ExpenseModal({ tripId, target, onClose }: ExpenseModalProps) {
         className="flex h-[min(760px,calc(100dvh-2rem))] w-110 max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-110"
       >
         <DialogTitle className="sr-only">
-          {target?.kind === "edit" ? "비용 수정" : "비용 추가"}
+          {shown?.kind === "edit" ? "비용 수정" : "비용 추가"}
         </DialogTitle>
-        {target?.kind === "new" && (
+        {shown?.kind === "new" && (
           <CreateExpense
+            key={opened}
             tripId={tripId}
             layout="modal"
             onClose={close}
@@ -43,11 +53,11 @@ export function ExpenseModal({ tripId, target, onClose }: ExpenseModalProps) {
             onBusyChange={setBusy}
           />
         )}
-        {target?.kind === "edit" && (
+        {shown?.kind === "edit" && (
           <EditExpense
-            key={target.expenseId}
+            key={`${opened}-${shown.expenseId}`}
             tripId={tripId}
-            expenseId={target.expenseId}
+            expenseId={shown.expenseId}
             layout="modal"
             onClose={close}
             onDone={onClose}
