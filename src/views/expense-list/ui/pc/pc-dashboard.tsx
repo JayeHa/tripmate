@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
-
 import { type PersonKey, SettleBand } from "@/entities/expense";
 
 import type { CategoryPick } from "../../lib/category-detail";
-import { useDashboard } from "../../model/use-dashboard";
+import type { Dashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { CategoryCard } from "../dashboard/category-card";
 import { SettleCard } from "../dashboard/settle-card";
 import { SettleLoadError } from "../dashboard/settle-load-error";
 import { SummaryCard } from "../mobile/summary-card";
-import { CategoryModal } from "./category-modal";
-import { SettleModal } from "./settle-modal";
 
-type PcDashboardProps = { tripId: string; list: ExpenseList };
+type PcDashboardProps = {
+  list: ExpenseList;
+  dash: Dashboard;
+  /** 카테고리 상세 창을 연다 */
+  onCategory: (pick: CategoryPick) => void;
+  /** 정산 창을 연다(null 이면 나부터) */
+  onSettle: (person: PersonKey | null) => void;
+};
 
 /** 오른쪽 카드 하나 — 흰 바탕 · 테두리 · r16 */
 const CARD = "flex shrink-0 flex-col gap-3 rounded-[16px] border border-divider px-4.5 py-4";
@@ -22,14 +25,10 @@ const CARD = "flex shrink-0 flex-col gap-3 rounded-[16px] border border-divider 
 /**
  * PC 가계부 오른쪽(줄을 고르지 않았을 때) — 요약(총 지출 · 내가 쓴 돈 + 정산 띠) → 카테고리 → 정산.
  * 모바일 「지출 · 정산」 탭과 같은 카드를 작은 크기로 그린다. 혼자 쓰는 가계부는 정산 띠 · 정산 카드가 없다.
- * 카테고리 줄 · 「전체 보기」 는 카테고리 상세 창을, 정산 띠 · 「자세히 보기」 · 사람 줄은 정산 창을 연다
+ * 카테고리 줄 · 「전체 보기」 는 카테고리 상세 창을, 정산 띠 · 「자세히 보기」 · 사람 줄은 정산 창을 연다(창은 목록이 쥔다)
  */
-export function PcDashboard({ tripId, list }: PcDashboardProps) {
+export function PcDashboard({ list, dash, onCategory, onSettle }: PcDashboardProps) {
   const { trip } = list;
-  const dash = useDashboard(tripId, list);
-  const [category, setCategory] = useState<CategoryPick | null>(null);
-  // 정산 창 — undefined 면 닫힘, null 이면 나부터
-  const [settle, setSettle] = useState<PersonKey | null | undefined>(undefined);
   const home = trip.home_currency;
   return (
     <>
@@ -46,14 +45,14 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
               state={dash.settle.band}
               home={home}
               personOf={dash.bandPersonOf}
-              onClick={() => setSettle(null)}
+              onClick={() => onSettle(null)}
               size="sm"
             />
           )}
         </SummaryCard>
       </div>
       <section className={CARD}>
-        <CategoryCard shares={dash.categories} home={home} size="sm" onOpen={setCategory} />
+        <CategoryCard shares={dash.categories} home={home} size="sm" onOpen={onCategory} />
       </section>
       {!list.solo && dash.settleFailed && (
         <section className={CARD}>
@@ -66,13 +65,11 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
             settle={dash.settle}
             home={home}
             avatarOf={dash.avatarOf}
-            onOpen={setSettle}
+            onOpen={onSettle}
             size="sm"
           />
         </section>
       )}
-      <CategoryModal list={list} opened={category} onClose={() => setCategory(null)} />
-      <SettleModal list={list} dash={dash} opened={settle} onClose={() => setSettle(undefined)} />
     </>
   );
 }

@@ -22,15 +22,19 @@ import { calendarCells } from "../../lib/calendar";
 import { detailFields } from "../../lib/detail-fields";
 import { filtersActive, matchesFilters } from "../../lib/filters";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
+import { useDashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { usePcList } from "../../model/use-pc-list";
+import { type PcScreensInitial, usePcScreens } from "../../model/use-pc-screens";
 import { useRowSelection } from "../../model/use-row-selection";
+import { CategoryModal } from "./category-modal";
 import { DateRail } from "./date-rail";
 import { ExpenseDetailPanel } from "./expense-detail-panel";
 import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
 import { PcDashboard } from "./pc-dashboard";
+import { SettleModal } from "./settle-modal";
 
 /**
  * [날짜 레일 200 | 표 | 오른쪽 패널] — 오른쪽 패널 너비를 쥔다(328~480, 처음 328). 창을 넓히면 표가 늘어난다.
@@ -46,7 +50,12 @@ const EXPENSE_SPLIT: SplitConfig = {
   side: "second",
 };
 
-type PcExpenseListProps = { tripId: string; list: ExpenseList };
+type PcExpenseListProps = {
+  tripId: string;
+  list: ExpenseList;
+  /** 주소로 들어왔을 때 열어 둘 창(카테고리 · 정산) */
+  initial?: PcScreensInitial;
+};
 
 const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({
   value: c,
@@ -60,7 +69,7 @@ const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_ME
  * 표와 오른쪽 사이 경계선을 끌어 오른쪽 너비를 바꾼다. 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
  * 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
-export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
+export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
   const { trip } = list;
   const pc = usePcList();
   const split = useSplitWidth(EXPENSE_SPLIT);
@@ -76,9 +85,11 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
     { scroller: scrollerRef, topKey: "all" },
   );
   const filtered = sections.flatMap((s) => s.expenses);
+  const dash = useDashboard(tripId, list);
+  const screens = usePcScreens(initial);
   const selection = useRowSelection(
     filtered.map((e) => e.id),
-    modal !== null,
+    modal !== null || screens.open,
   );
   const selectedRow = sections.flatMap((s) => s.rows).find((r) => r.id === selection.selected);
   const selectedExpense = filtered.find((e) => e.id === selection.selected);
@@ -159,11 +170,18 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
               onClose={selection.clear}
             />
           ) : (
-            <PcDashboard tripId={tripId} list={list} />
+            <PcDashboard
+              list={list}
+              dash={dash}
+              onCategory={screens.openCategory}
+              onSettle={screens.openSettle}
+            />
           )}
         </aside>
       </div>
       <ExpenseModal tripId={tripId} target={modal} onClose={() => setModal(null)} />
+      <CategoryModal list={list} opened={screens.category} onClose={screens.closeCategory} />
+      <SettleModal list={list} dash={dash} opened={screens.settle} onClose={screens.closeSettle} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { Toast } from "@/shared/ui/toast";
 
 import { parseCategoryPick } from "../lib/category-detail";
 import { type ExpenseList, useExpenseList } from "../model/use-expense-list";
+import type { PcScreensInitial } from "../model/use-pc-screens";
 import { MobileCategory } from "./mobile/mobile-category";
 import { MobileDashboard } from "./mobile/mobile-dashboard";
 import { MobileExpenseList, TOAST_ABOVE_FAB } from "./mobile/mobile-expense-list";
@@ -68,7 +69,7 @@ export function ExpenseListView({ tripId, tab = "list", category, person }: Expe
   return (
     <>
       {isDesktop ? (
-        <PcExpenseList tripId={tripId} list={list} />
+        <PcExpenseList tripId={tripId} list={list} initial={pcInitial(tab, category, person)} />
       ) : (
         <MobileTab tab={tab} tripId={tripId} list={list} category={category} person={person} />
       )}
@@ -94,4 +95,15 @@ function MobileTab({ tab, tripId, list, category, person }: MobileTabProps) {
     return <MobileCategory tripId={tripId} list={list} initial={parseCategoryPick(category)} />;
   }
   return <MobileExpenseList tripId={tripId} list={list} />;
+}
+
+/** PC 에서 주소로 열어 둘 창 — 카테고리 상세 · 정산 주소면 그 창, 아니면 없음 */
+function pcInitial(
+  tab: MobileScreen,
+  category: string | undefined,
+  person: string | undefined,
+): PcScreensInitial {
+  if (tab === "category") return { category: parseCategoryPick(category) };
+  if (tab === "settle") return { settle: person ?? null };
+  return {};
 }
