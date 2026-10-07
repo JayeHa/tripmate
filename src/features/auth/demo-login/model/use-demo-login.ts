@@ -50,7 +50,7 @@ async function seedTrip(supabase: Client, tripId: string) {
 }
 
 /**
- * 둘러보기. 익명 계정을 만들고 도쿄 여행 샘플을 심은 뒤 그 여행으로 보낸다.
+ * 둘러보기. 익명 계정을 만들고 도쿄 여행 샘플을 심은 뒤 여행 목록으로 보낸다.
  * 방문자마다 자기 데이터를 받으므로 마음껏 고치고 지워도 서로 영향이 없다.
  */
 export function useDemoLogin() {
@@ -104,7 +104,7 @@ export function useDemoLogin() {
     // 목록 캐시를 비운다. staleTime 이 30초라, 이 화면에서 이미 빈 목록을 받아 왔으면
     // 방금 만든 여행이 안 보인다.
     await qc.invalidateQueries({ queryKey: queryKeys.trips.all });
-    router.replace(`/trips/${trip.id}/home`);
+    router.replace("/trips");
   }
 
   return { enterDemo, loading, error };
