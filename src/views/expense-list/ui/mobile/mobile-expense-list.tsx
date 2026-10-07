@@ -16,6 +16,12 @@ import { ExpenseRow } from "./expense-row";
 import { ListTabs } from "./list-tabs";
 import { SummaryCard } from "./summary-card";
 
+/**
+ * 이 화면의 토스트를 더 올리는 높이 — 「+ 비용 추가」(하단 탭 위 16 · 높이 48, 아래에서 99–147)가 토스트 자리(110)와 겹쳐서
+ * 버튼 위로 띄운다
+ */
+export const TOAST_ABOVE_FAB = 48;
+
 type MobileExpenseListProps = { tripId: string; list: ExpenseList };
 
 /**

@@ -10,7 +10,7 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { Toast } from "@/shared/ui/toast";
 
 import { useExpenseList } from "../model/use-expense-list";
-import { MobileExpenseList } from "./mobile/mobile-expense-list";
+import { MobileExpenseList, TOAST_ABOVE_FAB } from "./mobile/mobile-expense-list";
 import { PcExpenseList } from "./pc/pc-expense-list";
 
 type ExpenseListViewProps = { tripId: string };
@@ -55,7 +55,7 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
       ) : (
         <MobileExpenseList tripId={tripId} list={list} />
       )}
-      <Toast message={list.toast} onDone={list.clearToast} />
+      <Toast message={list.toast} onDone={list.clearToast} mobileOffset={TOAST_ABOVE_FAB} />
     </>
   );
 }
