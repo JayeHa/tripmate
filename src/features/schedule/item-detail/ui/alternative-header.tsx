@@ -23,6 +23,8 @@ type AlternativeHeaderProps = {
   alt: ScheduleItem;
   /** 이 대체 장소 줄의 메모 수 — 빼기 전에 물을지 정한다 */
   memoCount: number;
+  /** 이 대체 장소에 연결된 비용 수 — 빼기 전에 물을지 · 무엇을 알릴지 정한다 */
+  expenseCount: number;
   actions: AlternativeActions;
   /** 요청이 서버에 가 있는 동안 — 뒤로 · 닫기를 막는다 */
   locked: boolean;
@@ -38,6 +40,7 @@ export function AlternativeHeader({
   main,
   alt,
   memoCount,
+  expenseCount,
   actions,
   locked,
   onBack,
@@ -87,7 +90,7 @@ export function AlternativeHeader({
             variant="destructive"
             disabled={actions.pending}
             onClick={() =>
-              hasOwnRecord(alt, memoCount) ? setConfirming(true) : actions.remove(alt)
+              hasOwnRecord(alt, memoCount, expenseCount) ? setConfirming(true) : actions.remove(alt)
             }
           >
             <Trash2 className="size-4.5" />
@@ -115,6 +118,7 @@ export function AlternativeHeader({
         open={confirming}
         onOpenChange={setConfirming}
         onConfirm={() => actions.remove(alt)}
+        expenseCount={expenseCount}
       />
     </div>
   );

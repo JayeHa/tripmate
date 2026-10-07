@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 
 import type { City } from "@/entities/city";
+import { useExpenses } from "@/entities/expense";
 import {
   buildTimeline,
   type Memo,
@@ -13,6 +14,7 @@ import {
 } from "@/entities/schedule-item";
 import { dayOfWeek } from "@/shared/lib/days";
 
+import { linkedExpenseCount } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { usePlanEdit } from "../model/use-plan-edit";
 import { AlternativeHeader } from "./alternative-header";
@@ -57,6 +59,7 @@ export function AlternativeDetail({
   const actions = useAlternativeActions(tripId, row.item, onSwapped);
   const locked = plan.locked || actions.locked;
   const { data: memos = [] } = useMemos(tripId);
+  const { data: expenses = [] } = useExpenses(tripId);
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
@@ -82,6 +85,7 @@ export function AlternativeDetail({
       main={row.item}
       alt={alt}
       memoCount={altRow.memos.length}
+      expenseCount={linkedExpenseCount(expenses, alt.id)}
       actions={actions}
       locked={locked}
       onBack={onBack}

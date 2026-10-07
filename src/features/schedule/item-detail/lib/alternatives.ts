@@ -34,12 +34,20 @@ export function alternativeChoices(
 }
 
 /**
- * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정).
- * 메모는 따로 읽으므로(memos) 그 줄의 메모 수를 받는다
+ * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크 · 연결된 비용)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정).
+ * 메모 · 비용은 따로 읽으므로 그 줄의 수를 받는다
  */
-export function hasOwnRecord(alt: ScheduleItem, memoCount: number): boolean {
+export function hasOwnRecord(alt: ScheduleItem, memoCount: number, expenseCount = 0): boolean {
   const links = Array.isArray(alt.links) ? alt.links.length : 0;
-  return !!alt.status || memoCount > 0 || links > 0;
+  return !!alt.status || memoCount > 0 || links > 0 || expenseCount > 0;
+}
+
+/** 그 일정 줄에 연결된 비용 수 */
+export function linkedExpenseCount(
+  expenses: { schedule_item_id: string | null }[],
+  itemId: string,
+): number {
+  return expenses.filter((e) => e.schedule_item_id === itemId).length;
 }
 
 /** 「「A」 대신 「B」으로」 — 바꾸기 확인창 · 토스트가 같이 쓰는 앞부분 */

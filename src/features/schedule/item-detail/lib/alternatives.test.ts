@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import type { Place, ScheduleItem } from "@/entities/schedule-item";
 
-import { alternativeChoices, hasOwnRecord, swapDoneMessage, swapQuestion } from "./alternatives";
+import {
+  alternativeChoices,
+  hasOwnRecord,
+  linkedExpenseCount,
+  swapDoneMessage,
+  swapQuestion,
+} from "./alternatives";
 
 /** 기본값이 채워진 장소 */
 function place(id: string, patch: Partial<Place> = {}): Place {
@@ -79,11 +85,25 @@ describe("alternativeChoices", () => {
 });
 
 describe("hasOwnRecord", () => {
-  it("예약 상태 · 메모 · 일정 링크 중 하나라도 있으면 true", () => {
+  it("예약 상태 · 메모 · 일정 링크 · 연결된 비용 중 하나라도 있으면 true", () => {
     expect(hasOwnRecord(item("a"), 0)).toBe(false);
     expect(hasOwnRecord(item("a", { status: "ok" }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 1)).toBe(true);
     expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
+    expect(hasOwnRecord(item("a"), 0, 2)).toBe(true);
+  });
+});
+
+describe("linkedExpenseCount", () => {
+  it("그 줄에 연결된 비용만 센다", () => {
+    const expenses = [
+      { schedule_item_id: "a" },
+      { schedule_item_id: "b" },
+      { schedule_item_id: "a" },
+      { schedule_item_id: null },
+    ];
+    expect(linkedExpenseCount(expenses, "a")).toBe(2);
+    expect(linkedExpenseCount(expenses, "c")).toBe(0);
   });
 });
 
