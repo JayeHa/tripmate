@@ -13,8 +13,13 @@ describe("detailDateText", () => {
     expect(detailDateText("2026-10-30", trip)).toBe("day 2 · 10.30 (금)");
   });
 
-  it("기간 밖 날짜는 마지막 날로 붙인다", () => {
-    expect(detailDateText("2026-11-10", trip)).toBe("day 5 · 11.2 (월)");
+  it("기간 밖 날짜는 day 없이 그 날짜 그대로", () => {
+    expect(detailDateText("2026-10-27", trip)).toBe("10.27 (화)");
+    expect(detailDateText("2026-11-10", trip)).toBe("11.10 (화)");
+  });
+
+  it("마지막 날은 기간 안", () => {
+    expect(detailDateText("2026-11-02", trip)).toBe("day 5 · 11.2 (월)");
   });
 });
 
