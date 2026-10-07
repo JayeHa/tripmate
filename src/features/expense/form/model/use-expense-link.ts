@@ -78,13 +78,22 @@ export function useExpenseLink({
   const dayMismatch =
     linked && dateOf(linked) !== fields.spentOn ? `day ${linked.day_index + 1}` : null;
 
-  /** 일정으로 연결하고 값을 채운다. force 면 사용자가 바꾼 칸도 덮는다(「값도 바꾸기」) */
-  function apply(item: ScheduleItem, force: boolean) {
+  /**
+   * 일정으로 연결한다. 채우는 방식은 셋 —
+   * fill: 처음 연결, 사용자가 직접 바꾸지 않은 날짜 · 카테고리만 채운다 /
+   * force: 「값도 바꾸기」, 날짜 · 카테고리 · 항목명을 모두 새 일정으로 /
+   * linkOnly: 「연결만 바꾸기」, 값은 그대로(확인 창이 그렇게 말했으니)
+   * 합계 포함은 어느 방식이든 대체 장소 여부를 따라간다
+   */
+  function apply(item: ScheduleItem, mode: "fill" | "force" | "linkOnly") {
     setItemId(item.id);
     setNoneChosen(false);
-    if (force || !dayTouched) fields.setSpentOn(dateOf(item));
-    const category = expenseCategoryOf(item);
-    if (category && (force || !categoryTouched)) fields.setCategory(category);
+    const force = mode === "force";
+    if (mode !== "linkOnly") {
+      if (force || !dayTouched) fields.setSpentOn(dateOf(item));
+      const category = expenseCategoryOf(item);
+      if (category && (force || !categoryTouched)) fields.setCategory(category);
+    }
     if (force) {
       fields.setName("");
       setDayTouched(false);
@@ -104,7 +113,7 @@ export function useExpenseLink({
   /** 목록에서 일정을 골랐다 — 이미 다른 일정에 연결돼 있으면 묻는다 */
   function pick(item: ScheduleItem) {
     if (itemId && itemId !== item.id) setPending(item);
-    else if (itemId !== item.id) apply(item, false);
+    else if (itemId !== item.id) apply(item, "fill");
   }
 
   /**
@@ -114,7 +123,7 @@ export function useExpenseLink({
   function confirmRelink(withValues: boolean) {
     if (pending) {
       if (!withValues && !fields.name.trim() && linked) fields.setName(itemName(linked));
-      apply(pending, withValues);
+      apply(pending, withValues ? "force" : "linkOnly");
     }
     setPending(null);
   }
