@@ -1,4 +1,3 @@
-import { roundTo } from "./currency";
 import type { ExchangeRates } from "./types";
 
 /**
@@ -10,9 +9,12 @@ export function rebaseFactor(rates: ExchangeRates, newHome: string): number | nu
   return r ? r.value / r.unit : null;
 }
 
-/** 환율 값 자릿수 — 1 이상은 소수 둘째, 그보다 작으면 여섯째까지 */
+/**
+ * 환율 값 — 유효 숫자 8자리. 소수 자릿수로 자르면 작은 환율(1동 = 0.0000392857달러)이 크게 깎이거나 0 이 된다
+ * (0 은 다음 저장 때 검증에 걸리고 금액도 0 이 된다)
+ */
 function rateValue(value: number): number {
-  return roundTo(value, value >= 1 ? 2 : 6);
+  return Number(value.toPrecision(8));
 }
 
 /**
