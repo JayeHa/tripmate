@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits, PersonRef } from "@/entities/expense";
 
-import { expenseRowView } from "./row";
+import { expenseRowView, whoOf } from "./row";
 
 const ctx = {
   home: "KRW",
@@ -80,5 +80,40 @@ describe("expenseRowView", () => {
     expect(expenseRowView({ ...base, paid: false, due_date: "2026-10-05" }, ctx).overdue).toBe(
       false,
     );
+  });
+});
+
+describe("whoOf", () => {
+  const me = { kind: "member" as const, id: "me" };
+  const dong = { kind: "member" as const, id: "d" };
+  const names: Record<string, string> = { me: "정원", d: "동규" };
+  const display = (p: { id: string }) => names[p.id];
+  const people = [
+    { person: me, name: "나" },
+    { person: dong, name: "동규" },
+  ];
+  const paidByMe = { splitEach: false, payer: { person: me, name: "나" } };
+
+  it("결제한 사람의 표시 이름 · 함께한 사람 수, 아바타는 결제한 사람", () => {
+    expect(whoOf({ ...paidByMe, togetherPeople: people }, display, 3)).toEqual({
+      person: me,
+      text: "정원 결제 · 2명",
+    });
+  });
+
+  it("한 명이면 「혼자」, 여행의 모두면 「N명 모두」", () => {
+    expect(whoOf({ ...paidByMe, togetherPeople: people.slice(0, 1) }, display, 3).text).toBe(
+      "정원 결제 · 혼자",
+    );
+    expect(whoOf({ ...paidByMe, togetherPeople: people }, display, 2).text).toBe(
+      "정원 결제 · 2명 모두",
+    );
+  });
+
+  it("각자 냄 — 아바타는 함께한 첫 사람", () => {
+    expect(whoOf({ splitEach: true, payer: null, togetherPeople: people }, display, 2)).toEqual({
+      person: me,
+      text: "각자 냄 · 2명",
+    });
   });
 });

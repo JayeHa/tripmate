@@ -18,3 +18,11 @@ export function periodLabel(
 export function periodParam(period: ExpensePeriod): string {
   return period === "prep" ? "prep" : String(period);
 }
+
+/** 통화별 합계를 보일 순서 — 기준 화폐를 맨 앞에, 나머지는 받은 순서대로 */
+export function sortedCurrencies(
+  byCurrency: Record<string, number>,
+  home: string,
+): [string, number][] {
+  return Object.entries(byCurrency).sort(([a], [b]) => Number(b === home) - Number(a === home));
+}
