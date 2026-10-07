@@ -1,9 +1,13 @@
 import Link from "next/link";
 
-import { ExpenseBadge, ExpenseCategoryTile, type PersonRef } from "@/entities/expense";
+import {
+  ExpenseBadge,
+  ExpenseCategoryTile,
+  type ExpenseRowView,
+  type PersonRef,
+  whoOf,
+} from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
-
-import { type ExpenseRowView, whoOf } from "../../lib/row";
 
 type ExpenseRowProps = {
   row: ExpenseRowView;

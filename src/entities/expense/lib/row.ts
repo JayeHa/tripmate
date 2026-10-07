@@ -1,15 +1,4 @@
 import {
-  EXPENSE_CATEGORY_LABEL,
-  type ExpenseCategory,
-  type ExpenseWithSplits,
-  payerOf,
-  PAYMENT_METHOD_LABEL,
-  type PaymentMethod,
-  type PersonRef,
-  splitPerson,
-  toHomeFor,
-} from "@/entities/expense";
-import {
   currencyName,
   decimalsOf,
   type ExchangeRates,
@@ -17,6 +6,16 @@ import {
   MissingRateError,
   roundTo,
 } from "@/shared/lib/money";
+
+import {
+  EXPENSE_CATEGORY_LABEL,
+  type ExpenseCategory,
+  type ExpenseWithSplits,
+  PAYMENT_METHOD_LABEL,
+  type PaymentMethod,
+} from "../model/types";
+import { toHomeFor } from "./amounts";
+import { payerOf, type PersonRef, splitPerson } from "./person";
 
 /** 목록 한 줄에 보이는 글 */
 export type ExpenseRowView = {
