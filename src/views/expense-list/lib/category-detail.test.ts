@@ -18,21 +18,39 @@ describe("categoryTitle", () => {
 });
 
 describe("dayBars", () => {
-  it("이틀 이상일 때만, 지출 없는 날은 빼고, 가장 큰 날이 60", () => {
+  it("이틀 이상이면 여행 날짜는 지출이 없어도 칸(높이 0), 가장 큰 날이 60", () => {
     expect(
       dayBars([
         { period: "prep", total: 100 },
         { period: 0, total: 0 },
         { period: 1, total: 400 },
+        { period: 2, total: 0 },
       ]),
     ).toEqual([
       { key: "prep", label: "준비", height: 15 },
+      { key: "0", label: "D1", height: 0 },
       { key: "1", label: "D2", height: 60 },
+      { key: "2", label: "D3", height: 0 },
     ]);
   });
 
-  it("하루뿐이면 막대 없음, 아주 작은 날도 4", () => {
-    expect(dayBars([{ period: "prep", total: 100 }])).toBeNull();
+  it("여행준비에 지출이 없으면 준비 칸은 없다", () => {
+    expect(
+      dayBars([
+        { period: "prep", total: 0 },
+        { period: 0, total: 100 },
+        { period: 1, total: 100 },
+      ])?.map((b) => b.label),
+    ).toEqual(["D1", "D2"]);
+  });
+
+  it("지출이 하루뿐이면 막대 없음, 아주 작은 날도 4", () => {
+    expect(
+      dayBars([
+        { period: "prep", total: 100 },
+        { period: 0, total: 0 },
+      ]),
+    ).toBeNull();
     expect(
       dayBars([
         { period: 0, total: 1 },

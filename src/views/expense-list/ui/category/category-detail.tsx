@@ -18,19 +18,19 @@ type CategoryDetailProps = {
 
 /**
  * 카테고리 상세의 내용 — 칩(전체 + 쓴 카테고리, 많이 쓴 순) · 「숙소 · 3건 · 전체의 32%」 · 금액 28/800 · 1인당(일행 여행) ·
- * 통화별 줄 · 날짜별 막대(이틀 이상일 때만) · 날짜별 목록. 합계에 넣는 지출만 센다. 모바일 화면과 PC 창이 같이 쓴다
+ * 통화별 줄 · 날짜별 막대(이틀 이상일 때만, 지출 없는 여행 날짜도 칸) · 날짜별 목록. 합계에 넣는 지출만 센다. 모바일 화면과 PC 창이 같이 쓴다
  */
 export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
   const { trip } = list;
   const home = trip.home_currency;
   const shares = categoryShares(list.expenses, home, trip.exchange_rates);
-  const sections = list
-    .sectionsOf((e) => e.counted && (pick === "all" || e.category === pick))
-    .filter((s) => s.rows.length > 0);
+  // 여행준비 · day 1 … N(지출 없는 날 포함) — 막대는 빈 날도 칸을 두고, 목록은 지출이 있는 날만
+  const allDays = list.sectionsOf((e) => e.counted && (pick === "all" || e.category === pick));
+  const sections = allDays.filter((s) => s.rows.length > 0);
   const expenses = sections.flatMap((s) => s.expenses);
   const totals = sumExpenses(expenses, home, trip.exchange_rates);
   const percent = list.total.home > 0 ? Math.round((totals.home / list.total.home) * 100) : 0;
-  const bars = dayBars(sections.map((s) => ({ period: s.period, total: s.total.home })));
+  const bars = dayBars(allDays.map((s) => ({ period: s.period, total: s.total.home })));
   return (
     <>
       <div className="flex gap-1.5 overflow-x-auto px-5 pt-1 pb-3">
@@ -69,6 +69,7 @@ export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
                 <span
                   className={cn(
                     "w-full max-w-7 rounded-t-tag",
+                    b.height === 0 && "invisible",
                     pick === "all" ? "bg-brand" : categoryBarClass(pick),
                   )}
                   style={{ height: b.height }}
