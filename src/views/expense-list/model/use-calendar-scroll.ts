@@ -14,7 +14,7 @@ type CalendarScrollOptions = {
 
 /**
  * 가계부 목록의 날짜 고르기(모바일 달력 띠 · PC 날짜 레일) ↔ 날짜 묶음. 고르면 그 묶음 머리가 기준선에 오도록 스크롤하고,
- * 스크롤하면 기준선을 지난 마지막 묶음을 고른다(맨 아래에 닿으면 화면에 머리가 보이는 마지막 묶음). 누른 뒤 스크롤하는 동안은
+ * 스크롤하면 기준선을 지난 마지막 묶음을 고른다(맨 아래에 닿으면 화면에 머리가 보이는 마지막 묶음, 아무것도 안 지났으면 맨 위 키). 누른 뒤 스크롤하는 동안은
  * 지나가는 날들로 선택이 튀지 않게 잠근다. 기준선 = 붙어 있는(sticky) 요소(`stickyRef` — 모바일은 달력 띠, PC 는 표 머리)의 아래 끝
  */
 export function useCalendarScroll(
@@ -60,6 +60,17 @@ export function useCalendarScroll(
     );
   }
 
+  /** 잠금의 상태 — 아직 가는 중 · 목표에 닿음 · 시간이 지나 풀림 */
+  function lockState(held: { key: string; until: number }, line: number) {
+    const top = sectionRefs.current.get(held.key)?.getBoundingClientRect().top;
+    const reached =
+      held.key === topKey
+        ? frame().scrollTop < 2
+        : top !== undefined && Math.abs(top - line + 1) <= 2;
+    if (reached) return "reached";
+    return Date.now() < held.until ? "moving" : "expired";
+  }
+
   useEffect(() => {
     const target: HTMLElement | Window = scroller?.current ?? window;
     /** 기준선을 지난 마지막 묶음을 고른다. 잠긴 동안은 목표에 닿았는지만 본다 */
@@ -67,23 +78,22 @@ export function useCalendarScroll(
       const line = lineY() + 1;
       const held = lock.current;
       if (held) {
-        const top = sectionRefs.current.get(held.key)?.getBoundingClientRect().top;
-        const reached =
-          held.key === topKey
-            ? frame().scrollTop < 2
-            : top !== undefined && Math.abs(top - line + 1) <= 2;
-        if (Date.now() < held.until && !reached) return;
+        const state = lockState(held, line);
+        if (state === "moving") return;
         lock.current = null;
+        // 목표에 닿아 풀렸으면 그 키 그대로 — 아래 계산은 기준선과 1px 차이로 이웃 묶음을 고를 수 있다
+        if (state === "reached") {
+          setSelected(held.key);
+          return;
+        }
       }
       const f = frame();
-      if (topKey !== undefined && f.scrollTop < 20) {
-        setSelected(topKey);
-        return;
-      }
-      // 맨 아래까지 내렸으면 기준선에 못 닿는 마지막 날들도 고를 수 있게 — 화면 안에 머리가 보이는 마지막 묶음
-      const limit = f.scrollTop >= f.max - 2 ? f.top + f.height : line;
+      // 맨 아래까지 내렸으면 기준선에 못 닿는 마지막 날들도 고를 수 있게 — 화면 안에 머리가 보이는 마지막 묶음.
+      // 처음부터 스크롤할 것이 없으면(짧은 목록) 맨 아래가 아니라 맨 위로 본다
+      const limit = f.scrollTop > 0 && f.scrollTop >= f.max - 2 ? f.top + f.height : line;
       const all = keysRef.current;
-      let current = all[0];
+      // 아직 아무 묶음 머리도 기준선을 지나지 않았으면 맨 위 키(PC 「전체」), 없으면 첫 묶음
+      let current = topKey ?? all[0];
       for (const key of all) {
         const top = sectionRefs.current.get(key)?.getBoundingClientRect().top;
         if (top !== undefined && top <= limit) current = key;
