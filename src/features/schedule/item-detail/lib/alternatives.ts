@@ -34,12 +34,36 @@ export function alternativeChoices(
 }
 
 /**
- * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정).
- * 메모는 따로 읽으므로(memos) 그 줄의 메모 수를 받는다
+ * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크 · 연결된 비용)을 가졌는지 — 지울 때 한 번 더 묻는다(바꾸기로 밀려난 원래 일정).
+ * 메모 · 비용은 따로 읽으므로 그 줄의 수를 받는다
  */
-export function hasOwnRecord(alt: ScheduleItem, memoCount: number): boolean {
+export function hasOwnRecord(alt: ScheduleItem, memoCount: number, expenseCount = 0): boolean {
   const links = Array.isArray(alt.links) ? alt.links.length : 0;
-  return !!alt.status || memoCount > 0 || links > 0;
+  return !!alt.status || memoCount > 0 || links > 0 || expenseCount > 0;
+}
+
+/** 일정 줄에 연결된 비용 — 전체 수와 그중 합계에서 빠진 수 */
+export type LinkedExpenses = { count: number; excluded: number };
+
+/** 그 일정 줄에 연결된 비용을 센다 */
+export function linkedExpensesOf(
+  expenses: { schedule_item_id: string | null; counted: boolean }[],
+  itemId: string,
+): LinkedExpenses {
+  const linked = expenses.filter((e) => e.schedule_item_id === itemId);
+  return { count: linked.length, excluded: linked.filter((e) => !e.counted).length };
+}
+
+/**
+ * 빼기 확인 창에 덧붙일 비용 안내. 비용은 지워지지 않고 연결만 끊기며, 합계 포함 여부는 그대로 남는다 —
+ * 그래서 합계에서 빠진 비용이 있을 때만 그 말을 한다(사용자가 합계 스위치를 다시 켰을 수 있다). 연결된 비용이 없으면 null
+ */
+export function linkedExpenseNote({ count, excluded }: LinkedExpenses): string | null {
+  if (count === 0) return null;
+  if (excluded === 0) return `연결된 비용 ${count}건은 가계부에 남아요.`;
+  if (excluded === count)
+    return `연결된 비용 ${count}건은 가계부에 남지만 합계에서 빠진 채로 남아요.`;
+  return `연결된 비용 ${count}건은 가계부에 남아요. 그중 ${excluded}건은 합계에서 빠진 채로 남아요.`;
 }
 
 /** 「「A」 대신 「B」으로」 — 바꾸기 확인창 · 토스트가 같이 쓰는 앞부분 */

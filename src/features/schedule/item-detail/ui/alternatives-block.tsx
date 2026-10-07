@@ -3,10 +3,11 @@
 import { ArrowLeftRight, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
+import { useExpenses } from "@/entities/expense";
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
 import { CircleAddButton } from "@/shared/ui/add-controls";
 
-import { hasOwnRecord } from "../lib/alternatives";
+import { hasOwnRecord, type LinkedExpenses, linkedExpensesOf } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
 import { SwapAlternativeDialog } from "./swap-alternative-dialog";
@@ -38,6 +39,7 @@ export function AlternativesBlock({
   const { data: memos = [] } = useMemos(tripId);
   /** 그 대체 장소 줄에 붙은 메모 수 — 빼기 전에 물을지 정한다 */
   const memoCount = (id: string) => memos.filter((m) => m.schedule_item_id === id).length;
+  const { data: expenses = [] } = useExpenses(tripId);
   if (alternatives.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
@@ -51,6 +53,7 @@ export function AlternativesBlock({
           main={main}
           alt={alt}
           memoCount={memoCount(alt.id)}
+          linkedExpenses={linkedExpensesOf(expenses, alt.id)}
           actions={actions}
           onOpen={() => onOpen(alt)}
         />
@@ -63,14 +66,23 @@ type AlternativeCardProps = {
   main: ScheduleItem;
   alt: ScheduleItem;
   memoCount: number;
+  /** 이 대체 장소에 연결된 비용 — 빼기 전에 물을지 · 무엇을 알릴지 정한다 */
+  linkedExpenses: LinkedExpenses;
   actions: AlternativeActions;
   onOpen: () => void;
 };
 
 /**
- * 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 「바꾸기」 는 한 번 묻고, 빼기는 자기 기록(상태 · 메모 · 링크)이 있으면 묻는다
+ * 대체 장소 카드 하나. 이름 · 설명을 누르면 상세로. 「바꾸기」 는 한 번 묻고, 빼기는 자기 기록(상태 · 메모 · 링크 · 연결된 비용)이 있으면 묻는다
  */
-function AlternativeCard({ main, alt, memoCount, actions, onOpen }: AlternativeCardProps) {
+function AlternativeCard({
+  main,
+  alt,
+  memoCount,
+  linkedExpenses,
+  actions,
+  onOpen,
+}: AlternativeCardProps) {
   const [confirming, setConfirming] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const sub = alt.place?.description;
@@ -101,7 +113,11 @@ function AlternativeCard({ main, alt, memoCount, actions, onOpen }: AlternativeC
         type="button"
         aria-label={`${itemName(alt)} 대체 장소에서 빼기`}
         disabled={actions.pending}
-        onClick={() => (hasOwnRecord(alt, memoCount) ? setConfirming(true) : actions.remove(alt))}
+        onClick={() =>
+          hasOwnRecord(alt, memoCount, linkedExpenses.count)
+            ? setConfirming(true)
+            : actions.remove(alt)
+        }
         className="flex size-8 shrink-0 items-center justify-center text-ink-400 disabled:opacity-40"
       >
         <X className="size-4" />
@@ -117,6 +133,7 @@ function AlternativeCard({ main, alt, memoCount, actions, onOpen }: AlternativeC
         open={confirming}
         onOpenChange={setConfirming}
         onConfirm={() => actions.remove(alt)}
+        expenses={linkedExpenses}
       />
     </div>
   );

@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { Place, ScheduleItem } from "@/entities/schedule-item";
 
-import { alternativeChoices, hasOwnRecord, swapDoneMessage, swapQuestion } from "./alternatives";
+import {
+  alternativeChoices,
+  hasOwnRecord,
+  linkedExpenseNote,
+  linkedExpensesOf,
+  swapDoneMessage,
+  swapQuestion,
+} from "./alternatives";
 
 /** 기본값이 채워진 장소 */
 function place(id: string, patch: Partial<Place> = {}): Place {
@@ -79,11 +86,36 @@ describe("alternativeChoices", () => {
 });
 
 describe("hasOwnRecord", () => {
-  it("예약 상태 · 메모 · 일정 링크 중 하나라도 있으면 true", () => {
+  it("예약 상태 · 메모 · 일정 링크 · 연결된 비용 중 하나라도 있으면 true", () => {
     expect(hasOwnRecord(item("a"), 0)).toBe(false);
     expect(hasOwnRecord(item("a", { status: "ok" }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 1)).toBe(true);
     expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
+    expect(hasOwnRecord(item("a"), 0, 2)).toBe(true);
+  });
+});
+
+describe("linkedExpensesOf · linkedExpenseNote", () => {
+  it("그 줄에 연결된 비용과 그중 합계에서 빠진 것을 센다", () => {
+    const expenses = [
+      { schedule_item_id: "a", counted: false },
+      { schedule_item_id: "b", counted: false },
+      { schedule_item_id: "a", counted: true },
+      { schedule_item_id: null, counted: false },
+    ];
+    expect(linkedExpensesOf(expenses, "a")).toEqual({ count: 2, excluded: 1 });
+    expect(linkedExpensesOf(expenses, "c")).toEqual({ count: 0, excluded: 0 });
+  });
+
+  it("합계에서 빠진 비용이 있을 때만 그 말을 한다 — 사용자가 합계 스위치를 다시 켰을 수 있다", () => {
+    expect(linkedExpenseNote({ count: 0, excluded: 0 })).toBeNull();
+    expect(linkedExpenseNote({ count: 2, excluded: 2 })).toBe(
+      "연결된 비용 2건은 가계부에 남지만 합계에서 빠진 채로 남아요.",
+    );
+    expect(linkedExpenseNote({ count: 1, excluded: 0 })).toBe("연결된 비용 1건은 가계부에 남아요.");
+    expect(linkedExpenseNote({ count: 3, excluded: 1 })).toBe(
+      "연결된 비용 3건은 가계부에 남아요. 그중 1건은 합계에서 빠진 채로 남아요.",
+    );
   });
 });
 
