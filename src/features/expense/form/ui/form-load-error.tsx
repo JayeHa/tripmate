@@ -6,8 +6,8 @@ import { EmptyState } from "@/shared/ui/empty-state";
 
 type FormLoadErrorProps = {
   title: string;
-  /** 머리의 뒤로 가기 */
-  back: string;
+  /** 머리의 뒤로 가기. 없으면 머리를 그리지 않는다(모달 — 창의 ✕ 가 대신한다) */
+  back?: string;
   onRetry: () => void;
 };
 
@@ -15,7 +15,7 @@ type FormLoadErrorProps = {
 export function FormLoadError({ title, back, onRetry }: FormLoadErrorProps) {
   return (
     <>
-      <AppHeader title={title} back={back} />
+      {back && <AppHeader title={title} back={back} />}
       <EmptyState
         icon={CloudOff}
         title="비용 화면을 불러오지 못했어요"
