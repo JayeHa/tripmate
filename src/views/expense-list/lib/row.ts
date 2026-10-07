@@ -105,3 +105,27 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     linkName: e.schedule_item_id ? ctx.linkNameOf(e.schedule_item_id) : null,
   };
 }
+
+/** 함께한 사람 수 글 — 한 명이면 「혼자」, 여행의 모두면 「3명 모두」 */
+function countText(count: number, everyone: number): string {
+  if (count === 1) return "혼자";
+  return count === everyone ? `${count}명 모두` : `${count}명`;
+}
+
+/**
+ * 행 아래 「누가 · 몇 명」 — 「정원 결제 · 2명」 · 「정원 결제 · 혼자」 · 「정원 결제 · 3명 모두」, 각자 냄이면 「각자 냄 · 3명」.
+ * 아바타는 결제한 사람(각자 냄이면 함께한 첫 사람). 이름은 목록의 「나」 가 아니라 표시 이름 — 시안이 내 이름으로 보인다
+ */
+export function whoOf(
+  row: Pick<ExpenseRowView, "splitEach" | "payer" | "togetherPeople">,
+  displayName: (person: PersonRef) => string,
+  everyone: number,
+): { person: PersonRef | null; text: string } {
+  const count = row.togetherPeople.length;
+  if (row.splitEach || !row.payer)
+    return { person: row.togetherPeople[0]?.person ?? null, text: `각자 냄 · ${count}명` };
+  return {
+    person: row.payer.person,
+    text: `${displayName(row.payer.person)} 결제 · ${countText(count, everyone)}`,
+  };
+}

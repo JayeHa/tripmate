@@ -1,10 +1,9 @@
 import Link from "next/link";
 
-import { ExpenseBadge, ExpenseCategoryTile } from "@/entities/expense";
+import { ExpenseBadge, ExpenseCategoryTile, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
-import type { ExpenseRowView } from "../../lib/row";
-import { RowNotes } from "../row-notes";
+import { type ExpenseRowView, whoOf } from "../../lib/row";
 
 type ExpenseRowProps = {
   row: ExpenseRowView;
@@ -12,41 +11,79 @@ type ExpenseRowProps = {
   onMarkPaid: () => void;
   /** 결제 완료로 바꾸는 중 */
   paying: boolean;
+  /** 표시 이름 — 「정원 결제」 */
+  displayNameOf: (person: PersonRef) => string;
+  /** 여행의 사람 수 — 「N명 모두」 */
+  everyone: number;
 };
 
 /**
- * 모바일 가계부 한 줄 — 카테고리 아이콘 20 · 이름 17/700(+ 결제 예정 · 합계 제외 배지) · 아래 연결 일정이나 예정일 지남,
- * 오른쪽 금액 17/800 · 외화면 근사치와 환율 · 「결제 : 나 | 함께 : 나, 김동규」. 합계에서 뺀 지출은 흐리다
+ * 모바일 가계부 한 줄 — 카테고리 타일 38 · 이름 14/500(앞 「결제 예정」 · 뒤 「합계 제외」 배지) ·
+ * 아래 아바타 16 + 「정원 결제 · 2명」(예정일이 지났으면 「예정일 지남 · 결제 완료로」), 오른쪽 금액 16/800 · 외화면 ≈ 원화.
+ * 합계에서 뺀 비용은 금액을 흐리게 긋는다. 줄 전체가 그 비용으로 가는 링크라 「결제 완료로」 는 그 위에 올린다
  */
-export function ExpenseRow({ row, href, onMarkPaid, paying }: ExpenseRowProps) {
+export function ExpenseRow({
+  row,
+  href,
+  onMarkPaid,
+  paying,
+  displayNameOf,
+  everyone,
+}: ExpenseRowProps) {
+  const who = whoOf(row, displayNameOf, everyone);
+  const initial = who.person ? displayNameOf(who.person).slice(0, 1) : "";
   return (
-    <div
-      className={cn(
-        "relative flex gap-2.5 border-b border-surface-muted py-4",
-        row.excluded && "opacity-50",
-      )}
-    >
+    <div className="relative flex items-center gap-3 px-5 py-3">
       <ExpenseCategoryTile category={row.category} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.25">
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
           <Link
             href={href}
-            className="min-w-0 truncate text-[17px] font-bold text-ink-900 after:absolute after:inset-0"
+            className="min-w-0 truncate text-sm font-medium text-ink-600 after:absolute after:inset-0"
           >
             {row.name}
           </Link>
           {row.excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
         </div>
-        <RowNotes row={row} onMarkPaid={onMarkPaid} paying={paying} />
+        {row.overdue ? (
+          <span className="flex items-center gap-1.5 text-xs text-status-wait-text">
+            예정일 지남
+            <button
+              type="button"
+              onClick={onMarkPaid}
+              disabled={paying}
+              className="relative z-10 flex h-5 items-center rounded-memo border border-status-wait-line bg-white px-2 text-[11px] font-semibold disabled:opacity-50"
+            >
+              결제 완료로
+            </button>
+          </span>
+        ) : (
+          <span className="flex min-w-0 items-center gap-1.25 text-xs text-ink-400">
+            {who.person && (
+              <span
+                className={cn(
+                  "flex size-4 shrink-0 items-center justify-center rounded-full text-[8px] font-extrabold text-white",
+                  who.person.kind === "guest" ? "bg-guest" : "bg-primary",
+                )}
+              >
+                {initial}
+              </span>
+            )}
+            <span className="truncate">{who.text}</span>
+          </span>
+        )}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="text-[17px] font-extrabold text-ink-900">{row.amountText}</span>
-        {row.approxText && <span className="text-xs text-ink-400">{row.approxText}</span>}
-        {row.rateText && <span className="text-[11px] text-ink-350">{row.rateText}</span>}
-        <span className="text-xs text-ink-350">
-          {row.splitEach ? "각자 냄" : `결제 : ${row.payer?.name ?? "-"}`} | 함께 : {row.together}
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
+        <span
+          className={cn(
+            "text-base font-extrabold",
+            row.excluded ? "text-ink-350 line-through" : "text-ink-900",
+          )}
+        >
+          {row.amountText}
         </span>
+        {row.approxText && <span className="text-[11px] text-ink-400">{row.approxText}</span>}
       </div>
     </div>
   );

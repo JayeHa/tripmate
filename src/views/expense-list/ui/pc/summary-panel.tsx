@@ -1,6 +1,8 @@
 import type { ExpenseTotals } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 
+import { sortedCurrencies } from "../../lib/period";
+
 type SummaryPanelProps = { total: ExpenseTotals; home: string };
 
 /**
@@ -8,9 +10,7 @@ type SummaryPanelProps = { total: ExpenseTotals; home: string };
  * 카테고리별 통계 · 정산은 지출내역 · 정산 단계(#18 ⑨)에서 이 칸 아래에 붙인다
  */
 export function SummaryPanel({ total, home }: SummaryPanelProps) {
-  const currencies = Object.entries(total.byCurrency).sort(([a], [b]) =>
-    a === home ? -1 : Number(b === home),
-  );
+  const currencies = sortedCurrencies(total.byCurrency, home);
   return (
     <aside className="flex w-95 shrink-0 flex-col gap-6 overflow-y-auto px-7 py-6">
       <div className="flex flex-col gap-1.5">
