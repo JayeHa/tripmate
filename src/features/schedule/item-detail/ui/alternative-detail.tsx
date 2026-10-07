@@ -14,7 +14,7 @@ import {
 } from "@/entities/schedule-item";
 import { dayOfWeek } from "@/shared/lib/days";
 
-import { linkedExpenseCount } from "../lib/alternatives";
+import { linkedExpensesOf } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { usePlanEdit } from "../model/use-plan-edit";
 import { AlternativeHeader } from "./alternative-header";
@@ -85,7 +85,7 @@ export function AlternativeDetail({
       main={row.item}
       alt={alt}
       memoCount={altRow.memos.length}
-      expenseCount={linkedExpenseCount(expenses, alt.id)}
+      linkedExpenses={linkedExpensesOf(expenses, alt.id)}
       actions={actions}
       locked={locked}
       onBack={onBack}

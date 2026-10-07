@@ -42,12 +42,28 @@ export function hasOwnRecord(alt: ScheduleItem, memoCount: number, expenseCount 
   return !!alt.status || memoCount > 0 || links > 0 || expenseCount > 0;
 }
 
-/** 그 일정 줄에 연결된 비용 수 */
-export function linkedExpenseCount(
-  expenses: { schedule_item_id: string | null }[],
+/** 일정 줄에 연결된 비용 — 전체 수와 그중 합계에서 빠진 수 */
+export type LinkedExpenses = { count: number; excluded: number };
+
+/** 그 일정 줄에 연결된 비용을 센다 */
+export function linkedExpensesOf(
+  expenses: { schedule_item_id: string | null; counted: boolean }[],
   itemId: string,
-): number {
-  return expenses.filter((e) => e.schedule_item_id === itemId).length;
+): LinkedExpenses {
+  const linked = expenses.filter((e) => e.schedule_item_id === itemId);
+  return { count: linked.length, excluded: linked.filter((e) => !e.counted).length };
+}
+
+/**
+ * 빼기 확인 창에 덧붙일 비용 안내. 비용은 지워지지 않고 연결만 끊기며, 합계 포함 여부는 그대로 남는다 —
+ * 그래서 합계에서 빠진 비용이 있을 때만 그 말을 한다(사용자가 합계 스위치를 다시 켰을 수 있다). 연결된 비용이 없으면 null
+ */
+export function linkedExpenseNote({ count, excluded }: LinkedExpenses): string | null {
+  if (count === 0) return null;
+  if (excluded === 0) return `연결된 비용 ${count}건은 가계부에 남아요.`;
+  if (excluded === count)
+    return `연결된 비용 ${count}건은 가계부에 남지만 합계에서 빠진 채로 남아요.`;
+  return `연결된 비용 ${count}건은 가계부에 남아요. 그중 ${excluded}건은 합계에서 빠진 채로 남아요.`;
 }
 
 /** 「「A」 대신 「B」으로」 — 바꾸기 확인창 · 토스트가 같이 쓰는 앞부분 */

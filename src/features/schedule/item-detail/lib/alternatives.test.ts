@@ -5,7 +5,8 @@ import type { Place, ScheduleItem } from "@/entities/schedule-item";
 import {
   alternativeChoices,
   hasOwnRecord,
-  linkedExpenseCount,
+  linkedExpenseNote,
+  linkedExpensesOf,
   swapDoneMessage,
   swapQuestion,
 } from "./alternatives";
@@ -94,16 +95,27 @@ describe("hasOwnRecord", () => {
   });
 });
 
-describe("linkedExpenseCount", () => {
-  it("그 줄에 연결된 비용만 센다", () => {
+describe("linkedExpensesOf · linkedExpenseNote", () => {
+  it("그 줄에 연결된 비용과 그중 합계에서 빠진 것을 센다", () => {
     const expenses = [
-      { schedule_item_id: "a" },
-      { schedule_item_id: "b" },
-      { schedule_item_id: "a" },
-      { schedule_item_id: null },
+      { schedule_item_id: "a", counted: false },
+      { schedule_item_id: "b", counted: false },
+      { schedule_item_id: "a", counted: true },
+      { schedule_item_id: null, counted: false },
     ];
-    expect(linkedExpenseCount(expenses, "a")).toBe(2);
-    expect(linkedExpenseCount(expenses, "c")).toBe(0);
+    expect(linkedExpensesOf(expenses, "a")).toEqual({ count: 2, excluded: 1 });
+    expect(linkedExpensesOf(expenses, "c")).toEqual({ count: 0, excluded: 0 });
+  });
+
+  it("합계에서 빠진 비용이 있을 때만 그 말을 한다 — 사용자가 합계 스위치를 다시 켰을 수 있다", () => {
+    expect(linkedExpenseNote({ count: 0, excluded: 0 })).toBeNull();
+    expect(linkedExpenseNote({ count: 2, excluded: 2 })).toBe(
+      "연결된 비용 2건은 가계부에 남지만 합계에서 빠진 채로 남아요.",
+    );
+    expect(linkedExpenseNote({ count: 1, excluded: 0 })).toBe("연결된 비용 1건은 가계부에 남아요.");
+    expect(linkedExpenseNote({ count: 3, excluded: 1 })).toBe(
+      "연결된 비용 3건은 가계부에 남아요. 그중 1건은 합계에서 빠진 채로 남아요.",
+    );
   });
 });
 

@@ -7,7 +7,7 @@ import { useExpenses } from "@/entities/expense";
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
 import { CircleAddButton } from "@/shared/ui/add-controls";
 
-import { hasOwnRecord, linkedExpenseCount } from "../lib/alternatives";
+import { hasOwnRecord, type LinkedExpenses, linkedExpensesOf } from "../lib/alternatives";
 import type { AlternativeActions } from "../model/use-alternative-actions";
 import { RemoveAlternativeDialog } from "./remove-alternative-dialog";
 import { SwapAlternativeDialog } from "./swap-alternative-dialog";
@@ -53,7 +53,7 @@ export function AlternativesBlock({
           main={main}
           alt={alt}
           memoCount={memoCount(alt.id)}
-          expenseCount={linkedExpenseCount(expenses, alt.id)}
+          linkedExpenses={linkedExpensesOf(expenses, alt.id)}
           actions={actions}
           onOpen={() => onOpen(alt)}
         />
@@ -66,8 +66,8 @@ type AlternativeCardProps = {
   main: ScheduleItem;
   alt: ScheduleItem;
   memoCount: number;
-  /** 이 대체 장소에 연결된 비용 수 — 빼기 전에 물을지 · 무엇을 알릴지 정한다 */
-  expenseCount: number;
+  /** 이 대체 장소에 연결된 비용 — 빼기 전에 물을지 · 무엇을 알릴지 정한다 */
+  linkedExpenses: LinkedExpenses;
   actions: AlternativeActions;
   onOpen: () => void;
 };
@@ -79,7 +79,7 @@ function AlternativeCard({
   main,
   alt,
   memoCount,
-  expenseCount,
+  linkedExpenses,
   actions,
   onOpen,
 }: AlternativeCardProps) {
@@ -114,7 +114,9 @@ function AlternativeCard({
         aria-label={`${itemName(alt)} 대체 장소에서 빼기`}
         disabled={actions.pending}
         onClick={() =>
-          hasOwnRecord(alt, memoCount, expenseCount) ? setConfirming(true) : actions.remove(alt)
+          hasOwnRecord(alt, memoCount, linkedExpenses.count)
+            ? setConfirming(true)
+            : actions.remove(alt)
         }
         className="flex size-8 shrink-0 items-center justify-center text-ink-400 disabled:opacity-40"
       >
@@ -131,7 +133,7 @@ function AlternativeCard({
         open={confirming}
         onOpenChange={setConfirming}
         onConfirm={() => actions.remove(alt)}
-        expenseCount={expenseCount}
+        expenses={linkedExpenses}
       />
     </div>
   );
