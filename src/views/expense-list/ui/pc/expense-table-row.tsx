@@ -1,5 +1,4 @@
 import { MapPin, StickyNote } from "lucide-react";
-import Link from "next/link";
 
 import { ExpenseBadge, ExpenseCategoryTile, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
@@ -10,7 +9,8 @@ import { TABLE_COLUMNS } from "./columns";
 
 type ExpenseTableRowProps = {
   row: ExpenseRowView;
-  href: string;
+  /** 줄을 눌렀다 — 수정 창을 연다 */
+  onOpen: () => void;
   onMarkPaid: () => void;
   /** 결제 완료로 바꾸는 중 */
   paying: boolean;
@@ -31,7 +31,7 @@ function avatarTone(person: PersonRef | null) {
  */
 export function ExpenseTableRow({
   row,
-  href,
+  onOpen,
   onMarkPaid,
   paying,
   mode,
@@ -56,12 +56,13 @@ export function ExpenseTableRow({
       <div className="flex min-w-0 flex-col gap-0.75">
         <div className="flex min-w-0 items-center gap-1.5">
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
-          <Link
-            href={href}
-            className="min-w-0 truncate text-sm font-semibold text-ink-800 after:absolute after:inset-0"
+          <button
+            type="button"
+            onClick={onOpen}
+            className="min-w-0 truncate text-left text-sm font-semibold text-ink-800 after:absolute after:inset-0"
           >
             {row.name}
-          </Link>
+          </button>
           {row.hasMemo && (
             <StickyNote className="size-3.25 shrink-0 text-ink-350" aria-label="메모 있음" />
           )}

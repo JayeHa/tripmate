@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   EXPENSE_CATEGORIES,
@@ -22,6 +21,7 @@ import type { ExpenseList } from "../../model/use-expense-list";
 import { usePcList } from "../../model/use-pc-list";
 import { SummaryCard } from "../mobile/summary-card";
 import { DateRail } from "./date-rail";
+import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
 
@@ -35,13 +35,15 @@ const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_ME
 
 /**
  * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
- * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다
+ * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다.
+ * 「+ 비용 추가」 · 줄 누르기는 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
 export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
   const pc = usePcList();
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const [modal, setModal] = useState<ExpenseModalTarget | null>(null);
   const active = filtersActive(pc.filters);
   const sections = active
     ? list.sectionsOf((e) => matchesFilters(e, pc.filters))
@@ -67,12 +69,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
             <h1 className="text-[22px] font-extrabold text-ink-900">가계부</h1>
             <span className="text-sm text-ink-400">{list.count}건</span>
             <span className="flex-1" />
-            <Button
-              variant="brand"
-              size="pill"
-              nativeButton={false}
-              render={<Link href={`${base}/new`} />}
-            >
+            <Button variant="brand" size="pill" onClick={() => setModal({ kind: "new" })}>
               + 비용 추가
             </Button>
           </div>
@@ -90,7 +87,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
           <ExpenseTable
             sections={sections}
             list={list}
-            base={base}
+            onOpen={(expenseId) => setModal({ kind: "edit", expenseId })}
             mode={pc.mode}
             onModeChange={pc.setMode}
             rateLine={baseRateLine(
@@ -117,6 +114,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
           </div>
         </aside>
       </div>
+      <ExpenseModal tripId={tripId} target={modal} onClose={() => setModal(null)} />
     </div>
   );
 }

@@ -13,7 +13,8 @@ import { ExpenseTableRow } from "./expense-table-row";
 type ExpenseTableProps = {
   sections: ExpenseListSection[];
   list: ExpenseList;
-  base: string;
+  /** 줄을 눌렀다 — 그 비용 수정 창을 연다 */
+  onOpen: (expenseId: string) => void;
   mode: AmountMode;
   onModeChange: (mode: AmountMode) => void;
   /** 「엔 920 기준」. 외화가 없으면 null */
@@ -39,7 +40,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
   const {
     sections,
     list,
-    base,
+    onOpen,
     mode,
     onModeChange,
     rateLine,
@@ -93,7 +94,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
                     <ExpenseTableRow
                       key={row.id}
                       row={row}
-                      href={`${base}/${row.id}`}
+                      onOpen={() => onOpen(row.id)}
                       onMarkPaid={() => list.markPaid(row.id)}
                       paying={list.paying === row.id}
                       mode={mode}
