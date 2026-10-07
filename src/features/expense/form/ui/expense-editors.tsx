@@ -34,8 +34,9 @@ type EditorCommon = {
   onClose: () => void;
   /** 저장 · 삭제가 끝났다 */
   onDone: () => void;
-  /** 저장 · 삭제 요청이 서버에 가 있는지 — 창은 그동안 닫히지 않게 막는다(닫으면 실패를 보일 곳이 없다) */
-  onBusyChange?: (busy: boolean) => void;
+  /** 저장 · 삭제 요청이 서버에 가 있는지(잠김) — 창은 그동안 닫히지 않게 막는다(닫으면 실패를 보일 곳이 없다).
+   * 일정 상세 · 장소 입력 창의 onLockChange 와 같은 약속이다 */
+  onLockChange?: (locked: boolean) => void;
   /** 페이지일 때 머리의 뒤로 가기(읽기 실패 · 못 찾음 안내). 창이면 비우고, 그 화면들에 ✕(onClose) 머리를 둔다 */
   back?: string;
 };
@@ -56,11 +57,11 @@ export function CreateExpense({
   onDone,
   back,
   period = null,
-  onBusyChange,
+  onLockChange,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
-  useBusy(create.isPending, onBusyChange);
+  useReportLock(create.isPending, onLockChange);
   if (loaded.failed)
     return <FormLoadError title="비용 추가" back={back} onClose={onClose} onRetry={loaded.retry} />;
   if (!loaded.data) return null;
@@ -94,12 +95,12 @@ export function EditExpense({
   onClose,
   onDone,
   back,
-  onBusyChange,
+  onLockChange,
 }: EditExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const update = useUpdateExpense(tripId);
   const remove = useDeleteExpense(tripId);
-  useBusy(update.isPending || remove.isPending, onBusyChange);
+  useReportLock(update.isPending || remove.isPending, onLockChange);
   const expenses = loaded.data?.expenses;
   const expense = expenses?.find((e) => e.id === expenseId);
   const initial: ExpenseFormValues | undefined = expense && formValuesOf(expense);
@@ -135,12 +136,12 @@ export function EditExpense({
   );
 }
 
-/** 요청 중인지를 부른 쪽에 알린다 — 바뀔 때마다, 사라질 때는 false(저장이 끝나 창이 닫히며 언마운트될 때 true 로 남지 않게) */
-function useBusy(busy: boolean, onBusyChange?: (busy: boolean) => void) {
+/** 잠김(요청 중)을 부른 쪽에 알린다 — 바뀔 때마다, 사라질 때는 false(저장이 끝나 창이 닫히며 언마운트될 때 true 로 남지 않게) */
+function useReportLock(locked: boolean, onLockChange?: (locked: boolean) => void) {
   useEffect(() => {
-    onBusyChange?.(busy);
-    return () => onBusyChange?.(false);
-  }, [busy, onBusyChange]);
+    onLockChange?.(locked);
+    return () => onLockChange?.(false);
+  }, [locked, onLockChange]);
 }
 
 type DeleteButtonProps = { onDelete: () => void };
