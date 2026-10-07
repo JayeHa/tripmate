@@ -10,6 +10,7 @@ import {
 } from "@/entities/expense";
 import { itemName } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
+import { ieyo } from "@/shared/lib/josa";
 import { cn } from "@/shared/lib/utils";
 import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
@@ -87,7 +88,8 @@ export function DayField({ form, trip }: DayFieldProps) {
       </button>
       {form.link.dayMismatch && (
         <span className="text-xs font-semibold text-status-wait-text">
-          연결된 일정은 {form.link.dayMismatch}이에요
+          연결된 일정은 {form.link.dayMismatch}
+          {ieyo(form.link.dayMismatch)}
         </span>
       )}
       <SheetDialog open={open} onClose={() => setOpen(false)} title="날짜 선택">

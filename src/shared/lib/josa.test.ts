@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { eulReul, euro } from "./josa";
+import { eulReul, euro, ieyo } from "./josa";
 
 describe("euro", () => {
   it("받침 없음 · ㄹ 받침은 「로」, 그 밖 받침은 「으로」", () => {
@@ -27,5 +27,20 @@ describe("eulReul", () => {
 
   it("한글로 끝나지 않으면 「을(를)」", () => {
     expect(eulReul("T3")).toBe("을(를)");
+  });
+});
+
+describe("ieyo", () => {
+  it("숫자는 읽는 소리로 — 일 · 삼은 「이에요」, 이 · 사는 「예요」", () => {
+    expect(ieyo("day 1")).toBe("이에요");
+    expect(ieyo("day 2")).toBe("예요");
+    expect(ieyo("day 3")).toBe("이에요");
+    expect(ieyo("day 4")).toBe("예요");
+    expect(ieyo("day 10")).toBe("이에요");
+  });
+
+  it("한글은 받침으로", () => {
+    expect(ieyo("여행준비")).toBe("예요");
+    expect(ieyo("숙소 정원")).toBe("이에요");
   });
 });
