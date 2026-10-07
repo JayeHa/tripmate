@@ -166,6 +166,9 @@
   /* 초대 안 한 정산 인원(guest) 아바타 — 멤버(블루)와 구분한다. soft 는 고르지 않은 결제자 칩의 아바타 */
   --color-guest: #f59e9e;
   --color-guest-soft: #f5b5b5;
+  /* 정산 인원 목록의 「초대 안 함」 배지. 중요 메모(important)와 값이 같지만 뜻이 달라 따로 둔다 */
+  --color-guest-tag: #b45309;
+  --color-guest-tag-bg: #fff6db;
 
   /* 메모 태그 */
   --color-tag-tip: #1f6feb;
