@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { PersonKey } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import {
@@ -30,14 +32,17 @@ export function CancelTransferDialog({
   onClose,
   onConfirm,
 }: CancelTransferDialogProps) {
+  // 닫히는 동안(페이드 아웃)에도 설명을 그리도록 마지막으로 물은 줄을 붙잡아 둔다 — 렌더 중에 조정한다
+  const [shown, setShown] = useState(row);
+  if (row !== null && row !== shown) setShown(row);
   return (
     <AlertDialog open={row !== null} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>송금 기록을 취소할까요?</AlertDialogTitle>
           <AlertDialogDescription>
-            {row &&
-              `${nameOf(row.from)} → ${nameOf(row.to)} ${formatMoney(row.amount, home)}을 보내지 않은 것으로 되돌려요. 남은 송금에 다시 보여요.`}
+            {shown &&
+              `${nameOf(shown.from)} → ${nameOf(shown.to)} ${formatMoney(shown.amount, home)}을 보내지 않은 것으로 되돌려요. 남은 송금에 다시 보여요.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
