@@ -22,6 +22,7 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { AppHeader } from "@/shared/ui/app-header";
 
+import { spentOnFromParam } from "../lib/spent-on-param";
 import { useExpenseFormData } from "../model/use-expense-form-data";
 import { ExpenseForm, type ExpenseFormLayout } from "./expense-form";
 import { FormLoadError } from "./form-load-error";
@@ -38,12 +39,13 @@ type EditorCommon = {
 };
 
 type CreateExpenseProps = EditorCommon & {
-  /** 새 비용의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
-  defaultSpentOn?: string;
+  /** 주소의 period(prep · 0-base 날) — 처음 날짜. 없거나 모르는 값이면 여행 첫날 */
+  period?: string | null;
 };
 
 /**
- * 비용 추가 — 정산 인원 · 일정 · 대체 장소까지 읽은 뒤 폼을 연다(useExpenseFormData). 모바일 · 주소로 연 페이지와 PC 목록의 창이 같이 쓴다
+ * 비용 추가 — 정산 인원 · 일정 · 대체 장소까지 읽은 뒤 폼을 연다(useExpenseFormData). 모바일 · 주소로 연 페이지와 PC 목록의 창이 같이 쓴다.
+ * 처음 날짜는 여행 기간으로 계산해야 해 여기서 정한다 — 여행을 못 읽으면 다른 데이터와 함께 실패 안내로 간다
  */
 export function CreateExpense({
   tripId,
@@ -51,20 +53,20 @@ export function CreateExpense({
   onClose,
   onDone,
   back,
-  defaultSpentOn,
+  period = null,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
   if (loaded.failed) return <FormLoadError title="비용 추가" back={back} onRetry={loaded.retry} />;
   if (!loaded.data) return null;
-  const { currentUserId } = loaded.data;
+  const { trip, currentUserId } = loaded.data;
   return (
     <ExpenseForm
       title="비용 추가"
       layout={layout}
       onClose={onClose}
       {...loaded.data}
-      defaultSpentOn={defaultSpentOn}
+      defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values) =>
