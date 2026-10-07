@@ -107,9 +107,15 @@ export function useExpenseLink({
     else if (itemId !== item.id) apply(item, false);
   }
 
-  /** 다른 일정으로 바꾸기 확인 — 값도 바꿀지 */
+  /**
+   * 다른 일정으로 바꾸기 확인 — 값도 바꿀지. 「연결만 바꾸기」 인데 항목명이 비어 있으면 옛 일정 이름을 칸에 채운다 —
+   * 빈 항목명은 연결 일정 이름으로 저장돼, 그대로 두면 「값은 안 바꾼다」 고 했는데 이름이 새 일정으로 바뀐다
+   */
   function confirmRelink(withValues: boolean) {
-    if (pending) apply(pending, withValues);
+    if (pending) {
+      if (!withValues && !fields.name.trim() && linked) fields.setName(itemName(linked));
+      apply(pending, withValues);
+    }
     setPending(null);
   }
 
