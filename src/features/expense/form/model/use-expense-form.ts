@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   type ExpenseCategory,
@@ -8,14 +8,12 @@ import {
 } from "@/entities/expense";
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
-import { decimalsOf } from "@/shared/lib/money";
 
-import { cleanAmount, fitAmountDraft } from "../lib/amount-draft";
 import { missingText } from "../lib/missing";
-import { homeAmountOrNull, rateLine } from "../lib/rate-line";
 import { splitPreview } from "../lib/split-preview";
 import { startValues } from "../lib/start-values";
 import { useExpenseLink } from "./use-expense-link";
+import { useMoney } from "./use-money";
 import { type FormPerson, usePeoplePicker } from "./use-people-picker";
 
 type ExpenseFormOptions = {
@@ -35,8 +33,7 @@ type ExpenseFormOptions = {
 
 /**
  * 비용 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
- * 금액은 입력 중인 문자열로 들고 제출할 때 숫자로 바꾼다. 일정 연결은 useExpenseLink 가 쥔다.
- * 통화를 바꾸면 이 지출에만 적은 환율을 비운다(옛 통화 기준이라). 나누기는 균등 분할만 한다
+ * 금액 · 통화 · 환율은 useMoney, 일정 연결은 useExpenseLink 가 쥔다. 금액은 제출할 때 숫자로 바꾼다. 나누기는 균등 분할만 한다
  */
 export function useExpenseForm({
   trip,
@@ -48,14 +45,10 @@ export function useExpenseForm({
   defaultSpentOn,
   onSubmit,
 }: ExpenseFormOptions) {
-  const currencies = useMemo(
-    () => [trip.home_currency, ...Object.keys(trip.exchange_rates)],
-    [trip],
-  );
   const [start] = useState(() =>
     startValues({
       trip,
-      currencies,
+      currencies: [trip.home_currency, ...Object.keys(trip.exchange_rates)],
       me,
       initial,
       defaultSpentOn,
@@ -65,9 +58,8 @@ export function useExpenseForm({
   const [opened] = useState(initial);
   const picker = usePeoplePicker({ people, me, start });
   const [name, setName] = useState(start.name);
-  const [amount, setAmountDraft] = useState(start.amount);
-  const [currency, setCurrencyState] = useState(start.currency);
-  const [rate, setRate] = useState(start.rate);
+  const money = useMoney({ trip, start, opened });
+  const { numAmount, homeAmount, currency, home } = money;
   const [paymentMethod, setPaymentMethod] = useState(start.paymentMethod);
   const [category, setCategory] = useState<ExpenseCategory | null>(start.category);
   const [memo, setMemo] = useState(start.memo);
@@ -97,10 +89,6 @@ export function useExpenseForm({
     },
   });
 
-  const decimals = decimalsOf(currency);
-  const numAmount = Number(amount) || 0;
-  const home = trip.home_currency;
-  const homeAmount = homeAmountOrNull(numAmount, currency, rate, home, trip.exchange_rates);
   const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "알 수 없음";
   const preview = splitPreview({
     amount: homeAmount ?? numAmount,
@@ -112,21 +100,6 @@ export function useExpenseForm({
   });
   const missing = missingText({ amount: numAmount, name: link.effectiveName(), category });
 
-  /** 입력한 글을 이 통화의 금액 초안으로 */
-  function setAmount(input: string) {
-    setAmountDraft(cleanAmount(input, decimals));
-  }
-
-  /**
-   * 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자른다. 이 지출 환율은 옛 통화 기준이라 비우되,
-   * 연 때의 통화로 돌아오면 연 때의 환율을 되살린다 — 화면의 「엔 920 기준」 과 저장되는 환율이 어긋나지 않게
-   */
-  function setCurrency(next: string) {
-    setCurrencyState(next);
-    setAmountDraft((draft) => fitAmountDraft(draft, decimalsOf(next)));
-    setRate(next === opened?.currency ? opened.rate : null);
-  }
-
   /** 검증을 통과하면 onSubmit, 아니면 첫 오류를 보인다 */
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -135,7 +108,7 @@ export function useExpenseForm({
       name: link.effectiveName(),
       amount: numAmount,
       currency,
-      rate,
+      rate: money.rate,
       payment_method: paymentMethod,
       payer: picker.payer === null ? null : personOfKey(picker.payer),
       split_each: picker.splitEach,
@@ -159,20 +132,12 @@ export function useExpenseForm({
 
   return {
     tripId: trip.id,
-    currencies,
+    ...money,
     people,
     me,
     picker,
-    home,
     name,
     setName,
-    amount,
-    setAmount,
-    numAmount,
-    homeAmount,
-    rateText: rateLine(currency, home, trip.exchange_rates, rate),
-    currency,
-    setCurrency,
     paymentMethod,
     setPaymentMethod,
     category,
