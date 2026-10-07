@@ -18,6 +18,7 @@ import { formPeople } from "../lib/people";
 import { useExpenseForm } from "../model/use-expense-form";
 import { AmountField } from "./amount-field";
 import { CategoryField, DayField, NameField, PaymentField } from "./expense-fields";
+import { FormMoreMenu } from "./form-more-menu";
 import { LinkField } from "./link-field";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
@@ -114,6 +115,7 @@ export function ExpenseForm({
         </button>
         <h1 className="flex-1 text-[17px] font-bold text-ink-900">{title}</h1>
         {headerRight}
+        <FormMoreMenu onRate={form.openRate} />
       </header>
       <div className={FRAME[layout].body}>
         <AmountField form={form} inputRef={amountRef} autoFocus={!initial} />

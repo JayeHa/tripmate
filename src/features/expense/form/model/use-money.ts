@@ -45,6 +45,8 @@ export function useMoney({ trip, start, opened }: MoneyOptions) {
   return {
     currencies,
     home,
+    /** 여행 환율(통화마다 단위 · 값) — 「환율설정」 창의 기본값 */
+    tripRates: trip.exchange_rates,
     amount,
     /** 입력한 글을 이 통화의 금액 초안으로 */
     setAmount: (input: string) => setAmountDraft(cleanAmount(input, decimalsOf(currency))),
