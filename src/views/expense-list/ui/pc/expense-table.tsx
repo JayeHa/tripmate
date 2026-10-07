@@ -4,6 +4,7 @@ import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { Segmented } from "@/shared/ui/segmented";
 
+import { homeModeLabel } from "../../lib/base-rate";
 import { periodLabel } from "../../lib/period";
 import type { ExpenseList, ExpenseListSection } from "../../model/use-expense-list";
 import type { AmountMode } from "../../model/use-pc-list";
@@ -29,13 +30,8 @@ type ExpenseTableProps = {
   keys: string[];
 };
 
-const MODES = [
-  { value: "local", label: "현지 금액" },
-  { value: "home", label: "원화" },
-] as const;
-
 /**
- * PC 가계부 표 카드 — 스크롤 칸 안에 붙는 열 머리(38, 「현지 금액 | 원화」), 「엔 920 기준」 한 줄, 날짜 띠(회색 + 합계)와 줄들.
+ * PC 가계부 표 카드 — 스크롤 칸 안에 붙는 열 머리(38, 「결제 통화 | 원화 환산」 — 기준 화폐가 원화가 아니면 「JPY 환산」), 「엔 920 기준」 한 줄, 날짜 띠(회색 + 합계)와 줄들.
  * 빈 날은 「아직 지출이 없어요」
  */
 export function ExpenseTable(props: ExpenseTableProps) {
@@ -69,7 +65,10 @@ export function ExpenseTable(props: ExpenseTableProps) {
           <div className="flex justify-end">
             <Segmented
               aria-label="금액 보기"
-              options={MODES}
+              options={[
+                { value: "local", label: "결제 통화" },
+                { value: "home", label: homeModeLabel(list.trip.home_currency) },
+              ]}
               value={mode}
               onChange={onModeChange}
             />

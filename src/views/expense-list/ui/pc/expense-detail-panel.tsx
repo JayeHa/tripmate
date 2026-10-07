@@ -7,7 +7,7 @@ import type { DetailField } from "../../lib/detail-fields";
 
 type ExpenseDetailPanelProps = {
   row: ExpenseRowView;
-  /** 금액 두 줄 — 표의 「현지 금액 / 원화」 를 따른다 */
+  /** 금액 두 줄 — 표의 「결제 통화 / 원화 환산」 을 따른다 */
   amount: { big: string; small: string | null };
   fields: DetailField[];
   /** 「수정」 — 비용 입력 창을 연다 */

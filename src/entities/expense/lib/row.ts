@@ -176,7 +176,7 @@ export function withLine(
   return `함께 · ${shown}${names.length > 2 ? ` 외 ${names.length - 2}` : ""}`;
 }
 
-/** PC 금액 칸 두 줄 — 「현지 금액」 이면 쓴 통화가 크게 + ≈ 원화, 「원화」 면 원화가 크게 + 쓴 통화. 이 비용만 다른 환율은 작은 줄 끝에 */
+/** PC 금액 칸 두 줄 — 「결제 통화」 면 쓴 통화가 크게 + ≈ 기준 화폐, 「원화 환산」 이면 기준 화폐가 크게 + 쓴 통화. 이 비용만 다른 환율은 작은 줄 끝에 */
 export function amountLines(
   row: Pick<ExpenseRowView, "amountText" | "approxText" | "homeText" | "ownRateText">,
   mode: "local" | "home",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { baseRateLine } from "./base-rate";
+import { baseRateLine, homeModeLabel } from "./base-rate";
 
 describe("baseRateLine", () => {
   const rates = { JPY: { unit: 100, value: 920 }, USD: { unit: 1, value: 1400 } };
@@ -13,5 +13,13 @@ describe("baseRateLine", () => {
 
   it("보일 것이 없으면 null", () => {
     expect(baseRateLine(["KRW"], "KRW", rates)).toBeNull();
+  });
+});
+
+describe("homeModeLabel", () => {
+  it("원화만 이름으로, 나머지는 통화 코드로", () => {
+    expect(homeModeLabel("KRW")).toBe("원화 환산");
+    expect(homeModeLabel("JPY")).toBe("JPY 환산");
+    expect(homeModeLabel("USD")).toBe("USD 환산");
   });
 });
