@@ -16,7 +16,7 @@ import type { ExpenseFormState } from "../model/use-expense-form";
 type RateDialogProps = {
   form: Pick<
     ExpenseFormState,
-    "rateOpen" | "closeRate" | "currency" | "home" | "rate" | "setRate" | "tripRates"
+    "rateOpen" | "rateOpens" | "closeRate" | "currency" | "home" | "rate" | "setRate" | "tripRates"
   >;
 };
 
@@ -29,13 +29,14 @@ export function RateDialog({ form }: RateDialogProps) {
   return (
     <AlertDialog open={form.rateOpen} onOpenChange={(open) => !open && form.closeRate()}>
       <AlertDialogContent className="gap-0 overflow-hidden p-0 sm:max-w-85">
-        {form.rateOpen && <RateBody form={form} />}
+        {/* 닫히는 동안에도 내용을 둔다(비우면 빈 틀이 줄어들며 사라진다). 열 때마다 key 를 바꿔 칸을 새로 채운다 */}
+        <RateBody key={form.rateOpens} form={form} />
       </AlertDialogContent>
     </AlertDialog>
   );
 }
 
-/** 창 안 — 열 때마다 지금 환율로 칸을 채운다 */
+/** 창 안 — 그릴 때(열 때마다 새로) 지금 환율로 칸을 채운다 */
 function RateBody({ form }: RateDialogProps) {
   const { currency, home, tripRates } = form;
   const [initial] = useState(() => rateDraftOf(currency, tripRates, form.rate));

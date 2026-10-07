@@ -29,6 +29,8 @@ export function useMoney({ trip, start, opened }: MoneyOptions) {
   const [currency, setCurrencyState] = useState(start.currency);
   const [rate, setRate] = useState(start.rate);
   const [rateOpen, setRateOpen] = useState(false);
+  // 「환율설정」 창을 연 횟수 — 창 내용의 key. 닫히는 동안에도 내용을 그리고, 열 때마다 지금 환율로 칸을 새로 채운다
+  const [rateOpens, setRateOpens] = useState(0);
   const home = trip.home_currency;
   const numAmount = Number(amount) || 0;
 
@@ -59,7 +61,11 @@ export function useMoney({ trip, start, opened }: MoneyOptions) {
     rate,
     setRate,
     rateOpen,
-    openRate: () => setRateOpen(true),
+    rateOpens,
+    openRate: () => {
+      setRateOpens((n) => n + 1);
+      setRateOpen(true);
+    },
     closeRate: () => setRateOpen(false),
   };
 }
