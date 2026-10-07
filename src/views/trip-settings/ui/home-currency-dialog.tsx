@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useExpenses, useSettlements } from "@/entities/expense";
 import { type Trip, type TripFormValues, useChangeHomeCurrency } from "@/entities/trip";
-import { currencyName, rebaseFactor, rebaseRates } from "@/shared/lib/money";
+import { appliedFactor, currencyName, rebaseFactor, rebaseRates } from "@/shared/lib/money";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -114,7 +114,8 @@ function Body({ trip, values, onCancel, onChanged }: BodyProps) {
           onClick={() => {
             if (!rates || factor === null) return;
             change.mutate(
-              { from, currency: to, rates, factor },
+              // 저장할 옛 기준 줄에서 거꾸로 구한 값 — 원화 지출(여행 환율)과 송금 기록이 같은 값으로 바뀌게
+              { from, currency: to, rates, factor: appliedFactor(rates, from) },
               { onSuccess: () => onChanged(values, rates) },
             );
           }}

@@ -37,3 +37,13 @@ export function rebaseRates(
   next[oldHome] = { unit, value: rateValue(unit / factor) };
   return next;
 }
+
+/**
+ * 다시 계산한 여행 환율의 옛 기준 줄에서 거꾸로 구한 factor — DB 에 넘겨 지출별 환율 · 송금 기록을 나눌 값.
+ * 옛 기준으로 쓴 지출은 저장된 여행 환율(반올림한 값)로 계산되므로, 송금 기록도 같은 값으로 나눠야
+ * 정산이 끝난 여행에 반올림 차이만큼의 「남은 송금」 이 생기지 않는다
+ */
+export function appliedFactor(rebased: ExchangeRates, oldHome: string): number {
+  const r = rebased[oldHome];
+  return r.unit / r.value;
+}

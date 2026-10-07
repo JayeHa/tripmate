@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { rebaseFactor, rebaseRates } from "./rebase";
+import { appliedFactor, rebaseFactor, rebaseRates } from "./rebase";
 
 const KRW_RATES = { JPY: { unit: 100, value: 855 }, USD: { unit: 1, value: 1400 } };
 
@@ -36,5 +36,15 @@ describe("rebaseRates", () => {
   it("아주 작은 환율도 유효 숫자로 남는다(0 이 되지 않는다)", () => {
     const krw = { VND: { unit: 1, value: 0.055 }, USD: { unit: 1, value: 1400 } };
     expect(rebaseRates(krw, "KRW", "USD", 1400).VND).toEqual({ unit: 1, value: 0.000039285714 });
+  });
+});
+
+describe("appliedFactor", () => {
+  it("저장할 옛 기준 줄에서 거꾸로 — 원화 지출과 송금 기록이 같은 값으로 바뀐다", () => {
+    const rebased = rebaseRates(KRW_RATES, "KRW", "JPY", 8.55);
+    const f = appliedFactor(rebased, "KRW");
+    // ₩1,000,000 원화 지출(여행 환율로 계산) = 같은 금액의 송금 기록(÷ f)
+    const expense = (1_000_000 * rebased.KRW.value) / rebased.KRW.unit;
+    expect(1_000_000 / f).toBeCloseTo(expense, 6);
   });
 });
