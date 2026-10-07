@@ -4,7 +4,7 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
 import { tripFormSchema, type TripFormValues } from "@/entities/trip";
-import { CURRENCY_OPTIONS } from "@/shared/lib/money";
+import { CURRENCY_OPTIONS, displayRateValue } from "@/shared/lib/money";
 import { Button } from "@/shared/ui/button";
 import { DateField } from "@/shared/ui/date-field";
 import { Input } from "@/shared/ui/input";
@@ -43,7 +43,8 @@ export function TripForm({ initial, submitLabel, pending, onSubmit }: Props) {
       id: rateId(),
       currency: r.currency,
       unit: String(r.unit),
-      value: String(r.value),
+      // 저장값 끝자리(기준 화폐를 바꿨다 되돌린 반올림)는 보이지 않게 — 저장하면 이 값으로 정리된다
+      value: String(displayRateValue(r.value)),
     })),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});

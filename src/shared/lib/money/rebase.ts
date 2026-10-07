@@ -1,0 +1,57 @@
+import type { ExchangeRates } from "./types";
+
+/**
+ * 새 기준 화폐 1단위가 옛 기준으로 얼마인가(100엔 = 855원이면 8.55) — 옛 기준 금액 ÷ 이 값 = 새 기준 금액.
+ * 옛 여행 환율에 새 기준 화폐가 없으면 null(사용자에게 물어야 한다)
+ */
+export function rebaseFactor(rates: ExchangeRates, newHome: string): number | null {
+  const r = rates[newHome];
+  return r ? r.value / r.unit : null;
+}
+
+/**
+ * 환율 값 — 유효 숫자 8자리. 소수 자릿수로 자르면 작은 환율(1동 = 0.0000392857달러)이 크게 깎이거나 0 이 된다
+ * (0 은 다음 저장 때 검증에 걸리고 금액도 0 이 된다)
+ */
+function rateValue(value: number): number {
+  return Number(value.toPrecision(8));
+}
+
+/**
+ * 옛 기준의 여행 환율을 새 기준으로 다시 계산한다. 단위는 그대로 두고 값만 ÷ factor,
+ * 새 기준 화폐 줄은 빼고 옛 기준 화폐 줄을 더한다 — 옛 기준으로 쓴 지출이 이 환율로 계산된다.
+ * 옛 기준 1단위가 새 기준 1 보다 작으면(원 → 엔) 100 단위로 적는다(100원 = 11.7엔)
+ */
+export function rebaseRates(
+  rates: ExchangeRates,
+  oldHome: string,
+  newHome: string,
+  factor: number,
+): ExchangeRates {
+  const next: ExchangeRates = {};
+  for (const [code, r] of Object.entries(rates)) {
+    if (code === newHome || code === oldHome) continue;
+    next[code] = { unit: r.unit, value: rateValue(r.value / factor) };
+  }
+  const unit = 1 / factor < 1 ? 100 : 1;
+  next[oldHome] = { unit, value: rateValue(unit / factor) };
+  return next;
+}
+
+/**
+ * 다시 계산한 여행 환율의 옛 기준 줄에서 거꾸로 구한 factor — DB 에 넘겨 지출별 환율 · 송금 기록을 나눌 값.
+ * 옛 기준으로 쓴 지출은 저장된 여행 환율(반올림한 값)로 계산되므로, 송금 기록도 같은 값으로 나눠야
+ * 정산이 끝난 여행에 반올림 차이만큼의 「남은 송금」 이 생기지 않는다
+ */
+export function appliedFactor(rebased: ExchangeRates, oldHome: string): number {
+  const r = rebased[oldHome];
+  return r.unit / r.value;
+}
+
+/**
+ * 환율 칸에 보일 값 — 유효 숫자 6자리(8.4999999 → 8.5, 11.764706 → 11.7647).
+ * 기준 화폐를 바꿨다 되돌리면 반올림이 두 번 겹쳐 저장값 끝자리가 흔들린다. 저장값(계산용 8자리)은 그대로 두고 보일 때만 정리한다
+ */
+export function displayRateValue(value: number): number {
+  return Number(value.toPrecision(6));
+}

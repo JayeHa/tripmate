@@ -1568,6 +1568,139 @@ describe("정산 인원 · 각자 냄 · 송금 기록 (0034)", () => {
   });
 });
 
+describe("기준 화폐 바꾸기 (0037 · 0038)", () => {
+  /** 기준 KRW · 100엔 = 855원 · 1달러 = 1,400원 여행과 지출 · 송금 기록 */
+  async function setup(start: string) {
+    await as(A);
+    const trip = await newTrip(start, start);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.trip_guests (trip_id, name) values ('${trip}', '서연') returning id`,
+    );
+    const guest = rows[0].id;
+    await db.exec(`
+      update public.trips set exchange_rates = '{"JPY":{"unit":100,"value":855},"USD":{"unit":1,"value":1400}}'
+      where id = '${trip}';
+      insert into public.expenses (trip_id, payer_id, amount, currency, name, rate) values
+        ('${trip}','${A}',10000,'KRW','원',null),
+        ('${trip}','${A}',1000,'JPY','엔',9.05),
+        ('${trip}','${A}',10,'USD','달러',1368),
+        ('${trip}','${A}',20,'USD','달러 기본',null);
+      insert into public.settlements (trip_id, from_guest_id, to_user_id, amount) values
+        ('${trip}','${guest}','${A}',13148);
+    `);
+    return trip;
+  }
+
+  /** 엔 기준으로 다시 계산한 여행 환율 — 화면이 넘기는 값 */
+  const JPY_RATES = JSON.stringify({
+    KRW: { unit: 100, value: 11.7 },
+    USD: { unit: 1, value: 163.74 },
+  });
+
+  it("여행 환율 · 지출별 환율 · 송금 기록을 새 기준으로, 새 기준으로 쓴 지출은 환율을 비운다", async () => {
+    const trip = await setup("2028-01-01");
+    await db.query(`select public.change_home_currency($1, 'KRW', 'JPY', $2, 8.55)`, [
+      trip,
+      JPY_RATES,
+    ]);
+
+    const t = await db.query<{ home: string; rates: unknown }>(
+      `select home_currency home, exchange_rates rates from public.trips where id = '${trip}'`,
+    );
+    expect(t.rows[0].home).toBe("JPY");
+    expect(t.rows[0].rates).toEqual(JSON.parse(JPY_RATES));
+
+    const e = await db.query<{ v: string }>(
+      `select name || '=' || coalesce(rate::text, 'null') v from public.expenses
+       where trip_id = '${trip}' order by name`,
+    );
+    // 1368 원/달러 ÷ 8.55 = 160 엔/달러 · 금액은 그대로
+    expect(e.rows.map((r) => r.v)).toEqual([
+      "달러=160.00000000",
+      "달러 기본=null",
+      "엔=null",
+      "원=null",
+    ]);
+
+    const s = await db.query<{ a: string }>(
+      `select amount::text a from public.settlements where trip_id = '${trip}'`,
+    );
+    // ₩13,148 ÷ 8.55 = ¥1,537.78
+    expect(s.rows[0].a).toBe("1537.78");
+  });
+
+  it("같은 화폐 · 새 기준이 든 환율 · 옛 기준이 빠진 환율 · 0 이하 값 · 화면이 알던 기준이 다름 · 멤버가 아닌 사람은 거부하고 아무것도 바꾸지 않는다", async () => {
+    const trip = await setup("2028-01-03");
+    const call = (currency: string, rates: string, factor: number) =>
+      rejects(
+        `select public.change_home_currency('${trip}', 'KRW', '${currency}', '${rates}'::jsonb, ${factor})`,
+      );
+    expect(await call("KRW", JPY_RATES, 8.55)).toMatch(/already the home currency/);
+    expect(
+      await call(
+        "JPY",
+        JSON.stringify({ JPY: { unit: 100, value: 1 }, KRW: { unit: 100, value: 11.7 } }),
+        8.55,
+      ),
+    ).toMatch(/must not include the new home/);
+    expect(await call("JPY", JSON.stringify({ USD: { unit: 1, value: 163.74 } }), 8.55)).toMatch(
+      /must include the old home/,
+    );
+    expect(await call("JPY", JPY_RATES, 0)).toMatch(/factor must be positive/);
+    // 화면이 알던 기준(USD)이 지금 기준(KRW)과 다르면 — 다른 멤버가 먼저 바꾼 경우
+    expect(
+      await rejects(
+        `select public.change_home_currency('${trip}', 'USD', 'JPY', '${JPY_RATES}'::jsonb, 8.55)`,
+      ),
+    ).toMatch(/changed by someone else/);
+
+    await as(B);
+    expect(await call("JPY", JPY_RATES, 8.55)).toMatch(/not a member/);
+
+    await as(A);
+    const t = await db.query<{ home: string }>(
+      `select home_currency home from public.trips where id = '${trip}'`,
+    );
+    expect(t.rows[0].home).toBe("KRW");
+    const s = await db.query<{ a: string }>(
+      `select amount::text a from public.settlements where trip_id = '${trip}'`,
+    );
+    expect(s.rows[0].a).toBe("13148.00");
+  });
+
+  it("중간에 실패하면 여행 · 지출도 되돌린다(한 트랜잭션)", async () => {
+    const trip = await setup("2028-01-05");
+    // 송금 기록 금액을 바꾸는 단계에서 실패하게 한다
+    await db.exec(`
+      reset role;
+      create function public.fail_settlement_update() returns trigger language plpgsql as
+        $$ begin raise exception 'boom'; end $$;
+      create trigger fail_settlement_update before update on public.settlements
+        for each row execute function public.fail_settlement_update();
+    `);
+    await as(A);
+    expect(
+      await rejects(
+        `select public.change_home_currency('${trip}', 'KRW', 'JPY', '${JPY_RATES}'::jsonb, 8.55)`,
+      ),
+    ).toMatch(/boom/);
+    await db.exec(`
+      reset role;
+      drop trigger fail_settlement_update on public.settlements;
+      drop function public.fail_settlement_update();
+    `);
+    await as(A);
+    const t = await db.query<{ home: string }>(
+      `select home_currency home from public.trips where id = '${trip}'`,
+    );
+    expect(t.rows[0].home).toBe("KRW");
+    const e = await db.query<{ r: string }>(
+      `select rate::text r from public.expenses where trip_id = '${trip}' and name = '달러'`,
+    );
+    expect(e.rows[0].r).toBe("1368.00000000");
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");
