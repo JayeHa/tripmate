@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useUser } from "@/entities/session";
-import { ratesToForm, useDeleteTrip, useTrip, useUpdateTrip } from "@/entities/trip";
+import {
+  ratesToForm,
+  type TripFormValues,
+  useDeleteTrip,
+  useTrip,
+  useUpdateTrip,
+} from "@/entities/trip";
 import { MemberList, useRemoveMember, useTripMembers } from "@/entities/trip-member";
 import { TripForm } from "@/features/trip/form";
 import { InviteLinkCard } from "@/features/trip/invite-member";
@@ -22,6 +28,8 @@ import {
 import { AppHeader } from "@/shared/ui/app-header";
 import { Button } from "@/shared/ui/button";
 
+import { HomeCurrencyDialog } from "./home-currency-dialog";
+
 type TripSettingsViewProps = { tripId: string };
 
 export function TripSettingsView({ tripId }: TripSettingsViewProps) {
@@ -33,10 +41,22 @@ export function TripSettingsView({ tripId }: TripSettingsViewProps) {
   const remove = useDeleteTrip();
   const removeMember = useRemoveMember(tripId);
   const [saved, setSaved] = useState(false);
+  // 기준 화폐를 바꾸는 저장 — 확인 창(다시 계산)을 거친다
+  const [rebasing, setRebasing] = useState<TripFormValues | null>(null);
 
   if (!trip) return <AppHeader title="설정" back="/trips" />;
 
   const isOwner = user?.id === trip.owner_id;
+
+  /** 여행 정보 저장 — 잠깐 「저장됨」 */
+  function save(values: TripFormValues) {
+    update.mutate(values, {
+      onSuccess: () => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+      },
+    });
+  }
 
   return (
     <>
@@ -73,13 +93,17 @@ export function TripSettingsView({ tripId }: TripSettingsViewProps) {
             submitLabel={saved ? "저장됨" : "저장"}
             pending={update.isPending}
             onSubmit={(values) =>
-              update.mutate(values, {
-                onSuccess: () => {
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 1500);
-                },
-              })
+              values.home_currency === trip.home_currency ? save(values) : setRebasing(values)
             }
+          />
+          <HomeCurrencyDialog
+            trip={trip}
+            values={rebasing}
+            onCancel={() => setRebasing(null)}
+            onChanged={(values, rates) => {
+              setRebasing(null);
+              save({ ...values, rates: ratesToForm(rates) });
+            }}
           />
           {update.error && <p className="mt-2 text-sm text-destructive">{update.error.message}</p>}
         </section>

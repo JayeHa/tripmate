@@ -3,8 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
+import type { ExchangeRates } from "@/shared/lib/money";
 
 import {
+  changeHomeCurrency,
   createTrip,
   deleteTrip,
   fetchTrip,
@@ -38,6 +40,29 @@ export function useUpdateTrip(tripId: string) {
     onSuccess: (trip) => {
       qc.setQueryData(queryKeys.trips.detail(tripId), trip);
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+    },
+  });
+}
+
+/**
+ * 기준 화폐 바꾸기 — 여행 환율 · 지출별 환율 · 송금 기록이 함께 바뀌므로 그 여행 아래 쿼리를 모두 다시 읽는다
+ * (지출 · 송금 기록 키는 여행 키 아래에 있다)
+ */
+export function useChangeHomeCurrency(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      currency,
+      rates,
+      factor,
+    }: {
+      currency: string;
+      rates: ExchangeRates;
+      factor: number;
+    }) => changeHomeCurrency(tripId, currency, rates, factor),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) });
     },
   });
 }

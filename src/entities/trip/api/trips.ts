@@ -86,6 +86,26 @@ export async function updateTripDates({ tripId, startDate, endDate }: TripDates)
   if (error) throw error;
 }
 
+/**
+ * 기준 화폐를 바꾼다 — 여행 환율(새 기준으로 다시 계산한 값) · 지출별 환율 · 송금 기록 금액을 한 트랜잭션으로.
+ * factor = 새 기준 1단위가 옛 기준으로 얼마인가(옛 기준 금액 ÷ factor = 새 기준 금액)
+ */
+export async function changeHomeCurrency(
+  tripId: string,
+  currency: string,
+  rates: ExchangeRates,
+  factor: number,
+) {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("change_home_currency", {
+    p_trip_id: tripId,
+    p_currency: currency,
+    p_rates: rates,
+    p_factor: factor,
+  });
+  if (error) throw error;
+}
+
 export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {
   const supabase = createClient();
   const { data, error } = await supabase
