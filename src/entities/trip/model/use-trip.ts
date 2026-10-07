@@ -6,6 +6,7 @@ import { queryKeys } from "@/shared/api/query-keys";
 import type { ExchangeRates } from "@/shared/lib/money";
 
 import {
+  addTripCurrency,
   changeHomeCurrency,
   createTrip,
   deleteTrip,
@@ -66,6 +67,17 @@ export function useChangeHomeCurrency(tripId: string) {
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
       void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) });
     },
+  });
+}
+
+/** 「다른 통화 추가」 — 끝나면 여행을 다시 읽어 통화 목록 · 환율에 보인다 */
+export function useAddTripCurrency(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, rate }: { code: string; rate: { unit: number; value: number } }) =>
+      addTripCurrency(tripId, code, rate),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
   });
 }
 

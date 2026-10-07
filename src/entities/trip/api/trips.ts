@@ -109,6 +109,22 @@ export async function changeHomeCurrency(
   if (error) throw error;
 }
 
+/** 여행 환율에 통화 하나를 더한다 — 이미 있으면 DB 가 그대로 둔다(동시에 더해도 앞 사람의 통화가 사라지지 않게) */
+export async function addTripCurrency(
+  tripId: string,
+  code: string,
+  rate: { unit: number; value: number },
+) {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("add_trip_currency", {
+    p_trip_id: tripId,
+    p_code: code,
+    p_unit: rate.unit,
+    p_value: rate.value,
+  });
+  if (error) throw error;
+}
+
 export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {
   const supabase = createClient();
   const { data, error } = await supabase

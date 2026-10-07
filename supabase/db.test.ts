@@ -1701,6 +1701,43 @@ describe("기준 화폐 바꾸기 (0037 · 0038)", () => {
   });
 });
 
+describe("여행에 통화 더하기 (0039)", () => {
+  it("없는 통화만 더하고, 이미 있는 통화 · 다른 통화의 환율은 그대로 둔다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-02-01", "2028-02-01");
+    await db.exec(
+      `update public.trips set exchange_rates = '{"JPY":{"unit":100,"value":855}}' where id = '${trip}'`,
+    );
+    await db.query(`select public.add_trip_currency('${trip}', 'USD', 1, 1400)`);
+    await db.query(`select public.add_trip_currency('${trip}', 'JPY', 100, 920)`);
+    const { rows } = await db.query<{ rates: unknown }>(
+      `select exchange_rates rates from public.trips where id = '${trip}'`,
+    );
+    expect(rows[0].rates).toEqual({
+      JPY: { unit: 100, value: 855 },
+      USD: { unit: 1, value: 1400 },
+    });
+  });
+
+  it("기준 화폐 · 잘못된 코드 · 0 이하 환율 · 멤버가 아닌 사람은 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-02-03", "2028-02-03");
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'KRW', 1, 1)`)).toMatch(
+      /home currency has no rate/,
+    );
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'usd', 1, 1)`)).toMatch(
+      /3 capital letters/,
+    );
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'USD', 1, 0)`)).toMatch(
+      /rate must be positive/,
+    );
+    await as(B);
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'USD', 1, 1400)`)).toMatch(
+      /not a member/,
+    );
+  });
+});
+
 describe("0013 데이터 이전", () => {
   it("기존 일정의 장소 칸을 places 로 옮긴다: 같은 사람 · 같은 구글 장소는 하나로, note 는 그대로", async () => {
     const before = MIGRATIONS.filter((f) => f < "0013");

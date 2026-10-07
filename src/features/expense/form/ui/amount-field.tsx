@@ -1,12 +1,12 @@
-import { Check, ChevronDown, Pencil } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
 import { currencyName, decimalsOf, formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
-import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { caretAfter, digitsBefore, formatAmountDraft } from "../lib/amount-draft";
 import type { ExpenseFormState } from "../model/use-expense-form";
+import { CurrencySheet } from "./currency-sheet";
 import { RateDialog } from "./rate-dialog";
 
 type AmountFieldProps = {
@@ -16,7 +16,7 @@ type AmountFieldProps = {
 };
 
 /**
- * 맨 위 금액 칸 — 가운데 큰 숫자(40/800, 쉼표) + 통화 이름, 오른쪽 통화 고르기(통화가 둘 이상일 때).
+ * 맨 위 금액 칸 — 가운데 큰 숫자(40/800, 쉼표) + 통화 이름, 오른쪽 통화 고르기(「다른 통화 추가」 도 여기서 — 통화가 하나여도 보인다).
  * 밑줄은 비었을 때 블루, 채우면 회색. 기준 화폐가 아니면 아래에 「≈ 원화 · 엔 920 기준 ✎」(누르면 「환율설정」).
  * 입력 칸 폭은 글자 수에 맞춘다 — 가운데 정렬에서 단위가 숫자에 붙어 있게.
  * 쉼표를 다시 넣으면 값이 통째로 바뀌어 커서가 끝으로 간다. 그래서 커서 앞의 숫자 수를 기억했다가 같은 자리로 돌려놓는다.
@@ -72,16 +72,14 @@ export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
             {currencyName(form.currency)}
           </span>
         </div>
-        {form.currencies.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            className="flex h-8 shrink-0 items-center gap-0.75 rounded-full bg-surface-muted pr-2.5 pl-3 text-[13px] font-bold text-ink-700"
-          >
-            {form.currency}({currencyName(form.currency)})
-            <ChevronDown className="size-3.5 text-ink-450" aria-hidden="true" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          className="flex h-8 shrink-0 items-center gap-0.75 rounded-full bg-surface-muted pr-2.5 pl-3 text-[13px] font-bold text-ink-700"
+        >
+          {form.currency}({currencyName(form.currency)})
+          <ChevronDown className="size-3.5 text-ink-450" aria-hidden="true" />
+        </button>
       </div>
       {form.rateText && (
         <button
@@ -101,27 +99,7 @@ export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
         </button>
       )}
       <RateDialog form={form} />
-      <SheetDialog open={sheetOpen} onClose={() => setSheetOpen(false)} title="통화 선택">
-        {form.currencies.map((code) => (
-          <button
-            key={code}
-            type="button"
-            onClick={() => {
-              form.setCurrency(code);
-              setSheetOpen(false);
-            }}
-            className={cn(
-              "flex h-13.5 w-full items-center text-[17px] font-bold",
-              code === form.currency ? "text-primary" : "text-ink-900",
-            )}
-          >
-            <span className="flex-1 text-left">
-              {code}({currencyName(code)})
-            </span>
-            {code === form.currency && <Check className="size-6" aria-hidden="true" />}
-          </button>
-        ))}
-      </SheetDialog>
+      <CurrencySheet form={form} open={sheetOpen} onClose={() => setSheetOpen(false)} />
     </div>
   );
 }
