@@ -8,6 +8,7 @@ import { useDashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { CategoryCard } from "../dashboard/category-card";
 import { SettleCard } from "../dashboard/settle-card";
+import { SettleLoadError } from "../dashboard/settle-load-error";
 import { SummaryCard } from "../mobile/summary-card";
 
 type PcDashboardProps = { tripId: string; list: ExpenseList };
@@ -51,6 +52,11 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
       <section className={CARD}>
         <CategoryCard shares={dash.categories} home={home} size="sm" />
       </section>
+      {!list.solo && dash.settleFailed && (
+        <section className={CARD}>
+          <SettleLoadError onRetry={dash.retrySettle} />
+        </section>
+      )}
       {!list.solo && dash.settle && (
         <section className={CARD}>
           <SettleCard

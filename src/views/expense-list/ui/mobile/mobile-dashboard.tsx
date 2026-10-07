@@ -10,6 +10,7 @@ import { useDashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { CategoryCard } from "../dashboard/category-card";
 import { SettleCard } from "../dashboard/settle-card";
+import { SettleLoadError } from "../dashboard/settle-load-error";
 import { ListTabs } from "./list-tabs";
 
 type MobileDashboardProps = { tripId: string; list: ExpenseList };
@@ -64,6 +65,11 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
         <section className={SECTION}>
           <CategoryCard shares={dash.categories} home={home} />
         </section>
+        {!list.solo && dash.settleFailed && (
+          <section className={SECTION}>
+            <SettleLoadError onRetry={dash.retrySettle} />
+          </section>
+        )}
         {!list.solo && dash.settle && (
           <section className={SECTION}>
             <SettleCard
