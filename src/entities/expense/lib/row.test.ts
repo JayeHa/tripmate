@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExpenseWithSplits, PersonRef } from "@/entities/expense";
-
+import type { ExpenseWithSplits } from "../model/types";
+import type { PersonRef } from "./person";
 import { amountLines, expenseRowView, whoOf, withLine } from "./row";
 
 const ctx = {

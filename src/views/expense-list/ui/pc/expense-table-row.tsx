@@ -1,9 +1,15 @@
 import { MapPin, StickyNote } from "lucide-react";
 
-import { ExpenseBadge, ExpenseCategoryTile, type PersonRef } from "@/entities/expense";
+import {
+  amountLines,
+  ExpenseBadge,
+  ExpenseCategoryTile,
+  type ExpenseRowView,
+  type PersonRef,
+  withLine,
+} from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
-import { amountLines, type ExpenseRowView, withLine } from "../../lib/row";
 import type { AmountMode } from "../../model/use-pc-list";
 import { TABLE_COLUMNS } from "./columns";
 

@@ -6,6 +6,7 @@ export * from "./lib/balances";
 export * from "./lib/columns";
 export * from "./lib/form-values";
 export * from "./lib/person";
+export * from "./lib/row";
 export * from "./lib/sections";
 export * from "./lib/settle";
 export * from "./lib/settle-band";

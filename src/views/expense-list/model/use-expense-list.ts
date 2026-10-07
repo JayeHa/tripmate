@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import {
   computeNetBalances,
+  expenseRowView,
   expenseSections,
   type ExpenseWithSplits,
   peopleOf,
@@ -21,8 +22,6 @@ import { useTripMembers } from "@/entities/trip-member";
 import { todayISO } from "@/shared/lib/days";
 import { type ExchangeRates, MissingRateError } from "@/shared/lib/money";
 import type { ToastMessage } from "@/shared/ui/toast";
-
-import { expenseRowView } from "../lib/row";
 
 /** 내가 쓴 돈(내 몫의 합, 기준 화폐). 환율이 없는 비용이 있으면 null — 틀린 합을 보이지 않는다 */
 function spentBy(

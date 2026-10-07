@@ -10,20 +10,10 @@ import {
   useDeleteExpense,
   useUpdateExpense,
 } from "@/entities/expense";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/shared/ui/alert-dialog";
 
 import { spentOnFromParam } from "../lib/spent-on-param";
 import { useExpenseFormData } from "../model/use-expense-form-data";
+import { DeleteExpenseConfirm } from "./delete-expense-confirm";
 import { ExpenseForm, type ExpenseFormLayout } from "./expense-form";
 import { EditorHeader, FormLoadError } from "./form-load-error";
 
@@ -82,7 +72,11 @@ export function CreateExpense({
   );
 }
 
-type EditExpenseProps = EditorCommon & { expenseId: string };
+type EditExpenseProps = EditorCommon & {
+  expenseId: string;
+  /** 삭제가 끝났다. 없으면 onDone — 모바일은 저장하면 상세로, 지우면 목록으로 간다 */
+  onDeleted?: () => void;
+};
 
 /**
  * 비용 수정 — 머리 오른쪽에 「삭제」. 폼은 지출 id 를 key 로 둔다 — 일행이 같은 지출을 고쳐 실시간으로 다시 읽어도
@@ -96,6 +90,7 @@ export function EditExpense({
   onDone,
   back,
   onLockChange,
+  onDeleted,
 }: EditExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const update = useUpdateExpense(tripId);
@@ -122,7 +117,13 @@ export function EditExpense({
       layout={layout}
       onClose={onClose}
       headerRight={
-        <DeleteButton onDelete={() => remove.mutate(expenseId, { onSuccess: onDone })} />
+        <DeleteExpenseConfirm
+          onDelete={() => remove.mutate(expenseId, { onSuccess: onDeleted ?? onDone })}
+          className="flex h-8.5 items-center gap-1 rounded-button bg-destructive-soft px-2.5 text-sm font-bold text-destructive"
+        >
+          <Trash2 className="size-4.5" aria-hidden="true" />
+          삭제
+        </DeleteExpenseConfirm>
       }
       {...loaded.data}
       expenseId={expenseId}
@@ -142,30 +143,4 @@ function useReportLock(locked: boolean, onLockChange?: (locked: boolean) => void
     onLockChange?.(locked);
     return () => onLockChange?.(false);
   }, [locked, onLockChange]);
-}
-
-type DeleteButtonProps = { onDelete: () => void };
-
-/** 머리 오른쪽 「삭제」 — 연한 빨강 칩, 누르면 확인 창 */
-function DeleteButton({ onDelete }: DeleteButtonProps) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger className="flex h-8.5 items-center gap-1 rounded-button bg-destructive-soft px-2.5 text-sm font-bold text-destructive">
-        <Trash2 className="size-4.5" aria-hidden="true" />
-        삭제
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>이 지출을 삭제할까요?</AlertDialogTitle>
-          <AlertDialogDescription>정산 내역에서도 제거돼요.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>취소</AlertDialogCancel>
-          <AlertDialogAction variant="danger" onClick={onDelete}>
-            삭제
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
 }
