@@ -3,7 +3,10 @@ import {
   type ExpenseCategory,
   expenseHome,
   type ExpenseWithSplits,
+  payerOf,
   type PersonKey,
+  personKey,
+  splitPerson,
   type Transfer,
 } from "@/entities/expense";
 import { type ExchangeRates, MissingRateError } from "@/shared/lib/money";
@@ -87,7 +90,17 @@ export function transferRows(
   ];
 }
 
-/** 둘 이상이 나눠 낸(정산이 생기는) 지출이 하나라도 있는가 — 없으면 정산 띠가 「나눠 낸 비용이 생기면…」 */
+/**
+ * 정산이 생기는 지출이 하나라도 있는가 — 결제한 사람 말고 다른 사람의 몫이 있는 지출(둘이 나눴거나, 남의 몫을 대신 냈거나).
+ * 없으면 정산 띠가 「나눠 낸 비용이 생기면…」. 각자 냄 · 합계 제외는 정산을 만들지 않는다
+ */
 export function hasSharedExpense(expenses: ExpenseWithSplits[]): boolean {
-  return expenses.some((e) => e.counted && !e.split_each && e.splits.length > 1);
+  return expenses.some((e) => {
+    const payer = payerOf(e);
+    if (!e.counted || e.split_each || !payer) return false;
+    return e.splits.some((s) => {
+      const person = splitPerson(s);
+      return person !== null && personKey(person) !== personKey(payer);
+    });
+  });
 }

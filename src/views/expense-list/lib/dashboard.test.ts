@@ -18,6 +18,8 @@ function expense(
     amount,
     currency: "KRW",
     rate: null,
+    payer_id: "u0",
+    payer_guest_id: null,
     counted: true,
     split_each: false,
     splits: Array.from({ length: people }, (_, i) => ({ user_id: `u${i}`, guest_id: null })),
@@ -99,10 +101,14 @@ describe("transferRows", () => {
 });
 
 describe("hasSharedExpense", () => {
-  it("둘 이상이 나눈 합계 포함 지출이 있을 때만", () => {
+  it("결제한 사람 몫만 있거나 · 각자 냄 · 합계 제외면 아니다", () => {
     expect(hasSharedExpense([expense("food", 100)])).toBe(false);
     expect(hasSharedExpense([expense("food", 100, { people: 2, split_each: true })])).toBe(false);
     expect(hasSharedExpense([expense("food", 100, { people: 2, counted: false })])).toBe(false);
     expect(hasSharedExpense([expense("food", 100, { people: 2 })])).toBe(true);
+  });
+
+  it("남의 몫 하나만 대신 낸 지출도 정산이 생긴다", () => {
+    expect(hasSharedExpense([expense("food", 100, { payer_id: "u9" })])).toBe(true);
   });
 });
