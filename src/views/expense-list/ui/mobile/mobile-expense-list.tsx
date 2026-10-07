@@ -27,7 +27,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
   const statsHref = `${base}/settlement`;
-  const cells = calendarCells(list.sections, trip.start_date);
+  const cells = calendarCells(list.allSections, trip.start_date);
   const scroll = useCalendarScroll(cells.map((c) => c.key));
   return (
     <>
@@ -48,7 +48,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         stripRef={scroll.stripRef}
       />
       <main className="flex flex-col gap-7 pt-4 pb-45">
-        {list.sections.map((s, i) => (
+        {list.allSections.map((s, i) => (
           <DayGroup
             key={cells[i].key}
             sectionRef={scroll.sectionRef(cells[i].key)}

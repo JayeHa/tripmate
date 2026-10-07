@@ -106,10 +106,16 @@ export function useExpenseList(tripId: string) {
     guests,
   );
   const me: PersonRef | null = user ? { kind: "member", id: user.id } : null;
-  const sections = expenseSections(expenses, trip, filter).map((s) => ({
-    ...s,
-    rows: s.expenses.map((e) => expenseRowView(e, ctx)),
-  }));
+  /** 묶음과 줄 글 */
+  const toSections = (period: ExpensePeriod | "all") =>
+    expenseSections(expenses, trip, period).map((s) => ({
+      ...s,
+      rows: s.expenses.map((e) => expenseRowView(e, ctx)),
+    }));
+  const allSections = toSections("all");
+  // PC 의 기간 칩으로 거른 묶음. 모바일은 필터가 없어(달력 띠로 옮겨 다닌다) 늘 allSections 를 쓴다 —
+  // 화면 폭이 바뀌어 PC → 모바일로 다시 그려져도 PC 에서 고른 필터에 갇히지 않게
+  const sections = filter === "all" ? allSections : toSections(filter);
   return {
     trip,
     isPending,
@@ -117,6 +123,7 @@ export function useExpenseList(tripId: string) {
     filter,
     setFilter,
     sections,
+    allSections,
     count: expenses.length,
     total: sumExpenses(expenses, trip.home_currency, trip.exchange_rates),
     /** 혼자 쓰는 가계부(사람이 나뿐) — 「내가 쓴 돈」 · 정산을 보이지 않는다 */
