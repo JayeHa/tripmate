@@ -17,3 +17,8 @@ export function baseRateLine(
     );
   return parts.length ? `${parts.join(" · ")} 기준` : null;
 }
+
+/** 금액 보기 세그먼트의 오른쪽 이름 — 원화면 「원화 환산」, 그 밖은 통화 코드로 「JPY 환산」 · 「USD 환산」 */
+export function homeModeLabel(home: string): string {
+  return home === "KRW" ? "원화 환산" : `${home} 환산`;
+}

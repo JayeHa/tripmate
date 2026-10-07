@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRef } from "react";
 
 import {
@@ -12,17 +12,17 @@ import {
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
-import { cn } from "@/shared/lib/utils";
-import { Button } from "@/shared/ui/button";
 
 import { linkCosts } from "../lib/link-costs";
 import { formPeople } from "../lib/people";
-import { type ExpenseFormState, useExpenseForm } from "../model/use-expense-form";
+import { useExpenseForm } from "../model/use-expense-form";
 import { AmountField } from "./amount-field";
 import { CategoryField, DayField, NameField, PaymentField } from "./expense-fields";
+import { FormMoreMenu } from "./form-more-menu";
 import { LinkField } from "./link-field";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
+import { SubmitBar } from "./submit-bar";
 
 /** 화면 틀 — page: 모바일 전체 화면 · PC 가운데 440 페이지, modal: 부른 쪽의 창(PC 440×760) 안을 채운다 */
 export type ExpenseFormLayout = "page" | "modal";
@@ -115,6 +115,7 @@ export function ExpenseForm({
         </button>
         <h1 className="flex-1 text-[17px] font-bold text-ink-900">{title}</h1>
         {headerRight}
+        <FormMoreMenu onRate={form.openRate} />
       </header>
       <div className={FRAME[layout].body}>
         <AmountField form={form} inputRef={amountRef} autoFocus={!initial} />
@@ -162,42 +163,5 @@ function AmountFirst({ onClick }: AmountFirstProps) {
         금액을 먼저 입력해 주세요
       </span>
     </button>
-  );
-}
-
-type SubmitBarProps = {
-  form: ExpenseFormState;
-  className?: string;
-  pending?: boolean;
-  submitError?: string | null;
-};
-
-/** 아래 고정 줄 — 빠진 필수 칸 안내(주황) · 저장 오류 · 완료 버튼. 필수 칸이 비면 버튼을 끈다 */
-function SubmitBar({ form, pending, submitError, className }: SubmitBarProps) {
-  const message = form.missing || form.error || submitError;
-  return (
-    <div
-      className={cn(
-        "flex shrink-0 flex-col gap-2 border-t border-surface-muted bg-background px-5 pt-2.5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]",
-        className,
-      )}
-    >
-      {message && (
-        <p
-          role={form.missing ? undefined : "alert"}
-          className={
-            form.missing
-              ? "flex items-center justify-center gap-1.25 text-[13px] font-semibold text-status-wait-text"
-              : "text-center text-[13px] font-semibold text-destructive"
-          }
-        >
-          {form.missing && <CircleAlert className="size-3.5" aria-hidden="true" />}
-          {message}
-        </p>
-      )}
-      <Button type="submit" size="cta" disabled={!!form.missing || pending}>
-        {pending ? "저장 중..." : "완료"}
-      </Button>
-    </div>
   );
 }
