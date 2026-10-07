@@ -1701,15 +1701,15 @@ describe("기준 화폐 바꾸기 (0037 · 0038)", () => {
   });
 });
 
-describe("여행에 통화 더하기 (0039)", () => {
+describe("여행에 통화 더하기 (0039 · 0040)", () => {
   it("없는 통화만 더하고, 이미 있는 통화 · 다른 통화의 환율은 그대로 둔다", async () => {
     await as(A);
     const trip = await newTrip("2028-02-01", "2028-02-01");
     await db.exec(
       `update public.trips set exchange_rates = '{"JPY":{"unit":100,"value":855}}' where id = '${trip}'`,
     );
-    await db.query(`select public.add_trip_currency('${trip}', 'USD', 1, 1400)`);
-    await db.query(`select public.add_trip_currency('${trip}', 'JPY', 100, 920)`);
+    await db.query(`select public.add_trip_currency('${trip}', 'KRW', 'USD', 1, 1400)`);
+    await db.query(`select public.add_trip_currency('${trip}', 'KRW', 'JPY', 100, 920)`);
     const { rows } = await db.query<{ rates: unknown }>(
       `select exchange_rates rates from public.trips where id = '${trip}'`,
     );
@@ -1719,22 +1719,26 @@ describe("여행에 통화 더하기 (0039)", () => {
     });
   });
 
-  it("기준 화폐 · 잘못된 코드 · 0 이하 환율 · 멤버가 아닌 사람은 거부한다", async () => {
+  it("기준 화폐 · 잘못된 코드 · 0 이하 환율 · 화면이 알던 기준이 다름 · 멤버가 아닌 사람은 거부한다", async () => {
     await as(A);
     const trip = await newTrip("2028-02-03", "2028-02-03");
-    expect(await rejects(`select public.add_trip_currency('${trip}', 'KRW', 1, 1)`)).toMatch(
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'KRW', 'KRW', 1, 1)`)).toMatch(
       /home currency has no rate/,
     );
-    expect(await rejects(`select public.add_trip_currency('${trip}', 'usd', 1, 1)`)).toMatch(
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'KRW', 'usd', 1, 1)`)).toMatch(
       /3 capital letters/,
     );
-    expect(await rejects(`select public.add_trip_currency('${trip}', 'USD', 1, 0)`)).toMatch(
+    expect(await rejects(`select public.add_trip_currency('${trip}', 'KRW', 'USD', 1, 0)`)).toMatch(
       /rate must be positive/,
     );
+    // 화면이 알던 기준(USD)이 지금 기준(KRW)과 다르면 — 다른 멤버가 먼저 바꾼 경우
+    expect(
+      await rejects(`select public.add_trip_currency('${trip}', 'USD', 'JPY', 100, 920)`),
+    ).toMatch(/changed by someone else/);
     await as(B);
-    expect(await rejects(`select public.add_trip_currency('${trip}', 'USD', 1, 1400)`)).toMatch(
-      /not a member/,
-    );
+    expect(
+      await rejects(`select public.add_trip_currency('${trip}', 'KRW', 'USD', 1, 1400)`),
+    ).toMatch(/not a member/);
   });
 });
 

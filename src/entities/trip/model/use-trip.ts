@@ -74,8 +74,15 @@ export function useChangeHomeCurrency(tripId: string) {
 export function useAddTripCurrency(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ code, rate }: { code: string; rate: { unit: number; value: number } }) =>
-      addTripCurrency(tripId, code, rate),
+    mutationFn: ({
+      home,
+      code,
+      rate,
+    }: {
+      home: string;
+      code: string;
+      rate: { unit: number; value: number };
+    }) => addTripCurrency(tripId, home, code, rate),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
   });

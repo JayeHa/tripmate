@@ -109,15 +109,20 @@ export async function changeHomeCurrency(
   if (error) throw error;
 }
 
-/** 여행 환율에 통화 하나를 더한다 — 이미 있으면 DB 가 그대로 둔다(동시에 더해도 앞 사람의 통화가 사라지지 않게) */
+/**
+ * 여행 환율에 통화 하나를 더한다 — 이미 있으면 DB 가 그대로 둔다(이 함수끼리는 동시에 더해도 앞 사람의 통화가 사라지지 않는다).
+ * home = 처음 환율을 계산한 기준 화폐 — 그사이 다른 사람이 바꿨으면 DB 가 거부한다(옛 기준의 값이 들어가지 않게)
+ */
 export async function addTripCurrency(
   tripId: string,
+  home: string,
   code: string,
   rate: { unit: number; value: number },
 ) {
   const supabase = createClient();
   const { error } = await supabase.rpc("add_trip_currency", {
     p_trip_id: tripId,
+    p_home: home,
     p_code: code,
     p_unit: rate.unit,
     p_value: rate.value,
