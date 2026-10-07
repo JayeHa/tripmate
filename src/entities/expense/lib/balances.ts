@@ -3,6 +3,7 @@ import { decimalsOf, type ExchangeRates, roundTo } from "@/shared/lib/money";
 import type { ExpenseWithSplits, Settlement } from "../model/types";
 import { toHomeFor } from "./amounts";
 import { payerOf, type PersonKey, personKey, type PersonRef, splitPerson } from "./person";
+import type { Transfer } from "./settle";
 
 export type Balances = {
   /** 기준 화폐로 결제한 돈 */
@@ -101,6 +102,14 @@ function settlementPerson(userId: string | null, guestId: string | null): Person
   if (userId) return { kind: "member", id: userId };
   if (guestId) return { kind: "guest", id: guestId };
   return null;
+}
+
+/** 송금 기록을 송금 한 줄(사람 키)로. 한쪽이라도 비어 있으면(지워진 사람) null */
+export function settlementTransfer(s: Settlement): Transfer | null {
+  const from = settlementPerson(s.from_user_id, s.from_guest_id);
+  const to = settlementPerson(s.to_user_id, s.to_guest_id);
+  if (!from || !to) return null;
+  return { from: personKey(from), to: personKey(to), amount: Number(s.amount) };
 }
 
 /** 이미 보낸 돈을 차액에서 뺀다 — 보낸 사람은 낼 돈이 줄고, 받은 사람은 받을 돈이 준다 */

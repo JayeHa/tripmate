@@ -9,17 +9,22 @@ import { EmptyState } from "@/shared/ui/empty-state";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Toast } from "@/shared/ui/toast";
 
-import { useExpenseList } from "../model/use-expense-list";
+import { type ExpenseList, useExpenseList } from "../model/use-expense-list";
+import { MobileDashboard } from "./mobile/mobile-dashboard";
 import { MobileExpenseList, TOAST_ABOVE_FAB } from "./mobile/mobile-expense-list";
 import { PcExpenseList } from "./pc/pc-expense-list";
 
-type ExpenseListViewProps = { tripId: string };
+type ExpenseListViewProps = {
+  tripId: string;
+  /** 모바일 탭 — 내역(목록) 또는 지출 · 정산(대시보드). PC 는 한 화면(오른쪽 패널이 대시보드)이라 쓰지 않는다 */
+  tab?: "list" | "stats";
+};
 
 /**
- * 가계부 목록. 데이터는 useExpenseList 가 쥐고, 배치는 모바일(요약 · 달력 띠 · 날짜 묶음) · PC(표 + 합계 칸)가 그린다.
+ * 가계부. 데이터는 useExpenseList 가 쥐고, 배치는 모바일(요약 · 달력 띠 · 날짜 묶음) · PC(표 + 합계 칸)가 그린다.
  * 첫 렌더(하이드레이션)에서는 화면 폭을 몰라 아무 레이아웃도 그리지 않는다. 읽기에 실패하면 안내와 「다시 시도」 를 보인다
  */
-export function ExpenseListView({ tripId }: ExpenseListViewProps) {
+export function ExpenseListView({ tripId, tab = "list" }: ExpenseListViewProps) {
   const list = useExpenseList(tripId);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   if (isDesktop === null) return null;
@@ -53,9 +58,17 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
       {isDesktop ? (
         <PcExpenseList tripId={tripId} list={list} />
       ) : (
-        <MobileExpenseList tripId={tripId} list={list} />
+        <MobileTab tab={tab} tripId={tripId} list={list} />
       )}
       <Toast message={list.toast} onDone={list.clearToast} mobileOffset={TOAST_ABOVE_FAB} />
     </>
   );
+}
+
+type MobileTabProps = { tab: "list" | "stats"; tripId: string; list: ExpenseList };
+
+/** 모바일 탭 하나 — 내역 또는 지출 · 정산 */
+function MobileTab({ tab, tripId, list }: MobileTabProps) {
+  if (tab === "stats") return <MobileDashboard tripId={tripId} list={list} />;
+  return <MobileExpenseList tripId={tripId} list={list} />;
 }

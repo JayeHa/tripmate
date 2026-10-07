@@ -24,6 +24,22 @@ const CATEGORY_ICON: Record<ExpenseCategory, { Icon: LucideIcon; tone: string; s
   other: { Icon: Ellipsis, tone: "text-cat-etc", soft: "bg-cat-etc-soft" },
 };
 
+/** 카테고리 진한 색의 바탕 — 비율 막대 */
+const CATEGORY_BAR: Record<ExpenseCategory, string> = {
+  food: "bg-cat-food",
+  transport: "bg-cat-move",
+  shopping: "bg-cat-shop",
+  activity: "bg-cat-sight",
+  lodging: "bg-cat-stay",
+  flight: "bg-cat-air",
+  other: "bg-cat-etc",
+};
+
+/** 비율 막대 한 칸의 색(진한 색 바탕). 모르는 카테고리는 기타 */
+export function categoryBarClass(category: ExpenseCategory): string {
+  return CATEGORY_BAR[category] ?? CATEGORY_BAR.other;
+}
+
 /** 모르는 카테고리(옛 데이터)는 기타로 그린다 */
 function iconOf(category: ExpenseCategory) {
   return CATEGORY_ICON[category] ?? CATEGORY_ICON.other;

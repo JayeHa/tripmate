@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import type { ExpenseTotals } from "@/entities/expense";
 import { type ExchangeRates, formatMoney, toHome } from "@/shared/lib/money";
@@ -19,6 +19,8 @@ type SummaryCardProps = {
   mySpent: number | null;
   /** 「지출내역 보기 ›」 가 갈 곳 */
   statsHref: string;
+  /** 카드 아래에 붙이는 것 — PC 의 정산 띠 */
+  children?: ReactNode;
 };
 
 /**
@@ -26,7 +28,15 @@ type SummaryCardProps = {
  * 금액을 누르면 통화별 합계(외화는 ≈ 원화)와 「지출내역 보기 ›」 가 펼쳐진다.
  * 환율이 없는 통화가 있으면 합계 · 내가 쓴 돈이 그만큼 빠지거나 보이지 않아, 그 이유를 카드 안에 한 줄로 알린다
  */
-export function SummaryCard({ total, home, rates, people, mySpent, statsHref }: SummaryCardProps) {
+export function SummaryCard({
+  total,
+  home,
+  rates,
+  people,
+  mySpent,
+  statsHref,
+  children,
+}: SummaryCardProps) {
   const [open, setOpen] = useState(false);
   const Chevron = open ? ChevronUp : ChevronDown;
   return (
@@ -80,6 +90,7 @@ export function SummaryCard({ total, home, rates, people, mySpent, statsHref }: 
           </Link>
         </div>
       )}
+      {children}
     </div>
   );
 }
