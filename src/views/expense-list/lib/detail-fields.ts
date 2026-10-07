@@ -31,9 +31,12 @@ type FieldContext = {
   meId: string | null;
 };
 
-/** 「 · 1인 ₩9,813」 — 둘 이상이 나눴을 때 기준 화폐로 한 사람 몫. 환율이 없으면 빈 글 */
+/**
+ * 「 · 1인 ₩9,813」 — 둘 이상이 똑같이 나눴을 때 기준 화폐로 한 사람 몫. 환율이 없으면 빈 글.
+ * 직접 나눈(custom) 옛 지출은 사람마다 몫이 달라 「1인」 이 맞는 사람이 없어서 보이지 않는다
+ */
 function perPersonText(e: ExpenseWithSplits, count: number, ctx: FieldContext): string {
-  if (count < 2) return "";
+  if (count < 2 || e.split_mode === "custom") return "";
   const home = ctx.trip.home_currency;
   try {
     const each = toHomeFor(e, Number(e.amount), home, ctx.trip.exchange_rates) / count;

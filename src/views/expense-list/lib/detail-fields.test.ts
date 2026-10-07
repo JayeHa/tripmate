@@ -29,6 +29,7 @@ const base = {
   payer_id: "me",
   payer_guest_id: null,
   split_each: false,
+  split_mode: "equal",
   paid: true,
   due_date: null,
   counted: true,
@@ -84,6 +85,10 @@ describe("detailFields", () => {
   it("혼자면 1인 몫이 없다", () => {
     const solo = { ...base, splits: [base.splits[0]] } as ExpenseWithSplits;
     expect(fieldsOf(solo).함께).toBe("혼자");
+  });
+
+  it("직접 나눈 비용은 1인 몫을 보이지 않는다", () => {
+    expect(fieldsOf({ ...base, split_mode: "custom" }).함께).toBe("함께 · 정원, 동규");
   });
 
   it("환율을 모르면 1인 몫을 빼고 보인다", () => {
