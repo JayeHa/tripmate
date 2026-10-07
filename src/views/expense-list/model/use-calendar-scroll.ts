@@ -88,6 +88,11 @@ export function useCalendarScroll(
         }
       }
       const f = frame();
+      // 맨 위면 맨 위 키(PC 「전체」) — 외화가 없으면 첫 묶음 머리가 처음부터 기준선에 붙어 있어 아래 계산으로는 가릴 수 없다
+      if (topKey !== undefined && f.scrollTop < 2) {
+        setSelected(topKey);
+        return;
+      }
       // 맨 아래까지 내렸으면 기준선에 못 닿는 마지막 날들도 고를 수 있게 — 화면 안에 머리가 보이는 마지막 묶음.
       // 처음부터 스크롤할 것이 없으면(짧은 목록) 맨 아래가 아니라 맨 위로 본다
       const limit = f.scrollTop > 0 && f.scrollTop >= f.max - 2 ? f.top + f.height : line;
