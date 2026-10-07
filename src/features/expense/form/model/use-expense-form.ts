@@ -6,6 +6,7 @@ import {
   type ExpenseFormValues,
   personOfKey,
 } from "@/entities/expense";
+import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import { decimalsOf } from "@/shared/lib/money";
 
@@ -14,6 +15,7 @@ import { missingText } from "../lib/missing";
 import { homeAmountOrNull, rateLine } from "../lib/rate-line";
 import { splitPreview } from "../lib/split-preview";
 import { startValues } from "../lib/start-values";
+import { useExpenseLink } from "./use-expense-link";
 import { type FormPerson, usePeoplePicker } from "./use-people-picker";
 
 type ExpenseFormOptions = {
@@ -21,6 +23,9 @@ type ExpenseFormOptions = {
   /** 멤버 · 정산 인원. 나를 맨 앞에 둔다 */
   people: FormPerson[];
   me: string;
+  /** 연결할 수 있는 일정 — 타임라인 일정과 대체 장소 줄 */
+  items: ScheduleItem[];
+  alternatives: ScheduleItem[];
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
@@ -30,13 +35,15 @@ type ExpenseFormOptions = {
 
 /**
  * 비용 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
- * 금액은 입력 중인 문자열로 들고 제출할 때 숫자로 바꾼다. 날짜를 바꾸면 연결 일정을 비운다(그날 일정에서만 고른다).
+ * 금액은 입력 중인 문자열로 들고 제출할 때 숫자로 바꾼다. 일정 연결은 useExpenseLink 가 쥔다.
  * 통화를 바꾸면 이 지출에만 적은 환율을 비운다(옛 통화 기준이라). 나누기는 균등 분할만 한다
  */
 export function useExpenseForm({
   trip,
   people,
   me,
+  items,
+  alternatives,
   initial,
   defaultSpentOn,
   onSubmit,
@@ -64,14 +71,30 @@ export function useExpenseForm({
   const [paymentMethod, setPaymentMethod] = useState(start.paymentMethod);
   const [category, setCategory] = useState<ExpenseCategory | null>(start.category);
   const [memo, setMemo] = useState(start.memo);
-  const [spentOn, setSpentOnState] = useState(start.spentOn);
-  const [itemId, setItemId] = useState(start.itemId);
+  const [spentOn, setSpentOn] = useState(start.spentOn);
   const [paid, setPaid] = useState(start.paid);
   const [dueDate, setDueDate] = useState(start.dueDate);
   const [counted, setCounted] = useState(start.counted);
   // 접힌 칸에 값이 있으면 펼친 채 연다 — 숨은 값을 모르고 저장하지 않게
   const [moreOpen, setMoreOpen] = useState(!!start.memo || !start.paid || !start.counted);
   const [error, setError] = useState<string | null>(null);
+  const link = useExpenseLink({
+    trip,
+    items,
+    alternatives,
+    startItemId: start.itemId,
+    editing: !!initial,
+    fields: {
+      spentOn,
+      setSpentOn,
+      category,
+      setCategory,
+      name,
+      setName,
+      setCounted,
+      openMore: () => setMoreOpen(true),
+    },
+  });
 
   const decimals = decimalsOf(currency);
   const numAmount = Number(amount) || 0;
@@ -86,7 +109,7 @@ export function useExpenseForm({
     participants: picker.participants,
     nameOf,
   });
-  const missing = missingText({ amount: numAmount, name, category });
+  const missing = missingText({ amount: numAmount, name: link.effectiveName(), category });
 
   /** 입력한 글을 이 통화의 금액 초안으로 */
   function setAmount(input: string) {
@@ -103,18 +126,12 @@ export function useExpenseForm({
     setRate(next === opened?.currency ? opened.rate : null);
   }
 
-  /** 날짜를 바꾸고 연결 일정을 비운다 */
-  function setSpentOn(date: string) {
-    setSpentOnState(date);
-    setItemId("");
-  }
-
   /** 검증을 통과하면 onSubmit, 아니면 첫 오류를 보인다 */
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (missing) return;
     const parsed = expenseFormSchema.safeParse({
-      name,
+      name: link.effectiveName(),
       amount: numAmount,
       currency,
       rate,
@@ -126,7 +143,7 @@ export function useExpenseForm({
       category,
       memo: memo || undefined,
       spent_on: spentOn || null,
-      schedule_item_id: itemId || null,
+      schedule_item_id: link.itemId || null,
       counted,
       paid,
       due_date: paid ? null : dueDate || null,
@@ -158,13 +175,12 @@ export function useExpenseForm({
     paymentMethod,
     setPaymentMethod,
     category,
-    setCategory,
+    setCategory: link.pickCategory,
     memo,
     setMemo,
     spentOn,
-    setSpentOn,
-    itemId,
-    setItemId,
+    setSpentOn: link.pickDay,
+    link,
     paid,
     setPaid,
     dueDate,

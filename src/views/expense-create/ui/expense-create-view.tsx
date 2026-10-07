@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { useCreateExpense, useTripGuests } from "@/entities/expense";
-import { useScheduleItems } from "@/entities/schedule-item";
+import { useCreateExpense, useExpenses, useTripGuests } from "@/entities/expense";
+import { useAlternatives, useScheduleItems } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
@@ -23,6 +23,8 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const members = membersQuery.data;
   const guests = guestsQuery.data;
   const { data: items } = useScheduleItems(tripId);
+  const { data: alternatives } = useAlternatives(tripId);
+  const { data: expenses } = useExpenses(tripId);
   const { data: user } = useUser();
   const create = useCreateExpense(tripId);
   const period = useSearchParams().get("period");
@@ -47,6 +49,8 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
       members={members}
       guests={guests}
       items={items}
+      alternatives={alternatives}
+      expenses={expenses}
       currentUserId={user.id}
       defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
       pending={create.isPending}

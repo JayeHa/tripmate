@@ -11,7 +11,7 @@ import {
   useTripGuests,
   useUpdateExpense,
 } from "@/entities/expense";
-import { useScheduleItems } from "@/entities/schedule-item";
+import { useAlternatives, useScheduleItems } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
@@ -44,6 +44,7 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
   const members = membersQuery.data;
   const guests = guestsQuery.data;
   const { data: items } = useScheduleItems(tripId);
+  const { data: alternatives } = useAlternatives(tripId);
   const { data: expenses } = useExpenses(tripId);
   const { data: user } = useUser();
   const update = useUpdateExpense(tripId);
@@ -86,6 +87,9 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
       members={members}
       guests={guests}
       items={items}
+      alternatives={alternatives}
+      expenses={expenses}
+      expenseId={expenseId}
       currentUserId={user.id}
       initial={initial}
       pending={update.isPending}
