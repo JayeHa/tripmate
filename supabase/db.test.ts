@@ -1568,7 +1568,7 @@ describe("정산 인원 · 각자 냄 · 송금 기록 (0034)", () => {
   });
 });
 
-describe("기준 화폐 바꾸기 (0037)", () => {
+describe("기준 화폐 바꾸기 (0037 · 0038)", () => {
   /** 기준 KRW · 100엔 = 855원 · 1달러 = 1,400원 여행과 지출 · 송금 기록 */
   async function setup(start: string) {
     await as(A);
@@ -1599,7 +1599,10 @@ describe("기준 화폐 바꾸기 (0037)", () => {
 
   it("여행 환율 · 지출별 환율 · 송금 기록을 새 기준으로, 새 기준으로 쓴 지출은 환율을 비운다", async () => {
     const trip = await setup("2028-01-01");
-    await db.query(`select public.change_home_currency($1, 'JPY', $2, 8.55)`, [trip, JPY_RATES]);
+    await db.query(`select public.change_home_currency($1, 'KRW', 'JPY', $2, 8.55)`, [
+      trip,
+      JPY_RATES,
+    ]);
 
     const t = await db.query<{ home: string; rates: unknown }>(
       `select home_currency home, exchange_rates rates from public.trips where id = '${trip}'`,
@@ -1626,11 +1629,11 @@ describe("기준 화폐 바꾸기 (0037)", () => {
     expect(s.rows[0].a).toBe("1537.78");
   });
 
-  it("같은 화폐 · 새 기준이 든 환율 · 옛 기준이 빠진 환율 · 0 이하 값 · 멤버가 아닌 사람은 거부하고 아무것도 바꾸지 않는다", async () => {
+  it("같은 화폐 · 새 기준이 든 환율 · 옛 기준이 빠진 환율 · 0 이하 값 · 화면이 알던 기준이 다름 · 멤버가 아닌 사람은 거부하고 아무것도 바꾸지 않는다", async () => {
     const trip = await setup("2028-01-03");
     const call = (currency: string, rates: string, factor: number) =>
       rejects(
-        `select public.change_home_currency('${trip}', '${currency}', '${rates}'::jsonb, ${factor})`,
+        `select public.change_home_currency('${trip}', 'KRW', '${currency}', '${rates}'::jsonb, ${factor})`,
       );
     expect(await call("KRW", JPY_RATES, 8.55)).toMatch(/already the home currency/);
     expect(
@@ -1644,6 +1647,12 @@ describe("기준 화폐 바꾸기 (0037)", () => {
       /must include the old home/,
     );
     expect(await call("JPY", JPY_RATES, 0)).toMatch(/factor must be positive/);
+    // 화면이 알던 기준(USD)이 지금 기준(KRW)과 다르면 — 다른 멤버가 먼저 바꾼 경우
+    expect(
+      await rejects(
+        `select public.change_home_currency('${trip}', 'USD', 'JPY', '${JPY_RATES}'::jsonb, 8.55)`,
+      ),
+    ).toMatch(/changed by someone else/);
 
     await as(B);
     expect(await call("JPY", JPY_RATES, 8.55)).toMatch(/not a member/);
@@ -1672,7 +1681,7 @@ describe("기준 화폐 바꾸기 (0037)", () => {
     await as(A);
     expect(
       await rejects(
-        `select public.change_home_currency('${trip}', 'JPY', '${JPY_RATES}'::jsonb, 8.55)`,
+        `select public.change_home_currency('${trip}', 'KRW', 'JPY', '${JPY_RATES}'::jsonb, 8.55)`,
       ),
     ).toMatch(/boom/);
     await db.exec(`

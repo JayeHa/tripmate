@@ -88,10 +88,12 @@ export async function updateTripDates({ tripId, startDate, endDate }: TripDates)
 
 /**
  * 기준 화폐를 바꾼다 — 여행 환율(새 기준으로 다시 계산한 값) · 지출별 환율 · 송금 기록 금액을 한 트랜잭션으로.
- * factor = 새 기준 1단위가 옛 기준으로 얼마인가(옛 기준 금액 ÷ factor = 새 기준 금액)
+ * factor = 새 기준 1단위가 옛 기준으로 얼마인가(옛 기준 금액 ÷ factor = 새 기준 금액).
+ * from = 화면이 알던 옛 기준 — 그사이 다른 사람이 바꿨으면 DB 가 거부한다(다른 기준의 factor 로 다시 나누지 않게)
  */
 export async function changeHomeCurrency(
   tripId: string,
+  from: string,
   currency: string,
   rates: ExchangeRates,
   factor: number,
@@ -99,6 +101,7 @@ export async function changeHomeCurrency(
   const supabase = createClient();
   const { error } = await supabase.rpc("change_home_currency", {
     p_trip_id: tripId,
+    p_from: from,
     p_currency: currency,
     p_rates: rates,
     p_factor: factor,

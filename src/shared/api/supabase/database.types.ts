@@ -673,7 +673,13 @@ export type Database = {
         Returns: undefined;
       };
       change_home_currency: {
-        Args: { p_trip_id: string; p_currency: string; p_rates: Json; p_factor: number };
+        Args: {
+          p_trip_id: string;
+          p_from: string;
+          p_currency: string;
+          p_rates: Json;
+          p_factor: number;
+        };
         Returns: undefined;
       };
       rotate_invite_token: {

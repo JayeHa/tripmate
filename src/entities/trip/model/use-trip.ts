@@ -52,14 +52,16 @@ export function useChangeHomeCurrency(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
+      from,
       currency,
       rates,
       factor,
     }: {
+      from: string;
       currency: string;
       rates: ExchangeRates;
       factor: number;
-    }) => changeHomeCurrency(tripId, currency, rates, factor),
+    }) => changeHomeCurrency(tripId, from, currency, rates, factor),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
       void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId) });

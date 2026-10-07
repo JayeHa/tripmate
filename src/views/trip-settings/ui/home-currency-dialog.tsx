@@ -94,7 +94,7 @@ function Body({ trip, values, onCancel, onChanged }: BodyProps) {
       )}
       {change.isError && (
         <p role="alert" className="text-[13px] text-destructive">
-          기준 화폐를 바꾸지 못했어요. 다시 시도해 주세요.
+          {changeErrorText(change.error)}
         </p>
       )}
       <AlertDialogFooter>
@@ -114,7 +114,7 @@ function Body({ trip, values, onCancel, onChanged }: BodyProps) {
           onClick={() => {
             if (!rates || factor === null) return;
             change.mutate(
-              { currency: to, rates, factor },
+              { from, currency: to, rates, factor },
               { onSuccess: () => onChanged(values, rates) },
             );
           }}
@@ -124,4 +124,12 @@ function Body({ trip, values, onCancel, onChanged }: BodyProps) {
       </AlertDialogFooter>
     </>
   );
+}
+
+/** 바꾸지 못한 이유 — 다른 멤버가 먼저 기준 화폐를 바꿨으면 새로 불러와 다시 하라고, 그 밖은 다시 시도 */
+function changeErrorText(error: Error | null): string {
+  if (error?.message.includes("changed by someone else")) {
+    return "다른 사람이 기준 화폐를 먼저 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요.";
+  }
+  return "기준 화폐를 바꾸지 못했어요. 다시 시도해 주세요.";
 }
