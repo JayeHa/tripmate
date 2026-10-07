@@ -30,20 +30,36 @@ type HomeCurrencyDialogProps = {
  * 「1달러 = [ ] 원」 을 물어 그 값으로 계산한다(넣어야 바꿀 수 있다). 폼에서 고친 환율 줄 대신 다시 계산한 환율이 저장된다
  */
 export function HomeCurrencyDialog({ trip, values, onCancel, onChanged }: HomeCurrencyDialogProps) {
+  // 요청을 창 바깥에 둔다 — 바꾸는 동안 Esc · 바깥 누르기로 닫히면 본문이 사라져,
+  // 기준 화폐는 바뀌었는데 같은 저장의 제목 · 기간이 저장되지 않는다(사라진 쪽의 onSuccess 는 불리지 않는다)
+  const change = useChangeHomeCurrency(trip.id);
   return (
-    <AlertDialog open={values !== null} onOpenChange={(open) => !open && onCancel()}>
+    <AlertDialog
+      open={values !== null}
+      onOpenChange={(open) => !open && !change.isPending && onCancel()}
+    >
       <AlertDialogContent>
-        {values && <Body trip={trip} values={values} onCancel={onCancel} onChanged={onChanged} />}
+        {values && (
+          <Body
+            trip={trip}
+            values={values}
+            change={change}
+            onCancel={onCancel}
+            onChanged={onChanged}
+          />
+        )}
       </AlertDialogContent>
     </AlertDialog>
   );
 }
 
-type BodyProps = Omit<HomeCurrencyDialogProps, "values"> & { values: TripFormValues };
+type BodyProps = Omit<HomeCurrencyDialogProps, "values"> & {
+  values: TripFormValues;
+  change: ReturnType<typeof useChangeHomeCurrency>;
+};
 
 /** 창 안 — 계산한 환율 미리 보기 · 모르는 환율 묻기 · 바꾸기 */
-function Body({ trip, values, onCancel, onChanged }: BodyProps) {
-  const change = useChangeHomeCurrency(trip.id);
+function Body({ trip, values, change, onCancel, onChanged }: BodyProps) {
   const { data: expenses = [] } = useExpenses(trip.id);
   const { data: settlements = [] } = useSettlements(trip.id);
   const from = trip.home_currency;
