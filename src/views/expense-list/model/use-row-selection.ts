@@ -9,10 +9,12 @@ const OWN_KEYS = "input, textarea, select, [role=menu], [role=listbox], [role=di
  * PC 가계부 표에서 고른 비용 — 오른쪽 패널이 그 비용의 상세가 된다. ↑↓ 는 보이는 줄 순서(`order`, 필터 반영)대로 옮기고
  * 옮긴 줄이 표에서 보이게 스크롤한다(줄에 `data-expense-id`). Esc 는 닫는다(요약으로).
  * `paused`(비용 창이 열림) 동안이나 입력칸 · 메뉴에 포커스가 있으면 키를 받지 않는다.
- * 고른 비용이 필터에 걸리거나 지워져 `order` 에 없으면 고르지 않은 것으로 본다
+ * 고른 비용이 필터에 걸리거나 지워져 `order` 에 없으면 선택을 비운다 — 가려 두기만 하면 필터를 풀 때 누르지 않은 상세가 다시 열린다
  */
 export function useRowSelection(order: string[], paused: boolean) {
   const [selected, setSelected] = useState<string | null>(null);
+  // 렌더 중에 비운다(이펙트를 거치면 한 번 더 그린다)
+  if (selected !== null && !order.includes(selected)) setSelected(null);
   // 키 처리는 한 번만 구독한다 — 렌더마다 바뀌는 값은 ref 로 본다
   const latest = useRef({ order, selected, paused });
   useEffect(() => {
@@ -44,7 +46,7 @@ export function useRowSelection(order: string[], paused: boolean) {
   }, []);
 
   return {
-    selected: selected !== null && order.includes(selected) ? selected : null,
+    selected,
     select: setSelected,
     clear: () => setSelected(null),
   };
