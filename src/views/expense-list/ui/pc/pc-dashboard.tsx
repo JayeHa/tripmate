@@ -1,15 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { SettleBand } from "@/entities/expense";
 
+import type { CategoryPick } from "../../lib/category-detail";
 import { useDashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { CategoryCard } from "../dashboard/category-card";
 import { SettleCard } from "../dashboard/settle-card";
 import { SettleLoadError } from "../dashboard/settle-load-error";
 import { SummaryCard } from "../mobile/summary-card";
+import { CategoryModal } from "./category-modal";
 
 type PcDashboardProps = { tripId: string; list: ExpenseList };
 
@@ -19,13 +22,14 @@ const CARD = "flex shrink-0 flex-col gap-3 rounded-[16px] border border-divider 
 /**
  * PC 가계부 오른쪽(줄을 고르지 않았을 때) — 요약(총 지출 · 내가 쓴 돈 + 정산 띠) → 카테고리 → 정산.
  * 모바일 「지출 · 정산」 탭과 같은 카드를 작은 크기로 그린다. 혼자 쓰는 가계부는 정산 띠 · 정산 카드가 없다.
- * 정산 띠 · 「자세히 보기」 는 정산 화면으로 간다
+ * 카테고리 줄 · 「전체 보기」 는 카테고리 상세 창을 연다. 정산 띠 · 「자세히 보기」 는 정산 화면으로 간다
  */
 export function PcDashboard({ tripId, list }: PcDashboardProps) {
   const router = useRouter();
   const { trip } = list;
   const settleHref = `/trips/${tripId}/expenses/settlement`;
   const dash = useDashboard(tripId, list);
+  const [category, setCategory] = useState<CategoryPick | null>(null);
   const home = trip.home_currency;
   return (
     <>
@@ -50,7 +54,7 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
         </SummaryCard>
       </div>
       <section className={CARD}>
-        <CategoryCard shares={dash.categories} home={home} size="sm" />
+        <CategoryCard shares={dash.categories} home={home} size="sm" onOpen={setCategory} />
       </section>
       {!list.solo && dash.settleFailed && (
         <section className={CARD}>
@@ -68,6 +72,7 @@ export function PcDashboard({ tripId, list }: PcDashboardProps) {
           />
         </section>
       )}
+      <CategoryModal list={list} opened={category} onClose={() => setCategory(null)} />
     </>
   );
 }

@@ -98,7 +98,7 @@ export function SummaryCard({
 type CurrencyLineProps = { code: string; amount: number; home: string; rates: ExchangeRates };
 
 /** 통화별 합계 한 줄 — 왼쪽 코드, 오른쪽 금액(외화면 아래 ≈ 원화, 환율이 없으면 빼고) */
-function CurrencyLine({ code, amount, home, rates }: CurrencyLineProps) {
+export function CurrencyLine({ code, amount, home, rates }: CurrencyLineProps) {
   const approx = code === home ? null : approxHome(amount, code, home, rates);
   return (
     <div className="flex min-h-11 items-center justify-between gap-3">
