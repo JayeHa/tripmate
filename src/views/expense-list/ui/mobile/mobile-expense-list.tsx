@@ -27,18 +27,18 @@ type MobileExpenseListProps = { tripId: string; list: ExpenseList };
 /**
  * 모바일 가계부 「내역」 — 머리 · 탭(내역 | 지출 · 정산) · 요약 카드 · 여행 날짜 달력 띠(붙음) · 날짜 묶음 · 「+ 비용 추가」.
  * 띠의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 띠가 따라간다. 「+ 비용 추가」 는 띠에서 고른 날로 연다.
- * 「지출 · 정산」 대시보드는 아직 없어 정산 화면으로 간다(#18 ⑩)
+ * 「지출 · 정산」 탭은 대시보드 주소(/stats)로 간다
  */
 export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
-  const statsHref = `${base}/settlement`;
+  const statsHref = `${base}/stats`;
   const cells = calendarCells(list.allSections, trip.start_date);
   const scroll = useCalendarScroll(cells.map((c) => c.key));
   return (
     <>
       <AppHeader title="가계부" subtitle={trip.title} back="/trips" />
-      <ListTabs statsHref={statsHref} />
+      <ListTabs active="list" listHref={base} statsHref={statsHref} />
       <SummaryCard
         total={list.total}
         home={trip.home_currency}

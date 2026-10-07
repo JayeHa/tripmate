@@ -25,12 +25,12 @@ import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { usePcList } from "../../model/use-pc-list";
 import { useRowSelection } from "../../model/use-row-selection";
-import { SummaryCard } from "../mobile/summary-card";
 import { DateRail } from "./date-rail";
 import { ExpenseDetailPanel } from "./expense-detail-panel";
 import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
+import { PcDashboard } from "./pc-dashboard";
 
 /**
  * [날짜 레일 200 | 표 | 오른쪽 패널] — 오른쪽 패널 너비를 쥔다(328~480, 처음 328). 창을 넓히면 표가 늘어난다.
@@ -56,13 +56,12 @@ const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_ME
 
 /**
  * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
- * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다.
+ * 필터는 표만 거른다(레일 · 오른쪽은 여행 전체). 오른쪽은 대시보드 카드(요약 · 카테고리 · 정산).
  * 표와 오른쪽 사이 경계선을 끌어 오른쪽 너비를 바꾼다. 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
  * 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
 export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
   const { trip } = list;
-  const base = `/trips/${tripId}/expenses`;
   const pc = usePcList();
   const split = useSplitWidth(EXPENSE_SPLIT);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -160,16 +159,7 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
               onClose={selection.clear}
             />
           ) : (
-            <div className="overflow-hidden rounded-[16px] border border-divider">
-              <SummaryCard
-                total={list.total}
-                home={trip.home_currency}
-                rates={trip.exchange_rates}
-                people={list.solo ? null : list.everyone}
-                mySpent={list.mySpent}
-                statsHref={`${base}/settlement`}
-              />
-            </div>
+            <PcDashboard tripId={tripId} list={list} />
           )}
         </aside>
       </div>

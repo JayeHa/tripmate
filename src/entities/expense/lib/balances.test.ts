@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { splitEqual } from "@/shared/lib/money";
 
 import type { ExpenseWithSplits, Settlement } from "../model/types";
-import { computeNetBalances } from "./balances";
+import { computeNetBalances, settlementTransfer } from "./balances";
 import { peopleOf, type PersonRef } from "./person";
 
 const rates = { JPY: { unit: 100, value: 900 } };
@@ -187,5 +187,21 @@ describe("computeNetBalances", () => {
 
     const after = computeNetBalances(expenses, members, "KRW", rates, [settlement("b", "a", 1000)]);
     expect(byId(after.net)).toEqual({ a: 1000, b: 0, c: -1000 });
+  });
+
+  it("송금 기록을 송금 한 줄로 — 사람 키와 금액", () => {
+    const record: Settlement = {
+      id: "t1",
+      trip_id: "t",
+      from_user_id: null,
+      from_guest_id: "g1",
+      to_user_id: "a",
+      to_guest_id: null,
+      amount: 1500,
+      settled_at: "",
+      created_by: null,
+    };
+    expect(settlementTransfer(record)).toEqual({ from: "g:g1", to: "m:a", amount: 1500 });
+    expect(settlementTransfer({ ...record, from_guest_id: null })).toBeNull();
   });
 });
