@@ -32,7 +32,13 @@ function settleOf(list: ExpenseList, settlements: Settlement[]) {
       missing: null,
       people: list.people.map((p) => {
         const key = personKey(p);
-        return { person: p, spent: b.spent[key] ?? 0, paid: b.paid[key] ?? 0 };
+        // net — 결제한 돈 − 쓴 돈에서 이미 보낸 돈을 뺀 남은 차액(사람 상세의 받을 돈 · 보낼 돈)
+        return {
+          person: p,
+          spent: b.spent[key] ?? 0,
+          paid: b.paid[key] ?? 0,
+          net: b.net[key] ?? 0,
+        };
       }),
       remaining: minimizeTransfers(b.net, decimalsOf(trip.home_currency)),
     };

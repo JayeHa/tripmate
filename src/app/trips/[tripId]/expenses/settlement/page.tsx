@@ -1,8 +1,14 @@
-import { SettlementView } from "@/views/settlement";
+import { ExpenseListView } from "@/views/expense-list";
 
 export const metadata = { title: "정산" };
 
-export default async function Page({ params }: PageProps<"/trips/[tripId]/expenses/settlement">) {
+export default async function Page({
+  params,
+  searchParams,
+}: PageProps<"/trips/[tripId]/expenses/settlement">) {
   const { tripId } = await params;
-  return <SettlementView tripId={tripId} />;
+  const { p } = await searchParams;
+  return (
+    <ExpenseListView tripId={tripId} tab="settle" person={typeof p === "string" ? p : undefined} />
+  );
 }

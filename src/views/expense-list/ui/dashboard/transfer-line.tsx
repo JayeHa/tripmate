@@ -1,5 +1,4 @@
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 
 import { personOfKey, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
@@ -9,20 +8,16 @@ import { PersonAvatar } from "./person-avatar";
 /** 표시 이름 · 사진 */
 type AvatarOf = (person: PersonRef) => { name: string; url: string | null };
 
-type MoreTransfersProps = { count: number; href: string | null; onOpen: () => void };
+type MoreTransfersProps = { count: number; onClick: () => void };
 
-/** 「+ N건 더 보기」 — 주소가 있으면 그리로(모바일), 없으면 그 자리에서 펼친다(PC) */
-export function MoreTransfers({ count, href, onOpen }: MoreTransfersProps) {
-  const className = "self-start pt-1 text-[13px] font-bold text-ink-500";
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        + {count}건 더 보기
-      </Link>
-    );
-  }
+/** 「+ N건 더 보기」 — 모바일은 정산 화면으로, PC 는 그 자리에서 펼친다(부른 쪽이 정한다) */
+export function MoreTransfers({ count, onClick }: MoreTransfersProps) {
   return (
-    <button type="button" onClick={onOpen} className={className}>
+    <button
+      type="button"
+      onClick={onClick}
+      className="self-start pt-1 text-[13px] font-bold text-ink-500"
+    >
       + {count}건 더 보기
     </button>
   );

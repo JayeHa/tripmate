@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { SettleBand } from "@/entities/expense";
+import { type PersonKey, SettleBand } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { AppHeader } from "@/shared/ui/app-header";
 
@@ -27,7 +27,9 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
   const router = useRouter();
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
-  const settleHref = `${base}/settlement`;
+  /** 정산 화면 — 사람을 주면 그 사람부터 */
+  const openSettle = (person: PersonKey | null) =>
+    router.push(`${base}/settlement${person ? `?p=${encodeURIComponent(person)}` : ""}`);
   const dash = useDashboard(tripId, list);
   const home = trip.home_currency;
   return (
@@ -59,7 +61,7 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
               state={dash.settle.band}
               home={home}
               personOf={dash.bandPersonOf}
-              onClick={() => router.push(settleHref)}
+              onClick={() => openSettle(null)}
             />
           )}
         </div>
@@ -81,7 +83,7 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
               settle={dash.settle}
               home={home}
               avatarOf={dash.avatarOf}
-              detailHref={settleHref}
+              onOpen={openSettle}
             />
           </section>
         )}
