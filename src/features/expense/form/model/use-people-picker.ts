@@ -31,10 +31,14 @@ export function usePeoplePicker({ people, me, start }: PeoplePickerOptions) {
   const [picked, setPicked] = useState(start.participants);
 
   const everyone = people.map((p) => p.key);
-  // 그사이 일행이 뺀 정산 인원은 고른 값에서 걸러 보인다(저장도 이 값) — 없는 인원으로 저장해 FK 에 걸리지 않게.
-  // 고른 값 자체는 두므로, 기기에 저장된 옛 목록으로 먼저 열렸다 새 목록이 와도 사라지지 않는다
-  const participants = picked ? liveParticipants(picked, everyone, me) : everyone;
-  const payer = splitEach ? null : livePayer(chosenPayer, everyone, me);
+  // 이 폼이 본 적 있는 사람 키. 렌더 중에 새 키를 더한다(이전 렌더 값에서 조정하는 패턴 — 이펙트를 거치지 않아 한 번에 맞는다)
+  const [seen, setSeen] = useState<ReadonlySet<string>>(() => new Set(everyone));
+  const unseen = everyone.filter((key) => !seen.has(key));
+  if (unseen.length > 0) setSeen(new Set([...seen, ...unseen]));
+  // 본 적 있다가 목록에서 사라진 정산 인원(일행이 뺌)은 고른 값에서 걸러 보인다(저장도 이 값) — 없는 인원으로 저장해 FK 에 걸리지 않게.
+  // 처음부터 목록에 없던 인원(기기에 저장된 옛 목록이라 아직 모르는 인원)은 거르지 않는다 — 실제로 있는 인원의 결제 · 몫을 바꾸지 않게
+  const participants = picked ? liveParticipants(picked, everyone, seen, me) : everyone;
+  const payer = splitEach ? null : livePayer(chosenPayer, everyone, seen, me);
   const allIn = people.every((p) => participants.includes(p.key));
 
   /** 사람 순서대로 정리한다 — 목록에 없는 키(옛 기록)는 뒤에 둔다 */
