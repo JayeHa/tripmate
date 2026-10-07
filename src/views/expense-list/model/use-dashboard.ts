@@ -77,7 +77,11 @@ export function useDashboard(tripId: string, list: ExpenseList) {
       ...settle,
       sent,
       me,
-      band: me ? settleBandState(settle.remaining, me, hasSharedExpense(list.expenses)) : null,
+      // 환율이 없어 계산하지 못했으면 띠를 그리지 않는다 — 빈 송금으로 계산하면 「모두 정산됐어요」 가 된다
+      band:
+        me && !settle.missing
+          ? settleBandState(settle.remaining, me, hasSharedExpense(list.expenses))
+          : null,
     },
   };
 }
