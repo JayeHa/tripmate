@@ -60,11 +60,15 @@ export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
           ))}
         </div>
         {bars && (
-          <div aria-hidden="true" className="flex h-22 items-end gap-2.5 pt-3">
+          // 긴 여행은 칸이 많다 — 칸마다 28 은 지키고 넘치면 막대 줄만 좌우로 스크롤한다(창 전체가 넓어지지 않게)
+          <div
+            aria-hidden="true"
+            className="-mx-5 flex h-22 items-end gap-2.5 overflow-x-auto px-5 pt-3"
+          >
             {bars.map((b) => (
               <div
                 key={b.key}
-                className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                className="flex h-full min-w-7 flex-1 shrink-0 flex-col items-center justify-end gap-1"
               >
                 <span
                   className={cn(
