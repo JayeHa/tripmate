@@ -1,40 +1,71 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 
-import { dayCount } from "@/shared/lib/days";
+import {
+  EXPENSE_CATEGORIES,
+  EXPENSE_CATEGORY_LABEL,
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHODS,
+  personKey,
+  sumExpenses,
+} from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
-import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import { FilterChip } from "@/shared/ui/filter-chip";
 
-import { periodLabel, periodParam } from "../../lib/period";
+import { baseRateLine } from "../../lib/base-rate";
+import { calendarCells } from "../../lib/calendar";
+import { filtersActive, matchesFilters } from "../../lib/filters";
+import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import type { ExpenseList } from "../../model/use-expense-list";
-import { TABLE_COLUMNS } from "./columns";
-import { ExpenseTableRow } from "./expense-table-row";
-import { SummaryPanel } from "./summary-panel";
+import { usePcList } from "../../model/use-pc-list";
+import { SummaryCard } from "../mobile/summary-card";
+import { DateRail } from "./date-rail";
+import { ExpenseTable } from "./expense-table";
+import { FilterBar } from "./filter-bar";
 
 type PcExpenseListProps = { tripId: string; list: ExpenseList };
 
+const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({
+  value: c,
+  label: EXPENSE_CATEGORY_LABEL[c],
+}));
+const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_METHOD_LABEL[m] }));
+
 /**
- * PC 가계부 — 왼쪽 표(머리 · 기간 칩 · 열 머리 · 여행준비 · day N 묶음과 묶음 합계 줄), 오른쪽 합계 칸(380).
- * 줄을 누르면 그 지출을 연다. 지출이 없는 날은 「아직 비용이 없어요」
+ * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
+ * 필터는 표만 거른다(레일 · 요약은 여행 전체). 오른쪽은 요약 카드 — 카테고리 · 정산 카드는 지출 · 정산 대시보드(#18 ⑩)에서 붙인다
  */
 export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
-  const periods = [
-    "all",
-    "prep",
-    ...Array.from({ length: dayCount(trip.start_date, trip.end_date) }, (_, i) => i),
-  ] as const;
+  const pc = usePcList();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const active = filtersActive(pc.filters);
+  const sections = active
+    ? list.sectionsOf((e) => matchesFilters(e, pc.filters))
+    : list.allSections;
+  const cells = calendarCells(list.allSections, trip.start_date);
+  const scroll = useCalendarScroll(
+    cells.map((c) => c.key),
+    { scroller: scrollerRef, topKey: "all" },
+  );
+  const filtered = sections.flatMap((s) => s.expenses);
+  const filteredTotal = sumExpenses(filtered, trip.home_currency, trip.exchange_rates);
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
-      <div className="flex min-w-0 flex-1 flex-col border-r border-divider">
-        <div className="flex shrink-0 flex-col gap-4 px-8 pt-6 pb-3.5">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-extrabold tracking-[-0.02em] text-ink-900">가계부</h1>
-            <span className="text-[15px] text-ink-400">{list.count}건</span>
+      <DateRail
+        items={cells.map((c, i) => ({ ...c, total: list.allSections[i].total.home }))}
+        home={trip.home_currency}
+        selected={scroll.selected}
+        onSelect={scroll.go}
+      />
+      <div className="flex min-w-0 flex-1 gap-5 px-6 py-5.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+          <div className="flex shrink-0 items-center gap-3">
+            <h1 className="text-[22px] font-extrabold text-ink-900">가계부</h1>
+            <span className="text-sm text-ink-400">{list.count}건</span>
             <span className="flex-1" />
             <Button
               variant="brand"
@@ -45,89 +76,47 @@ export function PcExpenseList({ tripId, list }: PcExpenseListProps) {
               + 비용 추가
             </Button>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {periods.map((p) => {
-              const text =
-                p === "all" ? { label: "전체", date: "" } : periodLabel(p, trip.start_date);
-              return (
-                <FilterChip
-                  key={String(p)}
-                  size="sm"
-                  className="h-8"
-                  selected={list.filter === p}
-                  onClick={() => list.setFilter(p)}
-                >
-                  {text.label}
-                  {text.date && <span className="font-medium opacity-75">{text.date}</span>}
-                </FilterChip>
-              );
-            })}
+          <FilterBar
+            pc={pc}
+            categories={CATEGORY_OPTIONS}
+            methods={METHOD_OPTIONS}
+            payers={list.people.map((p) => ({ value: personKey(p), label: list.displayNameOf(p) }))}
+            result={
+              active
+                ? `${filtered.length}건 · ${formatMoney(filteredTotal.home, trip.home_currency)}`
+                : null
+            }
+          />
+          <ExpenseTable
+            sections={sections}
+            list={list}
+            base={base}
+            mode={pc.mode}
+            onModeChange={pc.setMode}
+            rateLine={baseRateLine(
+              list.expenses.map((e) => e.currency),
+              trip.home_currency,
+              trip.exchange_rates,
+            )}
+            scrollerRef={scrollerRef}
+            headRef={scroll.stickyRef}
+            sectionRef={scroll.sectionRef}
+            keys={cells.map((c) => c.key)}
+          />
+        </div>
+        <aside className="flex w-82 shrink-0 flex-col gap-3 overflow-y-auto">
+          <div className="overflow-hidden rounded-[16px] border border-divider">
+            <SummaryCard
+              total={list.total}
+              home={trip.home_currency}
+              rates={trip.exchange_rates}
+              people={list.solo ? null : list.everyone}
+              mySpent={list.mySpent}
+              statsHref={`${base}/settlement`}
+            />
           </div>
-        </div>
-        <div
-          className={cn(
-            "shrink-0 border-y border-surface-muted bg-surface-sunken px-8 py-2.5 text-xs font-bold text-ink-400",
-            TABLE_COLUMNS,
-          )}
-        >
-          <span>카테고리</span>
-          <span>항목</span>
-          <span>결제</span>
-          <span>함께</span>
-          <span className="text-right">금액</span>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-          {list.sections.map((s) => {
-            const { label, date } = periodLabel(s.period, trip.start_date);
-            return (
-              <section key={String(s.period)} className="px-8">
-                <div className="flex items-center gap-1.5 pt-5 pb-2">
-                  <h2 className="text-[15px] font-extrabold text-ink-800">{label}</h2>
-                  {date && <span className="text-sm text-ink-400">{date}</span>}
-                </div>
-                {s.rows.map((row) => (
-                  <ExpenseTableRow
-                    key={row.id}
-                    row={row}
-                    href={`${base}/${row.id}`}
-                    onMarkPaid={() => list.markPaid(row.id)}
-                    paying={list.paying === row.id}
-                    avatarOf={list.avatarOf}
-                  />
-                ))}
-                {s.rows.length === 0 ? (
-                  <div className="flex items-center justify-between border-b border-surface-muted py-3.5">
-                    <span className="text-[13px] text-ink-350">아직 비용이 없어요</span>
-                    <Link
-                      href={`${base}/new?period=${periodParam(s.period)}`}
-                      className="text-[13px] font-bold text-primary"
-                    >
-                      + 비용 추가
-                    </Link>
-                  </div>
-                ) : (
-                  <div
-                    className={cn(
-                      "items-center border-b border-line bg-[#FAFBFC] py-3",
-                      TABLE_COLUMNS,
-                    )}
-                  >
-                    <span className="col-span-2 pl-9.5 text-[13px] font-bold text-ink-500">
-                      {label} 합계
-                    </span>
-                    <span />
-                    <span />
-                    <span className="text-right text-[15px] font-extrabold text-ink-900">
-                      {formatMoney(s.total.home, trip.home_currency)}
-                    </span>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
+        </aside>
       </div>
-      <SummaryPanel total={list.total} home={trip.home_currency} />
     </div>
   );
 }

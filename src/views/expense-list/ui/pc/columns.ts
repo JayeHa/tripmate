@@ -1,2 +1,3 @@
-/** PC 가계부 표의 열 — 카테고리 84 | 항목 | 결제 120 | 함께 160 | 금액 140. 머리 · 줄 · 합계 줄이 같이 쓴다 */
-export const TABLE_COLUMNS = "grid grid-cols-[84px_minmax(0,1fr)_120px_160px_140px] gap-4";
+/** PC 가계부 표의 열 — 카테고리 92 | 항목 | 결제 · 함께 150 | 결제수단 60 | 금액 128. 머리 · 줄이 같이 쓴다 */
+export const TABLE_COLUMNS =
+  "grid grid-cols-[92px_minmax(220px,1fr)_150px_60px_128px] items-center gap-3 px-4";

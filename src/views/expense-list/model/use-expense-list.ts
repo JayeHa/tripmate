@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import {
   computeNetBalances,
-  type ExpensePeriod,
   expenseSections,
   type ExpenseWithSplits,
   peopleOf,
@@ -42,7 +41,7 @@ function spentBy(
 }
 
 /**
- * 가계부 목록 화면의 데이터 — 기간 필터, 묶음(여행준비 · day N)과 줄 글, 총합계.
+ * 가계부 목록 화면의 데이터 — 묶음(여행준비 · day N)과 줄 글, 총합계 · 내가 쓴 돈. PC 는 필터로 거른 묶음을 sectionsOf 로 만든다.
  * 연결 일정 이름은 타임라인 일정과 대체 장소 줄에서 함께 찾는다(바꾸기로 대체 장소가 된 일정도 이름이 보이게)
  */
 export function useExpenseList(tripId: string) {
@@ -56,7 +55,6 @@ export function useExpenseList(tripId: string) {
   const { data: items = [] } = useScheduleItems(tripId);
   const { data: alternatives = [] } = useAlternatives(tripId);
   const markPaid = useMarkExpensePaid(tripId);
-  const [filter, setFilter] = useState<ExpensePeriod | "all">("all");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   /** 사람 이름 — 나는 「나」. 정산 인원은 이름만 있다 */
@@ -106,29 +104,27 @@ export function useExpenseList(tripId: string) {
     guests,
   );
   const me: PersonRef | null = user ? { kind: "member", id: user.id } : null;
-  /** 묶음과 줄 글 */
-  const toSections = (period: ExpensePeriod | "all") =>
-    expenseSections(expenses, trip, period).map((s) => ({
+  /** 묶음(여행준비 · day N, 비용 없는 날도)과 줄 글. 거르는 조건을 주면 맞는 비용만(PC 필터) */
+  const sectionsOf = (keep?: (e: ExpenseWithSplits) => boolean) =>
+    expenseSections(keep ? expenses.filter(keep) : expenses, trip).map((s) => ({
       ...s,
       rows: s.expenses.map((e) => expenseRowView(e, ctx)),
     }));
-  const allSections = toSections("all");
-  // PC 의 기간 칩으로 거른 묶음. 모바일은 필터가 없어(달력 띠로 옮겨 다닌다) 늘 allSections 를 쓴다 —
-  // 화면 폭이 바뀌어 PC → 모바일로 다시 그려져도 PC 에서 고른 필터에 갇히지 않게
-  const sections = filter === "all" ? allSections : toSections(filter);
+  const allSections = sectionsOf();
   return {
     trip,
     isPending,
     ready: true as const,
-    filter,
-    setFilter,
-    sections,
+    expenses,
     allSections,
+    sectionsOf,
     count: expenses.length,
     total: sumExpenses(expenses, trip.home_currency, trip.exchange_rates),
     /** 혼자 쓰는 가계부(사람이 나뿐) — 「내가 쓴 돈」 · 정산을 보이지 않는다 */
     solo: people.length <= 1,
-    /** 여행의 사람 수(멤버 + 정산 인원) — 「N명 모두」 를 가린다 */
+    /** 여행의 사람(멤버 + 정산 인원) — PC 「결제한 사람」 필터 */
+    people,
+    /** 여행의 사람 수 — 「N명 모두」 를 가린다 */
     everyone: people.length,
     /** 내가 쓴 돈. 아직 나를 모르거나 환율이 없으면 null */
     mySpent: me ? spentBy(me, people, expenses, trip.home_currency, trip.exchange_rates) : null,
@@ -148,4 +144,4 @@ export function useExpenseList(tripId: string) {
 }
 
 export type ExpenseList = Extract<ReturnType<typeof useExpenseList>, { ready: true }>;
-export type ExpenseListSection = ExpenseList["sections"][number];
+export type ExpenseListSection = ExpenseList["allSections"][number];

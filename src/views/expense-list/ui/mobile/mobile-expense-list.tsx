@@ -51,7 +51,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         cells={cells}
         selected={scroll.selected}
         onSelect={scroll.go}
-        stripRef={scroll.stripRef}
+        stripRef={scroll.stickyRef}
       />
       <main className="flex flex-col gap-7 pt-4 pb-45">
         {list.allSections.map((s, i) => (
