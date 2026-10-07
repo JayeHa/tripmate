@@ -11,13 +11,12 @@ import { Toast } from "@/shared/ui/toast";
 
 import { useExpenseList } from "../model/use-expense-list";
 import { MobileExpenseList } from "./mobile/mobile-expense-list";
-import { TOTAL_BAR_HEIGHT } from "./mobile/total-bar";
 import { PcExpenseList } from "./pc/pc-expense-list";
 
 type ExpenseListViewProps = { tripId: string };
 
 /**
- * 가계부 목록. 데이터는 useExpenseList 가 쥐고, 배치는 모바일(묶음 목록 + 합계 바) · PC(표 + 합계 칸)가 그린다.
+ * 가계부 목록. 데이터는 useExpenseList 가 쥐고, 배치는 모바일(요약 · 달력 띠 · 날짜 묶음) · PC(표 + 합계 칸)가 그린다.
  * 첫 렌더(하이드레이션)에서는 화면 폭을 몰라 아무 레이아웃도 그리지 않는다. 읽기에 실패하면 안내와 「다시 시도」 를 보인다
  */
 export function ExpenseListView({ tripId }: ExpenseListViewProps) {
@@ -56,7 +55,7 @@ export function ExpenseListView({ tripId }: ExpenseListViewProps) {
       ) : (
         <MobileExpenseList tripId={tripId} list={list} />
       )}
-      <Toast message={list.toast} onDone={list.clearToast} mobileOffset={TOTAL_BAR_HEIGHT} />
+      <Toast message={list.toast} onDone={list.clearToast} />
     </>
   );
 }

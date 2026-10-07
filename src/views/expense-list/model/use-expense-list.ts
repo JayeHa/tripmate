@@ -3,8 +3,12 @@
 import { useState } from "react";
 
 import {
+  computeNetBalances,
   type ExpensePeriod,
   expenseSections,
+  type ExpenseWithSplits,
+  peopleOf,
+  personKey,
   type PersonRef,
   sumExpenses,
   useExpenses,
@@ -16,9 +20,26 @@ import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { todayISO } from "@/shared/lib/days";
+import { type ExchangeRates, MissingRateError } from "@/shared/lib/money";
 import type { ToastMessage } from "@/shared/ui/toast";
 
 import { expenseRowView } from "../lib/row";
+
+/** 내가 쓴 돈(내 몫의 합, 기준 화폐). 환율이 없는 비용이 있으면 null — 틀린 합을 보이지 않는다 */
+function spentBy(
+  me: PersonRef,
+  people: PersonRef[],
+  expenses: ExpenseWithSplits[],
+  home: string,
+  rates: ExchangeRates,
+): number | null {
+  try {
+    return computeNetBalances(expenses, people, home, rates).spent[personKey(me)] ?? 0;
+  } catch (e) {
+    if (e instanceof MissingRateError) return null;
+    throw e;
+  }
+}
 
 /**
  * 가계부 목록 화면의 데이터 — 기간 필터, 묶음(여행준비 · day N)과 줄 글, 총합계.
@@ -80,6 +101,11 @@ export function useExpenseList(tripId: string) {
     nameOf,
     linkNameOf,
   };
+  const people = peopleOf(
+    members.map((m) => m.user_id),
+    guests,
+  );
+  const me: PersonRef | null = user ? { kind: "member", id: user.id } : null;
   const sections = expenseSections(expenses, trip, filter).map((s) => ({
     ...s,
     rows: s.expenses.map((e) => expenseRowView(e, ctx)),
@@ -93,6 +119,14 @@ export function useExpenseList(tripId: string) {
     sections,
     count: expenses.length,
     total: sumExpenses(expenses, trip.home_currency, trip.exchange_rates),
+    /** 혼자 쓰는 가계부(사람이 나뿐) — 「내가 쓴 돈」 · 정산을 보이지 않는다 */
+    solo: people.length <= 1,
+    /** 여행의 사람 수(멤버 + 정산 인원) — 「N명 모두」 를 가린다 */
+    everyone: people.length,
+    /** 내가 쓴 돈. 아직 나를 모르거나 환율이 없으면 null */
+    mySpent: me ? spentBy(me, people, expenses, trip.home_currency, trip.exchange_rates) : null,
+    /** 표시 이름 — 목록의 「나」 가 아니라 내 이름(「정원 결제」) */
+    displayNameOf: (person: PersonRef) => avatarOf(person).name || nameOf(person),
     /** 「결제 완료로」 — 실패하면 토스트로 알린다 */
     markPaid: (expenseId: string) =>
       markPaid.mutate(expenseId, {

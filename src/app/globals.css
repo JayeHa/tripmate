@@ -172,6 +172,9 @@
   --color-guest-tag: #b45309;
   --color-guest-tag-bg: #fff6db;
 
+  /* 가계부 달력 띠의 「결제 예정 있는 날」 점. 쇼핑 · 별점과 값이 같지만 뜻이 달라 따로 둔다 */
+  --color-planned-dot: #f59e0b;
+
   /* 메모 태그 */
   --color-tag-tip: #1f6feb;
   --color-tag-tip-bg: #e2edff;
