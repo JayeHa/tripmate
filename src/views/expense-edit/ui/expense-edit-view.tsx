@@ -7,15 +7,9 @@ import {
   type ExpenseFormValues,
   formValuesOf,
   useDeleteExpense,
-  useExpenses,
-  useTripGuests,
   useUpdateExpense,
 } from "@/entities/expense";
-import { useAlternatives, useScheduleItems } from "@/entities/schedule-item";
-import { useUser } from "@/entities/session";
-import { useTrip } from "@/entities/trip";
-import { useTripMembers } from "@/entities/trip-member";
-import { ExpenseForm, FormLoadError } from "@/features/expense/form";
+import { ExpenseForm, FormLoadError, useExpenseFormData } from "@/features/expense/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,16 +31,8 @@ type ExpenseEditViewProps = { tripId: string; expenseId: string };
  */
 export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
   const router = useRouter();
-  const tripQuery = useTrip(tripId);
-  const membersQuery = useTripMembers(tripId);
-  const guestsQuery = useTripGuests(tripId);
-  const trip = tripQuery.data;
-  const members = membersQuery.data;
-  const guests = guestsQuery.data;
-  const { data: items } = useScheduleItems(tripId);
-  const { data: alternatives } = useAlternatives(tripId);
-  const { data: expenses } = useExpenses(tripId);
-  const { data: user } = useUser();
+  const loaded = useExpenseFormData(tripId);
+  const expenses = loaded.data?.expenses;
   const update = useUpdateExpense(tripId);
   const remove = useDeleteExpense(tripId);
 
@@ -62,17 +48,8 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
         <p className="p-4 text-sm text-muted-foreground">지출을 찾을 수 없어요.</p>
       </>
     );
-  const loads = [tripQuery, membersQuery, guestsQuery];
-  // 기기에 저장된 값이 있으면 다시 읽기가 실패해도 그 값으로 연다 — 값이 없을 때만 안내
-  if (loads.some((q) => q.isError && q.data === undefined))
-    return (
-      <FormLoadError
-        title="비용 수정"
-        back={back}
-        onRetry={() => loads.forEach((q) => void q.refetch())}
-      />
-    );
-  if (!trip || !members || !guests || !user || !initial) return null;
+  if (loaded.failed) return <FormLoadError title="비용 수정" back={back} onRetry={loaded.retry} />;
+  if (!loaded.data || !initial) return null;
   return (
     <ExpenseForm
       key={expenseId}
@@ -83,14 +60,8 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
           onDelete={() => remove.mutate(expenseId, { onSuccess: () => router.replace(back) })}
         />
       }
-      trip={trip}
-      members={members}
-      guests={guests}
-      items={items}
-      alternatives={alternatives}
-      expenses={expenses}
+      {...loaded.data}
       expenseId={expenseId}
-      currentUserId={user.id}
       initial={initial}
       pending={update.isPending}
       submitError={update.error?.message ?? remove.error?.message}

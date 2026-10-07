@@ -46,7 +46,7 @@ function statusOf(itemId: string, noneChosen: boolean): LinkStatus {
  * 비용의 일정 연결. 일정을 고르면 날짜 · 카테고리를 그 일정으로 채운다 — 이 폼에서 사용자가 직접 바꾼 칸은 덮지 않는다.
  * 항목명은 비워 두면 일정 이름으로 저장한다. 날짜를 바꿔도 연결은 남고(여행준비 비용도 연결할 수 있다), 다르면 알린다.
  * 이미 연결된 비용을 다른 일정으로 바꾸면 바로 바꾸지 않고 「값도 바꾸기 / 연결만 바꾸기」 를 묻는다.
- * 합계 포함은 대체 장소 여부가 바뀔 때만 따라간다 — 대체 장소에 연결하면 빼고, 대체 장소에서 타임라인 일정으로 옮기면 넣는다
+ * 합계 포함은 대체 장소 여부가 바뀔 때만 따라간다 — 대체 장소에 연결하면 빼고, 대체 장소에서 타임라인 일정으로 옮기거나 연결을 지우면 넣는다
  * (「바꾸기」 와 같은 규칙). 같은 종류끼리 옮기면 사용자가 바꾼 값을 둔다
  */
 export function useExpenseLink({
@@ -62,10 +62,15 @@ export function useExpenseLink({
   const [dayTouched, setDayTouched] = useState(editing);
   const [categoryTouched, setCategoryTouched] = useState(editing);
   const [pending, setPending] = useState<ScheduleItem | null>(null);
-
-  const days = dayOptions(trip.start_date, trip.end_date);
   const findItem = (id: string) =>
     items.find((i) => i.id === id) ?? alternatives.find((i) => i.id === id) ?? null;
+  // 마지막으로 연결했던 일정이 대체 장소였나 — 합계 포함을 되돌릴지 정하는 기준.
+  // 지금 연결(`linked`)로 보면 ✕ · 「연결 안 함」 뒤에 기준을 잃는다. 처음 값은 저장된 연결에서(폼은 일정 · 대체 장소를 다 읽은 뒤 열린다)
+  const [onAlternative, setOnAlternative] = useState(
+    () => (startItemId ? findItem(startItemId)?.alternative_of : null) != null,
+  );
+
+  const days = dayOptions(trip.start_date, trip.end_date);
   const linked = itemId ? findItem(itemId) : null;
   const status = statusOf(itemId, noneChosen);
   const dateOf = (item: ScheduleItem) => dayIndexToDate(trip.start_date, item.day_index);
@@ -85,10 +90,15 @@ export function useExpenseLink({
       setDayTouched(false);
       setCategoryTouched(false);
     }
-    const wasAlternative = linked?.alternative_of != null;
     const alternative = item.alternative_of !== null;
-    if (alternative !== wasAlternative) fields.setCounted(!alternative);
+    follow(alternative);
     if (alternative) fields.openMore();
+  }
+
+  /** 대체 장소 여부가 바뀔 때만 합계 포함을 따라 바꾼다 — 대체 장소면 빼고, 아니게 되면(다른 일정 · 연결 지움) 넣는다 */
+  function follow(alternative: boolean) {
+    if (alternative !== onAlternative) fields.setCounted(!alternative);
+    setOnAlternative(alternative);
   }
 
   /** 목록에서 일정을 골랐다 — 이미 다른 일정에 연결돼 있으면 묻는다 */
@@ -137,15 +147,17 @@ export function useExpenseLink({
     pick,
     confirmRelink,
     cancelRelink: () => setPending(null),
-    /** 연결을 지운다(✕) — 다시 「어느 일정에서…」 로 */
+    /** 연결을 지운다(✕) — 다시 「어느 일정에서…」 로. 대체 장소 연결이었으면 합계에 다시 넣는다 */
     clear: () => {
       setItemId("");
       setNoneChosen(false);
+      follow(false);
     },
-    /** 「연결 안 함」 을 골랐다 */
+    /** 「연결 안 함」 을 골랐다. 대체 장소 연결이었으면 합계에 다시 넣는다 */
     chooseNone: () => {
       setItemId("");
       setNoneChosen(true);
+      follow(false);
     },
     /** 날짜를 직접 바꿨다 — 이제 연결이 날짜를 덮지 않는다 */
     pickDay: (date: string) => {
