@@ -672,6 +672,16 @@ export type Database = {
         Args: { p_trip_id: string; p_start: string; p_end: string };
         Returns: undefined;
       };
+      add_trip_currency: {
+        Args: {
+          p_trip_id: string;
+          p_home: string;
+          p_code: string;
+          p_unit: number;
+          p_value: number;
+        };
+        Returns: undefined;
+      };
       change_home_currency: {
         Args: {
           p_trip_id: string;

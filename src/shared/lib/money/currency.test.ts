@@ -37,6 +37,6 @@ describe("currencyName", () => {
   it("아는 통화는 이름, 모르는 통화는 코드", () => {
     expect(currencyName("JPY")).toBe("엔");
     expect(currencyName("KRW")).toBe("원");
-    expect(currencyName("CHF")).toBe("CHF");
+    expect(currencyName("XYZ")).toBe("XYZ");
   });
 });
