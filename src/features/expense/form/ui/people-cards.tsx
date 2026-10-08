@@ -9,11 +9,13 @@ type FoldedSectionProps = { form: ExpenseFormState; onOpen: () => void };
 /** 접힌 카드 — 「누가 내고, 누구와 나눴나요?」 14/700 / 「정원 결제 · 2명 모두 함께」 13/500 한 줄 말줄임 + ⌄ */
 export function FoldedSection({ form, onOpen }: FoldedSectionProps) {
   const { picker, people } = form;
-  const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "";
+  // 목록에서 빠진 사람(옛 비용)은 폼 본체처럼 「알 수 없음」 — 빈 이름이 끼지 않게
+  const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "알 수 없음";
   const summary = peopleSummary({
     payer: picker.payer,
     participants: picker.participants,
     allIn: picker.allIn,
+    everyone: people.length,
     nameOf,
   });
   return (
