@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronDown, ChevronUp, NotebookPen, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { MEMO_MAX } from "@/entities/schedule-item";
 import { dayLabel } from "@/shared/lib/days";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { FilterChip } from "@/shared/ui/filter-chip";
@@ -47,7 +48,7 @@ function DayMemoBody({
 }: DayMemoBodyProps) {
   const form = useDayMemo(tripId, dayIndex, onClose);
   const [picking, setPicking] = useState(false);
-  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
+  useReportLock(form.locked, onLockChange);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2.5 rounded-card bg-surface-sunken px-3.5 py-3">

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { itemName, type Place, type ScheduleItem } from "@/entities/schedule-item";
 import type { SearchCity } from "@/shared/lib/google-places";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
@@ -51,7 +52,7 @@ export function PlaceFormDialog({ open, onOpenChange, mode, ...rest }: PlaceForm
   const [locked, setLocked] = useState(false);
   const body = { ...rest, onClose: () => onOpenChange(false), onLockChange: setLocked };
   return (
-    <Dialog open={open} onOpenChange={(next) => (next || !locked) && onOpenChange(next)}>
+    <Dialog open={open} locked={locked} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         className="inset-0 flex h-dvh w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none bg-white p-0 ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(760px,calc(100dvh-2rem))] lg:w-140 lg:max-w-140 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
@@ -79,7 +80,7 @@ function AddBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<AddMod
     alternativeOf: mode.alternativeOf ?? null,
     onSaved: mode.onSaved,
   });
-  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
+  useReportLock(form.locked, onLockChange);
   const onInfo = form.step === "info";
   const copy = addCopy(mode);
   return (
@@ -145,7 +146,7 @@ function addCopy(mode: AddMode) {
  */
 function EditBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<EditMode>) {
   const form = usePlaceEditForm({ tripId, city, place: mode.place, onSaved: mode.onSaved });
-  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
+  useReportLock(form.locked, onLockChange);
   const onInfo = form.step === "info";
   return (
     <PlaceFormLayout

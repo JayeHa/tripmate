@@ -1,15 +1,29 @@
 "use client";
 
 // Base UI 의 AlertDialog 는 바깥 누르기로 닫히지 않게 고정돼 있다(disablePointerDismissal). 시안은 바깥을 누르면 취소라
-// Dialog 위에 role="alertdialog" 만 붙여 쓴다. 닫으면 안 되는 동안은 각 창의 onOpenChange 가 막는다
+// Dialog 위에 role="alertdialog" 만 붙여 쓴다. 닫으면 안 되는 동안은 locked 로 막는다
 import { Dialog as AlertDialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "cn";
 import * as React from "react";
 
 import { Button } from "@/shared/ui/button";
 
-function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+type AlertDialogProps = AlertDialogPrimitive.Root.Props & {
+  /** 요청이 서버에 가 있는 동안 — 바깥 누르기 · Esc 로 닫히지 않는다(Dialog 의 locked 와 같다) */
+  locked?: boolean;
+};
+
+/** 확인 창 — Base UI Dialog 에 locked 를 더했다 */
+function AlertDialog({ locked = false, onOpenChange, ...props }: AlertDialogProps) {
+  return (
+    <AlertDialogPrimitive.Root
+      data-slot="alert-dialog"
+      onOpenChange={(open, details) => {
+        if (open || !locked) onOpenChange?.(open, details);
+      }}
+      {...props}
+    />
+  );
 }
 
 function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {

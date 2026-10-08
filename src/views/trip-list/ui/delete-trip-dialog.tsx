@@ -23,7 +23,7 @@ type Props = {
 export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onConfirm }: Props) {
   return (
     // 삭제 중에는 닫지 않는다. 닫히면 실패해도 알 수 없다.
-    <AlertDialog open={Boolean(trip)} onOpenChange={(open) => !open && !locked && onCancel()}>
+    <AlertDialog open={Boolean(trip)} locked={locked} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
         {trip && (
           <>

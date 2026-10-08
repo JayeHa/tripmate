@@ -45,7 +45,7 @@ export function MoveDialog({ tripId, open, pair, onClose }: MoveDialogProps) {
     onClose();
   };
   return (
-    <Dialog open={open && !!pair} onOpenChange={(next) => !next && !actions.locked && close()}>
+    <Dialog open={open && !!pair} locked={actions.locked} onOpenChange={(next) => !next && close()}>
       <DialogContent className="grid-cols-[minmax(0,1fr)] gap-3.5 px-5 pt-5.5 pb-4.5 sm:max-w-100">
         {pair && (
           <MoveFields

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { MEMO_MAX, type ScheduleItem } from "@/entities/schedule-item";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 import { TimeField } from "@/shared/ui/time-field";
@@ -30,7 +31,7 @@ type NoteBodyProps = NoteDialogProps & { onLockChange: (locked: boolean) => void
 /** 칸 묶음. 상태는 useNoteEdit */
 function NoteBody({ tripId, item, onClose, onLockChange }: NoteBodyProps) {
   const form = useNoteEdit(tripId, item, onClose);
-  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
+  useReportLock(form.locked, onLockChange);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">

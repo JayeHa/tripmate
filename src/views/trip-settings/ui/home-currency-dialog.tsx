@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useExpenses, useSettlements } from "@/entities/expense";
 import { type Trip, type TripFormValues, useChangeHomeCurrency } from "@/entities/trip";
 import { appliedFactor, currencyName, rebaseFactor, rebaseRates } from "@/shared/lib/money";
+import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -33,16 +34,21 @@ export function HomeCurrencyDialog({ trip, values, onCancel, onChanged }: HomeCu
   // 요청을 창 바깥에 둔다 — 바꾸는 동안 Esc · 바깥 누르기로 닫히면 본문이 사라져,
   // 기준 화폐는 바뀌었는데 같은 저장의 제목 · 기간이 저장되지 않는다(사라진 쪽의 onSuccess 는 불리지 않는다)
   const change = useChangeHomeCurrency(trip.id);
+  // 닫히는 동안에도 본문을 그리고, 열 때마다 새로 그린다(지난번에 적은 환율이 남지 않게)
+  const shown = useHeldWhileClosing(values !== null, values);
+  const opens = useOpenCount(values !== null);
   return (
     <AlertDialog
       open={values !== null}
-      onOpenChange={(open) => !open && !change.isPending && onCancel()}
+      locked={change.isPending}
+      onOpenChange={(open) => !open && onCancel()}
     >
       <AlertDialogContent>
-        {values && (
+        {shown && (
           <Body
+            key={opens}
             trip={trip}
-            values={values}
+            values={shown}
             change={change}
             onCancel={onCancel}
             onChanged={onChanged}

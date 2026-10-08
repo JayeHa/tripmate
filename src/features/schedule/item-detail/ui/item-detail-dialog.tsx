@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
 import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
 import { linkedExpensesOf } from "../lib/alternatives";
@@ -54,7 +55,7 @@ export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetai
   // 함께 사라져 저장된 줄 안다. 잠금 여부는 본문의 훅들이 알아서 본문이 알려 준다
   const [locked, setLocked] = useState(false);
   return (
-    <Dialog open={!!row} onOpenChange={(open) => !open && !locked && onClose()}>
+    <Dialog open={!!row} locked={locked} onOpenChange={(open) => !open && onClose()}>
       <DialogContent showCloseButton={false} className={isDesktop ? PC_CLASS : MOBILE_CLASS}>
         {row && (
           <DetailBody
@@ -118,7 +119,7 @@ function MainDetail({
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
   const { data: expenses = [] } = useExpenses(tripId);
   const locked = plan.locked || actions.locked || alternatives.locked;
-  useEffect(() => onLockChange(locked), [locked, onLockChange]);
+  useReportLock(locked, onLockChange);
   const content = (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
       <DetailContent

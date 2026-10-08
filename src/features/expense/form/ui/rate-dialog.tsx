@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { currencyName } from "@/shared/lib/money";
+import { useOpenCount } from "@/shared/lib/use-dialog-state";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -16,7 +17,7 @@ import type { ExpenseFormState } from "../model/use-expense-form";
 type RateDialogProps = {
   form: Pick<
     ExpenseFormState,
-    "rateOpen" | "rateOpens" | "closeRate" | "currency" | "home" | "rate" | "setRate" | "tripRates"
+    "rateOpen" | "closeRate" | "currency" | "home" | "rate" | "setRate" | "tripRates"
   >;
 };
 
@@ -26,11 +27,12 @@ type RateDialogProps = {
  * 기준 화폐로 쓴 비용은 바꿀 환율이 없어 「설정불가」. 통화는 금액 칸의 통화 칩에서 바꾼다
  */
 export function RateDialog({ form }: RateDialogProps) {
+  const opens = useOpenCount(form.rateOpen);
   return (
     <AlertDialog open={form.rateOpen} onOpenChange={(open) => !open && form.closeRate()}>
       <AlertDialogContent className="gap-0 overflow-hidden p-0 sm:max-w-85">
         {/* 닫히는 동안에도 내용을 둔다(비우면 빈 틀이 줄어들며 사라진다). 열 때마다 key 를 바꿔 칸을 새로 채운다 */}
-        <RateBody key={form.rateOpens} form={form} />
+        <RateBody key={opens} form={form} />
       </AlertDialogContent>
     </AlertDialog>
   );

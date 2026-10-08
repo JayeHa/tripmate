@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
 import type { PersonKey } from "@/entities/expense";
+import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 
 import type { Dashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
@@ -24,16 +23,8 @@ type SettleModalProps = {
 export function SettleModal({ list, dash, opened, onClose }: SettleModalProps) {
   const isOpen = opened !== undefined;
   // 닫히는 동안에도 내용을 그리도록 마지막으로 연 사람을 붙잡고, 열릴 때마다 key 를 바꿔 새로 그린다
-  const [wasOpen, setWasOpen] = useState(isOpen);
-  const [shown, setShown] = useState<PersonKey | null>(opened ?? null);
-  const [opens, setOpens] = useState(0);
-  if (isOpen !== wasOpen) {
-    setWasOpen(isOpen);
-    if (isOpen) {
-      setShown(opened);
-      setOpens((n) => n + 1);
-    }
-  }
+  const shown = useHeldWhileClosing(isOpen, opened ?? null);
+  const opens = useOpenCount(isOpen);
   return (
     <ScreenModal open={isOpen} onClose={onClose} title="정산" subtitle={list.trip.title}>
       {dash.settle && (

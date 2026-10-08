@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 import { CreateExpense, EditExpense } from "./expense-editors";
@@ -28,21 +29,15 @@ type ExpenseDialogProps = {
  */
 export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
   const [locked, setLocked] = useState(false);
-  // 닫히는 동안(페이드 아웃)에도 내용을 그리도록 마지막으로 연 대상을 붙잡아 둔다 — 비우면 빈 흰 상자가 잠깐 남는다.
-  // 렌더 중에 이전 값에서 조정한다(이펙트를 거치면 한 프레임 비어 보인다)
-  // 열 때마다 폼을 새로 그린다 — 붙잡아 둔 내용 때문에 닫았다 다시 연 「비용 추가」 가 지난 입력을 이어받지 않게
-  const [shown, setShown] = useState(target);
-  const [opened, setOpened] = useState(0);
-  if (target !== null && target !== shown) {
-    setShown(target);
-    setOpened((n) => n + 1);
-  }
-  /** 요청 중이 아니면 닫는다 */
+  // 닫히는 동안에도 내용을 그리고, 열 때마다 폼을 새로 그린다 — 닫았다 다시 연 「비용 추가」 가 지난 입력을 이어받지 않게
+  const shown = useHeldWhileClosing(target !== null, target);
+  const opened = useOpenCount(target !== null);
+  /** 요청 중이 아니면 닫는다 — 폼의 ✕ */
   const close = () => {
     if (!locked) onClose();
   };
   return (
-    <Dialog open={target !== null} onOpenChange={(open) => !open && close()}>
+    <Dialog open={target !== null} locked={locked} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
         className="flex h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:max-w-none lg:h-[min(760px,calc(100dvh-2rem))] lg:w-110 lg:rounded-sheet"

@@ -5,6 +5,8 @@ import { Dialog, DialogContent } from "@/shared/ui/dialog";
 type FlowDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 요청이 서버에 가 있는 동안 — Esc · 바깥 클릭으로 닫히지 않는다 */
+  locked?: boolean;
   /** 1024px 아래에서 그릴 전체 화면 레이아웃 */
   mobile: React.ReactNode;
   /** 1024px 이상에서 그릴 가운데 모달 레이아웃 */
@@ -16,9 +18,9 @@ type FlowDialogProps = {
  * PC 는 가운데 760×660(창이 낮으면 줄고 본문이 안에서 스크롤), 1024px 아래는 전체 화면.
  * 두 레이아웃을 CSS 로 갈라 함께 그리므로, 상태는 감싸는 쪽이 하나만 들고 둘에 넘긴다.
  */
-export function FlowDialog({ open, onOpenChange, mobile, pc }: FlowDialogProps) {
+export function FlowDialog({ open, onOpenChange, locked, mobile, pc }: FlowDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} locked={locked} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         className="inset-0 h-dvh w-full max-w-none translate-0 gap-0 overflow-hidden rounded-none bg-white p-0 shadow-sheet ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(660px,calc(100dvh-2rem))] lg:w-190 lg:max-w-190 lg:-translate-1/2 lg:rounded-sheet"
