@@ -32,6 +32,8 @@ type EditorCommon = {
 };
 
 type CreateExpenseProps = EditorCommon & {
+  /** 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) — 날짜 · 카테고리도 그 일정으로 */
+  itemId?: string;
   /** 주소의 period(prep · 0-base 날) — 처음 날짜. 없거나 모르는 값이면 여행 첫날 */
   period?: string | null;
 };
@@ -48,6 +50,7 @@ export function CreateExpense({
   back,
   period = null,
   onLockChange,
+  itemId,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
@@ -63,6 +66,7 @@ export function CreateExpense({
       onClose={onClose}
       {...loaded.data}
       defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
+      presetItemId={itemId}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values, _opened, receipts) =>

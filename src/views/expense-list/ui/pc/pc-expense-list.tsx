@@ -12,6 +12,7 @@ import {
   ReceiptThumbs,
   sumExpenses,
 } from "@/entities/expense";
+import { ExpenseDialog, type ExpenseDialogTarget } from "@/features/expense/form";
 import { formatMoney } from "@/shared/lib/money";
 import type { SplitConfig } from "@/shared/lib/split";
 import { useSplitWidth } from "@/shared/lib/use-split-width";
@@ -31,7 +32,6 @@ import { useRowSelection } from "../../model/use-row-selection";
 import { CategoryModal } from "./category-modal";
 import { DateRail } from "./date-rail";
 import { ExpenseDetailPanel } from "./expense-detail-panel";
-import { ExpenseModal, type ExpenseModalTarget } from "./expense-modal";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
 import { PcDashboard } from "./pc-dashboard";
@@ -75,7 +75,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
   const pc = usePcList();
   const split = useSplitWidth(EXPENSE_SPLIT);
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const [modal, setModal] = useState<ExpenseModalTarget | null>(null);
+  const [modal, setModal] = useState<ExpenseDialogTarget | null>(null);
   const active = filtersActive(pc.filters);
   const sections = active
     ? list.sectionsOf((e) => matchesFilters(e, pc.filters))
@@ -189,7 +189,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
           )}
         </aside>
       </div>
-      <ExpenseModal tripId={tripId} target={modal} onClose={() => setModal(null)} />
+      <ExpenseDialog tripId={tripId} target={modal} onClose={() => setModal(null)} />
       <CategoryModal list={list} opened={screens.category} onClose={screens.closeCategory} />
       <SettleModal list={list} dash={dash} opened={screens.settle} onClose={screens.closeSettle} />
     </div>

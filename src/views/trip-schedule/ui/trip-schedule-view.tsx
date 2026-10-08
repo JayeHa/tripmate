@@ -174,6 +174,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             overlays.showToast(message);
           }}
           onMemo={overlays.openMemo}
+          onExpense={overlays.openExpense}
           onToast={overlays.showToast}
         />
       )}

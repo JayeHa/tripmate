@@ -1,5 +1,9 @@
 import { type ExpenseCategory, type ExpenseFormValues, personKey } from "@/entities/expense";
+import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
+import { dayIndexToDate } from "@/shared/lib/days";
+
+import { expenseCategoryOf } from "./link-items";
 
 type StartOptions = {
   trip: Trip;
@@ -9,6 +13,8 @@ type StartOptions = {
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd. 없으면 여행 첫날 */
   defaultSpentOn?: string;
+  /** 새 지출을 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) — 날짜 · 카테고리 · 합계 포함을 그 일정에 맞춘다 */
+  presetItem?: ScheduleItem | null;
 };
 
 /**
@@ -18,8 +24,29 @@ type StartOptions = {
  * 카테고리는 비워 두고 고르게 한다(필수 칸). 금액은 입력 칸이 다루는 문자열로, 날짜 없음(여행준비 · 예정일)은 빈 글로 바꾼다.
  * 환율은 칸이 없어 처음 값을 들고만 있다
  */
-export function startValues({ trip, currencies, me, initial, defaultSpentOn }: StartOptions) {
+export function startValues({
+  trip,
+  currencies,
+  me,
+  initial,
+  defaultSpentOn,
+  presetItem,
+}: StartOptions) {
   if (initial) return savedValues(initial);
+  const blank = newValues(trip, currencies, me, defaultSpentOn);
+  if (!presetItem) return blank;
+  // 일정에서 연 새 지출 — 그 일정의 날 · 카테고리(일정 종류로), 대체 장소면 합계에서 뺀다(연결할 때와 같은 규칙)
+  return {
+    ...blank,
+    itemId: presetItem.id,
+    spentOn: dayIndexToDate(trip.start_date, presetItem.day_index),
+    category: expenseCategoryOf(presetItem),
+    counted: presetItem.alternative_of === null,
+  };
+}
+
+/** 새 지출의 기본값 */
+function newValues(trip: Trip, currencies: string[], me: string, defaultSpentOn?: string) {
   return {
     name: "",
     amount: "",

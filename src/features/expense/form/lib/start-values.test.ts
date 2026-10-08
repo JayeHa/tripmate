@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ExpenseFormValues } from "@/entities/expense";
+import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 
 import { startValues } from "./start-values";
@@ -68,6 +69,25 @@ describe("startValues", () => {
       itemId: "",
       paid: false,
       dueDate: "2026-10-20",
+      counted: false,
+    });
+  });
+
+  it("일정에서 연 새 지출 — 그 일정의 날 · 카테고리로, 대체 장소면 합계에서 뺀다", () => {
+    const ramen = {
+      id: "s1",
+      kind: "place",
+      day_index: 1,
+      alternative_of: null,
+      place: { name: "라멘", category: "food" },
+    } as unknown as ScheduleItem;
+    expect(startValues({ ...base, presetItem: ramen })).toMatchObject({
+      itemId: "s1",
+      spentOn: "2026-11-01",
+      category: "food",
+      counted: true,
+    });
+    expect(startValues({ ...base, presetItem: { ...ramen, alternative_of: "s0" } })).toMatchObject({
       counted: false,
     });
   });

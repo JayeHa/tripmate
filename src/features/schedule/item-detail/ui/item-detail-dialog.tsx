@@ -39,11 +39,13 @@ type ItemDetailDialogProps = {
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
   /** ⋯ 메뉴의 이동 · 삭제가 끝났다 — 상세는 닫히고 부른 쪽이 토스트(message)를 띄운다 */
   onToast: (message: string) => void;
+  /** 비용 「+」 · 비용 줄 — 부른 쪽이 그 일정(itemId)의 비용 창을 상세 위에 연다. 새로 쓰면 expenseId 는 null */
+  onExpense: (itemId: string, expenseId: string | null) => void;
 };
 
 /**
  * 일정 상세 — 카드를 누르면 열린다. 모바일은 바텀시트, PC 는 가운데 모달.
- * 장소 정보(공용) · 이번 일정(이 방문만) · 메모 · 대체 장소를 보이고, 이번 일정 · 메모는 그 자리에서 고친다.
+ * 장소 정보(공용) · 이번 일정(이 방문만) · 비용 · 메모 · 대체 장소를 보이고, 이번 일정 · 메모는 그 자리에서 고친다.
  */
 export function ItemDetailDialog({ row, isDesktop, onClose, ...rest }: ItemDetailDialogProps) {
   // 저장 · 이동 · 삭제 요청이 서버에 가 있는 동안은 Esc · 바깥 클릭 · X 로 닫히지 않는다 — 닫히면 실패 문구가
@@ -103,6 +105,7 @@ function MainDetail({
   onSwapped,
   onMemo,
   onToast,
+  onExpense,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
@@ -121,6 +124,7 @@ function MainDetail({
         row={row}
         plan={plan}
         onMemo={(memo) => onMemo(row, memo)}
+        onExpense={(expenseId) => onExpense(row.item.id, expenseId)}
         alternatives={{
           actions: alternatives,
           onAdd: (city) => onAddAlternative(row.item, city),
