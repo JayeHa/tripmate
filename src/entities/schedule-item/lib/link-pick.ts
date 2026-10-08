@@ -56,6 +56,11 @@ export function filterLinkGroups(
     .filter((g) => g.items.length > 0);
 }
 
+/** 날짜 필터의 처음 값 — 그 날에 묶음(일정)이 없으면 전체(null). 없는 날로 열면 목록이 비고 칩은 안 걸린 것처럼 보인다 */
+export function startLinkDay(groups: LinkPickGroup[], day: string | null): string | null {
+  return day !== null && groups.some((g) => g.key === day) ? day : null;
+}
+
 /** 카테고리 필터의 줄 — 목록에 있는 카테고리만, 처음 나온 순서대로 */
 export function linkPickCategories(groups: LinkPickGroup[]): LinkPickCategory[] {
   const seen = new Map<string, LinkPickCategory>();

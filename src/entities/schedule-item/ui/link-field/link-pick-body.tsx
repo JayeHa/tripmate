@@ -12,6 +12,7 @@ import {
   linkPickCategories,
   type LinkPickFilter,
   type LinkPickGroup,
+  startLinkDay,
 } from "../../lib/link-pick";
 
 type LinkPickBodyProps = {
@@ -29,7 +30,7 @@ type LinkPickBodyProps = {
  */
 export function LinkPickBody({ groups, value, defaultDay, onPick }: LinkPickBodyProps) {
   const [filter, setFilter] = useState<LinkPickFilter>({
-    day: defaultDay,
+    day: startLinkDay(groups, defaultDay),
     category: null,
     query: "",
   });

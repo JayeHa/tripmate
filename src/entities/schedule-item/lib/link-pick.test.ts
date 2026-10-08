@@ -5,6 +5,7 @@ import {
   findLinkPick,
   linkPickCategories,
   type LinkPickGroup,
+  startLinkDay,
 } from "./link-pick";
 
 const sight = { value: "sight", label: "관광" };
@@ -70,5 +71,13 @@ describe("linkPickCategories · findLinkPick", () => {
     expect(findLinkPick(groups, "c")?.group.short).toBe("day 2");
     expect(findLinkPick(groups, "x")).toBeNull();
     expect(findLinkPick(groups, null)).toBeNull();
+  });
+});
+
+describe("startLinkDay", () => {
+  it("일정이 있는 날이면 그날, 없는 날이면 전체", () => {
+    expect(startLinkDay(groups, "1")).toBe("1");
+    expect(startLinkDay(groups, "2")).toBeNull();
+    expect(startLinkDay(groups, null)).toBeNull();
   });
 });
