@@ -37,7 +37,11 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
   const pin = (field: PinField) => (
     <PinButton
       on={pinned.includes(field)}
-      onClick={() => onToast?.(pinToast(field, prefs.togglePin(field)))}
+      onClick={() => {
+        // 고정은 알림을 받을 곳이 없어도 바꾼다 — onToast?.(…) 안에서 부르면 onToast 가 없을 때 인자 계산까지 건너뛴다
+        const on = prefs.togglePin(field);
+        onToast?.(pinToast(field, on));
+      }}
     />
   );
   /** 칸 하나 */
