@@ -18,6 +18,7 @@ import {
   syncReceipts,
   type UploadedReceipt,
 } from "../api/receipts";
+import { LINK_GONE } from "../lib/link-gone";
 import type { ExpenseFormValues } from "./schema";
 
 export function useExpenses(tripId: string) {
@@ -44,7 +45,21 @@ export function useCreateExpense(tripId: string) {
       void qc.invalidateQueries({ queryKey: queryKeys.receipts(tripId) });
       return qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) });
     },
+    onError: (error) => refetchItemsIfLinkGone(qc, tripId, error),
   });
+}
+
+/**
+ * 연결 일정이 지워져 저장이 막혔으면 일정 목록을 다시 읽는다 — 폼이 그 일정이 사라진 것을 알아채 연결을 풀고(#161),
+ * 다시 저장하면 연결 없이 들어간다
+ */
+function refetchItemsIfLinkGone(
+  qc: ReturnType<typeof useQueryClient>,
+  tripId: string,
+  error: Error,
+) {
+  if (error.message === LINK_GONE)
+    void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
 }
 
 /** 지출 고치기 — `opened` 는 수정 폼을 연 때의 값(그때와 달라진 칸만 보낸다) */
@@ -70,6 +85,7 @@ export function useUpdateExpense(tripId: string) {
       void qc.invalidateQueries({ queryKey: queryKeys.receipts(tripId) });
       return qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) });
     },
+    onError: (error) => refetchItemsIfLinkGone(qc, tripId, error),
   });
 }
 

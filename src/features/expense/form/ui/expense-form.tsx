@@ -6,7 +6,6 @@ import { useRef } from "react";
 import {
   type ExpenseFormValues,
   type ExpenseReceipt,
-  type ExpenseWithSplits,
   personKey,
   type ReceiptChange,
   type TripGuest,
@@ -65,10 +64,6 @@ type ExpenseFormProps = {
   /** 연결할 수 있는 일정 — 타임라인 일정과 대체 장소 줄 */
   items?: ScheduleItem[];
   alternatives?: ScheduleItem[];
-  /** 여행의 비용 — 일정마다 이미 쓴 돈을 보이려고 */
-  expenses?: ExpenseWithSplits[];
-  /** 고치는 비용의 id — 이미 쓴 돈에서 뺀다 */
-  expenseId?: string;
   currentUserId: string;
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
@@ -106,8 +101,6 @@ export function ExpenseForm({
   guests,
   items = [],
   alternatives = [],
-  expenses = [],
-  expenseId,
   currentUserId,
   initial,
   defaultSpentOn,
@@ -153,8 +146,6 @@ export function ExpenseForm({
             trip={trip}
             items={items}
             alternatives={alternatives}
-            expenses={expenses}
-            expenseId={expenseId}
             quick={linked !== null}
           />
           <NameField form={form} />

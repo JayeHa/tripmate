@@ -7,6 +7,7 @@ import { dayIndexToDate } from "@/shared/lib/days";
 
 import { dayOptions, dayOptionText } from "../lib/day-options";
 import { expenseCategoryOf } from "../lib/link-items";
+import { linkState } from "../lib/link-state";
 import { type RelinkRow, relinkRows } from "../lib/relink";
 
 /** 연결이 채우는 칸 — 폼이 쥐고, 이 훅은 바꾸기만 한다 */
@@ -34,15 +35,6 @@ type ExpenseLinkOptions = {
   dayPreset: boolean;
   fields: LinkedFields;
 };
-
-/** 일정 연결 칸의 모양 — 연결됨 · 「연결 안 함」 을 골랐음 · 아직 안 고름(「어느 일정에서 쓴 돈인가요?」) */
-export type LinkStatus = "linked" | "none" | "prompt";
-
-/** 연결 칸의 모양 */
-function statusOf(itemId: string, noneChosen: boolean): LinkStatus {
-  if (itemId) return "linked";
-  return noneChosen ? "none" : "prompt";
-}
 
 /**
  * 비용의 일정 연결. 일정을 고르면 날짜 · 카테고리를 그 일정으로 채운다 — 이 폼에서 사용자가 직접 바꾼 칸은 덮지 않는다.
@@ -75,7 +67,16 @@ export function useExpenseLink({
 
   const days = dayOptions(trip.start_date, trip.end_date);
   const linked = itemId ? findItem(itemId) : null;
-  const status = statusOf(itemId, noneChosen);
+  // 연 사이 일행이 일정을 지웠으면 연결이 없는 것으로 본다(#161)
+  const state = linkState(itemId, linked !== null, noneChosen);
+  // 사라진 일정이 대체 장소였으면 합계에 다시 넣는다 — ✕ · 「연결 안 함」 과 같은 규칙.
+  // 렌더 중에 맞춘다(같은 컴포넌트의 상태). follow 가 onAlternative 를 내려 한 번만 돈다
+  if (state.gone && onAlternative) follow(false);
+  // 마지막으로 본 연결 일정 이름. 항목명을 비워 두면 연결 일정 이름으로 저장하는데, 일정이 사라지면 항목명도 비어
+  // 「완료」 가 꺼진다 — 그때 이 이름을 항목명 칸에 채워 「그대로 저장」 할 수 있게 한다(렌더 중, 한 번만)
+  const [lastName, setLastName] = useState(linked ? itemName(linked) : "");
+  if (linked && itemName(linked) !== lastName) setLastName(itemName(linked));
+  if (state.gone && !fields.name.trim() && lastName) fields.setName(lastName);
   const dateOf = (item: ScheduleItem) => dayIndexToDate(trip.start_date, item.day_index);
   /** 날짜 칸 아래 「연결된 일정은 day N이에요」 — 연결 일정과 날짜가 다를 때만 */
   const dayMismatch =
@@ -115,8 +116,8 @@ export function useExpenseLink({
 
   /** 목록에서 일정을 골랐다 — 이미 다른 일정에 연결돼 있으면 묻는다 */
   function pick(item: ScheduleItem) {
-    if (itemId && itemId !== item.id) setPending(item);
-    else if (itemId !== item.id) apply(item, "fill");
+    if (state.itemId && state.itemId !== item.id) setPending(item);
+    else if (state.itemId !== item.id) apply(item, "fill");
   }
 
   /**
@@ -155,9 +156,14 @@ export function useExpenseLink({
 
   return {
     days,
-    itemId,
+    /** 저장할 연결 id — 사라진 일정이면 빈 글 */
+    itemId: state.itemId,
     linked,
-    status,
+    status: state.status,
+    /** 연결했던 일정이 사라졌다 — 칸 아래에 알린다 */
+    gone: state.gone,
+    /** 날짜를 직접 골랐다(수정 · 날짜를 미리 골라 연 비용 포함) — 고르기 창이 그날로 걸러 연다 */
+    dayTouched,
     dayMismatch,
     pending,
     pendingRows,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ScheduleItem } from "@/entities/schedule-item";
 
-import { expenseCategoryOf, linkRows } from "./link-items";
+import { expenseCategoryOf, linkGroups } from "./link-items";
 
 type Patch = Partial<Omit<ScheduleItem, "place">> & {
   category?: string | null;
@@ -38,56 +38,46 @@ function item({ category = null, lat = 1, ...patch }: Patch): ScheduleItem {
   };
 }
 
-const all = { day: "all" as const, category: "all" as const, query: "" };
-
-describe("linkRows", () => {
+describe("linkGroups", () => {
   const items = [
     item({ name: "라멘", category: "food", day_index: 1, position: 1, start_time: "12:30:00" }),
     item({ name: "신주쿠", category: "sight", day_index: 0, position: 1 }),
     item({ name: "메모", kind: "note", day_index: 0, position: 2 }),
     item({ name: "숙소", category: "stay", day_index: 0, position: 0, lat: null }),
     item({ name: "KE703", kind: "flight", day_index: 0, position: 3 }),
-    item({ name: "카페", category: "cafe", day_index: 1, position: 0 }),
+    item({ name: "온천", category: "rest", day_index: 3, position: 0 }),
   ];
   const alternatives = [
     item({ name: "츠케멘", category: "food", day_index: 1, alternative_of: "라멘" }),
   ];
+  const groups = linkGroups("2026-10-31", items, alternatives);
 
-  it("날짜 · 순서대로, 메모는 빼고, 대체 장소는 붙은 일정 바로 아래 — 번호는 그날 좌표 있는 장소만", () => {
-    expect(linkRows(items, alternatives, all).map((r) => [r.name, r.n, r.sub])).toEqual([
-      ["숙소", null, "day 1 · 숙소"],
-      ["신주쿠", 1, "day 1 · 관광명소"],
-      ["KE703", null, "day 1 · 항공편"],
-      ["카페", 1, "day 2 · 카페"],
-      ["라멘", 2, "day 2 · 음식점 · 12:30"],
-      ["츠케멘", null, "day 2 · 대체 장소 · 음식점"],
+  it("날짜 묶음 · 순서대로, 메모는 빼고, 대체 장소는 붙은 일정 바로 아래 — 일정이 없는 날은 묶음이 없다", () => {
+    expect(groups.map((g) => [g.key, g.short, g.date])).toEqual([
+      ["0", "day 1", "10.31 (토)"],
+      ["1", "day 2", "11.1 (일)"],
+      ["3", "day 4", "11.3 (화)"],
+    ]);
+    expect(groups.map((g) => g.items.map((i) => [i.title, i.meta]))).toEqual([
+      [
+        ["숙소", "숙소"],
+        ["신주쿠", "관광명소"],
+        ["KE703", "항공편"],
+      ],
+      [
+        ["라멘", "음식점 · 12:30"],
+        ["츠케멘", "대체 장소 · 음식점"],
+      ],
+      [["온천", "휴식"]],
     ]);
   });
 
-  it("날짜를 고르면 그날만, 줄에 날짜를 빼고 — 걸러도 번호는 그대로", () => {
-    const rows = linkRows(items, alternatives, { ...all, day: 1 });
-    expect(rows.map((r) => [r.name, r.n, r.sub])).toEqual([
-      ["카페", 1, "카페"],
-      ["라멘", 2, "음식점 · 12:30"],
-      ["츠케멘", null, "대체 장소 · 음식점"],
-    ]);
-  });
-
-  it("종류 — 식당은 음식점 · 카페, 항공은 항공편", () => {
-    expect(linkRows(items, alternatives, { ...all, category: "food" }).map((r) => r.name)).toEqual([
-      "카페",
-      "라멘",
-      "츠케멘",
-    ]);
-    expect(
-      linkRows(items, alternatives, { ...all, category: "flight" }).map((r) => r.name),
-    ).toEqual(["KE703"]);
-  });
-
-  it("검색어가 있으면 날짜 필터를 보지 않고 모든 날에서 찾는다", () => {
-    const rows = linkRows(items, alternatives, { day: 0, category: "all", query: "멘" });
-    expect(rows.map((r) => r.name)).toEqual(["라멘", "츠케멘"]);
-    expect(rows[0].sub).toBe("day 2 · 음식점 · 12:30");
+  it("카테고리 필터 값 · 썸네일 — 항공편은 항공, 휴식은 필터 없음", () => {
+    const flat = groups.flatMap((g) => g.items);
+    const of = (title: string) => flat.find((i) => i.title === title);
+    expect(of("KE703")).toMatchObject({ category: { value: "flight" }, thumbCategory: "air" });
+    expect(of("라멘")).toMatchObject({ category: { value: "food", label: "식비" } });
+    expect(of("온천")).toMatchObject({ category: null, thumbCategory: "rest" });
   });
 });
 
