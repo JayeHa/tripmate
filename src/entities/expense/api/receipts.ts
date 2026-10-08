@@ -74,7 +74,11 @@ export async function removeReceiptFiles(tripId: string, keys: string[]): Promis
   await callReceipts({ action: "remove", tripId, keys }).catch(() => undefined);
 }
 
-/** 올린 파일을 지출에 붙인다(한 요청이라 모두 붙거나 하나도 안 붙는다) */
+/**
+ * 올린 파일을 지출에 붙인다(한 요청이라 모두 붙거나 하나도 안 붙는다). 이미 붙은 키는 건너뛴다 —
+ * 앞선 저장이 붙이기까지 하고 뒤 단계에서 실패했을 때 다시 저장해도 같은 키로 막히지 않게.
+ * (upsert 로 겹침을 넘기면 장수 트리거가 겹침 검사보다 먼저 돌아 3장에서 거부된다)
+ */
 export async function attachReceipts(
   tripId: string,
   expenseId: string,
@@ -82,9 +86,20 @@ export async function attachReceipts(
 ): Promise<void> {
   if (files.length === 0) return;
   const supabase = createClient();
+  const { data: existing, error: readError } = await supabase
+    .from("expense_receipts")
+    .select("key")
+    .in(
+      "key",
+      files.map((f) => f.key),
+    );
+  if (readError) throw readError;
+  const attached = new Set((existing ?? []).map((r) => r.key));
+  const fresh = files.filter((f) => !attached.has(f.key));
+  if (fresh.length === 0) return;
   const { error } = await supabase
     .from("expense_receipts")
-    .insert(files.map((f) => ({ ...f, trip_id: tripId, expense_id: expenseId })));
+    .insert(fresh.map((f) => ({ ...f, trip_id: tripId, expense_id: expenseId })));
   if (error) throw error;
 }
 
