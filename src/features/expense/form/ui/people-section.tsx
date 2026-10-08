@@ -73,7 +73,7 @@ type SharedSectionProps = {
 
 /**
  * 일행이 있는 가계부의 섹션 — 제목 + 「+ 인원 추가」, 결제한 사람 줄, 함께한 사람 줄, 미리보기.
- * 접히면 「누가 내고, 누구와」 + 지금 값 한 줄(결제한 사람 이름만 굵게)
+ * 접히면 「누가 내고, 누구와 나눴나요?」 + 지금 값 한 줄(결제한 사람 이름만 굵게)
  */
 function SharedSection({ form, onAdd, open, onOpenChange }: SharedSectionProps) {
   const { picker, people } = form;

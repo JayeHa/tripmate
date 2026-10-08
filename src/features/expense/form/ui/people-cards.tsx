@@ -6,7 +6,7 @@ import type { FormPerson } from "../model/use-people-picker";
 
 type FoldedSectionProps = { form: ExpenseFormState; onOpen: () => void };
 
-/** 접힌 카드 — 「누가 내고, 누구와」 14/700 / 「정원 결제 · 2명 모두 함께」 13/500 한 줄 말줄임 + ⌄ */
+/** 접힌 카드 — 「누가 내고, 누구와 나눴나요?」 14/700 / 「정원 결제 · 2명 모두 함께」 13/500 한 줄 말줄임 + ⌄ */
 export function FoldedSection({ form, onOpen }: FoldedSectionProps) {
   const { picker, people } = form;
   const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "";
@@ -24,7 +24,7 @@ export function FoldedSection({ form, onOpen }: FoldedSectionProps) {
       className="flex items-center gap-2 rounded-card bg-surface-sunken px-4 py-3.5 text-left"
     >
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-sm font-bold text-ink-900">누가 내고, 누구와</span>
+        <span className="text-sm font-bold text-ink-900">누가 내고, 누구와 나눴나요?</span>
         <span className="truncate text-[13px] font-medium text-ink-500">
           {summary.lead && <b className="font-bold text-ink-900">{summary.lead}</b>}
           {summary.rest}
