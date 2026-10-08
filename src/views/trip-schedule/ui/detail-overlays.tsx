@@ -90,7 +90,12 @@ export function DetailOverlays({
       {o.note && <NoteDialog key={o.note.id} tripId={tripId} item={o.note} onClose={o.closeNote} />}
 
       <Toast message={o.toast} onDone={o.clearToast} />
-      <ExpenseDialog tripId={tripId} target={o.expense} onClose={o.closeExpense} />
+      <ExpenseDialog
+        tripId={tripId}
+        target={o.expense}
+        onClose={o.closeExpense}
+        onToast={o.showToast}
+      />
     </>
   );
 }

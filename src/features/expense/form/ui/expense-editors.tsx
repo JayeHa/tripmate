@@ -33,6 +33,8 @@ type EditorCommon = {
   back?: string;
   /** 빠른 입력 — 일정 상세에서 열었다(ExpenseForm 의 quick) */
   quick?: boolean;
+  /** 짧은 알림(입력 칸 고정 · 풀기) — 부른 화면이 하나를 그린다 */
+  onToast?: (text: string) => void;
 };
 
 type CreateExpenseProps = EditorCommon & {
@@ -56,6 +58,7 @@ export function CreateExpense({
   onLockChange,
   itemId,
   quick,
+  onToast,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
@@ -78,6 +81,7 @@ export function CreateExpense({
         (loaded.data.expenses ?? []).map((e) => e.currency),
       )}
       quick={quick}
+      onToast={onToast}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values, _opened, receipts) =>
@@ -110,6 +114,7 @@ export function EditExpense({
   onLockChange,
   onDeleted,
   quick,
+  onToast,
 }: EditExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const update = useUpdateExpense(tripId);
@@ -147,6 +152,7 @@ export function EditExpense({
       {...loaded.data}
       initial={initial}
       quick={quick}
+      onToast={onToast}
       receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}
       pending={update.isPending}
       submitError={update.error?.message ?? remove.error?.message}

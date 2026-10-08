@@ -142,6 +142,8 @@ export function useExpenseList(tripId: string) {
     paying: markPaid.isPending ? markPaid.variables : null,
     toast,
     clearToast: () => setToast(null),
+    /** 짧은 알림 — 비용 입력 창의 「고정했어요」 등 */
+    showToast: (text: string) => setToast({ text, id: Date.now() }),
     avatarOf,
     /** 그 지출에 붙은 영수증 — PC 표의 클립 아이콘 · 상세 패널 */
     receiptsOf: (expenseId: string) => receipts.filter((r) => r.expense_id === expenseId),
