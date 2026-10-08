@@ -31,8 +31,10 @@ export type ReceiptDraft = {
  * 사진 · PDF 만, 장당 10MB, 지출당 3장까지(RECEIPT_MAX_COUNT) — 넘는 파일은 올리지 않고 이유를 알린다
  */
 export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
+  // 폼을 연 때의 영수증 — 열어 둔 사이 일행이 붙인 줄(실시간으로 initial 에 생긴다)을 「뗄 것」 으로 잡지 않게 고정한다
+  const [opened] = useState(initial);
   const [items, setItems] = useState<ReceiptDraft[]>(() =>
-    initial.map((r) => ({
+    opened.map((r) => ({
       uid: r.id,
       id: r.id,
       key: r.key,
@@ -91,7 +93,7 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
         attach: items.flatMap((d) =>
           !d.id && d.key ? [{ key: d.key, name: d.name, mime: d.mime, size: d.size }] : [],
         ),
-        detach: initial.filter((r) => !kept.has(r.id)).map((r) => ({ id: r.id, key: r.key })),
+        detach: opened.filter((r) => !kept.has(r.id)).map((r) => ({ id: r.id, key: r.key })),
       };
     },
   };
