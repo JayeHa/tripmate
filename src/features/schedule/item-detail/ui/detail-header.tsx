@@ -4,6 +4,7 @@ import { itemName, NumberMarker, type TimelineRow } from "@/entities/schedule-it
 import { dayLabel } from "@/shared/lib/days";
 import { DialogTitle } from "@/shared/ui/dialog";
 
+import type { LinkedExpenses } from "../lib/alternatives";
 import type { ItemActions } from "../model/use-item-actions";
 import { ItemMenu } from "./item-menu";
 
@@ -12,6 +13,8 @@ type DetailHeaderProps = {
   startDate: string;
   totalDays: number;
   actions: ItemActions;
+  /** 이 일정과 그 대체 장소에 연결된 비용 — 삭제 확인에서 알린다 */
+  linkedExpenses: LinkedExpenses;
   /** 요청이 서버에 가 있는 동안 — 닫기를 막는다 */
   locked: boolean;
   onClose: () => void;
@@ -23,6 +26,7 @@ export function DetailHeader({
   startDate,
   totalDays,
   actions,
+  linkedExpenses,
   locked,
   onClose,
 }: DetailHeaderProps) {
@@ -46,6 +50,7 @@ export function DetailHeader({
           actions={actions}
           dayIndex={item.day_index}
           alternativeCount={row.alternatives.length}
+          linkedExpenses={linkedExpenses}
           startDate={startDate}
           totalDays={totalDays}
         />

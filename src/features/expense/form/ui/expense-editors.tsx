@@ -29,6 +29,8 @@ type EditorCommon = {
   onLockChange?: (locked: boolean) => void;
   /** 페이지일 때 머리의 뒤로 가기(읽기 실패 · 못 찾음 안내). 창이면 비우고, 그 화면들에 ✕(onClose) 머리를 둔다 */
   back?: string;
+  /** 빠른 입력 — 일정 상세에서 열었다(ExpenseForm 의 quick) */
+  quick?: boolean;
 };
 
 type CreateExpenseProps = EditorCommon & {
@@ -51,6 +53,7 @@ export function CreateExpense({
   period = null,
   onLockChange,
   itemId,
+  quick,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const create = useCreateExpense(tripId);
@@ -67,6 +70,7 @@ export function CreateExpense({
       {...loaded.data}
       defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
       presetItemId={itemId}
+      quick={quick}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values, _opened, receipts) =>
@@ -98,6 +102,7 @@ export function EditExpense({
   back,
   onLockChange,
   onDeleted,
+  quick,
 }: EditExpenseProps) {
   const loaded = useExpenseFormData(tripId);
   const update = useUpdateExpense(tripId);
@@ -135,6 +140,7 @@ export function EditExpense({
       {...loaded.data}
       expenseId={expenseId}
       initial={initial}
+      quick={quick}
       receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}
       pending={update.isPending}
       submitError={update.error?.message ?? remove.error?.message}

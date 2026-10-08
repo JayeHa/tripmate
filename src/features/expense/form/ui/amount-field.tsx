@@ -103,3 +103,20 @@ export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
     </div>
   );
 }
+
+type AmountFirstProps = { onClick: () => void };
+
+/** 금액을 넣기 전 아래 칸을 덮는 흰 막 — 「금액을 먼저 입력해 주세요」, 누르면 금액 칸으로 */
+export function AmountFirst({ onClick }: AmountFirstProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute inset-0 z-10 flex justify-center bg-white/70 pt-5"
+    >
+      <span className="sticky top-5 flex h-8 items-center rounded-full bg-ink-900 px-3.5 text-[13px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,.15)]">
+        금액을 먼저 입력해 주세요
+      </span>
+    </button>
+  );
+}

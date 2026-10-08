@@ -22,7 +22,7 @@ export function useDetailOverlays() {
   const [dayMemo, setDayMemo] = useState<number | null>(null);
   const [note, setNote] = useState<ScheduleItem | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  // 비용 창 — 상세의 「+ 비용」(그 일정에 연결된 새 비용) · 비용 줄(그 비용 수정)
+  // 비용 창 — 상세의 「+ 비용」(그 일정에 연결된 새 비용) · 비용 줄(그 비용 수정). 둘 다 빠른 입력
   const [expense, setExpense] = useState<ExpenseDialogTarget | null>(null);
   return {
     placeEdit,
@@ -43,7 +43,9 @@ export function useDetailOverlays() {
     openNote: (item: ScheduleItem) => setNote(item),
     closeNote: () => setNote(null),
     openExpense: (itemId: string, expenseId: string | null) =>
-      setExpense(expenseId ? { kind: "edit", expenseId } : { kind: "new", itemId }),
+      setExpense(
+        expenseId ? { kind: "edit", expenseId, quick: true } : { kind: "new", itemId, quick: true },
+      ),
     closeExpense: () => setExpense(null),
     /** detail 이 있으면 안내형(「제목 · 설명」, 조금 더 오래) */
     showToast: (text: string, detail?: string) => setToast({ text, detail, id: Date.now() }),

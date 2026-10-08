@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 
 import type { City } from "@/entities/city";
+import { useExpenses } from "@/entities/expense";
 import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import { linkedExpensesOf } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
 import { usePlanEdit } from "../model/use-plan-edit";
@@ -114,6 +116,7 @@ function MainDetail({
     onToast(message);
   });
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
+  const { data: expenses = [] } = useExpenses(tripId);
   const locked = plan.locked || actions.locked || alternatives.locked;
   useEffect(() => onLockChange(locked), [locked, onLockChange]);
   const content = (
@@ -141,6 +144,11 @@ function MainDetail({
       startDate={startDate}
       totalDays={totalDays}
       actions={actions}
+      linkedExpenses={linkedExpensesOf(
+        expenses,
+        row.item.id,
+        ...row.alternatives.map((alt) => alt.id),
+      )}
       locked={locked}
       onClose={onClose}
     />
