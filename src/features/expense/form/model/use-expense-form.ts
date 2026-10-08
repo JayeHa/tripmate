@@ -29,6 +29,8 @@ type ExpenseFormOptions = {
   defaultSpentOn?: string;
   /** 새 지출을 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) */
   presetItem?: ScheduleItem | null;
+  /** 새 지출의 처음 통화(startCurrency) */
+  defaultCurrency?: string;
   /** 붙어 있던 영수증이 있다 — 「추가 정보 입력」 을 펼친 채 연다 */
   hasReceipts?: boolean;
   /** 저장 — 수정이면 둘째 값으로 폼을 연 때의 값을 함께 준다(그때와 달라진 칸만 보내려고) */
@@ -49,6 +51,7 @@ export function useExpenseForm({
   defaultSpentOn,
   hasReceipts = false,
   presetItem = null,
+  defaultCurrency,
   onSubmit,
 }: ExpenseFormOptions) {
   const [start] = useState(() =>
@@ -59,6 +62,7 @@ export function useExpenseForm({
       initial,
       defaultSpentOn,
       presetItem,
+      defaultCurrency,
     }),
   );
   // 연 때의 값. 열려 있는 동안 지출이 다시 읽혀도(일행이 고침) 바뀌지 않는다

@@ -6,6 +6,7 @@ import { decimalsOf } from "@/shared/lib/money";
 
 import { cleanAmount, fitAmountDraft } from "../lib/amount-draft";
 import { homeAmountOrNull, rateLine } from "../lib/rate-line";
+import { rememberCurrency } from "./last-currency";
 
 type MoneyOptions = {
   trip: Trip;
@@ -33,11 +34,13 @@ export function useMoney({ trip, start, opened }: MoneyOptions) {
   const numAmount = Number(amount) || 0;
 
   /**
-   * 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자른다. 이 지출 환율은 옛 통화 기준이라 비우되,
+   * 통화를 바꾸고, 금액의 소수부를 새 통화에 맞춰 자른다. 새 비용이면 고른 통화를 기억한다(다음 새 비용의 처음 값). 이 지출 환율은 옛 통화 기준이라 비우되,
    * 연 때의 통화로 돌아오면 연 때의 환율을 되살린다 — 화면의 「엔 920 기준」 과 저장되는 환율이 어긋나지 않게
    */
   function setCurrency(next: string) {
     setCurrencyState(next);
+    // 새 비용에서 고른 통화는 다음 새 비용의 처음 값으로 기억한다. 수정은 그 비용 하나를 바로잡는 것이라 기억하지 않는다
+    if (!opened) rememberCurrency(trip.id, next);
     setAmountDraft((draft) => fitAmountDraft(draft, decimalsOf(next)));
     setRate(next === opened?.currency ? opened.rate : null);
   }

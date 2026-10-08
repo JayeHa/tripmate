@@ -12,6 +12,8 @@ import {
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 
 import { spentOnFromParam } from "../lib/spent-on-param";
+import { startCurrency } from "../lib/start-currency";
+import { readLastCurrency } from "../model/last-currency";
 import { useExpenseFormData } from "../model/use-expense-form-data";
 import { DeleteExpenseConfirm } from "./delete-expense-confirm";
 import { ExpenseForm, type ExpenseFormLayout } from "./expense-form";
@@ -70,6 +72,11 @@ export function CreateExpense({
       {...loaded.data}
       defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
       presetItemId={itemId}
+      defaultCurrency={startCurrency(
+        [trip.home_currency, ...Object.keys(trip.exchange_rates)],
+        readLastCurrency(trip.id),
+        (loaded.data.expenses ?? []).map((e) => e.currency),
+      )}
       quick={quick}
       pending={create.isPending}
       submitError={create.error?.message}

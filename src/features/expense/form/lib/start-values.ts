@@ -15,11 +15,13 @@ type StartOptions = {
   defaultSpentOn?: string;
   /** 새 지출을 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) — 날짜 · 카테고리 · 합계 포함을 그 일정에 맞춘다 */
   presetItem?: ScheduleItem | null;
+  /** 새 지출의 처음 통화(startCurrency) */
+  defaultCurrency?: string;
 };
 
 /**
  * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값 —
- * 마지막 통화 · 현금 · 결제 완료 · 합계 포함 · 내가 결제 · 모두와 나눔 · 고른 날 또는 여행 첫날.
+ * 처음 통화(없으면 첫 외화) · 현금 · 결제 완료 · 합계 포함 · 내가 결제 · 모두와 나눔 · 고른 날 또는 여행 첫날.
  * 함께한 사람의 null 은 「모두」 — 사람 목록을 따라간다(기기에 저장된 옛 목록으로 먼저 열려도 새로 읽은 사람이 빠지지 않게).
  * 카테고리는 비워 두고 고르게 한다(필수 칸). 금액은 입력 칸이 다루는 문자열로, 날짜 없음(여행준비 · 예정일)은 빈 글로 바꾼다.
  * 환율은 칸이 없어 처음 값을 들고만 있다
@@ -31,9 +33,15 @@ export function startValues({
   initial,
   defaultSpentOn,
   presetItem,
+  defaultCurrency,
 }: StartOptions) {
   if (initial) return savedValues(initial);
-  const blank = newValues(trip, currencies, me, defaultSpentOn);
+  const blank = newValues(
+    trip,
+    defaultCurrency ?? currencies[1] ?? currencies[0],
+    me,
+    defaultSpentOn,
+  );
   if (!presetItem) return blank;
   // 일정에서 연 새 지출 — 그 일정의 날 · 카테고리(일정 종류로), 대체 장소면 합계에서 뺀다(연결할 때와 같은 규칙)
   return {
@@ -46,11 +54,11 @@ export function startValues({
 }
 
 /** 새 지출의 기본값 */
-function newValues(trip: Trip, currencies: string[], me: string, defaultSpentOn?: string) {
+function newValues(trip: Trip, currency: string, me: string, defaultSpentOn?: string) {
   return {
     name: "",
     amount: "",
-    currency: currencies[currencies.length - 1],
+    currency,
     rate: null as number | null,
     paymentMethod: "cash" as ExpenseFormValues["payment_method"],
     payer: me as string | null,

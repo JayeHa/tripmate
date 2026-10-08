@@ -75,6 +75,8 @@ type ExpenseFormProps = {
   receipts?: ExpenseReceipt[];
   /** 새 지출을 처음부터 이 일정(타임라인 일정 · 대체 장소)에 연결한다 — 일정 상세의 「+ 비용」 */
   presetItemId?: string;
+  /** 새 지출의 처음 통화 — 마지막에 고른 통화 등(startCurrency) */
+  defaultCurrency?: string;
   /** 빠른 입력(일정에서 연 비용) — 일정 연결 · 카테고리 · 날짜 칸을 숨기고 맨 위에 글로 요약한다. 가계부에서 열면 모든 칸 */
   quick?: boolean;
   /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
@@ -108,6 +110,7 @@ export function ExpenseForm({
   submitError,
   receipts = NO_RECEIPTS,
   presetItemId,
+  defaultCurrency,
   quick = false,
   onSubmit,
 }: ExpenseFormProps) {
@@ -122,6 +125,7 @@ export function ExpenseForm({
     initial,
     defaultSpentOn,
     hasReceipts: receipts.length > 0,
+    defaultCurrency,
     presetItem: findItem([...items, ...alternatives], presetItemId),
     onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),
   });
