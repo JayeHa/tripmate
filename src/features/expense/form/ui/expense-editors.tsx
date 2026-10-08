@@ -1,7 +1,6 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useEffect } from "react";
 
 import {
   type ExpenseFormValues,
@@ -10,6 +9,7 @@ import {
   useDeleteExpense,
   useUpdateExpense,
 } from "@/entities/expense";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 
 import { spentOnFromParam } from "../lib/spent-on-param";
 import { useExpenseFormData } from "../model/use-expense-form-data";
@@ -152,12 +152,4 @@ export function EditExpense({
       }
     />
   );
-}
-
-/** 잠김(요청 중)을 부른 쪽에 알린다 — 바뀔 때마다, 사라질 때는 false(저장이 끝나 창이 닫히며 언마운트될 때 true 로 남지 않게) */
-function useReportLock(locked: boolean, onLockChange?: (locked: boolean) => void) {
-  useEffect(() => {
-    onLockChange?.(locked);
-    return () => onLockChange?.(false);
-  }, [locked, onLockChange]);
 }

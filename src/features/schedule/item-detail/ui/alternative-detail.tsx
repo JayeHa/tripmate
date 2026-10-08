@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
@@ -13,6 +13,7 @@ import {
   useMemos,
 } from "@/entities/schedule-item";
 import { dayOfWeek } from "@/shared/lib/days";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 
 import { linkedExpensesOf } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
@@ -63,7 +64,7 @@ export function AlternativeDetail({
   const locked = plan.locked || actions.locked;
   const { data: memos = [] } = useMemos(tripId);
   const { data: expenses = [] } = useExpenses(tripId);
-  useEffect(() => onLockChange(locked), [locked, onLockChange]);
+  useReportLock(locked, onLockChange);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
     () => buildTimeline([alt], [], dayOfWeek(startDate, alt.day_index), [], memos)[0],

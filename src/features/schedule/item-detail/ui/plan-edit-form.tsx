@@ -1,6 +1,5 @@
-import { useState } from "react";
-
 import { ReservationStatusPicker, type ScheduleItem } from "@/entities/schedule-item";
+import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { EmojiField } from "@/shared/ui/emoji-field";
@@ -27,9 +26,7 @@ const inputClass =
 export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   // 마지막으로 그린 칸 값. 닫힐 때(취소 · 저장) draft 가 먼저 비어도 창이 사라지는 동안은 이 값으로 그린다 —
   // 그러지 않으면 본문이 먼저 빠져 머리만 남은 시트가 줄어들며 사라진다
-  const [shown, setShown] = useState(edit.draft);
-  if (edit.draft && edit.draft !== shown) setShown(edit.draft);
-  const draft = edit.draft ?? shown;
+  const draft = useHeldWhileClosing(edit.draft !== null, edit.draft);
   if (!draft) return null;
   const isPlace = item.kind === "place";
   return (

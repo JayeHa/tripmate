@@ -32,7 +32,8 @@ function EditDatesFlow({ trip, onClose }: EditDatesFlowProps) {
       <FlowDialog
         open
         // 저장 중에는 Esc · 바깥 클릭으로 닫히지 않는다
-        onOpenChange={(open) => !open && !state.locked && onClose()}
+        locked={state.locked}
+        onOpenChange={(open) => !open && onClose()}
         mobile={<MobileEditDates state={state} onClose={onClose} Title={DialogTitle} />}
         pc={<PcEditDates state={state} onClose={onClose} Title={DialogTitle} />}
       />

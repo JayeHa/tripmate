@@ -45,7 +45,7 @@ export function CurrencyPicker({
     add.mutate({ home, code, rate }, { onSuccess: () => onPicked(code) });
   }
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && !add.isPending && onClose()}>
+    <Dialog open={open} locked={add.isPending} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
         className="flex h-dvh w-screen max-w-none flex-col gap-0 rounded-none p-0 sm:max-w-none lg:h-130 lg:w-105 lg:rounded-sheet"

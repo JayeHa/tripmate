@@ -1,7 +1,7 @@
 "use client";
 
 import { Link as LinkIcon, Star, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   itemName,
@@ -10,6 +10,7 @@ import {
   NumberMarker,
   type TimelineRow,
 } from "@/entities/schedule-item";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
@@ -47,7 +48,7 @@ type MemoComposerDialogProps = {
 export function MemoComposerDialog({ isDesktop, onClose, ...rest }: MemoComposerDialogProps) {
   const [locked, setLocked] = useState(false);
   return (
-    <Dialog open onOpenChange={(open) => !open && !locked && onClose()}>
+    <Dialog open locked={locked} onOpenChange={(open) => !open && onClose()}>
       <DialogContent showCloseButton={false} className={isDesktop ? PC_CLASS : MOBILE_CLASS}>
         <ComposerBody {...rest} onClose={onClose} onLockChange={setLocked} />
       </DialogContent>
@@ -62,7 +63,7 @@ type ComposerBodyProps = Omit<MemoComposerDialogProps, "isDesktop"> & {
 /** 작성 칸. 상태는 useMemoComposer 가 쥔다 */
 function ComposerBody({ tripId, row, when, memo, onClose, onLockChange }: ComposerBodyProps) {
   const form = useMemoComposer({ tripId, item: row.item, memo, onDone: onClose });
-  useEffect(() => onLockChange(form.locked), [form.locked, onLockChange]);
+  useReportLock(form.locked, onLockChange);
   return (
     <>
       <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-3">

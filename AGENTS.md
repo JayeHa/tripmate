@@ -151,6 +151,15 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 화면(view)이 하나를 그리고 상태를 쥔다. 하위 컴포넌트 · 훅은 `<Toast>` 를 직접 그리지 않고 콜백(`onToast(text)` · `onGuide(text, detail)`)으로 요청한다.
 예: `views/trip-schedule` 의 `useDetailOverlays().showToast`.
 
+## 창(Dialog) 상태
+
+창 안의 내용이 부모 상태에서 오면 손으로 짜지 말고 `shared/lib/use-dialog-state.ts` 를 쓴다. 리뷰에서 같은 모양의 버그가 반복됐다.
+
+- **닫히는 동안 내용 유지** — `useHeldWhileClosing(open, value)`. 닫으며 대상을 null 로 바꾸면 페이드 아웃 동안 빈 틀이 보인다
+- **열 때마다 새로 그리기** — `useOpenCount(open)` 을 내용의 key 로. 값으로 비교하면 같은 대상을 다시 열 때 지난 입력이 남는다
+- **요청 중 닫기 막기** — 창에 `locked`(`Dialog` · `AlertDialog` · `SheetDialog` · `FlowDialog`), 안쪽 내용은 `useReportLock(locked, onLockChange)` 로 알린다.
+  사라질 때 false 로 되돌려서, 저장하고 닫힌 뒤 잠김이 남지 않는다. 창 안의 ✕ · 취소 버튼은 각자 `disabled` 로 막는다
+
 ## 요청을 prop 으로 내릴 때
 
 「그 날로 스크롤해 줘」 처럼 **한 번 실행할 요청**을 상태로 만들어 prop 으로 내리면, 받는 컴포넌트가 다시 마운트될 때 지난 요청이 다시 실행된다.

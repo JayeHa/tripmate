@@ -184,7 +184,8 @@ export function TripListView() {
       {/* 만드는 중에는 Esc · 바깥 클릭으로 닫히지 않는다 (useTripCreate 의 locked) */}
       <FlowDialog
         open={createOpen}
-        onOpenChange={(open) => (open || !createFlow.locked) && setCreateOpen(open)}
+        locked={createFlow.locked}
+        onOpenChange={setCreateOpen}
         mobile={
           <TripCreateFlow
             layout="mobile"

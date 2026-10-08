@@ -7,8 +7,22 @@ import * as React from "react";
 
 import { Button } from "@/shared/ui/button";
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+type DialogProps = DialogPrimitive.Root.Props & {
+  /** 요청이 서버에 가 있는 동안 — 바깥 누르기 · Esc 로 닫히지 않는다(여는 건 그대로). 창 안의 ✕ · 취소는 각자 disabled 로 막는다 */
+  locked?: boolean;
+};
+
+/** 창 — Base UI Dialog 에 locked 를 더했다 */
+function Dialog({ locked = false, onOpenChange, ...props }: DialogProps) {
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      onOpenChange={(open, details) => {
+        if (open || !locked) onOpenChange?.(open, details);
+      }}
+      {...props}
+    />
+  );
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {

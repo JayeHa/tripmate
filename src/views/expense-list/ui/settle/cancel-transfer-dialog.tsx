@@ -1,7 +1,6 @@
-import { useState } from "react";
-
 import type { PersonKey } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
+import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,9 +31,8 @@ export function CancelTransferDialog({
   onClose,
   onConfirm,
 }: CancelTransferDialogProps) {
-  // 닫히는 동안(페이드 아웃)에도 설명을 그리도록 마지막으로 물은 줄을 붙잡아 둔다 — 렌더 중에 조정한다
-  const [shown, setShown] = useState(row);
-  if (row !== null && row !== shown) setShown(row);
+  // 닫히는 동안(페이드 아웃)에도 설명을 그리도록 마지막으로 물은 줄을 붙잡아 둔다
+  const shown = useHeldWhileClosing(row !== null, row);
   return (
     <AlertDialog open={row !== null} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>

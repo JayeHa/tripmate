@@ -30,7 +30,7 @@ export function SheetDialog({
   children,
 }: SheetDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && !locked && onClose()}>
+    <Dialog open={open} locked={locked} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
         // 일정 상세 안에서 여는 중첩 창이라 스크림을 직접 그려 뒤 창을 어둡게 한다
