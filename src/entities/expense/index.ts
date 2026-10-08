@@ -7,6 +7,7 @@ export * from "./lib/balances";
 export * from "./lib/columns";
 export * from "./lib/detail-text";
 export * from "./lib/form-values";
+export * from "./lib/link-gone";
 export * from "./lib/person";
 export * from "./lib/receipt-rules";
 export * from "./lib/row";

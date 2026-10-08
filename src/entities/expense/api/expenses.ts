@@ -2,6 +2,7 @@ import { createClient } from "@/shared/api/supabase/client";
 import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money";
 
 import { insertColumns, sharesChanged, updateColumns } from "../lib/columns";
+import { withLinkGone } from "../lib/link-gone";
 import { personKey, personOfKey, type PersonRef } from "../lib/person";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
@@ -68,7 +69,7 @@ export async function createExpense(
     .insert({ ...insertColumns(values), trip_id: tripId, created_by: createdBy })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throw withLinkGone(error);
 
   const { error: splitError } = await supabase
     .from("expense_splits")
@@ -100,7 +101,7 @@ export async function updateExpense(
   const columns = updateColumns(values, opened);
   if (Object.keys(columns).length > 0) {
     const { error } = await supabase.from("expenses").update(columns).eq("id", expenseId);
-    if (error) throw error;
+    if (error) throw withLinkGone(error);
   }
   if (!sharesChanged(values, opened)) return;
 
