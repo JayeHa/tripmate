@@ -1,32 +1,7 @@
-import {
-  Bath,
-  BedDouble,
-  Check,
-  Coffee,
-  Landmark,
-  Loader2,
-  type LucideIcon,
-  MapPin,
-  Plane,
-  ShoppingBag,
-  UtensilsCrossed,
-} from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 
-import type { PlaceCategory } from "@/entities/schedule-item";
+import { CategoryThumb, type PlaceCategory } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
-
-/** 카테고리 썸네일: 아이콘과 옅은 바탕(`-soft`) · 진한 아이콘색. 카테고리를 모르면(구글 결과) 회색 핀 */
-const CATEGORY_THUMB = {
-  sight: { icon: Landmark, tone: "bg-cat-sight-soft text-cat-sight" },
-  food: { icon: UtensilsCrossed, tone: "bg-cat-food-soft text-cat-food" },
-  cafe: { icon: Coffee, tone: "bg-cat-cafe-soft text-cat-cafe" },
-  shop: { icon: ShoppingBag, tone: "bg-cat-shop-soft text-cat-shop" },
-  rest: { icon: Bath, tone: "bg-cat-rest-soft text-cat-rest" },
-  stay: { icon: BedDouble, tone: "bg-cat-stay-soft text-cat-stay" },
-  air: { icon: Plane, tone: "bg-cat-air-soft text-cat-air" },
-} satisfies Record<PlaceCategory, { icon: LucideIcon; tone: string }>;
-
-const UNKNOWN_THUMB = { icon: MapPin, tone: "bg-surface-muted text-ink-400" };
 
 type PlaceRowProps = {
   name: string;
@@ -58,7 +33,6 @@ export function PlaceRow({
   busy,
   onToggle,
 }: PlaceRowProps) {
-  const thumb = category ? CATEGORY_THUMB[category] : UNKNOWN_THUMB;
   const hasThird = rating != null || !!description;
   return (
     <button
@@ -70,11 +44,7 @@ export function PlaceRow({
         chosen ? "bg-surface-memo" : "bg-white",
       )}
     >
-      <span
-        className={cn("flex size-14 shrink-0 items-center justify-center rounded-memo", thumb.tone)}
-      >
-        <thumb.icon className="size-6" />
-      </span>
+      <CategoryThumb category={category} size="lg" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.75">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="truncate text-base font-bold tracking-[-0.01em] text-ink-900">

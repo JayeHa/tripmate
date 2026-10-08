@@ -138,7 +138,6 @@ export function EditExpense({
         </DeleteExpenseConfirm>
       }
       {...loaded.data}
-      expenseId={expenseId}
       initial={initial}
       quick={quick}
       receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}

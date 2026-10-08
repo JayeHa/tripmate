@@ -2,41 +2,28 @@ import type { ExpenseCategory } from "@/entities/expense";
 import {
   CATEGORY_LABEL,
   categoryOf,
-  isMappedPlace,
   itemName,
   kindOf,
+  type PlaceCategory,
   type ScheduleItem,
 } from "@/entities/schedule-item";
+import { dayLabel } from "@/shared/lib/days";
+import type { LinkPickCategory, LinkPickGroup, LinkPickItem } from "@/shared/lib/link-pick";
 
-/** 일정 고르기의 종류 필터 — 값 · 이름 */
-export const LINK_CATEGORIES = [
-  ["all", "전체"],
-  ["food", "식당"],
-  ["sight", "관광"],
-  ["shop", "쇼핑"],
-  ["stay", "숙소"],
-  ["flight", "항공"],
-] as const;
-export type LinkCategory = (typeof LINK_CATEGORIES)[number][0];
-
-export type LinkFilter = {
-  /** 0 부터의 날짜, 「전체 날짜」 면 "all" */
-  day: number | "all";
-  category: LinkCategory;
-  /** 이름 검색. 있으면 날짜 필터는 보지 않는다(모든 날에서 찾는다) */
-  query: string;
+/** 일정 연결 창의 카테고리 필터 — 관광 · 식비 · 쇼핑 · 카페 · 숙소 · 항공. 휴식은 필터가 없다 */
+const LINK_CATEGORY: Partial<Record<PlaceCategory | "flight", LinkPickCategory>> = {
+  sight: { value: "sight", label: "관광" },
+  food: { value: "food", label: "식비" },
+  shop: { value: "shop", label: "쇼핑" },
+  cafe: { value: "cafe", label: "카페" },
+  stay: { value: "stay", label: "숙소" },
+  flight: { value: "flight", label: "항공" },
+  air: { value: "flight", label: "항공" },
 };
 
-export type LinkRow = {
-  id: string;
-  /** 그날 지도 번호(좌표 있는 장소). 번호가 없는 일정은 null */
-  n: number | null;
-  name: string;
-  /** 「day 2 · 음식점 · 12:30」 처럼 — 날짜는 전체 날짜 · 검색일 때만 */
-  sub: string;
-  dayIndex: number;
-  alternative: boolean;
-};
+/** 일정 연결 줄 — 썸네일은 화면이 thumbCategory 로 그린다 */
+export type LinkItem = LinkPickItem & { thumbCategory: PlaceCategory | null };
+export type LinkGroup = Omit<LinkPickGroup, "items"> & { items: LinkItem[] };
 
 /** 일정 종류 이름 — 장소면 장소 카테고리, 항공편이면 「항공편」 */
 function kindLabel(item: ScheduleItem): string | null {
@@ -45,72 +32,51 @@ function kindLabel(item: ScheduleItem): string | null {
   return category ? CATEGORY_LABEL[category] : null;
 }
 
-/** 종류 필터에 맞는지 — 식당은 음식점 · 카페, 항공은 항공편 · 공항 */
-function matchesCategory(item: ScheduleItem, filter: LinkCategory): boolean {
-  if (filter === "all") return true;
-  const kind = kindOf(item);
+/** 일정 한 줄 → 연결 창의 줄. 둘째 줄 = 「대체 장소 · 음식점 · 12:30」 */
+function linkItemOf(item: ScheduleItem, alternative: boolean): LinkItem {
+  const flight = kindOf(item) === "flight";
   const category = categoryOf(item);
-  if (filter === "flight") return kind === "flight" || category === "air";
-  if (filter === "food") return category === "food" || category === "cafe";
-  return category === filter;
-}
-
-/** 일정 한 줄 → 목록 줄 */
-function rowOf(
-  item: ScheduleItem,
-  n: number | null,
-  alternative: boolean,
-  withDay: boolean,
-): LinkRow {
-  const parts = [
-    withDay ? `day ${item.day_index + 1}` : null,
-    alternative ? "대체 장소" : null,
-    kindLabel(item),
-    item.start_time?.slice(0, 5) ?? null,
-  ].filter((part) => part !== null);
   return {
     id: item.id,
-    n,
-    name: itemName(item),
-    sub: parts.join(" · "),
-    dayIndex: item.day_index,
-    alternative,
+    title: itemName(item),
+    meta: [alternative ? "대체 장소" : null, kindLabel(item), item.start_time?.slice(0, 5) ?? null]
+      .filter((part) => part !== null)
+      .join(" · "),
+    category: LINK_CATEGORY[flight ? "flight" : (category ?? "rest")] ?? null,
+    thumbCategory: flight ? "air" : category,
   };
 }
 
 /**
- * 비용에 연결할 일정 목록 — 날짜 · 순서대로, 대체 장소는 붙은 일정 바로 아래. 메모(note)는 연결하지 않아 뺀다.
- * 번호는 타임라인 지도 번호와 같다(그날 좌표 있는 장소만 1, 2, …). 필터는 번호를 매긴 뒤에 건다 — 걸러도 번호가 바뀌지 않게
+ * 비용에 연결할 일정을 날짜 묶음으로 — 날마다 순서대로, 대체 장소는 붙은 일정 바로 아래. 메모(note)는 연결하지 않아 뺀다.
+ * 일정이 없는 날은 묶음을 만들지 않는다. 묶음 key 는 0 부터의 날 순번(글자)
  */
-export function linkRows(
+export function linkGroups(
+  startDate: string,
   items: ScheduleItem[],
   alternatives: ScheduleItem[],
-  filter: LinkFilter,
-): LinkRow[] {
-  const query = filter.query.trim();
-  const withDay = filter.day === "all" || query !== "";
+): LinkGroup[] {
   const sorted = items
     .filter((item) => kindOf(item) !== "note")
     .toSorted((a, b) => a.day_index - b.day_index || a.position - b.position);
-  const numbers = new Map<string, number>();
-  const counts = new Map<number, number>();
+  const groups = new Map<number, LinkGroup>();
   for (const item of sorted) {
-    if (!isMappedPlace(item)) continue;
-    const n = (counts.get(item.day_index) ?? 0) + 1;
-    counts.set(item.day_index, n);
-    numbers.set(item.id, n);
+    const day = item.day_index;
+    const group = groups.get(day) ?? {
+      key: String(day),
+      short: `day ${day + 1}`,
+      date: dayLabel(startDate, day),
+      items: [],
+    };
+    group.items.push(
+      linkItemOf(item, false),
+      ...alternatives
+        .filter((alt) => alt.alternative_of === item.id)
+        .map((alt) => linkItemOf(alt, true)),
+    );
+    groups.set(day, group);
   }
-  const rows = sorted.flatMap((item) => [
-    { item, n: numbers.get(item.id) ?? null, alternative: false },
-    ...alternatives
-      .filter((alt) => alt.alternative_of === item.id)
-      .map((alt) => ({ item: alt, n: null, alternative: true })),
-  ]);
-  return rows
-    .filter(({ item }) => query !== "" || filter.day === "all" || item.day_index === filter.day)
-    .filter(({ item }) => matchesCategory(item, filter.category))
-    .filter(({ item }) => itemName(item).includes(query))
-    .map(({ item, n, alternative }) => rowOf(item, n, alternative, withDay));
+  return [...groups.values()];
 }
 
 /** 일정에서 비용 카테고리 — 연결하면 이 값으로 채운다. 맞는 것이 없으면(휴식 · 카테고리 없음) null */

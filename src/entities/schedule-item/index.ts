@@ -18,6 +18,7 @@ export * from "./model/use-memos";
 export * from "./model/use-moves";
 export * from "./model/use-open-memos";
 export * from "./model/use-schedule-items";
+export * from "./ui/category-thumb";
 export * from "./ui/memo-card";
 export * from "./ui/reservation-badge";
 export * from "./ui/reservation-status-picker";
