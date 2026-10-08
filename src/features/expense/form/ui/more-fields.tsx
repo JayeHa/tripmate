@@ -33,6 +33,13 @@ type MoreFieldsProps = {
 export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsProps) {
   const pinned = PIN_FIELDS.filter((f) => prefs.pins.includes(f));
   const rest = PIN_FIELDS.filter((f) => !pinned.includes(f));
+  // 기본값이 아닌 값이 든 칸 — 고정을 풀 때 접힌 아코디언 안으로 숨지 않게 펼친다(연 때 펼치는 규칙과 같다)
+  const filled: Record<PinField, boolean> = {
+    paid: !form.paid,
+    memo: form.memo.trim() !== "",
+    receipts: drafts.items.length > 0,
+    excluded: !form.counted,
+  };
   /** 그 칸의 고정 버튼 */
   const pin = (field: PinField) => (
     <PinButton
@@ -40,6 +47,7 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
       onClick={() => {
         // 고정은 알림을 받을 곳이 없어도 바꾼다 — onToast?.(…) 안에서 부르면 onToast 가 없을 때 인자 계산까지 건너뛴다
         const on = prefs.togglePin(field);
+        if (!on && filled[field]) form.setMoreOpen(true);
         onToast?.(pinToast(field, on));
       }}
     />
