@@ -88,19 +88,23 @@ export async function attachReceipts(
   if (error) throw error;
 }
 
-/** 수정한 지출의 영수증을 맞춘다 — 붙이고, 뗀 줄을 지운 뒤 그 파일도 지운다 */
+/**
+ * 수정한 지출의 영수증을 맞춘다 — 뗄 줄을 먼저 지우고, 새 것을 붙인 뒤, 뗀 파일을 지운다.
+ * 떼기를 먼저 하는 이유: 3장이 붙은 지출에서 한 장을 바꾸면 붙이는 순간 4장이 되어 DB 트리거가 거부한다
+ */
 export async function syncReceipts(tripId: string, expenseId: string, change: ReceiptChange) {
+  if (change.detach.length > 0) {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("expense_receipts")
+      .delete()
+      .in(
+        "id",
+        change.detach.map((d) => d.id),
+      );
+    if (error) throw error;
+  }
   await attachReceipts(tripId, expenseId, change.attach);
-  if (change.detach.length === 0) return;
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("expense_receipts")
-    .delete()
-    .in(
-      "id",
-      change.detach.map((d) => d.id),
-    );
-  if (error) throw error;
   await removeReceiptFiles(
     tripId,
     change.detach.map((d) => d.key),
