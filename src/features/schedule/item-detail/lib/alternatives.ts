@@ -45,12 +45,14 @@ export function hasOwnRecord(alt: ScheduleItem, memoCount: number, expenseCount 
 /** 일정 줄에 연결된 비용 — 전체 수와 그중 합계에서 빠진 수 */
 export type LinkedExpenses = { count: number; excluded: number };
 
-/** 그 일정 줄에 연결된 비용을 센다 */
+/** 그 일정 줄들에 연결된 비용을 센다 — 일정을 지우면 함께 지워지는 대체 장소까지 넘길 수 있다 */
 export function linkedExpensesOf(
   expenses: { schedule_item_id: string | null; counted: boolean }[],
-  itemId: string,
+  ...itemIds: string[]
 ): LinkedExpenses {
-  const linked = expenses.filter((e) => e.schedule_item_id === itemId);
+  const linked = expenses.filter(
+    (e) => e.schedule_item_id !== null && itemIds.includes(e.schedule_item_id),
+  );
   return { count: linked.length, excluded: linked.filter((e) => !e.counted).length };
 }
 

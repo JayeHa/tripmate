@@ -6,9 +6,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 import { CreateExpense, EditExpense } from "./expense-editors";
 
-/** 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결), 또는 그 비용 수정 */
-export type ExpenseDialogTarget =
-  { kind: "new"; itemId?: string } | { kind: "edit"; expenseId: string };
+/**
+ * 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결), 또는 그 비용 수정.
+ * quick: 일정 상세에서 열었다 — 빠른 입력(일정 연결 · 카테고리 · 날짜 칸을 숨기고 요약)
+ */
+export type ExpenseDialogTarget = { quick?: boolean } & (
+  { kind: "new"; itemId?: string } | { kind: "edit"; expenseId: string }
+);
 
 type ExpenseDialogProps = {
   tripId: string;
@@ -51,6 +55,7 @@ export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
             key={opened}
             tripId={tripId}
             itemId={shown.itemId}
+            quick={shown.quick}
             layout="modal"
             onClose={close}
             onDone={onClose}
@@ -62,6 +67,7 @@ export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
             key={`${opened}-${shown.expenseId}`}
             tripId={tripId}
             expenseId={shown.expenseId}
+            quick={shown.quick}
             layout="modal"
             onClose={close}
             onDone={onClose}

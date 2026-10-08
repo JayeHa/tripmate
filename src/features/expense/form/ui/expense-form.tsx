@@ -15,21 +15,26 @@ import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { TripMember } from "@/entities/trip-member";
 
-import { linkCosts } from "../lib/link-costs";
 import { formPeople } from "../lib/people";
 import { useExpenseForm } from "../model/use-expense-form";
 import { useReceiptDrafts } from "../model/use-receipt-drafts";
-import { AmountField } from "./amount-field";
-import { CategoryField, DayField, NameField, PaymentField } from "./expense-fields";
+import { AmountField, AmountFirst } from "./amount-field";
+import { NameField, PaymentField } from "./expense-fields";
 import { FormMoreMenu } from "./form-more-menu";
-import { LinkField } from "./link-field";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
+import { QuickSummary } from "./quick-summary";
 import { ReceiptsField } from "./receipts-field";
+import { ScheduleFields } from "./schedule-fields";
 import { SubmitBar } from "./submit-bar";
 
 /** 붙어 있던 영수증이 없을 때 — 렌더마다 새 배열을 만들지 않게 */
 const NO_RECEIPTS: ExpenseReceipt[] = [];
+
+/** 일정 · 대체 장소 줄에서 그 id 를 찾는다. id 가 없거나 못 찾으면 null */
+function findItem(items: ScheduleItem[], id: string | undefined) {
+  return id ? (items.find((i) => i.id === id) ?? null) : null;
+}
 
 /** 화면 틀 — page: 모바일 전체 화면 · PC 가운데 440 페이지, modal: 부른 쪽의 창(PC 440×760) 안을 채운다 */
 export type ExpenseFormLayout = "page" | "modal";
@@ -75,6 +80,8 @@ type ExpenseFormProps = {
   receipts?: ExpenseReceipt[];
   /** 새 지출을 처음부터 이 일정(타임라인 일정 · 대체 장소)에 연결한다 — 일정 상세의 「+ 비용」 */
   presetItemId?: string;
+  /** 빠른 입력(일정에서 연 비용) — 일정 연결 · 카테고리 · 날짜 칸을 숨기고 맨 위에 글로 요약한다. 가계부에서 열면 모든 칸 */
+  quick?: boolean;
   /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
   onSubmit: (
     values: ExpenseFormValues,
@@ -86,7 +93,8 @@ type ExpenseFormProps = {
 /**
  * 비용 추가 · 수정 화면. 모바일은 탭 위를 덮는 전체 화면, PC 는 가운데 440 칸(페이지) 또는 부른 쪽의 창 안(모달).
  * 금액(맨 위) → 일정 연결 → 카테고리 → 날짜 → 항목명 → 결제수단 → 누가 내고 누구와 나눴나 → 추가 정보, 아래에 완료.
- * 새 비용은 금액을 넣기 전까지 아래 칸을 흐리게 덮고, 누르면 금액 칸으로 보낸다
+ * 새 비용은 금액을 넣기 전까지 아래 칸을 흐리게 덮고, 누르면 금액 칸으로 보낸다.
+ * 빠른 입력은 연결된 일정이 있을 때만 — 일행이 일정을 지워 연결이 풀리면 모든 칸으로 돌아간다
  */
 export function ExpenseForm({
   title,
@@ -107,6 +115,7 @@ export function ExpenseForm({
   submitError,
   receipts = NO_RECEIPTS,
   presetItemId,
+  quick = false,
   onSubmit,
 }: ExpenseFormProps) {
   const me = personKey({ kind: "member", id: currentUserId });
@@ -120,17 +129,11 @@ export function ExpenseForm({
     initial,
     defaultSpentOn,
     hasReceipts: receipts.length > 0,
-    presetItem: presetItemId
-      ? (items.find((i) => i.id === presetItemId) ??
-        alternatives.find((i) => i.id === presetItemId) ??
-        null)
-      : null,
+    presetItem: findItem([...items, ...alternatives], presetItemId),
     onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),
   });
-  const costs = linkCosts(expenses, trip.home_currency, trip.exchange_rates, expenseId);
-  // 지금 날짜의 day 순번(0 부터). 여행준비(빈 글)면 null — 날짜 옵션의 첫 줄이 여행준비라 하나 뺀다
-  const dayIndex = form.link.days.findIndex((o) => o.value === form.spentOn) - 1;
   const amountRef = useRef<HTMLInputElement>(null);
+  const linked = quick ? form.link.linked : null;
   return (
     <form onSubmit={form.submit} className={FRAME[layout].form}>
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
@@ -142,18 +145,18 @@ export function ExpenseForm({
         <FormMoreMenu onRate={form.openRate} />
       </header>
       <div className={FRAME[layout].body}>
+        {linked && <QuickSummary form={form} linked={linked} />}
         <AmountField form={form} inputRef={amountRef} autoFocus={!initial} />
         <div className="relative flex flex-col gap-7 px-5 pt-6 pb-8">
-          <LinkField
-            link={form.link}
+          <ScheduleFields
+            form={form}
+            trip={trip}
             items={items}
             alternatives={alternatives}
-            costs={costs}
-            home={trip.home_currency}
-            dayIndex={dayIndex >= 0 ? dayIndex : null}
+            expenses={expenses}
+            expenseId={expenseId}
+            quick={linked !== null}
           />
-          <CategoryField form={form} />
-          <DayField form={form} trip={trip} />
           <NameField form={form} />
           <PaymentField form={form} />
           <PeopleSection form={form} />
@@ -171,22 +174,5 @@ export function ExpenseForm({
         className={FRAME[layout].bar}
       />
     </form>
-  );
-}
-
-type AmountFirstProps = { onClick: () => void };
-
-/** 금액을 넣기 전 아래 칸을 덮는 흰 막 — 「금액을 먼저 입력해 주세요」, 누르면 금액 칸으로 */
-function AmountFirst({ onClick }: AmountFirstProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="absolute inset-0 z-10 flex justify-center bg-white/70 pt-5"
-    >
-      <span className="sticky top-5 flex h-8 items-center rounded-full bg-ink-900 px-3.5 text-[13px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,.15)]">
-        금액을 먼저 입력해 주세요
-      </span>
-    </button>
   );
 }

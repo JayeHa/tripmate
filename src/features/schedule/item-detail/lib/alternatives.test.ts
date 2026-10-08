@@ -107,6 +107,15 @@ describe("linkedExpensesOf · linkedExpenseNote", () => {
     expect(linkedExpensesOf(expenses, "c")).toEqual({ count: 0, excluded: 0 });
   });
 
+  it("여러 줄을 함께 센다 — 일정을 지우면 대체 장소도 함께 지워진다", () => {
+    const expenses = [
+      { schedule_item_id: "main", counted: true },
+      { schedule_item_id: "alt", counted: false },
+      { schedule_item_id: "other", counted: true },
+    ];
+    expect(linkedExpensesOf(expenses, "main", "alt")).toEqual({ count: 2, excluded: 1 });
+  });
+
   it("합계에서 빠진 비용이 있을 때만 그 말을 한다 — 사용자가 합계 스위치를 다시 켰을 수 있다", () => {
     expect(linkedExpenseNote({ count: 0, excluded: 0 })).toBeNull();
     expect(linkedExpenseNote({ count: 2, excluded: 2 })).toBe(
