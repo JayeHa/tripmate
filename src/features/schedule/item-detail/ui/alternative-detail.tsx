@@ -36,6 +36,8 @@ type AlternativeDetailProps = {
   onSwapped: (altId: string, message: string) => void;
   /** 메모 쓰기 · 고치기 — 이 대체 장소 줄에 붙는다 */
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
+  /** 비용 쓰기 · 고치기 — 이 대체 장소 줄에 연결된다 */
+  onExpense: (itemId: string, expenseId: string | null) => void;
 };
 
 /**
@@ -54,6 +56,7 @@ export function AlternativeDetail({
   onEditPlace,
   onSwapped,
   onMemo,
+  onExpense,
 }: AlternativeDetailProps) {
   const plan = usePlanEdit(tripId, alt);
   const actions = useAlternativeActions(tripId, row.item, onSwapped);
@@ -74,6 +77,7 @@ export function AlternativeDetail({
         row={altRow}
         plan={plan}
         onMemo={(memo) => onMemo(altRow, memo)}
+        onExpense={(expenseId) => onExpense(alt.id, expenseId)}
         alternatives={null}
         onEditPlace={onEditPlace}
       />

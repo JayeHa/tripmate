@@ -73,6 +73,8 @@ type ExpenseFormProps = {
   submitError?: string | null;
   /** 이미 붙어 있던 영수증(수정) */
   receipts?: ExpenseReceipt[];
+  /** 새 지출을 처음부터 이 일정(타임라인 일정 · 대체 장소)에 연결한다 — 일정 상세의 「+ 비용」 */
+  presetItemId?: string;
   /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
   onSubmit: (
     values: ExpenseFormValues,
@@ -104,6 +106,7 @@ export function ExpenseForm({
   pending,
   submitError,
   receipts = NO_RECEIPTS,
+  presetItemId,
   onSubmit,
 }: ExpenseFormProps) {
   const me = personKey({ kind: "member", id: currentUserId });
@@ -117,6 +120,11 @@ export function ExpenseForm({
     initial,
     defaultSpentOn,
     hasReceipts: receipts.length > 0,
+    presetItem: presetItemId
+      ? (items.find((i) => i.id === presetItemId) ??
+        alternatives.find((i) => i.id === presetItemId) ??
+        null)
+      : null,
     onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),
   });
   const costs = linkCosts(expenses, trip.home_currency, trip.exchange_rates, expenseId);

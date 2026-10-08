@@ -1,9 +1,10 @@
 "use client";
 
-import { MapPin, NotebookPen } from "lucide-react";
+import { MapPin, NotebookPen, Receipt } from "lucide-react";
 import { useState } from "react";
 
 import type { City } from "@/entities/city";
+import { useExpenses } from "@/entities/expense";
 import { type Memo, type ScheduleItem, type TimelineRow, useMemos } from "@/entities/schedule-item";
 import { AddChip, AddChipRow } from "@/shared/ui/add-controls";
 
@@ -28,17 +29,28 @@ type DetailExtrasProps = {
   /** 이 장소의 도시 — 대체 장소 직접 추가의 검색 범위 */
   city: City | null;
   onMemo: (memo: Memo | null) => void;
+  /** 「추가」 줄의 「비용」 — 이 일정에 연결된 새 비용 */
+  onExpense: () => void;
 };
 
 /**
- * 상세 본문 아래쪽 — 대체 장소 칸(있을 때만) · 「대체 장소 추가」 창 · 맨 아래 「추가」 줄(빈 칸의 칩: 메모 · 대체 장소).
+ * 상세 본문 아래쪽 — 대체 장소 칸(있을 때만) · 「대체 장소 추가」 창 · 맨 아래 「추가」 줄(빈 칸의 칩: 비용 · 메모 · 대체 장소).
  * 칸의 「+」 와 「추가」 줄 칩이 같은 창을 열어서 창 상태를 여기서 쥔다
  */
-export function DetailExtras({ tripId, row, alternatives: alt, city, onMemo }: DetailExtrasProps) {
+export function DetailExtras({
+  tripId,
+  row,
+  alternatives: alt,
+  city,
+  onMemo,
+  onExpense,
+}: DetailExtrasProps) {
   const { data: memos = [] } = useMemos(tripId);
+  const { data: expenses = [] } = useExpenses(tripId);
   const [picking, setPicking] = useState(false);
   const item = row.item;
   const hasMemos = memos.some((m) => m.schedule_item_id === item.id);
+  const hasExpenses = expenses.some((e) => e.schedule_item_id === item.id);
   const altChip = !!alt && row.alternatives.length === 0;
   return (
     <>
@@ -63,8 +75,9 @@ export function DetailExtras({ tripId, row, alternatives: alt, city, onMemo }: D
           />
         </>
       )}
-      {(!hasMemos || altChip) && (
+      {(!hasExpenses || !hasMemos || altChip) && (
         <AddChipRow>
+          {!hasExpenses && <AddChip icon={Receipt} label="비용" onClick={onExpense} />}
           {!hasMemos && <AddChip icon={NotebookPen} label="메모" onClick={() => onMemo(null)} />}
           {altChip && <AddChip icon={MapPin} label="대체 장소" onClick={() => setPicking(true)} />}
         </AddChipRow>

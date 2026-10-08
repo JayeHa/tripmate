@@ -27,6 +27,8 @@ type ExpenseFormOptions = {
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
+  /** 새 지출을 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) */
+  presetItem?: ScheduleItem | null;
   /** 붙어 있던 영수증이 있다 — 「추가 정보 입력」 을 펼친 채 연다 */
   hasReceipts?: boolean;
   /** 저장 — 수정이면 둘째 값으로 폼을 연 때의 값을 함께 준다(그때와 달라진 칸만 보내려고) */
@@ -46,6 +48,7 @@ export function useExpenseForm({
   initial,
   defaultSpentOn,
   hasReceipts = false,
+  presetItem = null,
   onSubmit,
 }: ExpenseFormOptions) {
   const [start] = useState(() =>
@@ -55,6 +58,7 @@ export function useExpenseForm({
       me,
       initial,
       defaultSpentOn,
+      presetItem,
     }),
   );
   // 연 때의 값. 열려 있는 동안 지출이 다시 읽혀도(일행이 고침) 바뀌지 않는다
@@ -81,6 +85,7 @@ export function useExpenseForm({
     alternatives,
     startItemId: start.itemId,
     editing: !!initial,
+    // 일정에서 연 비용(presetItem)의 날짜는 그 일정에서 채운 값이라 고른 날짜로 보지 않는다 — 연결을 바꾸면 따라간다
     dayPreset: defaultSpentOn !== undefined,
     fields: {
       spentOn,

@@ -4,10 +4,11 @@ import { useState } from "react";
 
 import type { City } from "@/entities/city";
 import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import type { ExpenseDialogTarget } from "@/features/expense/form";
 import type { ToastMessage } from "@/shared/ui/toast";
 
 /**
- * 일정 상세 · 카드에서 위에 여는 창들의 상태 — 장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 날짜 메모 · 토스트.
+ * 일정 상세 · 카드에서 위에 여는 창들의 상태 — 장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 날짜 메모 · 비용 · 토스트.
  * 화면(TripScheduleView)이 쥐고 DetailOverlays 가 그린다. 열 때 받은 값으로 창을 열고, 닫으면 null
  */
 export function useDetailOverlays() {
@@ -21,6 +22,8 @@ export function useDetailOverlays() {
   const [dayMemo, setDayMemo] = useState<number | null>(null);
   const [note, setNote] = useState<ScheduleItem | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  // 비용 창 — 상세의 「+ 비용」(그 일정에 연결된 새 비용) · 비용 줄(그 비용 수정)
+  const [expense, setExpense] = useState<ExpenseDialogTarget | null>(null);
   return {
     placeEdit,
     altAdd,
@@ -28,6 +31,7 @@ export function useDetailOverlays() {
     dayMemo,
     note,
     toast,
+    expense,
     openPlaceEdit: (place: Place, city: City | null) => setPlaceEdit({ place, city }),
     openAltAdd: (main: ScheduleItem, city: City | null) => setAltAdd({ main, city }),
     openMemo: (row: TimelineRow, target: Memo | null) => setMemo({ row, memo: target }),
@@ -38,6 +42,9 @@ export function useDetailOverlays() {
     closeDayMemo: () => setDayMemo(null),
     openNote: (item: ScheduleItem) => setNote(item),
     closeNote: () => setNote(null),
+    openExpense: (itemId: string, expenseId: string | null) =>
+      setExpense(expenseId ? { kind: "edit", expenseId } : { kind: "new", itemId }),
+    closeExpense: () => setExpense(null),
     /** detail 이 있으면 안내형(「제목 · 설명」, 조금 더 오래) */
     showToast: (text: string, detail?: string) => setToast({ text, detail, id: Date.now() }),
     clearToast: () => setToast(null),
