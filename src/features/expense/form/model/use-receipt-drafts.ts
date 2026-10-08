@@ -28,7 +28,7 @@ export type ReceiptDraft = {
 /**
  * 비용 입력의 영수증 — 고르면 줄여서(사진) 바로 저장소에 올리고, 「완료」 할 때 붙일 것 · 뗄 것을 넘긴다.
  * 이미 붙어 있던 영수증을 지우면 저장할 때 떼고 파일도 지운다. 닫으면(저장 안 함) 붙어 있던 것은 그대로다.
- * 사진 · PDF 만, 장당 10MB, 10장까지 — 넘는 파일은 올리지 않고 이유를 알린다
+ * 사진 · PDF 만, 장당 10MB, 지출당 3장까지(RECEIPT_MAX_COUNT) — 넘는 파일은 올리지 않고 이유를 알린다
  */
 export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
   const [items, setItems] = useState<ReceiptDraft[]>(() =>
@@ -66,7 +66,7 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
     }
   }
 
-  /** 고른 파일들 — 받지 않는 종류는 건너뛰고, 10장을 넘는 만큼은 올리지 않는다 */
+  /** 고른 파일들 — 받지 않는 종류는 건너뛰고, 장수를 넘는 만큼은 올리지 않는다 */
   function add(files: File[]) {
     setError(null);
     const room = RECEIPT_MAX_COUNT - items.length;

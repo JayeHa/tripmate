@@ -3,7 +3,7 @@
 import { FileText, Loader2, Plus, X } from "lucide-react";
 import { useRef } from "react";
 
-import { RECEIPT_MIMES, useReceiptUrls } from "@/entities/expense";
+import { RECEIPT_MAX_COUNT, RECEIPT_MIMES, useReceiptUrls } from "@/entities/expense";
 
 import type { ReceiptDraft, ReceiptDrafts } from "../model/use-receipt-drafts";
 
@@ -21,7 +21,7 @@ export function ReceiptsField({ tripId, drafts }: ReceiptsFieldProps) {
   const { data: urls = {} } = useReceiptUrls(tripId, keys);
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm text-ink-400">영수증 (선택 · 10장까지)</span>
+      <span className="text-sm text-ink-400">영수증 (선택 · {RECEIPT_MAX_COUNT}장까지)</span>
       <div className="flex flex-wrap gap-2">
         {drafts.items.map((d) => (
           <Thumb

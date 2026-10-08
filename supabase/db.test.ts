@@ -1752,7 +1752,7 @@ describe("여행에 통화 더하기 (0039 · 0040)", () => {
   });
 });
 
-describe("지출 영수증 (0041)", () => {
+describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {
     await as(A);
@@ -1769,7 +1769,7 @@ describe("지출 영수증 (0041)", () => {
       [expense, trip, key, mime],
     );
 
-  it("그 여행 폴더의 키만, 사진 · PDF 만, 한 지출에 10장까지", async () => {
+  it("그 여행 폴더의 키만, 사진 · PDF 만, 한 지출에 3장까지(0042)", async () => {
     const { trip, expense } = await setup("2028-03-01");
     await attach(trip, expense, `${trip}/a.jpg`);
     await attach(trip, expense, `${trip}/b.pdf`, "application/pdf");
@@ -1783,10 +1783,10 @@ describe("지출 영수증 (0041)", () => {
         `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', '${trip}/x.exe', 'x', 'application/x-msdownload', 1)`,
       ),
     ).toMatch(/mime/);
-    for (let i = 0; i < 8; i++) await attach(trip, expense, `${trip}/n${i}.jpg`);
+    await attach(trip, expense, `${trip}/c.jpg`);
     expect(
       await rejects(
-        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', '${trip}/eleven.jpg', 'x', 'image/jpeg', 1)`,
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', '${trip}/fourth.jpg', 'x', 'image/jpeg', 1)`,
       ),
     ).toMatch(/too many receipts/);
   });

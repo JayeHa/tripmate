@@ -8,9 +8,9 @@ export const RECEIPT_MIMES = [
   "application/pdf",
 ] as const;
 
-/** 장당 최대 크기(10MB) · 한 지출 최대 장수 — DB 와 같다(0041) */
+/** 장당 최대 크기(10MB) · 한 지출 최대 장수(3장) — DB 와 같다(0041 · 0042) */
 export const RECEIPT_MAX_BYTES = 10 * 1024 * 1024;
-export const RECEIPT_MAX_COUNT = 10;
+export const RECEIPT_MAX_COUNT = 3;
 
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
