@@ -7,13 +7,18 @@ import { RECEIPT_MAX_COUNT, RECEIPT_MIMES, useReceiptUrls } from "@/entities/exp
 
 import type { ReceiptDraft, ReceiptDrafts } from "../model/use-receipt-drafts";
 
-type ReceiptsFieldProps = { tripId: string; drafts: ReceiptDrafts };
+type ReceiptsFieldProps = {
+  tripId: string;
+  drafts: ReceiptDrafts;
+  /** 칸 이름 오른쪽(「📌 고정」) */
+  titleRight?: React.ReactNode;
+};
 
 /**
  * 「영수증」 칸 — 96 칸 사진 · PDF 묶음(각각 ✕ 로 빼기)과 점선 「+ 사진 · PDF」. 여러 장을 한 번에 고른다.
  * 올리는 동안은 칸에 도는 표시, 붙어 있던 사진은 저장소의 읽기 주소로 보인다
  */
-export function ReceiptsField({ tripId, drafts }: ReceiptsFieldProps) {
+export function ReceiptsField({ tripId, drafts, titleRight }: ReceiptsFieldProps) {
   const input = useRef<HTMLInputElement>(null);
   const keys = drafts.items.flatMap((d) =>
     d.key && !d.preview && d.mime !== "application/pdf" ? [d.key] : [],
@@ -21,7 +26,10 @@ export function ReceiptsField({ tripId, drafts }: ReceiptsFieldProps) {
   const { data: urls = {} } = useReceiptUrls(tripId, keys);
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm text-ink-400">영수증 (선택 · {RECEIPT_MAX_COUNT}장까지)</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm text-ink-400">영수증 (선택 · {RECEIPT_MAX_COUNT}장까지)</span>
+        {titleRight}
+      </div>
       <div className="flex flex-wrap gap-2">
         {drafts.items.map((d) => (
           <Thumb

@@ -189,7 +189,12 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
           )}
         </aside>
       </div>
-      <ExpenseDialog tripId={tripId} target={modal} onClose={() => setModal(null)} />
+      <ExpenseDialog
+        tripId={tripId}
+        target={modal}
+        onClose={() => setModal(null)}
+        onToast={list.showToast}
+      />
       <CategoryModal list={list} opened={screens.category} onClose={screens.closeCategory} />
       <SettleModal list={list} dash={dash} opened={screens.settle} onClose={screens.closeSettle} />
     </div>

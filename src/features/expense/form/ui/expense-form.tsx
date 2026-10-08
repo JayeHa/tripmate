@@ -16,6 +16,7 @@ import type { TripMember } from "@/entities/trip-member";
 
 import { formPeople } from "../lib/people";
 import { useExpenseForm } from "../model/use-expense-form";
+import { useFormPrefs } from "../model/use-form-prefs";
 import { useReceiptDrafts } from "../model/use-receipt-drafts";
 import { AmountField, AmountFirst } from "./amount-field";
 import { PaymentField } from "./expense-fields";
@@ -23,7 +24,6 @@ import { FormMoreMenu } from "./form-more-menu";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
 import { QuickSummary } from "./quick-summary";
-import { ReceiptsField } from "./receipts-field";
 import { ScheduleFields } from "./schedule-fields";
 import { SubmitBar } from "./submit-bar";
 
@@ -79,6 +79,8 @@ type ExpenseFormProps = {
   defaultCurrency?: string;
   /** 빠른 입력(일정에서 연 비용) — 일정 연결 · 카테고리 · 날짜 칸을 숨기고 맨 위에 글로 요약한다. 가계부에서 열면 모든 칸 */
   quick?: boolean;
+  /** 짧은 알림(입력 칸 고정 · 풀기) — 화면이 하나를 그린다 */
+  onToast?: (text: string) => void;
   /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
   onSubmit: (
     values: ExpenseFormValues,
@@ -112,10 +114,12 @@ export function ExpenseForm({
   presetItemId,
   defaultCurrency,
   quick = false,
+  onToast,
   onSubmit,
 }: ExpenseFormProps) {
   const me = personKey({ kind: "member", id: currentUserId });
   const drafts = useReceiptDrafts(trip.id, receipts);
+  const prefs = useFormPrefs();
   const form = useExpenseForm({
     trip,
     people: formPeople(members, guests, currentUserId),
@@ -153,8 +157,14 @@ export function ExpenseForm({
             quick={linked !== null}
           />
           <PaymentField form={form} />
-          <PeopleSection form={form} />
-          <MoreFields form={form} receipts={<ReceiptsField tripId={trip.id} drafts={drafts} />} />
+          <PeopleSection form={form} prefs={prefs} />
+          <MoreFields
+            form={form}
+            prefs={prefs}
+            onToast={onToast}
+            tripId={trip.id}
+            drafts={drafts}
+          />
           {!initial && form.numAmount <= 0 && (
             <AmountFirst onClick={() => amountRef.current?.focus()} />
           )}

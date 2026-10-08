@@ -19,6 +19,8 @@ type ExpenseDialogProps = {
   tripId: string;
   target: ExpenseDialogTarget | null;
   onClose: () => void;
+  /** 짧은 알림(입력 칸 고정 · 풀기) — 부른 화면이 하나를 그린다 */
+  onToast?: (text: string) => void;
 };
 
 /**
@@ -27,7 +29,7 @@ type ExpenseDialogProps = {
  * 바깥 · Esc · 폼의 ✕ 로 닫고, 저장 · 삭제하면 닫힌다. 목록은 저장이 다시 읽기를 부르므로 따로 갱신하지 않는다.
  * 저장 · 삭제 중에는 닫히지 않는다 — 닫으면 폼이 사라져 실패를 보일 곳이 없다
  */
-export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
+export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialogProps) {
   const [locked, setLocked] = useState(false);
   // 닫히는 동안에도 내용을 그리고, 열 때마다 폼을 새로 그린다 — 닫았다 다시 연 「비용 추가」 가 지난 입력을 이어받지 않게
   const shown = useHeldWhileClosing(target !== null, target);
@@ -51,6 +53,7 @@ export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
             tripId={tripId}
             itemId={shown.itemId}
             quick={shown.quick}
+            onToast={onToast}
             layout="modal"
             onClose={close}
             onDone={onClose}
@@ -63,6 +66,7 @@ export function ExpenseDialog({ tripId, target, onClose }: ExpenseDialogProps) {
             tripId={tripId}
             expenseId={shown.expenseId}
             quick={shown.quick}
+            onToast={onToast}
             layout="modal"
             onClose={close}
             onDone={onClose}
