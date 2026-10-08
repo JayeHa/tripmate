@@ -72,6 +72,11 @@ export function useExpenseLink({
   // 사라진 일정이 대체 장소였으면 합계에 다시 넣는다 — ✕ · 「연결 안 함」 과 같은 규칙.
   // 렌더 중에 맞춘다(같은 컴포넌트의 상태). follow 가 onAlternative 를 내려 한 번만 돈다
   if (state.gone && onAlternative) follow(false);
+  // 마지막으로 본 연결 일정 이름. 항목명을 비워 두면 연결 일정 이름으로 저장하는데, 일정이 사라지면 항목명도 비어
+  // 「완료」 가 꺼진다 — 그때 이 이름을 항목명 칸에 채워 「그대로 저장」 할 수 있게 한다(렌더 중, 한 번만)
+  const [lastName, setLastName] = useState(linked ? itemName(linked) : "");
+  if (linked && itemName(linked) !== lastName) setLastName(itemName(linked));
+  if (state.gone && !fields.name.trim() && lastName) fields.setName(lastName);
   const dateOf = (item: ScheduleItem) => dayIndexToDate(trip.start_date, item.day_index);
   /** 날짜 칸 아래 「연결된 일정은 day N이에요」 — 연결 일정과 날짜가 다를 때만 */
   const dayMismatch =
