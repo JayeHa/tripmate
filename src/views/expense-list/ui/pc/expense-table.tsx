@@ -97,6 +97,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
                       key={row.id}
                       row={row}
                       selected={selected === row.id}
+                      hasReceipt={list.receiptsOf(row.id).length > 0}
                       onSelect={() => onSelect(row.id)}
                       onMarkPaid={() => list.markPaid(row.id)}
                       paying={list.paying === row.id}

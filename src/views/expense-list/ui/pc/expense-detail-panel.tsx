@@ -10,6 +10,8 @@ type ExpenseDetailPanelProps = {
   /** 금액 두 줄 — 표의 「결제 통화 / 원화 환산」 을 따른다 */
   amount: { big: string; small: string | null };
   fields: DetailField[];
+  /** 영수증 묶음(있을 때만) */
+  receipts?: React.ReactNode;
   /** 「수정」 — 비용 입력 창을 연다 */
   onEdit: () => void;
   /** ✕ — 요약으로 돌아간다 */
@@ -24,6 +26,7 @@ export function ExpenseDetailPanel({
   row,
   amount,
   fields,
+  receipts,
   onEdit,
   onClose,
 }: ExpenseDetailPanelProps) {
@@ -70,6 +73,7 @@ export function ExpenseDetailPanel({
           </div>
         ))}
       </dl>
+      {receipts}
       <p className="text-xs text-ink-350">↑↓ 다른 비용 · Esc 닫기</p>
     </section>
   );

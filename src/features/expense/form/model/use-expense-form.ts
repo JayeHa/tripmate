@@ -27,6 +27,8 @@ type ExpenseFormOptions = {
   initial?: ExpenseFormValues;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
+  /** 붙어 있던 영수증이 있다 — 「추가 정보 입력」 을 펼친 채 연다 */
+  hasReceipts?: boolean;
   /** 저장 — 수정이면 둘째 값으로 폼을 연 때의 값을 함께 준다(그때와 달라진 칸만 보내려고) */
   onSubmit: (values: ExpenseFormValues, opened: ExpenseFormValues | undefined) => void;
 };
@@ -43,6 +45,7 @@ export function useExpenseForm({
   alternatives,
   initial,
   defaultSpentOn,
+  hasReceipts = false,
   onSubmit,
 }: ExpenseFormOptions) {
   const [start] = useState(() =>
@@ -68,7 +71,9 @@ export function useExpenseForm({
   const [dueDate, setDueDate] = useState(start.dueDate);
   const [counted, setCounted] = useState(start.counted);
   // 접힌 칸에 값이 있으면 펼친 채 연다 — 숨은 값을 모르고 저장하지 않게
-  const [moreOpen, setMoreOpen] = useState(!!start.memo || !start.paid || !start.counted);
+  const [moreOpen, setMoreOpen] = useState(
+    !!start.memo || !start.paid || !start.counted || hasReceipts,
+  );
   const [error, setError] = useState<string | null>(null);
   const link = useExpenseLink({
     trip,

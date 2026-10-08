@@ -7,17 +7,21 @@ import { Textarea } from "@/shared/ui/textarea";
 
 import type { ExpenseFormState } from "../model/use-expense-form";
 
-type MoreFieldsProps = { form: ExpenseFormState };
+type MoreFieldsProps = {
+  form: ExpenseFormState;
+  /** 메모 아래 「영수증」 칸 */
+  receipts: React.ReactNode;
+};
 
 /**
- * 「추가 정보 입력」 — 자주 안 쓰는 칸을 접어 둔다: 결제 상태(+ 예정일) · 메모 · 합계에서 제외.
+ * 「추가 정보 입력」 — 자주 안 쓰는 칸을 접어 둔다: 결제 상태(+ 예정일) · 메모 · 영수증 · 합계에서 제외.
  * 예정일 달력은 맨 아래 칸이라 위로 연다. 지난 날은 고르지 않는다
  */
-export function MoreFields({ form }: MoreFieldsProps) {
+export function MoreFields({ form, receipts }: MoreFieldsProps) {
   return (
     <MoreSection
       title="추가 정보 입력"
-      hint="결제 상태 · 메모 · 합계 제외"
+      hint="결제 상태 · 메모 · 영수증 · 합계 제외"
       open={form.moreOpen}
       onOpenChange={form.setMoreOpen}
     >
@@ -60,6 +64,7 @@ export function MoreFields({ form }: MoreFieldsProps) {
           className="min-h-21 resize-none leading-normal"
         />
       </div>
+      {receipts}
       <div className="flex items-center gap-3 pb-3">
         <label htmlFor="expense-excluded" className="flex flex-1 flex-col gap-0.75">
           <span className="text-base font-bold text-ink-900">합계에서 제외</span>

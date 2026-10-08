@@ -65,8 +65,11 @@ export function CreateExpense({
       defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
       pending={create.isPending}
       submitError={create.error?.message}
-      onSubmit={(values) =>
-        create.mutate({ values, createdBy: currentUserId }, { onSuccess: onDone })
+      onSubmit={(values, _opened, receipts) =>
+        create.mutate(
+          { values, createdBy: currentUserId, receipts: receipts.attach },
+          { onSuccess: onDone },
+        )
       }
     />
   );
@@ -128,10 +131,14 @@ export function EditExpense({
       {...loaded.data}
       expenseId={expenseId}
       initial={initial}
+      receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}
       pending={update.isPending}
       submitError={update.error?.message ?? remove.error?.message}
-      onSubmit={(values, opened) =>
-        update.mutate({ expenseId, values, opened: opened ?? initial }, { onSuccess: onDone })
+      onSubmit={(values, opened, receipts) =>
+        update.mutate(
+          { expenseId, values, opened: opened ?? initial, receipts },
+          { onSuccess: onDone },
+        )
       }
     />
   );
