@@ -234,6 +234,7 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 [`docs/policies/data-model.md`](docs/policies/data-model.md) 에 있다. 권한을 다루는 기능을 만들거나 리뷰할 때 먼저 읽는다.
 장소 검색 범위 · 구글 지도 · 장소 API 결정은 [`docs/policies/place-search.md`](docs/policies/place-search.md) 에 쌓는다.
 일정 화면의 동작 규칙(이어서 · 하루씩 보기 · 편집 · 상세 · 시간 입력)은 [`docs/policies/schedule.md`](docs/policies/schedule.md) 에 있다. 일정 화면의 동작을 바꾸면 같은 PR 에서 그 문서도 고친다.
+사진 · 파일 저장(저장소 · 키 · 받는 파일 · 압축 · 지우기)은 [`docs/policies/files.md`](docs/policies/files.md) 에 쌓는다. 파일 규칙을 바꾸면 같은 PR 에서 그 문서도 고친다.
 **마이그레이션(테이블 · 정책 · 함수 · 트리거)을 바꾸면 같은 PR 에서 이 문서도 고친다.** 테이블 · 함수 이름이 빠지면 `migrations.test.ts` 가 막는다.
 
 ## 클라이언트 가드는 가드가 아니다
