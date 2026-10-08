@@ -69,6 +69,9 @@ export function useExpenseLink({
   const linked = itemId ? findItem(itemId) : null;
   // 연 사이 일행이 일정을 지웠으면 연결이 없는 것으로 본다(#161)
   const state = linkState(itemId, linked !== null, noneChosen);
+  // 사라진 일정이 대체 장소였으면 합계에 다시 넣는다 — ✕ · 「연결 안 함」 과 같은 규칙.
+  // 렌더 중에 맞춘다(같은 컴포넌트의 상태). follow 가 onAlternative 를 내려 한 번만 돈다
+  if (state.gone && onAlternative) follow(false);
   const dateOf = (item: ScheduleItem) => dayIndexToDate(trip.start_date, item.day_index);
   /** 날짜 칸 아래 「연결된 일정은 day N이에요」 — 연결 일정과 날짜가 다를 때만 */
   const dayMismatch =
