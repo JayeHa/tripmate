@@ -4,8 +4,9 @@ import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 
 import type { ExpenseFormState } from "../model/use-expense-form";
-import { CategoryField, DayField } from "./expense-fields";
+import { CategoryField, DayField, NameField } from "./expense-fields";
 import { LinkField } from "./link-field";
+import { LinkedBundle } from "./linked-bundle";
 
 type ScheduleFieldsProps = {
   form: ExpenseFormState;
@@ -17,8 +18,9 @@ type ScheduleFieldsProps = {
 };
 
 /**
- * 일정 연결 → 카테고리 → 날짜. 빠른 입력이면 모두 숨긴다 —
- * 단 연 때 카테고리가 비어 있었으면(휴식처럼 일정 종류로 못 정함) 카테고리 칸은 둔다. 없으면 저장할 수 없다
+ * 일정 연결 → 카테고리 → 날짜 → 항목명. 일정을 연결하면 세 칸 대신 「일정에서 가져옴」 묶음(LinkedBundle).
+ * 빠른 입력이면 연결 · 카테고리 · 날짜를 숨기고 항목명만 — 단 연 때 카테고리가 비어 있었으면(카테고리 없는 장소처럼 일정 종류로 못 정함)
+ * 카테고리 칸은 둔다. 없으면 저장할 수 없다
  */
 export function ScheduleFields({ form, trip, items, alternatives, quick }: ScheduleFieldsProps) {
   const [categoryKnown] = useState(form.category !== null);
@@ -26,7 +28,14 @@ export function ScheduleFields({ form, trip, items, alternatives, quick }: Sched
   const dayIndex = form.link.dayTouched
     ? form.link.days.findIndex((o) => o.value === form.spentOn) - 1
     : -1;
-  if (quick) return categoryKnown ? null : <CategoryField form={form} />;
+  if (quick)
+    return (
+      <>
+        {!categoryKnown && <CategoryField form={form} />}
+        <NameField form={form} />
+      </>
+    );
+  const linked = form.link.linked;
   return (
     <>
       <LinkField
@@ -36,8 +45,15 @@ export function ScheduleFields({ form, trip, items, alternatives, quick }: Sched
         alternatives={alternatives}
         dayIndex={dayIndex >= 0 ? dayIndex : null}
       />
-      <CategoryField form={form} />
-      <DayField form={form} trip={trip} />
+      {linked ? (
+        <LinkedBundle form={form} trip={trip} linked={linked} />
+      ) : (
+        <>
+          <CategoryField form={form} />
+          <DayField form={form} trip={trip} />
+          <NameField form={form} />
+        </>
+      )}
     </>
   );
 }

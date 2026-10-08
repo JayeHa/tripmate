@@ -18,7 +18,7 @@ import { formPeople } from "../lib/people";
 import { useExpenseForm } from "../model/use-expense-form";
 import { useReceiptDrafts } from "../model/use-receipt-drafts";
 import { AmountField, AmountFirst } from "./amount-field";
-import { NameField, PaymentField } from "./expense-fields";
+import { PaymentField } from "./expense-fields";
 import { FormMoreMenu } from "./form-more-menu";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
@@ -89,7 +89,7 @@ type ExpenseFormProps = {
 
 /**
  * 비용 추가 · 수정 화면. 모바일은 탭 위를 덮는 전체 화면, PC 는 가운데 440 칸(페이지) 또는 부른 쪽의 창 안(모달).
- * 금액(맨 위) → 일정 연결 → 카테고리 → 날짜 → 항목명 → 결제수단 → 누가 내고 누구와 나눴나 → 추가 정보, 아래에 완료.
+ * 금액(맨 위) → 일정 연결 → 카테고리 → 날짜 → 항목명(연결하면 「일정에서 가져옴」 묶음) → 결제수단 → 누가 내고 누구와 나눴나 → 추가 정보, 아래에 완료.
  * 새 비용은 금액을 넣기 전까지 아래 칸을 흐리게 덮고, 누르면 금액 칸으로 보낸다.
  * 빠른 입력은 연결된 일정이 있을 때만 — 일행이 일정을 지워 연결이 풀리면 모든 칸으로 돌아간다
  */
@@ -152,7 +152,6 @@ export function ExpenseForm({
             alternatives={alternatives}
             quick={linked !== null}
           />
-          <NameField form={form} />
           <PaymentField form={form} />
           <PeopleSection form={form} />
           <MoreFields form={form} receipts={<ReceiptsField tripId={trip.id} drafts={drafts} />} />
