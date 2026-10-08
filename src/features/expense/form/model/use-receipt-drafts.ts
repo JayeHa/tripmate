@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   type ExpenseReceipt,
@@ -8,6 +8,7 @@ import {
   RECEIPT_MAX_BYTES,
   RECEIPT_MAX_COUNT,
   type ReceiptChange,
+  removeReceiptFiles,
   uploadReceipt,
 } from "@/entities/expense";
 import { compressImage } from "@/shared/lib/compress-image";
@@ -44,6 +45,8 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
     })),
   );
   const [error, setError] = useState<string | null>(null);
+  // 올리는 중에 ✕ 로 뺀 것 — 올리기가 끝나면 그 파일을 바로 지운다
+  const dropped = useRef(new Set<string>());
 
   /** 한 파일을 올린다 — 올리는 동안 자리를 먼저 보이고, 끝나면 키를 채운다. 실패하면 자리를 뺀다 */
   async function uploadOne(file: File) {
@@ -57,6 +60,10 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
       const blob = await compressImage(file);
       if (blob.size > RECEIPT_MAX_BYTES) throw new Error("too-big");
       const done = await uploadReceipt(tripId, blob, file.name);
+      if (dropped.current.delete(uid)) {
+        void removeReceiptFiles(tripId, [done.key]);
+        return;
+      }
       setItems((list) => list.map((d) => (d.uid === uid ? { ...d, ...done } : d)));
     } catch (e) {
       setItems((list) => list.filter((d) => d.uid !== uid));
@@ -82,7 +89,18 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
     items,
     error,
     add,
-    remove: (uid: string) => setItems((list) => list.filter((d) => d.uid !== uid)),
+    /**
+     * 뺀다. 방금 올린 것(붙지 않음)은 파일도 바로 지우고, 올리는 중이면 끝난 뒤 지운다.
+     * 붙어 있던 것은 저장할 때 뗀다(닫으면 그대로)
+     */
+    remove(uid: string) {
+      const draft = items.find((d) => d.uid === uid);
+      if (draft && !draft.id) {
+        if (draft.key) void removeReceiptFiles(tripId, [draft.key]);
+        else dropped.current.add(uid);
+      }
+      setItems((list) => list.filter((d) => d.uid !== uid));
+    },
     /** 올리는 중인 파일이 있다 — 저장을 기다리게 한다 */
     uploading: items.some((d) => !d.key),
     full: items.length >= RECEIPT_MAX_COUNT,
