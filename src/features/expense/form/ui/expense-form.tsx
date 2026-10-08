@@ -5,8 +5,10 @@ import { useRef } from "react";
 
 import {
   type ExpenseFormValues,
+  type ExpenseReceipt,
   type ExpenseWithSplits,
   personKey,
+  type ReceiptChange,
   type TripGuest,
 } from "@/entities/expense";
 import type { ScheduleItem } from "@/entities/schedule-item";
@@ -16,13 +18,18 @@ import type { TripMember } from "@/entities/trip-member";
 import { linkCosts } from "../lib/link-costs";
 import { formPeople } from "../lib/people";
 import { useExpenseForm } from "../model/use-expense-form";
+import { useReceiptDrafts } from "../model/use-receipt-drafts";
 import { AmountField } from "./amount-field";
 import { CategoryField, DayField, NameField, PaymentField } from "./expense-fields";
 import { FormMoreMenu } from "./form-more-menu";
 import { LinkField } from "./link-field";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
+import { ReceiptsField } from "./receipts-field";
 import { SubmitBar } from "./submit-bar";
+
+/** 붙어 있던 영수증이 없을 때 — 렌더마다 새 배열을 만들지 않게 */
+const NO_RECEIPTS: ExpenseReceipt[] = [];
 
 /** 화면 틀 — page: 모바일 전체 화면 · PC 가운데 440 페이지, modal: 부른 쪽의 창(PC 440×760) 안을 채운다 */
 export type ExpenseFormLayout = "page" | "modal";
@@ -64,8 +71,14 @@ type ExpenseFormProps = {
   pending?: boolean;
   /** 저장 요청이 실패한 이유 */
   submitError?: string | null;
-  /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값 */
-  onSubmit: (values: ExpenseFormValues, opened: ExpenseFormValues | undefined) => void;
+  /** 이미 붙어 있던 영수증(수정) */
+  receipts?: ExpenseReceipt[];
+  /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
+  onSubmit: (
+    values: ExpenseFormValues,
+    opened: ExpenseFormValues | undefined,
+    receipts: ReceiptChange,
+  ) => void;
 };
 
 /**
@@ -90,9 +103,11 @@ export function ExpenseForm({
   defaultSpentOn,
   pending,
   submitError,
+  receipts = NO_RECEIPTS,
   onSubmit,
 }: ExpenseFormProps) {
   const me = personKey({ kind: "member", id: currentUserId });
+  const drafts = useReceiptDrafts(trip.id, receipts);
   const form = useExpenseForm({
     trip,
     people: formPeople(members, guests, currentUserId),
@@ -101,7 +116,8 @@ export function ExpenseForm({
     alternatives,
     initial,
     defaultSpentOn,
-    onSubmit,
+    hasReceipts: receipts.length > 0,
+    onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),
   });
   const costs = linkCosts(expenses, trip.home_currency, trip.exchange_rates, expenseId);
   // 지금 날짜의 day 순번(0 부터). 여행준비(빈 글)면 null — 날짜 옵션의 첫 줄이 여행준비라 하나 뺀다
@@ -133,7 +149,7 @@ export function ExpenseForm({
           <NameField form={form} />
           <PaymentField form={form} />
           <PeopleSection form={form} />
-          <MoreFields form={form} />
+          <MoreFields form={form} receipts={<ReceiptsField tripId={trip.id} drafts={drafts} />} />
           {!initial && form.numAmount <= 0 && (
             <AmountFirst onClick={() => amountRef.current?.focus()} />
           )}
@@ -141,8 +157,9 @@ export function ExpenseForm({
       </div>
       <SubmitBar
         form={form}
-        pending={pending}
-        submitError={submitError}
+        // 영수증을 올리는 동안은 저장하지 않는다 — 올라가지 않은 파일이 붙지 않은 채 남는다
+        pending={Boolean(pending) || drafts.uploading}
+        submitError={drafts.uploading ? "영수증을 올리는 중이에요" : submitError}
         className={FRAME[layout].bar}
       />
     </form>

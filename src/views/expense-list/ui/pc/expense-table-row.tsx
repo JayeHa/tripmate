@@ -1,4 +1,4 @@
-import { MapPin, StickyNote } from "lucide-react";
+import { MapPin, Paperclip, StickyNote } from "lucide-react";
 
 import {
   amountLines,
@@ -17,6 +17,8 @@ type ExpenseTableRowProps = {
   row: ExpenseRowView;
   /** 오른쪽에 상세가 열린 줄 — 연한 파랑 */
   selected: boolean;
+  /** 영수증이 붙어 있다 — 이름 옆 클립 */
+  hasReceipt: boolean;
   /** 줄을 눌렀다 — 오른쪽에 상세를 연다 */
   onSelect: () => void;
   onMarkPaid: () => void;
@@ -40,6 +42,7 @@ function avatarTone(person: PersonRef | null) {
 export function ExpenseTableRow({
   row,
   selected,
+  hasReceipt,
   onSelect,
   onMarkPaid,
   paying,
@@ -76,10 +79,7 @@ export function ExpenseTableRow({
           >
             {row.name}
           </button>
-          {row.hasMemo && (
-            <StickyNote className="size-3.25 shrink-0 text-ink-350" aria-label="메모 있음" />
-          )}
-          {row.excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
+          <NameMarks receipt={hasReceipt} memo={row.hasMemo} excluded={row.excluded} />
         </div>
         {row.overdue ? (
           <span className="flex items-center gap-1.5 text-xs whitespace-nowrap text-status-wait-text">
@@ -133,5 +133,20 @@ export function ExpenseTableRow({
         {amount.small && <span className="text-[11px] text-ink-400">{amount.small}</span>}
       </div>
     </div>
+  );
+}
+
+type NameMarksProps = { receipt: boolean; memo: boolean; excluded: boolean };
+
+/** 항목명 뒤 표시 — 영수증 클립 · 메모 아이콘 · 「합계 제외」 배지(있는 것만) */
+function NameMarks({ receipt, memo, excluded }: NameMarksProps) {
+  return (
+    <>
+      {receipt && (
+        <Paperclip className="size-3.25 shrink-0 text-ink-350" aria-label="영수증 있음" />
+      )}
+      {memo && <StickyNote className="size-3.25 shrink-0 text-ink-350" aria-label="메모 있음" />}
+      {excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
+    </>
   );
 }

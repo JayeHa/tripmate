@@ -56,7 +56,12 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
       {detail.state === "ready" && (
         <>
           <div className="min-h-0 flex-1 overflow-y-auto lg:overflow-visible">
-            <DetailBody expense={detail.expense} row={detail.row} trip={detail.trip} />
+            <DetailBody
+              expense={detail.expense}
+              row={detail.row}
+              trip={detail.trip}
+              receipts={detail.receipts}
+            />
           </div>
           <div className="flex shrink-0 flex-col gap-2 border-t border-surface-muted bg-background px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:sticky lg:bottom-0">
             {remove.isError && (

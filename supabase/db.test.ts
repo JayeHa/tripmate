@@ -24,7 +24,17 @@ const STUBS = `
     $$ select coalesce(nullif(current_setting('test.jwt', true), ''), '{}')::jsonb $$;
   create function extensions.gen_random_bytes(int) returns bytea language sql as
     $$ select decode(md5(random()::text), 'hex') $$;
-  create table storage.buckets (id text primary key, name text, public boolean);
+  create table storage.buckets (
+    id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]
+  );
+  create table storage.objects (
+    id uuid primary key default gen_random_uuid(), bucket_id text, name text, owner uuid
+  );
+  alter table storage.objects enable row level security;
+  grant usage on schema storage to anon, authenticated;
+  grant all on storage.objects to anon, authenticated;
+  create function storage.foldername(name text) returns text[] language sql immutable as
+    $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
   create publication supabase_realtime;
 `;
 
@@ -1739,6 +1749,90 @@ describe("여행에 통화 더하기 (0039 · 0040)", () => {
     expect(
       await rejects(`select public.add_trip_currency('${trip}', 'KRW', 'USD', 1, 1400)`),
     ).toMatch(/not a member/);
+  });
+});
+
+describe("지출 영수증 (0041 · 0042)", () => {
+  /** 여행 · 지출 하나 */
+  async function setup(start: string) {
+    await as(A);
+    const trip = await newTrip(start, start);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name) values ('${trip}', '${A}', 1, 'KRW', '라멘') returning id`,
+    );
+    return { trip, expense: rows[0].id };
+  }
+  /** 영수증 한 줄을 붙인다 */
+  const attach = (trip: string, expense: string, key: string, mime = "image/jpeg") =>
+    db.query(
+      `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ($1, $2, $3, 'r.jpg', $4, 1000)`,
+      [expense, trip, key, mime],
+    );
+
+  it("그 여행 폴더의 키만, 사진 · PDF 만, 한 지출에 3장까지(0042)", async () => {
+    const { trip, expense } = await setup("2028-03-01");
+    await attach(trip, expense, `${trip}/a.jpg`);
+    await attach(trip, expense, `${trip}/b.pdf`, "application/pdf");
+    expect(
+      await rejects(
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', 'other/x.jpg', 'x', 'image/jpeg', 1)`,
+      ),
+    ).toMatch(/expense_receipts_key_chk/);
+    expect(
+      await rejects(
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', '${trip}/x.exe', 'x', 'application/x-msdownload', 1)`,
+      ),
+    ).toMatch(/mime/);
+    await attach(trip, expense, `${trip}/c.jpg`);
+    expect(
+      await rejects(
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${expense}', '${trip}', '${trip}/fourth.jpg', 'x', 'image/jpeg', 1)`,
+      ),
+    ).toMatch(/too many receipts/);
+  });
+
+  it("다른 여행의 지출에는 붙이지 못하고, 멤버가 아니면 보지도 붙이지도 못한다", async () => {
+    const one = await setup("2028-03-03");
+    const two = await setup("2028-03-05");
+    expect(
+      await rejects(
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${two.expense}', '${one.trip}', '${one.trip}/x.jpg', 'x', 'image/jpeg', 1)`,
+      ),
+    ).toMatch(/row-level security/);
+    await attach(one.trip, one.expense, `${one.trip}/mine.jpg`);
+    await as(B);
+    const seen = await db.query(
+      `select 1 from public.expense_receipts where trip_id = '${one.trip}'`,
+    );
+    expect(seen.rows).toHaveLength(0);
+    expect(
+      await rejects(
+        `insert into public.expense_receipts (expense_id, trip_id, key, name, mime, size) values ('${one.expense}', '${one.trip}', '${one.trip}/b.jpg', 'x', 'image/jpeg', 1)`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+
+  it("지출을 지우면 영수증 줄도 지워진다", async () => {
+    const { trip, expense } = await setup("2028-03-07");
+    await attach(trip, expense, `${trip}/gone.jpg`);
+    await db.query(`delete from public.expenses where id = '${expense}'`);
+    const left = await db.query(
+      `select 1 from public.expense_receipts where expense_id = '${expense}'`,
+    );
+    expect(left.rows).toHaveLength(0);
+  });
+
+  it("버킷: 경로 첫 칸 여행의 멤버만 파일을 올린다", async () => {
+    const { trip } = await setup("2028-03-09");
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('receipts', '${trip}/ok.jpg')`,
+    );
+    await as(B);
+    expect(
+      await rejects(
+        `insert into storage.objects (bucket_id, name) values ('receipts', '${trip}/no.jpg')`,
+      ),
+    ).toMatch(/row-level security/);
   });
 });
 

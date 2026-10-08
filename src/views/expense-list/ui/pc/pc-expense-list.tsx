@@ -9,6 +9,7 @@ import {
   PAYMENT_METHOD_LABEL,
   PAYMENT_METHODS,
   personKey,
+  ReceiptThumbs,
   sumExpenses,
 } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
@@ -168,6 +169,15 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
               })}
               onEdit={() => setModal({ kind: "edit", expenseId: selectedRow.id })}
               onClose={selection.clear}
+              receipts={
+                list.receiptsOf(selectedRow.id).length > 0 && (
+                  <ReceiptThumbs
+                    tripId={tripId}
+                    receipts={list.receiptsOf(selectedRow.id)}
+                    size="sm"
+                  />
+                )
+              }
             />
           ) : (
             <PcDashboard

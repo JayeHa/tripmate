@@ -21,6 +21,7 @@ export const queryKeys = {
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
+  receipts: (tripId: string) => ["trips", tripId, "receipts"] as const,
   /** 한 여행의 모든 날짜·이동수단 경로. 일정이 바뀌면 이 prefix 로 한꺼번에 무효화한다. */
   dayRoutes: (tripId: string) => ["trips", tripId, "route"] as const,
   dayRoute: (tripId: string, dayIndex: number, mode: string) =>
@@ -34,6 +35,8 @@ export const queryKeys = {
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (queryKey[0] === "cities") return true;
+  // 영수증 읽기 주소는 1시간이면 만료돼 저장하지 않는다
+  if (queryKey[2] === "receipts" && queryKey[3] === "urls") return false;
   return queryKey[0] === "trips" && queryKey[2] !== "route";
 }
 

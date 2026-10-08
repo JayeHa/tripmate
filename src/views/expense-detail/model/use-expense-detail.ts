@@ -1,6 +1,12 @@
 "use client";
 
-import { expenseRowView, type PersonRef, useExpenses, useTripGuests } from "@/entities/expense";
+import {
+  expenseRowView,
+  type PersonRef,
+  useExpenses,
+  useTripGuests,
+  useTripReceipts,
+} from "@/entities/expense";
 import { itemName, useAlternatives, useScheduleItems } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
@@ -19,6 +25,7 @@ export function useExpenseDetail(tripId: string, expenseId: string) {
   const { data: guests = [] } = useTripGuests(tripId);
   const { data: items = [] } = useScheduleItems(tripId);
   const { data: alternatives = [] } = useAlternatives(tripId);
+  const { data: tripReceipts = [] } = useTripReceipts(tripId);
   const trip = tripQuery.data;
   const expenses = expensesQuery.data;
   const retry = () => {
@@ -53,5 +60,6 @@ export function useExpenseDetail(tripId: string, expenseId: string) {
     nameOf,
     linkNameOf,
   });
-  return { state: "ready" as const, trip, expense, row, retry };
+  const receipts = tripReceipts.filter((r) => r.expense_id === expenseId);
+  return { state: "ready" as const, trip, expense, row, receipts, retry };
 }

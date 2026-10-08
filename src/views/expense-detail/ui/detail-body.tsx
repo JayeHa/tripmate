@@ -4,24 +4,28 @@ import {
   detailDateText,
   ExpenseBadge,
   ExpenseCategoryIcon,
+  type ExpenseReceipt,
   type ExpenseRowView,
   type ExpenseWithSplits,
   paymentStatusText,
   type PersonRef,
+  ReceiptThumbs,
 } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 
 type DetailBodyProps = {
   expense: ExpenseWithSplits;
   row: ExpenseRowView;
-  trip: { start_date: string; end_date: string };
+  trip: { id: string; start_date: string; end_date: string };
+  /** 이 지출에 붙은 영수증 */
+  receipts: ExpenseReceipt[];
 };
 
 /**
  * 비용 상세의 내용 — 카테고리(타일 28 + 이름 · 「합계 제외」) · 항목명 17/700 · 금액 28/800(외화면 옆에 ≈ 원화),
- * 표(날짜 · 일정 · 결제수단 · 결제한 사람 · 함께한 사람 · 결제 상태) · 메모(있을 때만). 일정은 연결했을 때만 줄이 있다
+ * 표(날짜 · 일정 · 결제수단 · 결제한 사람 · 함께한 사람 · 결제 상태) · 메모 · 영수증(있을 때만, 누르면 새 창에서 원본). 일정은 연결했을 때만 줄이 있다
  */
-export function DetailBody({ expense, row, trip }: DetailBodyProps) {
+export function DetailBody({ expense, row, trip, receipts }: DetailBodyProps) {
   const memo = expense.memo?.trim();
   return (
     <div className="flex flex-col gap-5 px-5 pt-2 pb-8">
@@ -57,6 +61,12 @@ export function DetailBody({ expense, row, trip }: DetailBodyProps) {
           <p className="rounded-memo bg-surface-memo px-3.5 py-3 text-sm leading-[1.55] whitespace-pre-line text-ink-800">
             {memo}
           </p>
+        </section>
+      )}
+      {receipts.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h3 className="text-[13px] font-bold text-ink-400">영수증</h3>
+          <ReceiptThumbs tripId={trip.id} receipts={receipts} />
         </section>
       )}
     </div>

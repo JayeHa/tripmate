@@ -14,6 +14,7 @@ import {
   useExpenses,
   useMarkExpensePaid,
   useTripGuests,
+  useTripReceipts,
 } from "@/entities/expense";
 import { itemName, useAlternatives, useScheduleItems } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
@@ -53,6 +54,7 @@ export function useExpenseList(tripId: string) {
   const { data: guests = [] } = useTripGuests(tripId);
   const { data: items = [] } = useScheduleItems(tripId);
   const { data: alternatives = [] } = useAlternatives(tripId);
+  const { data: receipts = [] } = useTripReceipts(tripId);
   const markPaid = useMarkExpensePaid(tripId);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -141,6 +143,8 @@ export function useExpenseList(tripId: string) {
     toast,
     clearToast: () => setToast(null),
     avatarOf,
+    /** 그 지출에 붙은 영수증 — PC 표의 클립 아이콘 · 상세 패널 */
+    receiptsOf: (expenseId: string) => receipts.filter((r) => r.expense_id === expenseId),
   };
 }
 
