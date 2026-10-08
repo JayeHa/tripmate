@@ -85,7 +85,8 @@ export function useExpenseForm({
     alternatives,
     startItemId: start.itemId,
     editing: !!initial,
-    dayPreset: defaultSpentOn !== undefined || !!presetItem,
+    // 일정에서 연 비용(presetItem)의 날짜는 그 일정에서 채운 값이라 고른 날짜로 보지 않는다 — 연결을 바꾸면 따라간다
+    dayPreset: defaultSpentOn !== undefined,
     fields: {
       spentOn,
       setSpentOn,
