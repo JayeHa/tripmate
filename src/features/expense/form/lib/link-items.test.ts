@@ -82,12 +82,12 @@ describe("linkGroups", () => {
 });
 
 describe("expenseCategoryOf", () => {
-  it("일정 종류를 비용 카테고리로 — 맞는 것이 없으면 null", () => {
+  it("일정 종류를 비용 카테고리로 — 휴식은 관광, 카테고리가 없으면 null", () => {
     expect(expenseCategoryOf(item({ category: "cafe" }))).toBe("food");
     expect(expenseCategoryOf(item({ category: "sight" }))).toBe("activity");
     expect(expenseCategoryOf(item({ category: "stay" }))).toBe("lodging");
     expect(expenseCategoryOf(item({ kind: "flight" }))).toBe("flight");
-    expect(expenseCategoryOf(item({ category: "rest" }))).toBeNull();
+    expect(expenseCategoryOf(item({ category: "rest" }))).toBe("activity");
     expect(expenseCategoryOf(item({ category: null }))).toBeNull();
   });
 });

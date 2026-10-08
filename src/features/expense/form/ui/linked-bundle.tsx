@@ -16,13 +16,13 @@ type LinkedBundleProps = { form: ExpenseFormState; trip: Trip; linked: ScheduleI
 /**
  * 「일정에서 가져옴」 묶음 — 일정을 연결하면 항목명 · 카테고리 · 날짜 칸 대신 회색 묶음(r12)에 글 3줄로 보인다.
  * 머리 오른쪽 「수정」 을 누르면 블루 테두리 + 세 칸이 입력칸이 되고(항목명이 비어 있으면 일정 이름을 채운다), 「닫기」 로 다시 글로.
- * 카테고리가 비어 있으면(휴식처럼 일정 종류로 못 정함) 처음부터 입력칸으로 연다 — 고르지 않으면 저장할 수 없다.
+ * 카테고리가 비어 있으면(카테고리 없는 장소처럼 일정 종류로 못 정함) 처음부터 입력칸으로 연다 — 고르지 않으면 저장할 수 없다.
  * 글로 볼 때도 날짜가 연결 일정과 다르면 아래에 알린다(시안은 입력칸에서만 알린다)
  */
 export function LinkedBundle({ form, trip, linked }: LinkedBundleProps) {
   const mustPick = form.category === null;
   const [editing, setEditing] = useState(mustPick);
-  // 카테고리가 비면(연결을 휴식 같은 일정으로 바꿈) 입력칸으로 연다 — 렌더 중에 맞춘다.
+  // 카테고리가 비면(카테고리 없는 장소로 연결을 바꿈) 입력칸으로 연다 — 렌더 중에 맞춘다.
   // 고른 뒤에도 닫지 않는다(고르는 순간 칸이 사라지지 않게). 닫기는 사용자가
   if (mustPick && !editing) setEditing(true);
   /** 「수정」 — 입력칸으로 열 때 빈 항목명을 일정 이름으로 채운다(빈 칸은 일정 이름으로 저장되지만, 칸에서는 보이게) */

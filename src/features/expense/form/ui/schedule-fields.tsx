@@ -19,7 +19,7 @@ type ScheduleFieldsProps = {
 
 /**
  * 일정 연결 → 카테고리 → 날짜 → 항목명. 일정을 연결하면 세 칸 대신 「일정에서 가져옴」 묶음(LinkedBundle).
- * 빠른 입력이면 연결 · 카테고리 · 날짜를 숨기고 항목명만 — 단 연 때 카테고리가 비어 있었으면(휴식처럼 일정 종류로 못 정함)
+ * 빠른 입력이면 연결 · 카테고리 · 날짜를 숨기고 항목명만 — 단 연 때 카테고리가 비어 있었으면(카테고리 없는 장소처럼 일정 종류로 못 정함)
  * 카테고리 칸은 둔다. 없으면 저장할 수 없다
  */
 export function ScheduleFields({ form, trip, items, alternatives, quick }: ScheduleFieldsProps) {

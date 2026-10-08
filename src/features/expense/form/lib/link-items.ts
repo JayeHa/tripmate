@@ -81,13 +81,17 @@ export function linkGroups(
   return [...groups.values()];
 }
 
-/** 일정에서 비용 카테고리 — 연결하면 이 값으로 채운다. 맞는 것이 없으면(휴식 · 카테고리 없음) null */
+/**
+ * 일정에서 비용 카테고리 — 연결하면 이 값으로 채운다. 맞는 것이 없으면(카테고리 없음) null.
+ * 휴식(온천 · 스파 · 정원 입장 등)은 입장료 · 체험 성격이라 관광으로 본다(2026-10-09 사용자 결정)
+ */
 export function expenseCategoryOf(item: ScheduleItem): ExpenseCategory | null {
   if (kindOf(item) === "flight") return "flight";
   const map: Record<string, ExpenseCategory> = {
     food: "food",
     cafe: "food",
     sight: "activity",
+    rest: "activity",
     shop: "shopping",
     stay: "lodging",
     air: "transport",
