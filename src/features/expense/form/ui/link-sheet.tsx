@@ -1,9 +1,10 @@
-import { Check, ChevronDown, CircleSlash } from "lucide-react";
+import { Check, CircleSlash } from "lucide-react";
 import { useState } from "react";
 
 import type { ScheduleItem } from "@/entities/schedule-item";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
+import { FILTER_ALL, FilterSelect } from "@/shared/ui/filter-select";
 import { SearchField } from "@/shared/ui/search-field";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
@@ -21,6 +22,11 @@ type LinkSheetProps = {
   /** 날짜 필터의 처음 값(0 부터) — 연결된 일정의 날, 없으면 지금 고른 날. 여행준비면 null(전체 날짜) */
   startDay: number | null;
 };
+
+/** 종류 필터의 줄 — 「전체」 는 FilterSelect 가 맨 위에 둔다 */
+const CATEGORY_OPTIONS = LINK_CATEGORIES.filter(([value]) => value !== "all").map(
+  ([value, label]) => ({ value, label }),
+);
 
 /**
  * 일정 선택 — 이름 검색 · 날짜 · 종류 필터 · 일정 목록(번호 · 이름 · 종류 · 시간, 이미 쓴 비용) · 맨 아래 「연결 안 함」.
@@ -61,24 +67,24 @@ function LinkSheetBody({
         placeholder="일정 이름 검색"
         aria-label="일정 이름 검색"
       />
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <FilterSelect
           label="날짜"
-          className="flex-[1.4]"
+          width="fit"
           value={String(filter.day)}
-          onChange={(v) => setFilter((f) => ({ ...f, day: v === "all" ? "all" : Number(v) }))}
-          options={[
-            ["all", "전체 날짜"],
-            // 여행준비(첫 줄)는 일정이 없어 뺀다
-            ...link.days.slice(1).map((o, i) => [String(i), `${o.label} · ${o.sub}`] as const),
-          ]}
+          onChange={(v) => setFilter((f) => ({ ...f, day: v === FILTER_ALL ? "all" : Number(v) }))}
+          allLabel="전체 날짜"
+          // 여행준비(첫 줄)는 일정이 없어 뺀다
+          options={link.days
+            .slice(1)
+            .map((o, i) => ({ value: String(i), label: o.label, sub: o.sub }))}
         />
         <FilterSelect
           label="종류"
-          className="flex-1"
+          width="fit"
           value={filter.category}
           onChange={(v) => setFilter((f) => ({ ...f, category: v as LinkCategory }))}
-          options={LINK_CATEGORIES}
+          options={CATEGORY_OPTIONS}
         />
       </div>
       <ul className="-mx-2 flex flex-col">
@@ -135,38 +141,6 @@ function LinkSheetBody({
         <CircleSlash className="size-4" aria-hidden="true" />
         연결 안 함
       </button>
-    </div>
-  );
-}
-
-type FilterSelectProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: readonly (readonly [string, string])[];
-  className?: string;
-};
-
-/** 필터 고르기 — 40 높이 흰 상자 + ⌄ */
-function FilterSelect({ label, value, onChange, options, className }: FilterSelectProps) {
-  return (
-    <div className={cn("relative flex min-w-0 items-center", className)}>
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full appearance-none rounded-memo border border-input bg-white pr-7.5 pl-3 text-sm font-bold text-ink-900 outline-none"
-      >
-        {options.map(([v, text]) => (
-          <option key={v} value={v}>
-            {text}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute right-2.5 size-4 text-ink-400"
-        aria-hidden="true"
-      />
     </div>
   );
 }

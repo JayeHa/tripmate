@@ -1,14 +1,14 @@
 "use client";
 
-import { ChevronDown, ChevronUp, NotebookPen, Star } from "lucide-react";
+import { ChevronDown, NotebookPen, Star } from "lucide-react";
 import { useState } from "react";
 
 import { MEMO_MAX } from "@/entities/schedule-item";
-import { dayLabel } from "@/shared/lib/days";
+import { dayLabel, dayParts } from "@/shared/lib/days";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import { FilterChip } from "@/shared/ui/filter-chip";
+import { FilterSelect } from "@/shared/ui/filter-select";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { useDayMemo } from "../model/use-day-memo";
@@ -23,7 +23,8 @@ type DayMemoDialogProps = {
 };
 
 /**
- * 날짜 메모 쓰기 — 대상(「day N 메모 · 날짜 · 일정 맨 아래에 추가돼요」 + 「변경 ⌄」 으로 날짜 바꾸기) · ☆ 중요 · 글(500자).
+ * 날짜 메모 쓰기 — 대상(「day N 메모 · 날짜 · 일정 맨 아래에 추가돼요」 + 「변경 ⌄」 드롭다운으로 날짜 바꾸기) · ☆ 중요 · 글(500자).
+ * 「변경」 은 펼치는 줄이 아니라 위에 뜨는 목록이라 시트 높이가 바뀌지 않는다.
  * 저장하면 그날 맨 끝에 메모 한 줄이 생긴다. 장소 메모는 일정 상세의 「+ 메모」 에서 쓴다
  */
 export function DayMemoDialog(props: DayMemoDialogProps) {
@@ -47,7 +48,6 @@ function DayMemoBody({
   onLockChange,
 }: DayMemoBodyProps) {
   const form = useDayMemo(tripId, dayIndex, onClose);
-  const [picking, setPicking] = useState(false);
   useReportLock(form.locked, onLockChange);
   return (
     <div className="flex flex-col gap-3">
@@ -61,33 +61,27 @@ function DayMemoBody({
             {dayLabel(startDate, form.dayIndex)} · 일정 맨 아래에 추가돼요
           </span>
         </div>
-        <button
-          type="button"
-          aria-expanded={picking}
-          onClick={() => setPicking((p) => !p)}
-          className="flex items-center gap-0.5 text-[13px] font-bold text-primary"
-        >
-          변경
-          {picking ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
-        </button>
-      </div>
-      {picking && (
-        <div className="flex flex-wrap gap-1.5">
-          {Array.from({ length: totalDays }, (_, day) => day).map((i) => (
-            <FilterChip
-              key={i}
-              size="lg"
-              selected={i === form.dayIndex}
-              onClick={() => {
-                form.setDayIndex(i);
-                setPicking(false);
-              }}
+        <FilterSelect
+          label="날짜 변경"
+          align="end"
+          allLabel={null}
+          value={String(form.dayIndex)}
+          onChange={(v) => form.setDayIndex(Number(v))}
+          options={Array.from({ length: totalDays }, (_, day) => {
+            const { date, dow } = dayParts(startDate, day);
+            return { value: String(day), label: `day ${day + 1}`, sub: `${date}/${dow}` };
+          })}
+          trigger={
+            <button
+              type="button"
+              className="flex items-center gap-0.5 text-[13px] font-bold text-primary"
             >
-              day {i + 1}
-            </FilterChip>
-          ))}
-        </div>
-      )}
+              변경
+              <ChevronDown className="size-3.5" />
+            </button>
+          }
+        />
+      </div>
       <button
         type="button"
         aria-pressed={form.starred}
