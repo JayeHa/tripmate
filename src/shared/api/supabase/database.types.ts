@@ -614,6 +614,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_receipts: {
+        Row: {
+          id: string;
+          expense_id: string;
+          trip_id: string;
+          key: string;
+          name: string;
+          mime: string;
+          size: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          expense_id: string;
+          trip_id: string;
+          key: string;
+          name: string;
+          mime: string;
+          size: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          expense_id?: string;
+          trip_id?: string;
+          key?: string;
+          name?: string;
+          mime?: string;
+          size?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

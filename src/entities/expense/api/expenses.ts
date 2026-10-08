@@ -5,6 +5,7 @@ import { insertColumns, sharesChanged, updateColumns } from "../lib/columns";
 import { personKey, personOfKey, type PersonRef } from "../lib/person";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
+import { attachReceipts, removeReceiptFiles, type UploadedReceipt } from "./receipts";
 
 export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]> {
   const supabase = createClient();
@@ -50,10 +51,15 @@ function splitRow(expenseId: string, s: { person: PersonRef; share: number }) {
   };
 }
 
+/**
+ * 지출을 만든다 — 지출 · 나눔 · 영수증 줄 순서로. 나눔이나 영수증 줄을 저장하지 못하면 지출도 되돌린다
+ * (다시 저장해도 두 번 생기지 않게). 영수증 파일은 이미 저장소에 올라가 있다
+ */
 export async function createExpense(
   tripId: string,
   values: ExpenseFormValues,
   createdBy: string,
+  receipts: UploadedReceipt[] = [],
 ): Promise<string> {
   const supabase = createClient();
   const shares = resolveShares(values);
@@ -71,6 +77,12 @@ export async function createExpense(
     // 분배 저장 실패 시 지출도 되돌림
     await supabase.from("expenses").delete().eq("id", data.id);
     throw splitError;
+  }
+  try {
+    await attachReceipts(tripId, data.id, receipts);
+  } catch (e) {
+    await supabase.from("expenses").delete().eq("id", data.id);
+    throw e;
   }
   return data.id;
 }
@@ -104,10 +116,19 @@ export async function updateExpense(
   if (insError) throw insError;
 }
 
-export async function deleteExpense(expenseId: string): Promise<void> {
+/** 지출을 지운다 — 영수증 줄은 함께 지워지고(cascade), 그 파일은 지운 뒤 저장소에서 지운다 */
+export async function deleteExpense(tripId: string, expenseId: string): Promise<void> {
   const supabase = createClient();
+  const { data: receipts } = await supabase
+    .from("expense_receipts")
+    .select("key")
+    .eq("expense_id", expenseId);
   const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
   if (error) throw error;
+  await removeReceiptFiles(
+    tripId,
+    (receipts ?? []).map((r) => r.key),
+  );
 }
 
 /**
