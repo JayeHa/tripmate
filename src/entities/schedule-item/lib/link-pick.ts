@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /**
  * 일정 연결 고르기(`ScheduleLinkField`)의 목록 계산 — 날짜 묶음 · 검색 · 날짜/카테고리 필터.
- * 화면이 받는 모양만 알고, 일정이 무엇인지는 모른다
+ * 묶음 · 줄 모양만 받는다 — 비용 · 바우처 · 체크리스트가 각자 일정을 이 모양으로 바꿔 넘긴다
  */
 
 export type LinkPickCategory = { value: string; label: string };

@@ -4,11 +4,13 @@ import {
   categoryOf,
   itemName,
   kindOf,
+  type LinkPickCategory,
+  type LinkPickGroup,
+  type LinkPickItem,
   type PlaceCategory,
   type ScheduleItem,
 } from "@/entities/schedule-item";
 import { dayLabel } from "@/shared/lib/days";
-import type { LinkPickCategory, LinkPickGroup, LinkPickItem } from "@/shared/lib/link-pick";
 
 /** 일정 연결 창의 카테고리 필터 — 관광 · 식비 · 쇼핑 · 카페 · 숙소 · 항공. 휴식은 필터가 없다 */
 const LINK_CATEGORY: Partial<Record<PlaceCategory | "flight", LinkPickCategory>> = {

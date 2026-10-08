@@ -1,5 +1,4 @@
-import { CategoryThumb, type ScheduleItem } from "@/entities/schedule-item";
-import { ScheduleLinkField } from "@/shared/ui/schedule-link-field";
+import { CategoryThumb, type ScheduleItem, ScheduleLinkField } from "@/entities/schedule-item";
 
 import { linkGroups } from "../lib/link-items";
 import type { ExpenseLink } from "../model/use-expense-link";

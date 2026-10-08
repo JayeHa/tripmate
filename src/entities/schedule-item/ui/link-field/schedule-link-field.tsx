@@ -4,10 +4,10 @@ import { cn } from "cn";
 import { CalendarDays, ChevronDown, X } from "lucide-react";
 import { useState } from "react";
 
-import { findLinkPick, type LinkPickGroup } from "@/shared/lib/link-pick";
 import { useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
+import { findLinkPick, type LinkPickGroup } from "../../lib/link-pick";
 import { LinkPickBody } from "./link-pick-body";
 
 type ScheduleLinkFieldProps = {

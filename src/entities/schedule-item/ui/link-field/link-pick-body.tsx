@@ -4,14 +4,15 @@ import { cn } from "cn";
 import { Check, CircleSlash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { FILTER_ALL, FilterSelect } from "@/shared/ui/filter-select";
+import { SearchField } from "@/shared/ui/search-field";
+
 import {
   filterLinkGroups,
   linkPickCategories,
   type LinkPickFilter,
   type LinkPickGroup,
-} from "@/shared/lib/link-pick";
-import { FILTER_ALL, FilterSelect } from "@/shared/ui/filter-select";
-import { SearchField } from "@/shared/ui/search-field";
+} from "../../lib/link-pick";
 
 type LinkPickBodyProps = {
   groups: LinkPickGroup[];
