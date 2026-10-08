@@ -140,17 +140,21 @@ function ChipText({ label, current, options, width }: ChipTextProps) {
   );
 }
 
-/** 목록 한 줄 — 글자(고르면 블루) · 오른쪽 회색 보조 글 · 고른 줄 ✓ */
+/**
+ * 목록 한 줄 — 글자(고르면 블루) · 오른쪽 회색 보조 글 · 고른 줄 ✓.
+ * 기본 RadioItem 의 `focus:**:text-accent-foreground` 는 자식에 색을 직접 걸어 고른 줄의 블루를 덮는다 — 자식이 줄 색을 따르게 바꾼다
+ */
 function OptionRow({ value, label, sub }: FilterOption) {
   return (
     <DropdownMenuRadioItem
       value={value}
       // Base UI 라디오 줄은 기본이 「눌러도 닫히지 않음」 — 고르면 바로 적용 · 닫힘
       closeOnClick
-      className="h-10 gap-3 rounded-button pr-9 pl-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted focus:text-ink-900 **:data-[slot=dropdown-menu-radio-item-indicator]:right-2.5 data-checked:text-brand-text focus:data-checked:text-brand-text [&_[data-slot=dropdown-menu-radio-item-indicator]_svg]:text-brand"
+      className="h-10 gap-3 rounded-button pr-9 pl-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted focus:text-ink-900 focus:**:text-inherit **:data-[slot=dropdown-menu-radio-item-indicator]:right-2.5 data-checked:text-brand-text focus:data-checked:text-brand-text [&_[data-slot=dropdown-menu-radio-item-indicator]_svg]:text-brand"
     >
       <span className="flex-1 truncate">{label}</span>
-      {sub && <span className="shrink-0 text-xs font-medium text-ink-400">{sub}</span>}
+      {/* 회색을 지킨다 — 포커스 때 자식 글자 색을 줄 색으로 맞추는 규칙(focus:**:text-inherit)보다 앞서게 */}
+      {sub && <span className="shrink-0 text-xs font-medium text-ink-400!">{sub}</span>}
     </DropdownMenuRadioItem>
   );
 }
