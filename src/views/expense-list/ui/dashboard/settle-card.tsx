@@ -8,14 +8,15 @@ import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
 import { transferRows } from "../../lib/dashboard";
+import { diffBars } from "../../lib/diff-bar";
 import type { Dashboard } from "../../model/use-dashboard";
-import { PersonAvatar } from "./person-avatar";
+import { DiffRow } from "./diff-row";
 import { MoreTransfers, TransferLine } from "./transfer-line";
 
 /** 크기 — 모바일 대시보드 / PC 오른쪽 카드 */
 const SIZE = {
-  md: { title: "text-[15px]", avatar: "size-7.5", name: "text-sm", spent: "text-[15px]" },
-  sm: { title: "text-sm", avatar: "size-7", name: "text-[13px]", spent: "text-sm" },
+  md: { title: "text-[15px]" },
+  sm: { title: "text-sm" },
 } as const;
 
 /** 처음 보이는 송금 줄 수 */
@@ -32,7 +33,7 @@ type SettleCardProps = {
 };
 
 /**
- * 「정산」 — 사람마다 쓴 돈(굵게) · 결제한 돈(작게), 점선 아래 송금(남은 것 먼저 · 보낸 것은 흐리게 긋고).
+ * 「정산」 — 사람마다 차액 막대(받을 돈 · 보낼 돈, 아래 쓴 돈 · 결제한 돈), 점선 아래 송금(남은 것 먼저 · 보낸 것은 흐리게 긋고).
  * 송금이 3줄을 넘으면 모바일은 「+ N건 더 보기」 가 정산 화면으로, PC 는 그 자리에서 펼친다(PC 는 나와 주고받는 줄을 먼저).
  * 주고받을 송금이 없으면 「각자 낸 만큼 썼어요」. 환율이 없는 비용이 있으면 계산하지 않고 그 통화를 알린다
  */
@@ -43,6 +44,7 @@ export function SettleCard({ settle, home, avatarOf, onOpen, size = "md" }: Sett
   const rows = transferRows(settle.remaining, settle.sent, settle.me, pc);
   const shown = open ? rows : rows.slice(0, SHOWN);
   const left = rows.filter((t) => !t.done).length;
+  const bars = diffBars(settle.people);
   return (
     <>
       <div className="flex items-center">
@@ -62,29 +64,26 @@ export function SettleCard({ settle, home, avatarOf, onOpen, size = "md" }: Sett
         </p>
       ) : (
         <>
-          <p className="-mt-1.5 text-right text-[11px] text-ink-350">쓴 돈 · 결제한 돈</p>
-          {settle.people.map(({ person, spent, paid }) => {
+          <p className="-mt-1 flex justify-between text-[11px] text-ink-350">
+            <span>◀ 보낼 돈</span>
+            <span>받을 돈 ▶</span>
+          </p>
+          {settle.people.map(({ person, spent, paid }, i) => {
             const a = avatarOf(person);
             const me = personKey(person) === settle.me;
             return (
-              <button
-                type="button"
+              <DiffRow
                 key={personKey(person)}
+                person={person}
+                name={me ? `${a.name} (나)` : a.name}
+                url={a.url}
+                spent={spent}
+                paid={paid}
+                bar={bars[i]}
+                home={home}
+                compact={pc}
                 onClick={() => onOpen(personKey(person))}
-                className="flex items-center gap-2.5 text-left"
-              >
-                <PersonAvatar person={person} name={a.name} url={a.url} className={s.avatar} />
-                <span className={cn("min-w-0 flex-1 truncate font-semibold text-ink-700", s.name)}>
-                  {a.name}
-                  {me && " (나)"}
-                </span>
-                <span className="flex flex-col items-end gap-px">
-                  <span className={cn("font-extrabold text-ink-900", s.spent)}>
-                    {formatMoney(spent, home)}
-                  </span>
-                  <span className="text-[11px] text-ink-400">결제 {formatMoney(paid, home)}</span>
-                </span>
-              </button>
+              />
             );
           })}
           {rows.length === 0 ? (
