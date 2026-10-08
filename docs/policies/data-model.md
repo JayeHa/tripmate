@@ -43,25 +43,27 @@ erDiagram
   trip_guests |o--o{ expense_splits : "guest_id"
   trips ||--o{ trip_guests : ""
   trips ||--o{ settlements : ""
+  expenses ||--o{ expense_receipts : ""
 ```
 
-| 테이블           | 무엇                                                                                                                        | 단위        |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `profiles`       | 사람(이름 · 아바타). `auth.users` 가 생기면 트리거가 만든다                                                                 | 사람        |
-| `trips`          | 여행(제목 · 기간 · 통화 · 환율 · 초대 토큰 · 하루 요약)                                                                     | 여행        |
-| `trip_members`   | 여행 멤버와 역할(owner · member)                                                                                            | 여행        |
-| `city_regions`   | 해외 권역. 기준 데이터                                                                                                      | 공용        |
-| `cities`         | 도시(지도 중심 · 통화 · 시간대 · 포함 지역). 기준 데이터                                                                    | 공용        |
-| `trip_cities`    | 여행이 고른 도시와 순서                                                                                                     | 여행        |
-| `places`         | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)                                           | 사람 · 도시 |
-| `schedule_items` | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모). 대체 장소도 일정 줄(`alternative_of`)            | 여행        |
-| `memos`          | 일정에 붙는 메모 하나(작성자 · 본문 · ★ 중요 · 링크)                                                                        | 여행        |
-| `moves`          | 두 장소 사이의 이동 방법(수단 · 상세)                                                                                       | 여행        |
-| `day_routes`     | Routes API 경로 캐시(지도 화면)                                                                                             | 여행        |
-| `expenses`       | 지출 — 항목명 · 금액 · 통화(+ 그 지출만의 환율) · 결제수단 · 카테고리 · 쓴 날(없으면 여행준비) · 합계 포함 여부 · 결제 상태 | 여행        |
-| `expense_splits` | 지출을 누가 얼마씩 나누는지                                                                                                 | 여행        |
-| `trip_guests`    | **정산 인원** — 앱에 초대하지 않고 가계부 정산에만 넣는 사람(이름만, 1–20자)                                                | 여행        |
-| `settlements`    | 정산에서 **이미 보낸 돈** 한 줄(보낸 쪽 · 받는 쪽 · 금액)                                                                   | 여행        |
+| 테이블             | 무엇                                                                                                                           | 단위        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| `profiles`         | 사람(이름 · 아바타). `auth.users` 가 생기면 트리거가 만든다                                                                    | 사람        |
+| `trips`            | 여행(제목 · 기간 · 통화 · 환율 · 초대 토큰 · 하루 요약)                                                                        | 여행        |
+| `trip_members`     | 여행 멤버와 역할(owner · member)                                                                                               | 여행        |
+| `city_regions`     | 해외 권역. 기준 데이터                                                                                                         | 공용        |
+| `cities`           | 도시(지도 중심 · 통화 · 시간대 · 포함 지역). 기준 데이터                                                                       | 공용        |
+| `trip_cities`      | 여행이 고른 도시와 순서                                                                                                        | 여행        |
+| `places`           | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)                                              | 사람 · 도시 |
+| `schedule_items`   | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모). 대체 장소도 일정 줄(`alternative_of`)               | 여행        |
+| `memos`            | 일정에 붙는 메모 하나(작성자 · 본문 · ★ 중요 · 링크)                                                                           | 여행        |
+| `moves`            | 두 장소 사이의 이동 방법(수단 · 상세)                                                                                          | 여행        |
+| `day_routes`       | Routes API 경로 캐시(지도 화면)                                                                                                | 여행        |
+| `expenses`         | 지출 — 항목명 · 금액 · 통화(+ 그 지출만의 환율) · 결제수단 · 카테고리 · 쓴 날(없으면 여행준비) · 합계 포함 여부 · 결제 상태    | 여행        |
+| `expense_splits`   | 지출을 누가 얼마씩 나누는지                                                                                                    | 여행        |
+| `trip_guests`      | **정산 인원** — 앱에 초대하지 않고 가계부 정산에만 넣는 사람(이름만, 1–20자)                                                   | 여행        |
+| `settlements`      | 정산에서 **이미 보낸 돈** 한 줄(보낸 쪽 · 받는 쪽 · 금액)                                                                      | 여행        |
+| `expense_receipts` | 지출에 붙은 영수증 파일(사진 · PDF) 한 장 — 저장소 키 · 이름 · 종류 · 크기. 파일은 저장소(개발 중 Supabase Storage, 최종 R2)에 | 여행        |
 
 일정 링크(`schedule_items.links`, 예약 페이지 · 구매한 상품)는 이번 방문에만 해당해 장소 링크(`places.links`)와 따로 둔다. 예상 대기(`places.wait`)는 장소 정보다. 주소는 넷이다 — `address`(한국어로 요청한 번지 주소, 일본은 구글에 한국어 표기가 없어 로마자) · `address_local`(현지어, 현지인 · 택시에 보여 줄 용도) · `address_ko`(한글 — 일본은 한글 동네 이름 + 번지 숫자, 한국은 `address` 와 같아 비움) · `address_detail`(사용자가 적는 상세 위치 「파르코 본관 8F」). 화면은 로마자 → 현지어 → 한글 순으로 함께 적는다. 운영시간은 `hours`(매일 같음) · `hours_week`(요일별 `{ mon: "11:00–22:00", sun: null }` — null 은 휴무, 키가 없으면 모름) 둘이고, 요일 값이 하나라도 있으면 `hours_week` 를 본다.
 
@@ -85,6 +87,8 @@ erDiagram
 
 **정산**(0034). 「누가 누구에게 얼마를」 은 비용에서 계산하고, **이미 보낸 돈**(`settlements`)만 뺀다. 비용 · 송금 기록에 쓰고 있는 정산 인원은 뺄 수 없다(FK `on delete restrict`, 0035). 「받았어요 · 보냈어요」 를 누르면 그 줄이 생기고, 취소하면 지운다. 계산된 송금 쌍에 표시를 다는 대신 기록을 남기는 이유는, 비용이 나중에 바뀌어도 이미 보낸 돈은 그대로 남고 남은 금액만 다시 계산되기 때문이다(2026-10-06 사용자 결정).
 
+**영수증**(0041). 지출에 사진 · PDF 를 10장까지 붙인다(`expense_receipts`). 파일은 고르는 순간 저장소에 올리고 지출을 저장할 때 표에 붙인다 — 붙지 못한 파일은 따로 정리한다(#155). 키는 `{여행 id}/{uuid}.{확장자}` 라 경로 첫 칸으로 멤버를 가린다. 저장소는 최종 Cloudflare R2 이고 그 전까지 Supabase Storage 비공개 버킷 `receipts` 를 쓴다(`docs/engineering/library-policy.md`). 올리기 · 보기 · 지우기는 늘 서버 라우트(`/api/receipts`)가 멤버를 확인하고 발급한 서명 주소로 한다 — 저장소를 바꿔도 화면은 그대로다. 버킷에도 같은 경로 규칙의 정책(`receipts_member_*`)을 건다. 지출을 지우면 표의 줄은 함께 지워지고(cascade) 파일은 화면이 지운다.
+
 - **대체 장소 「바꾸기」 는 합계 포함 여부를 덮어쓴다**(0033). 대체 장소가 된 일정의 지출은 모두 빼고, 타임라인에 올라온 일정의 지출은 모두 넣는다 — 사용자가 손으로 바꾼 값과 구분하지 않는다
 - **대체 장소가 된 줄을 「빼기」 로 지우면** 그 줄의 지출은 연결이 끊기고(`set null`) 합계에서 뺀 채로 남는다(#92 결정 — `counted` 는 그대로 둔다)
 - 두 경우 모두 비용 입력 화면의 「합계에서 제외」 스위치로 지출마다 다시 바꾼다. 「바꾸기」 가 손으로 바꾼 값까지 덮는 규칙은 그대로 둔다(#18 ⑥ — 시안이 「대체 장소로 바뀐 일정의 비용은 자동으로 제외돼요」 라고 화면에 알린다)
@@ -95,20 +99,21 @@ erDiagram
 
 익명 칸: **허용** = 자기 여행 · 자기 장소 안에서 됨, **거부** = 익명 계정은 못 함.
 
-| 테이블                        | 읽기                                          | 만들기                                                         | 고치기                     | 지우기                                                                          | 익명          | 지키는 것                                                  |
-| ----------------------------- | --------------------------------------------- | -------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------- |
-| `profiles`                    | 로그인한 누구나                               | 가입 트리거만                                                  | 자기 것                    | 계정과 함께(cascade)                                                            | 허용          | `profiles_select` · `profiles_update_self`                 |
-| `trips`                       | 소유자 · 멤버                                 | 소유자 = 나(`create_trip`)                                     | 멤버                       | 소유자                                                                          | 허용          | `trips_*` 정책                                             |
-| `trip_members`                | 같은 여행 멤버                                | 정책 없음 — 여행 생성 트리거(소유자) · `join_trip_by_token` 만 | —                          | 본인(나가기) · 소유자(내보내기). 소유자 자신의 행은 DB 가 아직 막지 않는다(#72) | 합류 **거부** | `members_select` · `members_delete` · `join_trip_by_token` |
-| `city_regions` · `cities`     | 로그인한 누구나                               | 마이그레이션만                                                 | 마이그레이션만             | 마이그레이션만                                                                  | —             | `*_read` (쓰기 정책 없음)                                  |
-| `trip_cities`                 | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `trip_cities_*`                                            |
-| `places`                      | 만든 사람 + 그 장소를 일정에 쓰는 여행의 멤버 | 만든 사람 = 나                                                 | **만든 사람만**            | **만든 사람만**, 쓰는 일정이 있으면 불가                                        | 허용          | `places_*` 정책 · FK `restrict`                            |
-| `schedule_items`              | 멤버                                          | 멤버 + 붙일 수 있는 장소만                                     | 멤버 + 붙일 수 있는 장소만 | 멤버                                                                            | 허용          | `items_all` · `can_attach_place`                           |
-| `memos`                       | 멤버                                          | 멤버(작성자 = 나, 트리거)                                      | 멤버(작성자는 그대로)      | 멤버                                                                            | 허용          | `memos_all` · `keep_memo_author` · 복합 FK                 |
-| `moves`                       | 멤버                                          | 멤버 + 두 일정이 같은 여행                                     | 같음                       | 멤버                                                                            | 허용          | `moves_all` · 복합 FK                                      |
-| `day_routes`                  | 멤버                                          | 멤버(경로 API)                                                 | 멤버                       | 멤버                                                                            | 허용          | `routes_all`                                               |
-| `expenses` · `expense_splits` | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `expenses_all` · `splits_all`                              |
-| `trip_guests` · `settlements` | 멤버                                          | 멤버                                                           | 멤버                       | 멤버                                                                            | 허용          | `trip_guests_all` · `settlements_all`                      |
+| 테이블                        | 읽기                                          | 만들기                                                            | 고치기                     | 지우기                                                                          | 익명          | 지키는 것                                                  |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------- |
+| `profiles`                    | 로그인한 누구나                               | 가입 트리거만                                                     | 자기 것                    | 계정과 함께(cascade)                                                            | 허용          | `profiles_select` · `profiles_update_self`                 |
+| `trips`                       | 소유자 · 멤버                                 | 소유자 = 나(`create_trip`)                                        | 멤버                       | 소유자                                                                          | 허용          | `trips_*` 정책                                             |
+| `trip_members`                | 같은 여행 멤버                                | 정책 없음 — 여행 생성 트리거(소유자) · `join_trip_by_token` 만    | —                          | 본인(나가기) · 소유자(내보내기). 소유자 자신의 행은 DB 가 아직 막지 않는다(#72) | 합류 **거부** | `members_select` · `members_delete` · `join_trip_by_token` |
+| `city_regions` · `cities`     | 로그인한 누구나                               | 마이그레이션만                                                    | 마이그레이션만             | 마이그레이션만                                                                  | —             | `*_read` (쓰기 정책 없음)                                  |
+| `trip_cities`                 | 멤버                                          | 멤버                                                              | 멤버                       | 멤버                                                                            | 허용          | `trip_cities_*`                                            |
+| `places`                      | 만든 사람 + 그 장소를 일정에 쓰는 여행의 멤버 | 만든 사람 = 나                                                    | **만든 사람만**            | **만든 사람만**, 쓰는 일정이 있으면 불가                                        | 허용          | `places_*` 정책 · FK `restrict`                            |
+| `schedule_items`              | 멤버                                          | 멤버 + 붙일 수 있는 장소만                                        | 멤버 + 붙일 수 있는 장소만 | 멤버                                                                            | 허용          | `items_all` · `can_attach_place`                           |
+| `memos`                       | 멤버                                          | 멤버(작성자 = 나, 트리거)                                         | 멤버(작성자는 그대로)      | 멤버                                                                            | 허용          | `memos_all` · `keep_memo_author` · 복합 FK                 |
+| `moves`                       | 멤버                                          | 멤버 + 두 일정이 같은 여행                                        | 같음                       | 멤버                                                                            | 허용          | `moves_all` · 복합 FK                                      |
+| `day_routes`                  | 멤버                                          | 멤버(경로 API)                                                    | 멤버                       | 멤버                                                                            | 허용          | `routes_all`                                               |
+| `expenses` · `expense_splits` | 멤버                                          | 멤버                                                              | 멤버                       | 멤버                                                                            | 허용          | `expenses_all` · `splits_all`                              |
+| `trip_guests` · `settlements` | 멤버                                          | 멤버                                                              | 멤버                       | 멤버                                                                            | 허용          | `trip_guests_all` · `settlements_all`                      |
+| `expense_receipts`            | 멤버                                          | 멤버 — 같은 여행 지출에만, 그 여행 폴더 키만, 지출당 10장(트리거) | —                          | 멤버 · 지출과 함께(cascade)                                                     | 허용          | `expense_receipts_all` · `expense_receipts_limit`          |
 
 - **장소를 일정에 붙일 수 있는 조건**(`can_attach_place`): 내가 만든 장소, 또는 이 여행의 다른 일정이 이미 쓰는 장소(일행이 같은 곳을 한 번 더 담을 때).
   남의 보관함 장소 id 를 알아도 내 여행에 끌어와 읽을 수 없다
@@ -210,10 +215,10 @@ erDiagram
 
 ## 실시간
 
-`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` · `trip_guests` · `settlements` 를 발행한다.
+`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` · `trip_guests` · `settlements` · `expense_receipts` 를 발행한다.
 여행 화면은 여행 하나에 채널 하나를 열고(`features/trip/realtime-sync`) 변경이 오면 해당 쿼리를 다시 읽는다.
 
-- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places` · `trip_guests` · `settlements`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
+- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places` · `trip_guests` · `settlements` · `expense_receipts`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
 - **삭제 이벤트에는 RLS 가 적용되지 않는다**(지워진 행은 권한을 확인할 수 없다). 필터 없이 구독하는 `places` · `expense_splits` 는 남의 삭제 이벤트가 올 수 있어 확인이 필요하다(#73)
 - 근거: <https://supabase.com/docs/guides/realtime/postgres-changes> (2026-10-04 확인)
 - `places` · `expense_splits` 는 `trip_id` 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 행만 온다
