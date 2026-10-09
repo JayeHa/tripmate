@@ -84,18 +84,19 @@ export function SettlePerson({ list, settle, avatarOf, initial }: SettlePersonPr
             };
           })}
           trigger={
-            <button type="button" className="flex items-center gap-3 text-left">
+            <button type="button" className="flex items-center gap-3 self-start text-left">
               <PersonAvatar person={current.person} name={a.name} url={a.url} className="size-11" />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-lg font-extrabold text-ink-900">
-                  {a.name}
-                  {me && " (나)"}
+              <span className="flex min-w-0 flex-col gap-0.5">
+                {/* ⌄ 를 이름 바로 옆에 둬 눌러서 고르는 칸임을 알린다 */}
+                <span className="flex min-w-0 items-center gap-1">
+                  <span className="truncate text-lg font-extrabold text-ink-900">
+                    {a.name}
+                    {me && " (나)"}
+                  </span>
+                  <ChevronDown aria-hidden="true" className="size-4.5 shrink-0 text-ink-400" />
                 </span>
-                <span className="text-[13px] text-ink-400">
-                  {keys.length}명 중 · {list.trip.title}
-                </span>
+                <span className="truncate text-[13px] text-ink-400">{settleSub(box, money)}</span>
               </span>
-              <ChevronDown aria-hidden="true" className="size-4.5 shrink-0 text-ink-400" />
             </button>
           }
         />
