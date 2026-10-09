@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { categoryTitle, dayBars, parseCategoryPick } from "./category-detail";
+import { categoryTitle, dayBars, parseCategoryPick, stackSegments } from "./category-detail";
 
 describe("parseCategoryPick", () => {
   it("카테고리 이름이면 그것, 아니면 전체", () => {
@@ -57,5 +57,41 @@ describe("dayBars", () => {
         { period: 1, total: 1000 },
       ])?.[0].height,
     ).toBe(4);
+  });
+});
+
+describe("stackSegments", () => {
+  it("아래 → 위 카테고리 순서 고정, 합이 막대 높이", () => {
+    expect(
+      stackSegments(
+        [
+          { category: "lodging", total: 300 },
+          { category: "food", total: 100 },
+        ],
+        60,
+      ),
+    ).toEqual([
+      { category: "food", height: 15 },
+      { category: "lodging", height: 45 },
+    ]);
+  });
+
+  it("아주 작은 칸도 2px, 차이는 가장 큰 칸에서 맞춘다", () => {
+    const s = stackSegments(
+      [
+        { category: "food", total: 1 },
+        { category: "shopping", total: 10000 },
+      ],
+      60,
+    );
+    expect(s).toEqual([
+      { category: "food", height: 2 },
+      { category: "shopping", height: 58 },
+    ]);
+  });
+
+  it("금액이 없거나 높이가 0 이면 칸 없음", () => {
+    expect(stackSegments([{ category: "food", total: 0 }], 60)).toEqual([]);
+    expect(stackSegments([{ category: "food", total: 10 }], 0)).toEqual([]);
   });
 });
