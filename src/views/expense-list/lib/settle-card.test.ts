@@ -4,9 +4,9 @@ import type { PersonRef } from "@/entities/expense";
 
 import { settleCardView } from "./settle-card";
 
-/** 사람 — 키는 m:id */
+/** 사람 — 키는 m:id, 차액 = 결제 − 쓴 돈(보낸 기록이 없을 때) */
 function person(id: string, spent: number, paid: number) {
-  return { person: { kind: "member", id } as PersonRef, spent, paid };
+  return { person: { kind: "member", id } as PersonRef, net: paid - spent };
 }
 
 const ME = "m:me";
@@ -24,6 +24,20 @@ describe("settleCardView — 사람", () => {
     const v = settleCardView(six, [], ME, false);
     expect(v.shown.map((p) => p.person.id)).toEqual(["me", "b", "c"]);
     expect(v.hidden.map((p) => p.person.id)).toEqual(["e", "d", "a"]);
+  });
+
+  it("남은 차액으로 고른다 — 보내서 0 이 된 사람은 아래로", () => {
+    const settled = [
+      person("me", 0, 400),
+      { ...person("b", 100, 0), net: 0 },
+      person("c", 100, 0),
+      person("d", 100, 0),
+    ];
+    expect(settleCardView(settled, [], ME, true).shown.map((p) => p.person.id)).toEqual([
+      "me",
+      "c",
+      "d",
+    ]);
   });
 
   it("나를 모르면 차액 큰 순 3명, 3명 이하면 숨김 없음", () => {

@@ -4,14 +4,16 @@ import { type PersonKey, personKey, type PersonRef, type Transfer } from "@/enti
 const PEOPLE_MAX = 3;
 const MINE_MAX = 2;
 
-type CardPerson = { person: PersonRef; spent: number; paid: number };
+/** net — 보낸 기록을 뺀 남은 차액(받을 돈 +, 보낼 돈 −) */
+type CardPerson = { person: PersonRef; net: number };
 
 /** 송금 줄 아래 회색 한 줄 — 보이지 않은 송금 요약. 없으면 null */
 export type SettleRest = { text: string; mineDone: boolean } | null;
 
 /**
  * 대시보드 정산 카드(P37)의 내용.
- * - 사람: (나) 맨 위 + 차액(|결제 − 쓴 돈|) 큰 순으로 모두 3줄까지, 나머지는 「외 N명」 으로
+ * - 사람: (나) 맨 위 + 남은 차액(|net|, 보낸 기록을 뺀 것) 큰 순으로 모두 3줄까지, 나머지는 「외 N명」 으로.
+ *   원래 차액(|결제 − 쓴 돈|)으로 고르면 정산을 마친 사람이 아직 보낼 돈이 있는 사람을 가린다
  * - 송금: 나와 주고받는 남은 송금 2건까지(받을 것 먼저), 나머지는 회색 줄 「외 N건 · 내 송금 a건 + 일행끼리 b건」.
  *   내 송금이 없으면 「내 정산은 끝났어요 · 일행 정산 N건 남음」
  * - 남은 송금이 없으면 none — 보낸 기록이 있으면 「모두 정산됐어요」, 없으면 「각자 낸 만큼 썼어요 · 정산할 금액이 없어요」.
@@ -24,9 +26,8 @@ export function settleCardView<P extends CardPerson>(
   anySent: boolean,
 ) {
   const self = people.find((p) => personKey(p.person) === me);
-  const gap = (p: P) => Math.abs(p.paid - p.spent);
   // 안정 정렬 — 차액이 같으면 원래 순서(멤버 먼저)
-  const others = people.filter((p) => p !== self).sort((a, b) => gap(b) - gap(a));
+  const others = people.filter((p) => p !== self).sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
   const room = self ? PEOPLE_MAX - 1 : PEOPLE_MAX;
   const isMine = (t: Transfer) => me !== null && (t.from === me || t.to === me);
   const mine = remaining.filter(isMine).sort((a, b) => Number(b.to === me) - Number(a.to === me));
