@@ -8,8 +8,6 @@ export type DiffBar = {
   width: number;
 };
 
-/** 이보다 작은 차액은 정산 없음 — 나누기에서 생긴 1원 아래 끝수 */
-const EPSILON = 1;
 /** 막대 최소 길이(%) — 아주 작은 차액도 보이게 */
 const MIN_WIDTH = 0.6;
 
@@ -18,10 +16,12 @@ const MIN_WIDTH = 0.6;
  * 차액은 송금 기록을 뺀 남은 차액(`settle.people[].net`) — 사람 상세의 받을 돈 · 보낼 돈 · 남은 송금과 같은 금액이라,
  * 「받았어요」 로 표시한 정산은 막대에서도 줄어든다. 막대 아래 「쓴 돈 · 결제」 는 원래 값 그대로 보인다
  */
-export function diffBars(nets: number[]): DiffBar[] {
+export function diffBars(nets: number[], decimals: number): DiffBar[] {
+  // 최소 단위의 절반보다 작은 차액은 정산 없음(원 0.5 · 달러 0.005) — 사람 상세 · 송금 계산과 같은 기준
+  const eps = 0.5 / 10 ** decimals;
   const max = Math.max(0, ...nets.map(Math.abs));
   return nets.map((net) => {
-    if (Math.abs(net) < EPSILON || max === 0) return { side: "none", net, left: 50, width: 0 };
+    if (Math.abs(net) <= eps || max === 0) return { side: "none", net, left: 50, width: 0 };
     const width = Math.max(MIN_WIDTH, (Math.abs(net) / max) * 50);
     return net > 0
       ? { side: "receive", net, left: 50, width }

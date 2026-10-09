@@ -4,7 +4,7 @@ import { ChevronRight, CircleCheck } from "lucide-react";
 import { useState } from "react";
 
 import { type PersonKey, personKey, type PersonRef } from "@/entities/expense";
-import { formatMoney } from "@/shared/lib/money";
+import { decimalsOf, formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
 import { transferRows } from "../../lib/dashboard";
@@ -44,7 +44,10 @@ export function SettleCard({ settle, home, avatarOf, onOpen, size = "md" }: Sett
   const rows = transferRows(settle.remaining, settle.sent, settle.me, pc);
   const shown = open ? rows : rows.slice(0, SHOWN);
   const left = rows.filter((t) => !t.done).length;
-  const bars = diffBars(settle.people.map((p) => p.net));
+  const bars = diffBars(
+    settle.people.map((p) => p.net),
+    decimalsOf(home),
+  );
   return (
     <>
       <div className="flex items-center">
