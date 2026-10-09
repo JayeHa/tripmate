@@ -37,7 +37,8 @@ export function settleCardView<P extends CardPerson>(
     hidden: others.slice(room),
     mine: mine.slice(0, MINE_MAX),
     mineCount: mine.length,
-    rest: restLine(mine.length, theirs),
+    // 나를 아직 모르면(사용자 정보 응답 전) 어느 송금이 내 것인지 몰라 건수만 — 「내 정산은 끝났어요」 로 오해하지 않게
+    rest: me === null ? unknownRest(remaining.length) : restLine(mine.length, theirs),
     none: remaining.length > 0 ? null : noneText(anySent),
   };
 }
@@ -45,6 +46,11 @@ export function settleCardView<P extends CardPerson>(
 /** 남은 송금이 없을 때의 한 줄 — 보낸 기록이 있으면 다 끝난 것, 없으면 처음부터 정산할 것이 없다 */
 function noneText(anySent: boolean): string {
   return anySent ? "모두 정산됐어요" : "각자 낸 만큼 썼어요 · 정산할 금액이 없어요";
+}
+
+/** 나를 모를 때의 회색 한 줄 — 남은 송금 건수만 */
+function unknownRest(count: number): SettleRest {
+  return count > 0 ? { text: `외 ${count}건`, mineDone: false } : null;
 }
 
 /** 회색 한 줄의 글 — 보이지 않은 내 송금 · 일행끼리 송금 */

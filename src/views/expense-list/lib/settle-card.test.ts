@@ -76,6 +76,13 @@ describe("settleCardView — 송금", () => {
     expect(settleCardView(six, [t("c", "me")], ME, false).rest).toBeNull();
   });
 
+  it("나를 아직 모르면 「내 정산은 끝났어요」 대신 건수만", () => {
+    expect(settleCardView(six, [t("me", "b"), t("d", "b")], null, false).rest).toEqual({
+      text: "외 2건",
+      mineDone: false,
+    });
+  });
+
   it("내 송금이 없으면 「내 정산은 끝났어요」, 남은 송금이 없으면 한 줄", () => {
     expect(settleCardView(six, [t("d", "b"), t("c", "b")], ME, false).rest).toEqual({
       text: "내 정산은 끝났어요 · 일행 정산 2건 남음",
