@@ -139,8 +139,21 @@ export function SettlePerson({ list, settle, avatarOf, initial }: SettlePersonPr
         </button>
         <SettleExplain open={explain} onClose={() => setExplain(false)} />
       </div>
-      <SettleTransfers list={list} settle={settle} person={key} avatarOf={avatarOf} />
-      <PersonExpenseList list={list} person={current.person} me={me} name={a.name} />
+      {/* 사람이 바뀌면 새로 그린다 — 송금 탭 · 기록 실패 안내 · 비용 탭이 앞 사람 것으로 남지 않게 */}
+      <SettleTransfers
+        key={`t-${key}`}
+        list={list}
+        settle={settle}
+        person={key}
+        avatarOf={avatarOf}
+      />
+      <PersonExpenseList
+        key={`e-${key}`}
+        list={list}
+        person={current.person}
+        me={me}
+        name={a.name}
+      />
       <p className="px-5 pt-3 text-xs text-ink-350">합계에서 제외한 비용은 정산에서 빠져요.</p>
     </>
   );
