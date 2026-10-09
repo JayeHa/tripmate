@@ -91,7 +91,7 @@ export function SettleTransfers({ list, settle, person, avatarOf }: SettleTransf
       <CancelTransferDialog
         row={canceling}
         home={home}
-        me={settle.me}
+        person={person}
         avatarOf={avatarOf}
         onClose={() => setCanceling(null)}
         onConfirm={(t) => actions.remove.mutate(t.key, done)}

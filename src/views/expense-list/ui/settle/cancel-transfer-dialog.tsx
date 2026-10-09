@@ -20,28 +20,28 @@ type CancelTransferDialogProps = {
   /** 표시를 풀지 묻는 송금(이미 보냈다고 적은 줄). null 이면 닫힘 */
   row: TransferRow | null;
   home: string;
-  /** 나 — 내가 받는 줄이면 「받았어요」, 아니면 「보냈어요」 */
-  me: PersonKey | null;
+  /** 보고 있는 사람 — 그 사람이 받는 줄이면 「받았어요」, 아니면 「보냈어요」(그 화면의 버튼과 같은 동사) */
+  person: PersonKey | null;
   avatarOf: Dashboard["avatarOf"];
   onClose: () => void;
   onConfirm: (row: TransferRow) => void;
 };
 
 /**
- * 「보냈어요 표시를 풀까요?」(내가 받는 줄이면 「받았어요 …」) — 송금 줄(보내는 사람 → 받는 사람 · 금액)과
+ * 「보냈어요 표시를 풀까요?」(보고 있는 사람이 받는 줄이면 「받았어요 …」) — 송금 줄(보내는 사람 → 받는 사람 · 금액)과
  * 「다시 남은 송금으로 돌아가요.」 표시를 풀면 송금 기록을 지워 그 금액이 남은 송금으로 돌아간다. 표시하는 쪽은 확인 없이 바로
  */
 export function CancelTransferDialog({
   row,
   home,
-  me,
+  person,
   avatarOf,
   onClose,
   onConfirm,
 }: CancelTransferDialogProps) {
   // 닫히는 동안(페이드 아웃)에도 내용을 그리도록 마지막으로 물은 줄을 붙잡아 둔다
   const shown = useHeldWhileClosing(row !== null, row);
-  const verb = shown && shown.to === me ? "받았어요" : "보냈어요";
+  const verb = shown && shown.to === person ? "받았어요" : "보냈어요";
   return (
     <AlertDialog open={row !== null} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
