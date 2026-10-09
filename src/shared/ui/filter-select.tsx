@@ -1,27 +1,23 @@
 "use client";
 
-import { cn } from "cn";
-import { ChevronDown } from "lucide-react";
 import type * as React from "react";
 
+import { useMediaQuery } from "@/shared/lib/use-media-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 
+import { ChipText, FilterChipButton, type FilterOption, OptionRow } from "./filter-select-parts";
+import { SheetSelect } from "./filter-select-sheet";
+
 /** 「전체」(필터를 걸지 않음)의 값 */
 export const FILTER_ALL = "all";
 
-export type FilterOption = {
-  value: string;
-  label: string;
-  /** 줄 오른쪽 회색 보조 글(예: 날짜) */
-  sub?: string;
-};
+export type { FilterOption } from "./filter-select-parts";
 
 type FilterSelectProps = {
   /** 아무것도 고르지 않았을 때 칩 글자 · 읽기 프로그램 이름 */
@@ -38,16 +34,66 @@ type FilterSelectProps = {
   width?: "auto" | "fit";
   /** 목록을 칩의 어느 쪽에 맞출지 */
   align?: "start" | "end";
-  /** 칩 대신 그릴 버튼(예: 「변경 ⌄」 링크). 받은 요소에 여닫기 동작을 붙인다 */
-  trigger?: React.ReactElement;
+  /** 칩 대신 그릴 버튼(예: 「변경 ⌄」 링크 · 사람 이름 머리). 받은 요소에 여닫기 동작을 붙인다 */
+  trigger?: React.ReactElement<{ onClick?: () => void; "aria-haspopup"?: "dialog" }>;
+  /**
+   * auto: PC(1024 이상)는 드롭다운, 그 아래는 바텀시트. dropdown: 늘 드롭다운 —
+   * 시트 · 창 안에서 여는 필터(시트 위에 시트가 뜨지 않게)와 날짜 메모 「변경」 이 쓴다
+   */
+  layout?: "auto" | "dropdown";
+  /** 시트 제목. 없으면 label */
+  sheetTitle?: string;
 };
 
 /**
  * 필터 고르기(P33) — 칩을 누르면 아래 6px 에 목록이 뜨고, 고르면 바로 적용하고 닫힌다.
  * 칩 34 · r17 · 13/700 + ⌄ 14, 고르면 잉크 바탕에 고른 글자. 목록 최소 200 · r12 · 줄 40 · 14/600 · 고른 줄 블루 글자 + ✓.
- * 브라우저 기본 select 는 필터에 쓰지 않는다. 지금은 하나 고르기 · 드롭다운만 있다(여러 개 · 모바일 시트는 쓰는 화면이 생길 때)
+ * 1024 아래는 바텀시트에서 고른다(layout="auto"). 브라우저 기본 select 는 필터에 쓰지 않는다.
+ * 지금은 하나 고르기만 있다(여러 개 고르기는 쓰는 화면이 생길 때)
  */
-export function FilterSelect({
+export function FilterSelect(props: FilterSelectProps) {
+  const desktop = useMediaQuery("(min-width: 1024px)");
+  // 화면 폭을 모르는 첫 렌더(서버 · 하이드레이션)는 드롭다운으로 그린다
+  if ((props.layout ?? "auto") === "auto" && desktop === false) return <SheetFilter {...props} />;
+  return <DropdownFilter {...props} />;
+}
+
+/** 1024 아래 — 칩(또는 받은 버튼)을 누르면 바텀시트 */
+function SheetFilter({
+  label,
+  options,
+  value,
+  onChange,
+  allLabel = "전체",
+  width = "auto",
+  trigger,
+  sheetTitle,
+}: FilterSelectProps) {
+  const current = options.find((o) => o.value === value);
+  const chip = (
+    <FilterChipButton
+      selected={!!current}
+      aria-label={current ? `${label}: ${current.label}` : label}
+      aria-haspopup="dialog"
+    >
+      <ChipText label={label} current={current?.label} options={options} width={width} />
+    </FilterChipButton>
+  );
+  return (
+    <SheetSelect
+      trigger={trigger ?? chip}
+      title={sheetTitle ?? label}
+      options={options}
+      value={current ? value : FILTER_ALL}
+      allValue={FILTER_ALL}
+      allLabel={allLabel}
+      onChange={onChange}
+    />
+  );
+}
+
+/** PC — 칩(또는 받은 버튼) 아래 6px 에 드롭다운 */
+function DropdownFilter({
   label,
   options,
   value,
@@ -87,74 +133,5 @@ export function FilterSelect({
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-type FilterChipButtonProps = React.ComponentProps<"button"> & { selected: boolean };
-
-/** 칩 모양 버튼(P2) — 고르면 잉크 바탕 · 흰 글자, 아니면 #F2F3F5 · #444 */
-function FilterChipButton({ selected, className, ...props }: FilterChipButtonProps) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "flex h-8.5 max-w-45 shrink-0 items-center gap-1 rounded-full pr-2.5 pl-3 text-[13px] font-bold whitespace-nowrap",
-        selected ? "bg-ink-900 text-white" : "bg-surface-muted text-ink-700",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-type ChipTextProps = {
-  label: string;
-  current: string | undefined;
-  options: FilterOption[];
-  width: "auto" | "fit";
-};
-
-/**
- * 칩 글자 + ⌄. fit 이면 모든 옵션 글자를 같은 칸에 겹쳐 그려(보이는 건 지금 글자 하나) 칸 폭이 가장 긴 글자에 맞춰진다 —
- * 재지 않고 CSS 로만 고정한다
- */
-function ChipText({ label, current, options, width }: ChipTextProps) {
-  const shown = current ?? label;
-  return (
-    <>
-      <span className="grid min-w-0">
-        {width === "fit" &&
-          [label, ...options.map((o) => o.label)].map((text) => (
-            <span
-              key={text}
-              aria-hidden="true"
-              className="invisible col-start-1 row-start-1 truncate"
-            >
-              {text}
-            </span>
-          ))}
-        <span className="col-start-1 row-start-1 truncate">{shown}</span>
-      </span>
-      <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
-    </>
-  );
-}
-
-/**
- * 목록 한 줄 — 글자(고르면 블루) · 오른쪽 회색 보조 글 · 고른 줄 ✓.
- * 기본 RadioItem 의 `focus:**:text-accent-foreground` 는 자식에 색을 직접 걸어 고른 줄의 블루를 덮는다 — 자식이 줄 색을 따르게 바꾼다
- */
-function OptionRow({ value, label, sub }: FilterOption) {
-  return (
-    <DropdownMenuRadioItem
-      value={value}
-      // Base UI 라디오 줄은 기본이 「눌러도 닫히지 않음」 — 고르면 바로 적용 · 닫힘
-      closeOnClick
-      className="h-10 gap-3 rounded-button pr-9 pl-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted focus:text-ink-900 focus:**:text-inherit **:data-[slot=dropdown-menu-radio-item-indicator]:right-2.5 data-checked:text-brand-text focus:data-checked:text-brand-text [&_[data-slot=dropdown-menu-radio-item-indicator]_svg]:text-brand"
-    >
-      <span className="flex-1 truncate">{label}</span>
-      {/* 회색을 지킨다 — 포커스 때 자식 글자 색을 줄 색으로 맞추는 규칙(focus:**:text-inherit)보다 앞서게 */}
-      {sub && <span className="shrink-0 text-xs font-medium text-ink-400!">{sub}</span>}
-    </DropdownMenuRadioItem>
   );
 }

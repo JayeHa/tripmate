@@ -46,6 +46,41 @@ export function netBox(
   return { kind: "none", amount: 0 };
 }
 
+/** 상자 · 사람 줄의 상태 — 남은 돈의 종류와, 그중 일부 · 전부를 이미 주고받았는지 */
+export type SettleState = {
+  kind: "recv" | "send" | "none" | "done";
+  amount: number;
+  /** 일부를 이미 주고받아 남은 금액만 보인다 */
+  partial: boolean;
+};
+
+/**
+ * 받을 돈 · 보낼 돈 상자의 상태 — 남은 차액(netBox)과 그 사람의 송금 기록으로.
+ * 남은 돈이 없는데 주고받은 기록이 있으면 「정산 끝」(done). 남은 돈이 있고 **같은 방향**의 기록(받을 돈이면 받은 기록,
+ * 보낼 돈이면 보낸 기록)이 있으면 「… · 남은 금액」(partial) — 반대 방향 기록은 그 앞 정산이 끝난 것이라 나머지가 아니다
+ */
+export function settleState(
+  net: number,
+  decimals: number,
+  transfers: Pick<PersonTransfer, "settlementId" | "receive">[],
+): SettleState {
+  const box = netBox(net, decimals);
+  const recorded = transfers.filter((t) => t.settlementId !== null);
+  if (box.kind === "none") {
+    return { kind: recorded.length > 0 ? "done" : "none", amount: 0, partial: false };
+  }
+  const partial = recorded.some((t) => t.receive === (box.kind === "recv"));
+  return { ...box, partial };
+}
+
+/** 사람 고르기 줄의 둘째 글 — 「받을 돈 ₩N」 · 「보낼 돈 ₩N · 남은 금액」 · 「정산 없음」 · 「정산 끝」 */
+export function settleSub(state: SettleState, money: (amount: number) => string): string {
+  if (state.kind === "none") return "정산 없음";
+  if (state.kind === "done") return "정산 끝";
+  const head = `${state.kind === "recv" ? "받을 돈" : "보낼 돈"} ${money(state.amount)}`;
+  return state.partial ? `${head} · 남은 금액` : head;
+}
+
 /** 「결제한 비용」(그 사람이 결제한, 각자 냄 제외) · 「함께한 비용」(그 사람 몫이 있는) */
 export type PersonExpenseTab = "paid" | "with";
 

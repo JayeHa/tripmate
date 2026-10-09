@@ -53,6 +53,7 @@ export function LinkPickBody({ groups, value, defaultDay, onPick }: LinkPickBody
         />
         <div className="flex items-center gap-1.5">
           <FilterSelect
+            layout="dropdown"
             label="날짜"
             width="fit"
             value={filter.day ?? FILTER_ALL}
@@ -60,6 +61,7 @@ export function LinkPickBody({ groups, value, defaultDay, onPick }: LinkPickBody
             options={groups.map((g) => ({ value: g.key, label: g.short, sub: g.date }))}
           />
           <FilterSelect
+            layout="dropdown"
             label="카테고리"
             width="fit"
             value={filter.category ?? FILTER_ALL}
