@@ -63,7 +63,8 @@ type ProfileInput = { profile: MyProfile; displayName: string; avatar: AvatarCha
 
 /**
  * 프로필 저장. 사진을 그대로 두면 이름만 적는다 — 편집기를 연 때의 주소를 다시 쓰면 그사이 다른 기기에서 바꾼 사진을 되돌린다.
- * 사진을 바꾸면 새 주소를 적은 뒤 그 직전 DB 의 사진 파일을 지운다(실패해도 저장은 끝난 것 — 남은 파일은 화면에 쓰이지 않는다)
+ * 사진을 바꾸면 새 주소를 적은 뒤 그 직전 DB 의 사진 파일을 지운다(실패해도 저장은 끝난 것 — 남은 파일은 화면에 쓰이지 않는다).
+ * 주소를 적지 못하면 방금 올린 파일을 지우고 실패를 알린다
  */
 async function saveProfile({ profile, displayName, avatar }: ProfileInput): Promise<void> {
   const supabase = createClient();
@@ -79,7 +80,11 @@ async function saveProfile({ profile, displayName, avatar }: ProfileInput): Prom
     .from("profiles")
     .update({ ...name, avatar_url: avatarUrl })
     .eq("id", profile.id);
-  if (error) throw error;
+  if (error) {
+    // 방금 올린 사진은 프로필에 붙지 못했다 — 다시 저장할 때마다 새로 올리므로 남기지 않는다
+    if (avatar.kind === "upload" && avatarUrl) await removeAvatar(avatarUrl).catch(() => undefined);
+    throw error;
+  }
   if (before && before !== avatarUrl) await removeAvatar(before).catch(() => undefined);
 }
 
