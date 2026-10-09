@@ -7,10 +7,10 @@ import { cn } from "@/shared/lib/utils";
 import type { CategoryPick } from "../../lib/category-detail";
 import { type CategoryShare, topCategories } from "../../lib/dashboard";
 
-/** 크기 — 모바일 대시보드(제목 15 · 줄 14 · 금액 칸 96) / PC 오른쪽 카드(14 · 13 · 88) */
+/** 크기 — 모바일 대시보드(제목 15 · 줄 14 · 금액 칸 최소 96) / PC 오른쪽 카드(14 · 13 · 최소 88). 금액이 길면 칸이 넓어진다 */
 const SIZE = {
-  md: { title: "text-[15px]", label: "text-sm", sum: "w-24 text-sm", rest: "text-[13px]" },
-  sm: { title: "text-sm", label: "text-[13px]", sum: "w-22 text-[13px]", rest: "text-xs" },
+  md: { title: "text-[15px]", label: "text-sm", sum: "min-w-24 text-sm", rest: "text-[13px]" },
+  sm: { title: "text-sm", label: "text-[13px]", sum: "min-w-22 text-[13px]", rest: "text-xs" },
 } as const;
 
 type CategoryCardProps = {
@@ -62,11 +62,13 @@ export function CategoryCard({ shares, home, size = "md", onOpen }: CategoryCard
               className="flex items-center gap-2.5 text-left"
             >
               <ExpenseCategoryTile category={c.category} size="sm" />
-              <span className={cn("flex-1 font-semibold text-ink-700", s.label)}>
+              <span className={cn("min-w-0 flex-1 truncate font-semibold text-ink-700", s.label)}>
                 {EXPENSE_CATEGORY_LABEL[c.category]}
               </span>
-              <span className="text-xs text-ink-400">{c.percent}%</span>
-              <span className={cn("text-right font-extrabold text-ink-900", s.sum)}>
+              <span className="shrink-0 text-xs text-ink-400">{c.percent}%</span>
+              <span
+                className={cn("text-right font-extrabold whitespace-nowrap text-ink-900", s.sum)}
+              >
                 {formatMoney(c.total, home)}
               </span>
               <ChevronRight aria-hidden="true" className="size-3.5 shrink-0 text-handle" />

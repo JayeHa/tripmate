@@ -1,5 +1,6 @@
 import { categoryBarClass, EXPENSE_CATEGORY_LABEL, sumExpenses } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
+import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
 import { FilterChip } from "@/shared/ui/filter-chip";
 
@@ -44,7 +45,12 @@ export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
         <span className="text-sm font-bold text-ink-450">
           {categoryTitle(pick, expenses.length, percent)}
         </span>
-        <span className="text-[28px] font-extrabold tracking-[-0.02em] text-ink-900">
+        <span
+          className={cn(
+            "font-extrabold tracking-[-0.02em] whitespace-nowrap text-ink-900",
+            sizeByLength(formatMoney(totals.home, home), [[14, "text-[28px]"]], "text-xl"),
+          )}
+        >
           {formatMoney(totals.home, home)}
         </span>
         {!list.solo && (

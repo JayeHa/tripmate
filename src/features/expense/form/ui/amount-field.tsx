@@ -2,12 +2,19 @@ import { ChevronDown, Pencil } from "lucide-react";
 import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
 import { currencyName, decimalsOf, formatMoney } from "@/shared/lib/money";
+import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
 
 import { caretAfter, digitsBefore, formatAmountDraft } from "../lib/amount-draft";
 import type { ExpenseFormState } from "../model/use-expense-form";
 import { CurrencySheet } from "./currency-sheet";
 import { RateDialog } from "./rate-dialog";
+
+/** 금액 글자 크기 — 「9,999,999」(9자)까지 40, 12자까지 32, 그보다 길면 26 */
+const AMOUNT_SIZES = [
+  [9, "text-[40px]"],
+  [12, "text-[32px]"],
+] as const;
 
 type AmountFieldProps = {
   form: ExpenseFormState;
@@ -66,7 +73,11 @@ export function AmountField({ form, inputRef, autoFocus }: AmountFieldProps) {
             }}
             placeholder="0"
             style={{ width: `${Math.max(1, text.length) * 0.62 + 0.2}em` }}
-            className="min-w-0 bg-transparent p-0 text-right text-[40px] font-extrabold tracking-tight text-ink-900 outline-none placeholder:text-ink-900"
+            // 큰 금액은 글자를 줄여 단위 · 통화 칩을 화면 밖으로 밀지 않게(폭은 글자 크기를 따르는 em)
+            className={cn(
+              "min-w-0 bg-transparent p-0 text-right font-extrabold tracking-tight text-ink-900 outline-none placeholder:text-ink-900",
+              sizeByLength(text, AMOUNT_SIZES, "text-[26px]"),
+            )}
           />
           <span className={cn("text-xl font-bold", filled ? "text-ink-900" : "text-line-dashed")}>
             {currencyName(form.currency)}

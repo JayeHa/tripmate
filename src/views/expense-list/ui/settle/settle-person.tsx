@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { type PersonKey, personKey } from "@/entities/expense";
 import { decimalsOf, formatMoney } from "@/shared/lib/money";
+import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
 import { FilterSelect } from "@/shared/ui/filter-select";
 
@@ -24,6 +25,12 @@ type SettlePersonProps = {
   /** 처음 볼 사람(키). 없거나 모르는 사람이면 나, 나도 없으면 첫 사람 */
   initial: PersonKey | null;
 };
+
+/** 상자 금액 글자 크기 — 「₩999,999,999」(12자)까지 22, 14자까지 18, 더 길면 15 */
+const BOX_SIZES = [
+  [12, "text-[22px]"],
+  [14, "text-lg"],
+] as const;
 
 /** 받을 돈 · 보낼 돈 상자의 색과 이름 — 일부를 주고받았으면 이름 뒤에 「 · 남은 금액」, 모두 끝나면 회색 「정산 끝」 */
 const BOX = {
@@ -108,7 +115,8 @@ export function SettlePerson({ list, settle, avatarOf, initial }: SettlePersonPr
           <span className="w-px shrink-0 bg-divider" />
           <div
             className={cn(
-              "flex w-37 shrink-0 flex-col justify-center gap-1 rounded-card px-3.5 py-3",
+              // 금액이 길면 상자가 넓어지고(최대 60%) 글자가 작아진다 — 상자 밖으로 넘치지 않게
+              "flex max-w-[60%] min-w-37 shrink-0 flex-col justify-center gap-1 rounded-card px-3.5 py-3",
               BOX[box.kind].tone,
             )}
           >
@@ -116,7 +124,12 @@ export function SettlePerson({ list, settle, avatarOf, initial }: SettlePersonPr
               {BOX[box.kind].label}
               {box.partial && " · 남은 금액"}
             </span>
-            <span className="flex items-center gap-1 text-[22px] font-extrabold tracking-[-0.01em] whitespace-nowrap">
+            <span
+              className={cn(
+                "flex items-center gap-1 font-extrabold tracking-[-0.01em] whitespace-nowrap",
+                sizeByLength(money(box.amount), BOX_SIZES, "text-[15px]"),
+              )}
+            >
               {box.kind === "done" ? (
                 <>
                   <Check aria-hidden="true" className="size-5" strokeWidth={3} />

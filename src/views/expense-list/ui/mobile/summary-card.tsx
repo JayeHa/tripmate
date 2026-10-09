@@ -6,8 +6,13 @@ import { type ReactNode, useState } from "react";
 
 import type { ExpenseTotals } from "@/entities/expense";
 import { type ExchangeRates, formatMoney, toHome } from "@/shared/lib/money";
+import { sizeByLength } from "@/shared/lib/size-by-length";
+import { cn } from "@/shared/lib/utils";
 
 import { sortedCurrencies } from "../../lib/period";
+
+/** 총 지출 글자 크기 — 「₩1,234,567,890」(14자)까지 26, 더 길면 18 */
+const TOTAL_SIZES = [[14, "text-[26px]"]] as const;
 
 type SummaryCardProps = {
   total: ExpenseTotals;
@@ -41,18 +46,24 @@ export function SummaryCard({
   const Chevron = open ? ChevronUp : ChevronDown;
   return (
     <div className="flex flex-col gap-3 bg-white px-5 py-4.5">
-      <div className="flex items-end gap-2.5">
+      {/* 금액이 길면 「내가 쓴 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
+      <div className="flex flex-wrap items-end gap-x-2.5 gap-y-1.5">
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
+          className="flex min-w-0 flex-col items-start gap-0.5 text-left"
         >
           <span className="flex items-center gap-0.5 text-[13px] font-bold text-ink-400">
             {people === null ? "총 지출" : `총 지출 · ${people}명`}
             <Chevron className="size-3.5 text-ink-350" aria-hidden="true" />
           </span>
-          <span className="text-[26px] font-extrabold tracking-tight text-ink-900">
+          <span
+            className={cn(
+              "font-extrabold tracking-tight whitespace-nowrap text-ink-900",
+              sizeByLength(formatMoney(total.home, home), TOTAL_SIZES, "text-lg"),
+            )}
+          >
             {formatMoney(total.home, home)}
           </span>
           {total.planned > 0 && (
@@ -62,7 +73,7 @@ export function SummaryCard({
           )}
         </button>
         {people !== null && mySpent !== null && (
-          <div className="flex shrink-0 flex-col items-end gap-0.5">
+          <div className="ml-auto flex shrink-0 flex-col items-end gap-0.5">
             <span className="text-xs text-ink-450">내가 쓴 돈</span>
             <span className="text-[15px] font-extrabold text-ink-900">
               {formatMoney(mySpent, home)}
