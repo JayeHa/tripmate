@@ -53,12 +53,16 @@ export function FilterMultiSelect({
         render={<FilterChipButton selected={active} />}
       >
         <ChipText
-          shown={{ text: text ?? label, icon: picked[0]?.chipIcon }}
+          shown={{ key: "shown", text: text ?? label, icon: picked[0]?.chipIcon }}
           widest={
             width === "fit"
               ? [
-                  { text: label },
-                  ...options.map((o) => ({ text: `${o.label}${more}`, icon: o.chipIcon })),
+                  { key: "", text: label },
+                  ...options.map((o) => ({
+                    key: o.value,
+                    text: `${o.label}${more}`,
+                    icon: o.chipIcon,
+                  })),
                 ]
               : []
           }

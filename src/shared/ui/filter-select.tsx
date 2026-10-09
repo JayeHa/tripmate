@@ -66,10 +66,13 @@ function chipTexts(
   width: "auto" | "fit",
 ) {
   return {
-    shown: { text: current?.label ?? label, icon: current?.chipIcon },
+    shown: { key: "shown", text: current?.label ?? label, icon: current?.chipIcon },
     widest:
       width === "fit"
-        ? [{ text: label }, ...options.map((o) => ({ text: o.label, icon: o.chipIcon }))]
+        ? [
+            { key: FILTER_ALL, text: label },
+            ...options.map((o) => ({ key: o.value, text: o.label, icon: o.chipIcon })),
+          ]
         : [],
   };
 }

@@ -32,8 +32,8 @@ export function FilterChipButton({ selected, className, ...props }: FilterChipBu
   );
 }
 
-/** 칩에 보일 수 있는 글 하나 — 앞에 그릴 것(아바타)이 있으면 함께 */
-export type ChipCandidate = { text: string; icon?: React.ReactNode };
+/** 칩에 보일 수 있는 글 하나 — 앞에 그릴 것(아바타)이 있으면 함께. key 는 옵션 값(이름은 겹칠 수 있다) */
+export type ChipCandidate = { key: string; text: string; icon?: React.ReactNode };
 
 type ChipTextProps = {
   shown: ChipCandidate;
@@ -50,9 +50,9 @@ export function ChipText({ shown, widest }: ChipTextProps) {
     <>
       <span className="grid min-w-0">
         {widest.map((c) => (
-          <ChipLine key={c.text} {...c} hidden />
+          <ChipLine key={c.key} text={c.text} icon={c.icon} hidden />
         ))}
-        <ChipLine {...shown} />
+        <ChipLine text={shown.text} icon={shown.icon} />
       </span>
       <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
     </>
@@ -60,7 +60,7 @@ export function ChipText({ shown, widest }: ChipTextProps) {
 }
 
 /** 칩 글 한 줄 — 겹쳐 그리는 칸 하나. hidden 이면 자리만 차지한다 */
-function ChipLine({ text, icon, hidden }: ChipCandidate & { hidden?: boolean }) {
+function ChipLine({ text, icon, hidden }: Omit<ChipCandidate, "key"> & { hidden?: boolean }) {
   return (
     <span
       aria-hidden={hidden}
