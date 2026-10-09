@@ -41,6 +41,8 @@ export function FilterMultiSelect({
   align = "start",
 }: FilterMultiSelectProps) {
   const picked = options.filter((o) => value.includes(o.value));
+  // 걸렸는지는 value 로 본다 — 옵션에서 빠진 값(여행에서 뺀 사람)만 남아도 칩은 걸림, 「전체」 는 안 체크라 눌러서 풀 수 있다
+  const active = value.length > 0;
   const text = multiLabel(picked.map((o) => o.label));
   const more = options.length > 1 ? ` 외 ${options.length - 1}` : "";
   return (
@@ -48,7 +50,7 @@ export function FilterMultiSelect({
       <DropdownMenuTrigger
         // 칩에는 겹쳐 그린 글자가 있어 이름을 직접 준다 — 고른 값이 있으면 함께 읽힌다
         aria-label={text ? `${label}: ${picked.map((o) => o.label).join(", ")}` : label}
-        render={<FilterChipButton selected={text !== null} />}
+        render={<FilterChipButton selected={active} />}
       >
         <ChipText
           shown={{ text: text ?? label, icon: picked[0]?.chipIcon }}
@@ -67,11 +69,7 @@ export function FilterMultiSelect({
         sideOffset={6}
         className="w-auto max-w-[calc(100vw-2rem)] min-w-50 border-divider"
       >
-        <MultiOptionRow
-          label="전체"
-          checked={picked.length === 0}
-          onCheckedChange={() => onChange([])}
-        />
+        <MultiOptionRow label="전체" checked={!active} onCheckedChange={() => onChange([])} />
         <DropdownMenuSeparator className="bg-surface-muted" />
         {options.map((o) => (
           <MultiOptionRow
