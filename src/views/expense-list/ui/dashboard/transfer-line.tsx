@@ -8,21 +8,6 @@ import { PersonAvatar } from "./person-avatar";
 /** 표시 이름 · 사진 */
 type AvatarOf = (person: PersonRef) => { name: string; url: string | null };
 
-type MoreTransfersProps = { count: number; onClick: () => void };
-
-/** 「+ N건 더 보기」 — 모바일은 정산 화면으로, PC 는 그 자리에서 펼친다(부른 쪽이 정한다) */
-export function MoreTransfers({ count, onClick }: MoreTransfersProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="self-start pt-1 text-[13px] font-bold text-ink-500"
-    >
-      + {count}건 더 보기
-    </button>
-  );
-}
-
 type TransferLineProps = {
   from: string;
   to: string;
@@ -30,13 +15,21 @@ type TransferLineProps = {
   done: boolean;
   avatarOf: AvatarOf;
   pc: boolean;
+  /** 금액 색 — 내가 받을 돈 블루 · 보낼 돈 주황(대시보드 「내 송금」). 없으면 잉크 */
+  tone?: "receive" | "send";
 };
+
+/** 금액 색 */
+const AMOUNT_TONE = {
+  receive: "text-brand-text",
+  send: "text-status-wait-text",
+} as const;
 
 /**
  * 송금 한 줄 — 보내는 사람 → 받는 사람 · 금액. 보낸 것은 흐리게 긋는다.
  * 보내는 사람 칸은 폭을 고정하고(모바일 88 · PC 80, 긴 이름은 말줄임) 받는 사람 칸이 남은 폭을 써서, 이름 길이와 상관없이 화살표가 같은 자리에 온다
  */
-export function TransferLine({ from, to, amount, done, avatarOf, pc }: TransferLineProps) {
+export function TransferLine({ from, to, amount, done, avatarOf, pc, tone }: TransferLineProps) {
   const text = cn(
     "font-semibold text-ink-700",
     pc ? "text-[13px]" : "text-sm",
@@ -61,7 +54,8 @@ export function TransferLine({ from, to, amount, done, avatarOf, pc }: TransferL
       <b
         className={cn(
           // 받는 사람과 금액 사이를 조금 더 띄운다(줄 gap 8 + 12)
-          "pl-3 font-extrabold whitespace-nowrap text-ink-900",
+          "pl-3 font-extrabold whitespace-nowrap",
+          tone ? AMOUNT_TONE[tone] : "text-ink-900",
           pc ? "text-sm" : "text-[15px]",
           done && "line-through",
         )}
