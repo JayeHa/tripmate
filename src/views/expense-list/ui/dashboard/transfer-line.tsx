@@ -32,7 +32,10 @@ type TransferLineProps = {
   pc: boolean;
 };
 
-/** 송금 한 줄 — 보내는 사람 → 받는 사람 · 금액. 보낸 것은 흐리게 긋는다 */
+/**
+ * 송금 한 줄 — 보내는 사람 → 받는 사람 · 금액. 보낸 것은 흐리게 긋는다.
+ * 보내는 사람 칸은 폭을 고정하고(긴 이름은 말줄임) 받는 사람 칸이 남은 폭을 써서, 이름 길이와 상관없이 화살표가 같은 자리에 온다
+ */
 export function TransferLine({ from, to, amount, done, avatarOf, pc }: TransferLineProps) {
   const text = cn(
     "font-semibold text-ink-700",
@@ -41,10 +44,13 @@ export function TransferLine({ from, to, amount, done, avatarOf, pc }: TransferL
   );
   return (
     <div className={cn("flex items-center gap-2", pc ? "py-1.25" : "py-1.5", done && "opacity-45")}>
-      <Side personKeyValue={from} avatarOf={avatarOf} className={text} pc={pc} />
+      <span className={cn("flex shrink-0 items-center gap-2", pc ? "w-24" : "w-28")}>
+        <Side personKeyValue={from} avatarOf={avatarOf} className={text} pc={pc} />
+      </span>
       <ArrowRight aria-label="에게" className="size-3.5 shrink-0 text-handle" />
-      <Side personKeyValue={to} avatarOf={avatarOf} className={text} pc={pc} />
-      <span className="flex-1" />
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        <Side personKeyValue={to} avatarOf={avatarOf} className={text} pc={pc} />
+      </span>
       <b
         className={cn(
           "font-extrabold whitespace-nowrap text-ink-900",

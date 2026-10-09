@@ -17,7 +17,7 @@ type ListProps = {
   onToggle: (t: TransferRow) => void;
 };
 
-/** 내 송금 — 상대 아바타 30 · 「동규에게 ₩54,210 받아요」 · 「받았어요」(적었으면 회색 「받았어요 ✓」) */
+/** 내 송금 — 상대 아바타 30 · 「동규에게 ₩54,210 받아요」(14/500, 금액만 600) · 「받았어요」(적었으면 회색 「받았어요 ✓」) */
 export function MyTransfers({
   rows,
   person,
@@ -42,11 +42,13 @@ export function MyTransfers({
             <PersonAvatar person={other} name={a.name} url={a.url} className="size-7.5" />
             <span
               className={cn(
-                "min-w-0 flex-1 text-[15px] font-bold text-ink-900",
+                "min-w-0 flex-1 text-sm font-medium text-ink-800",
                 done && "line-through",
               )}
             >
-              {a.name}에게 {formatMoney(t.amount, home)} {t.receive ? "받아요" : "보내요"}
+              {a.name}에게{" "}
+              <span className="font-semibold text-ink-900">{formatMoney(t.amount, home)}</span>{" "}
+              {t.receive ? "받아요" : "보내요"}
             </span>
             <button
               type="button"
