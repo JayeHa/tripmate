@@ -43,7 +43,14 @@ export function TransferLine({ from, to, amount, done, avatarOf, pc }: TransferL
     done && "line-through",
   );
   return (
-    <div className={cn("flex items-center gap-2", pc ? "py-1.25" : "py-1.5", done && "opacity-45")}>
+    // min-w-0 — 격자(확인 창) · flex 안에서도 줄이 내용보다 좁아질 수 있게. 없으면 긴 이름이 말줄임되지 않고 금액이 밖으로 밀린다
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-2",
+        pc ? "py-1.25" : "py-1.5",
+        done && "opacity-45",
+      )}
+    >
       <span className={cn("flex shrink-0 items-center gap-2", pc ? "w-20" : "w-22")}>
         <Side personKeyValue={from} avatarOf={avatarOf} className={text} pc={pc} />
       </span>
