@@ -1,17 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
-import {
-  amountLines,
-  EXPENSE_CATEGORIES,
-  EXPENSE_CATEGORY_LABEL,
-  PAYMENT_METHOD_LABEL,
-  PAYMENT_METHODS,
-  personKey,
-  ReceiptThumbs,
-  sumExpenses,
-} from "@/entities/expense";
+import { amountLines, ReceiptThumbs, sumExpenses } from "@/entities/expense";
 import { ExpenseDialog, type ExpenseDialogTarget } from "@/features/expense/form";
 import { formatMoney } from "@/shared/lib/money";
 import type { SplitConfig } from "@/shared/lib/split";
@@ -22,7 +14,8 @@ import { SplitHandle } from "@/shared/ui/split-handle";
 import { baseRateLine } from "../../lib/base-rate";
 import { calendarCells } from "../../lib/calendar";
 import { detailFields } from "../../lib/detail-fields";
-import { filtersActive, matchesFilters } from "../../lib/filters";
+import { filtersActive, matchesFilters, moreGroups } from "../../lib/filters";
+import { tableGroups } from "../../lib/table-groups";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import { useDashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
@@ -34,6 +27,7 @@ import { DateRail } from "./date-rail";
 import { ExpenseDetailPanel } from "./expense-detail-panel";
 import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
+import { filterOptions } from "./filter-options";
 import { PcDashboard } from "./pc-dashboard";
 import { SettleModal } from "./settle-modal";
 
@@ -58,15 +52,9 @@ type PcExpenseListProps = {
   initial?: PcScreensInitial;
 };
 
-const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({
-  value: c,
-  label: EXPENSE_CATEGORY_LABEL[c],
-}));
-const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_METHOD_LABEL[m] }));
-
 /**
  * PC 가계부 — [날짜 레일 200 | 머리 · 필터 · 표 | 오른쪽 328]. 레일을 누르면 표가 그 날로 스크롤하고, 표를 스크롤하면 레일이 따라간다.
- * 필터는 표만 거른다(레일 · 오른쪽은 여행 전체). 오른쪽은 대시보드 카드(요약 · 카테고리 · 정산).
+ * 필터 · 정렬은 표만 바꾼다(레일 · 오른쪽은 여행 전체). 금액순이면 표가 한 목록이라, 레일에서 날을 고르면 최신순으로 돌아가 그 날로 간다. 오른쪽은 대시보드 카드(요약 · 카테고리 · 정산).
  * 표와 오른쪽 사이 경계선을 끌어 오른쪽 너비를 바꾼다. 줄을 누르면 오른쪽이 그 비용 상세로 바뀐다(↑↓ 다른 비용 · Esc · ✕ 로 요약). 「+ 비용 추가」 · 상세의 「수정」 은
  * 페이지를 옮기지 않고 가운데 창(440×760)으로 연다
  */
@@ -86,22 +74,30 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
     { scroller: scrollerRef, topKey: "all" },
   );
   const filtered = sections.flatMap((s) => s.expenses);
+  const groups = tableGroups(sections, pc.sort, trip);
   const dash = useDashboard(tripId, list);
   const screens = usePcScreens(initial);
+  // ↑↓ 는 보이는 순서대로 — 금액순이면 정렬한 순서
   const selection = useRowSelection(
-    filtered.map((e) => e.id),
+    groups.flatMap((g) => g.rows.map((r) => r.row.id)),
     modal !== null || screens.open,
   );
   const selectedRow = sections.flatMap((s) => s.rows).find((r) => r.id === selection.selected);
   const selectedExpense = filtered.find((e) => e.id === selection.selected);
   const filteredTotal = sumExpenses(filtered, trip.home_currency, trip.exchange_rates);
+  const options = filterOptions(list);
+  /** 레일에서 날을 골랐다 — 금액순이면 날짜 묶음을 먼저 그려(flushSync) 그 묶음으로 스크롤할 수 있게 한다 */
+  const goDay = (key: string) => {
+    if (pc.sort !== "date" && key !== "all") flushSync(() => pc.setSort("date"));
+    scroll.go(key);
+  };
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
       <DateRail
         items={cells.map((c, i) => ({ ...c, total: list.allSections[i].total.home }))}
         home={trip.home_currency}
         selected={scroll.selected}
-        onSelect={scroll.go}
+        onSelect={goDay}
       />
       <div className="flex min-w-0 flex-1 gap-2.5 px-6 py-5.5">
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
@@ -115,9 +111,9 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
           </div>
           <FilterBar
             pc={pc}
-            categories={CATEGORY_OPTIONS}
-            methods={METHOD_OPTIONS}
-            payers={list.people.map((p) => ({ value: personKey(p), label: list.displayNameOf(p) }))}
+            {...options}
+            more={moreGroups(list.expenses, list.solo, pc.filters)}
+            onSort={pc.setSort}
             result={
               active
                 ? `${filtered.length}건 · ${formatMoney(filteredTotal.home, trip.home_currency)}`
@@ -125,7 +121,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
             }
           />
           <ExpenseTable
-            sections={sections}
+            groups={groups}
             list={list}
             selected={selection.selected}
             onSelect={selection.select}
@@ -139,7 +135,6 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
             scrollerRef={scrollerRef}
             headRef={scroll.stickyRef}
             sectionRef={scroll.sectionRef}
-            keys={cells.map((c) => c.key)}
           />
         </div>
         <SplitHandle
