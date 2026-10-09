@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 
+import { todayISO } from "@/shared/lib/days";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/shared/ui/app-header";
@@ -11,6 +12,7 @@ import { buttonVariants } from "@/shared/ui/button";
 import { floatingAddClass } from "@/shared/ui/floating-add-button";
 
 import { calendarCells } from "../../lib/calendar";
+import { newPeriod } from "../../lib/new-period";
 import { periodLabel } from "../../lib/period";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import type { ExpenseList, ExpenseListSection } from "../../model/use-expense-list";
@@ -31,7 +33,7 @@ type MobileExpenseListProps = { tripId: string; list: ExpenseList };
 /**
  * 모바일 가계부 「내역」 — 머리 · 탭(내역 | 지출 · 정산) · 요약 카드 + 「+ 비용 추가」(52) · 날짜 묶음.
  * 「+ 비용 추가」 가 위로 사라지면 날짜 이동 줄과 플로팅 「+ 비용 추가」 가 나타난다(목록은 밀리지 않는다).
- * 줄의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 줄이 따라간다. 「+ 비용 추가」 는 지금 날로 연다.
+ * 줄의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 줄이 따라간다. 「+ 비용 추가」 는 줄에서 고른 날(맨 위에서는 오늘)로 연다.
  * 「지출 · 정산」 탭은 대시보드 주소(/stats)로 간다
  */
 export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
@@ -42,7 +44,8 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const scroll = useCalendarScroll(cells.map((c) => c.key));
   const cta = useRef<HTMLAnchorElement>(null);
   const past = useScrolledPast(cta, scroll.stickyRef);
-  const newHref = `${base}/new?period=${scroll.selected}`;
+  const period = newPeriod(scroll.selected, past, trip.start_date, trip.end_date, todayISO());
+  const newHref = period === null ? `${base}/new` : `${base}/new?period=${period}`;
   return (
     <>
       <AppHeader title="가계부" subtitle={trip.title} back="/trips" />
