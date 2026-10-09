@@ -44,7 +44,7 @@ export function SettleCard({ settle, home, avatarOf, onOpen, size = "md" }: Sett
   const rows = transferRows(settle.remaining, settle.sent, settle.me, pc);
   const shown = open ? rows : rows.slice(0, SHOWN);
   const left = rows.filter((t) => !t.done).length;
-  const bars = diffBars(settle.people);
+  const bars = diffBars(settle.people.map((p) => p.net));
   return (
     <>
       <div className="flex items-center">
