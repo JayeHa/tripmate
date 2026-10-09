@@ -1,4 +1,4 @@
-import { categoryBarClass, EXPENSE_CATEGORY_LABEL, sumExpenses } from "@/entities/expense";
+import { EXPENSE_CATEGORY_LABEL, sumExpenses } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
@@ -10,6 +10,7 @@ import { periodLabel, sortedCurrencies } from "../../lib/period";
 import type { ExpenseList } from "../../model/use-expense-list";
 import { CurrencyLine } from "../mobile/summary-card";
 import { CategoryExpenseRow } from "./category-expense-row";
+import { DayBars } from "./day-bars";
 
 type CategoryDetailProps = {
   list: ExpenseList;
@@ -19,7 +20,7 @@ type CategoryDetailProps = {
 
 /**
  * 카테고리 상세의 내용 — 칩(전체 + 쓴 카테고리, 많이 쓴 순) · 「숙소 · 3건 · 전체의 32%」 · 금액 28/800 · 1인당(일행 여행) ·
- * 통화별 줄 · 날짜별 막대(이틀 이상일 때만, 지출 없는 여행 날짜도 칸) · 날짜별 목록. 합계에 넣는 지출만 센다. 모바일 화면과 PC 창이 같이 쓴다
+ * 통화별 줄 · 날짜별 막대(이틀 이상일 때만, 지출 없는 여행 날짜도 칸, 「전체」 는 카테고리 누적) · 날짜별 목록. 합계에 넣는 지출만 센다. 모바일 화면과 PC 창이 같이 쓴다
  */
 export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
   const { trip } = list;
@@ -66,28 +67,17 @@ export function CategoryDetail({ list, pick, onPick }: CategoryDetailProps) {
           ))}
         </div>
         {bars && (
-          // 긴 여행은 칸이 많다 — 칸마다 28 은 지키고 넘치면 막대 줄만 좌우로 스크롤한다(창 전체가 넓어지지 않게)
-          <div
-            aria-hidden="true"
-            className="-mx-5 flex h-22 items-end gap-2.5 overflow-x-auto px-5 pt-3"
-          >
-            {bars.map((b) => (
-              <div
-                key={b.key}
-                className="flex h-full min-w-7 flex-1 shrink-0 flex-col items-center justify-end gap-1"
-              >
-                <span
-                  className={cn(
-                    "w-full max-w-7 rounded-t-tag",
-                    b.height === 0 && "invisible",
-                    pick === "all" ? "bg-brand" : categoryBarClass(pick),
-                  )}
-                  style={{ height: b.height }}
-                />
-                <span className="text-[11px] text-ink-400">{b.label}</span>
-              </div>
-            ))}
-          </div>
+          <DayBars
+            bars={bars}
+            pick={pick}
+            partsOf={(key) =>
+              categoryShares(
+                allDays.find((d) => String(d.period) === key)?.expenses ?? [],
+                home,
+                trip.exchange_rates,
+              )
+            }
+          />
         )}
       </div>
       {sections.length === 0 && (

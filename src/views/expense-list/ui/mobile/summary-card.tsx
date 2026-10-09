@@ -117,7 +117,7 @@ export function CurrencyLine({ code, amount, home, rates }: CurrencyLineProps) {
     <div className="flex min-h-11 items-center justify-between gap-3">
       <span className="text-sm font-bold text-ink-400">{code}</span>
       <div className="flex flex-col items-end gap-0.5">
-        <span className="text-[15px] font-extrabold text-ink-900">{formatMoney(amount, code)}</span>
+        <span className="text-[15px] font-medium text-ink-900">{formatMoney(amount, code)}</span>
         {approx !== null && (
           <span className="text-xs text-ink-400">≈ {formatMoney(approx, home)}</span>
         )}
