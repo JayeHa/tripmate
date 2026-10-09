@@ -62,6 +62,7 @@ function DayMemoBody({
           </span>
         </div>
         <FilterSelect
+          layout="dropdown"
           label="날짜 변경"
           align="end"
           allLabel={null}

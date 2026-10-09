@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits } from "@/entities/expense";
 
-import { netBox, personExpenses, personTransfers } from "./settle-person";
+import { netBox, personExpenses, personTransfers, settleState, settleSub } from "./settle-person";
 
 describe("personTransfers", () => {
   it("그 사람이 주고받는 줄만, 그 사람 입장으로 — 보낸 기록은 id 로 취소", () => {
@@ -65,5 +65,25 @@ describe("personExpenses", () => {
         ["e3", 2000],
       ],
     );
+  });
+});
+
+describe("settleState · settleSub", () => {
+  const sent = [{ settlementId: "x" }];
+  const money = (n: number) => `₩${n}`;
+
+  it("남은 돈이 있고 보낸 기록도 있으면 남은 금액", () => {
+    const state = settleState(500, 0, sent);
+    expect(state).toEqual({ kind: "recv", amount: 500, partial: true });
+    expect(settleSub(state, money)).toBe("받을 돈 ₩500 · 남은 금액");
+  });
+
+  it("남은 돈이 없고 보낸 기록이 있으면 정산 끝, 없으면 정산 없음", () => {
+    expect(settleSub(settleState(0, 0, sent), money)).toBe("정산 끝");
+    expect(settleSub(settleState(0, 0, []), money)).toBe("정산 없음");
+  });
+
+  it("보낸 기록이 없으면 그대로", () => {
+    expect(settleSub(settleState(-300, 0, [{ settlementId: null }]), money)).toBe("보낼 돈 ₩300");
   });
 });
