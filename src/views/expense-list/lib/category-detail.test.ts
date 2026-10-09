@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { ExpenseCategory } from "@/entities/expense";
+
 import { categoryTitle, dayBars, parseCategoryPick, stackSegments } from "./category-detail";
 
 describe("parseCategoryPick", () => {
@@ -61,7 +63,7 @@ describe("dayBars", () => {
 });
 
 describe("stackSegments", () => {
-  it("아래 → 위 카테고리 순서 고정, 합이 막대 높이", () => {
+  it("아래 → 위 순서 고정(위에서 무지개 순), 합이 막대 높이", () => {
     expect(
       stackSegments(
         [
@@ -71,8 +73,8 @@ describe("stackSegments", () => {
         60,
       ),
     ).toEqual([
-      { category: "food", height: 15 },
       { category: "lodging", height: 45 },
+      { category: "food", height: 15 },
     ]);
   });
 
@@ -88,6 +90,14 @@ describe("stackSegments", () => {
       { category: "food", height: 2 },
       { category: "shopping", height: 58 },
     ]);
+    expect(
+      stackSegments(
+        ["shopping", "food", "lodging", "flight", "activity", "transport", "other"].map(
+          (category) => ({ category: category as ExpenseCategory, total: 10 }),
+        ),
+        70,
+      ).map((x) => x.category),
+    ).toEqual(["other", "transport", "activity", "flight", "lodging", "food", "shopping"]);
   });
 
   it("금액이 없거나 높이가 0 이면 칸 없음", () => {

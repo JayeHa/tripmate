@@ -47,20 +47,31 @@ export function dayBars(days: { period: ExpensePeriod; total: number }[]): DayBa
 /** 누적 막대 한 칸 — 카테고리와 높이(px) */
 export type BarSegment = { category: ExpenseCategory; height: number };
 
+/**
+ * 누적 막대의 쌓는 순서(아래 → 위) — 위에서 읽으면 무지개(쇼핑 빨강 · 식비 주황 · 숙소 초록 · 항공 파랑 · 관광 보라), 회색인 교통 · 기타는 맨 아래
+ */
+const STACK_ORDER: ExpenseCategory[] = [
+  "other",
+  "transport",
+  "activity",
+  "flight",
+  "lodging",
+  "food",
+  "shopping",
+];
+
 /** 누적 막대 칸의 가장 작은 높이(px) — 아주 적게 쓴 카테고리도 색이 보이게 */
 const SEGMENT_MIN = 2;
 
 /**
- * 「전체」 의 하루 막대를 그날 카테고리 금액 비율로 나눈 칸들 — 아래 → 위 순서(식비 · 교통 · 쇼핑 · 관광 · 숙소 · 항공 · 기타)로 고정해
+ * 「전체」 의 하루 막대를 그날 카테고리 금액 비율로 나눈 칸들 — 아래 → 위 순서(STACK_ORDER, 위에서 무지개 순)로 고정해
  * 날마다 같은 색이 같은 자리에 온다. 칸은 최소 2px, 반올림으로 생긴 차이는 가장 큰 칸에서 맞춘다(작은 칸이 많으면 막대가 조금 높아질 수 있다)
  */
 export function stackSegments(
   parts: { category: ExpenseCategory; total: number }[],
   height: number,
 ): BarSegment[] {
-  const order = EXPENSE_CATEGORIES.flatMap((c) =>
-    parts.filter((p) => p.category === c && p.total > 0),
-  );
+  const order = STACK_ORDER.flatMap((c) => parts.filter((p) => p.category === c && p.total > 0));
   const sum = order.reduce((n, p) => n + p.total, 0);
   if (sum <= 0 || height <= 0) return [];
   const segments = order.map((p) => ({
