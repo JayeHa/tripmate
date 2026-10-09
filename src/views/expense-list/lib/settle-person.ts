@@ -56,17 +56,21 @@ export type SettleState = {
 
 /**
  * 받을 돈 · 보낼 돈 상자의 상태 — 남은 차액(netBox)과 그 사람의 송금 기록으로.
- * 남은 돈이 없는데 보낸 기록이 있으면 「정산 끝」(done), 남은 돈이 있고 보낸 기록도 있으면 「… · 남은 금액」(partial)
+ * 남은 돈이 없는데 주고받은 기록이 있으면 「정산 끝」(done). 남은 돈이 있고 **같은 방향**의 기록(받을 돈이면 받은 기록,
+ * 보낼 돈이면 보낸 기록)이 있으면 「… · 남은 금액」(partial) — 반대 방향 기록은 그 앞 정산이 끝난 것이라 나머지가 아니다
  */
 export function settleState(
   net: number,
   decimals: number,
-  transfers: Pick<PersonTransfer, "settlementId">[],
+  transfers: Pick<PersonTransfer, "settlementId" | "receive">[],
 ): SettleState {
   const box = netBox(net, decimals);
-  const sent = transfers.some((t) => t.settlementId !== null);
-  if (box.kind === "none") return { kind: sent ? "done" : "none", amount: 0, partial: false };
-  return { ...box, partial: sent };
+  const recorded = transfers.filter((t) => t.settlementId !== null);
+  if (box.kind === "none") {
+    return { kind: recorded.length > 0 ? "done" : "none", amount: 0, partial: false };
+  }
+  const partial = recorded.some((t) => t.receive === (box.kind === "recv"));
+  return { ...box, partial };
 }
 
 /** 사람 고르기 줄의 둘째 글 — 「받을 돈 ₩N」 · 「보낼 돈 ₩N · 남은 금액」 · 「정산 없음」 · 「정산 끝」 */

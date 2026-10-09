@@ -69,21 +69,28 @@ describe("personExpenses", () => {
 });
 
 describe("settleState · settleSub", () => {
-  const sent = [{ settlementId: "x" }];
+  const received = [{ settlementId: "x", receive: true }];
+  const paid = [{ settlementId: "y", receive: false }];
   const money = (n: number) => `₩${n}`;
 
   it("남은 돈이 있고 보낸 기록도 있으면 남은 금액", () => {
-    const state = settleState(500, 0, sent);
+    const state = settleState(500, 0, received);
     expect(state).toEqual({ kind: "recv", amount: 500, partial: true });
     expect(settleSub(state, money)).toBe("받을 돈 ₩500 · 남은 금액");
   });
 
   it("남은 돈이 없고 보낸 기록이 있으면 정산 끝, 없으면 정산 없음", () => {
-    expect(settleSub(settleState(0, 0, sent), money)).toBe("정산 끝");
+    expect(settleSub(settleState(0, 0, paid), money)).toBe("정산 끝");
     expect(settleSub(settleState(0, 0, []), money)).toBe("정산 없음");
   });
 
   it("보낸 기록이 없으면 그대로", () => {
-    expect(settleSub(settleState(-300, 0, [{ settlementId: null }]), money)).toBe("보낼 돈 ₩300");
+    expect(settleSub(settleState(-300, 0, [{ settlementId: null, receive: false }]), money)).toBe(
+      "보낼 돈 ₩300",
+    );
+  });
+
+  it("반대 방향 기록만 있으면 남은 금액이 아니다 — 앞 정산은 끝났고 새로 생긴 돈", () => {
+    expect(settleState(30, 0, paid)).toEqual({ kind: "recv", amount: 30, partial: false });
   });
 });
