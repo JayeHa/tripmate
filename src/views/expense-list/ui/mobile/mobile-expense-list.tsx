@@ -2,15 +2,21 @@
 
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
 
+import { todayISO } from "@/shared/lib/days";
 import { formatMoney } from "@/shared/lib/money";
+import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/shared/ui/app-header";
+import { buttonVariants } from "@/shared/ui/button";
 import { floatingAddClass } from "@/shared/ui/floating-add-button";
 
 import { calendarCells } from "../../lib/calendar";
+import { newPeriod } from "../../lib/new-period";
 import { periodLabel } from "../../lib/period";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
 import type { ExpenseList, ExpenseListSection } from "../../model/use-expense-list";
+import { useScrolledPast } from "../../model/use-scrolled-past";
 import { CalendarStrip } from "./calendar-strip";
 import { ExpenseRow } from "./expense-row";
 import { ListTabs } from "./list-tabs";
@@ -25,8 +31,9 @@ export const TOAST_ABOVE_FAB = 48;
 type MobileExpenseListProps = { tripId: string; list: ExpenseList };
 
 /**
- * 모바일 가계부 「내역」 — 머리 · 탭(내역 | 지출 · 정산) · 요약 카드 · 여행 날짜 달력 띠(붙음) · 날짜 묶음 · 「+ 비용 추가」.
- * 띠의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 띠가 따라간다. 「+ 비용 추가」 는 띠에서 고른 날로 연다.
+ * 모바일 가계부 「내역」 — 머리 · 탭(내역 | 지출 · 정산) · 요약 카드 + 「+ 비용 추가」(52) · 날짜 묶음.
+ * 「+ 비용 추가」 가 위로 사라지면 날짜 이동 줄과 플로팅 「+ 비용 추가」 가 나타난다(목록은 밀리지 않는다).
+ * 줄의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 줄이 따라간다. 「+ 비용 추가」 는 줄에서 고른 날(맨 위에서는 오늘)로 연다.
  * 「지출 · 정산」 탭은 대시보드 주소(/stats)로 간다
  */
 export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
@@ -35,6 +42,10 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const statsHref = `${base}/stats`;
   const cells = calendarCells(list.allSections, trip.start_date);
   const scroll = useCalendarScroll(cells.map((c) => c.key));
+  const cta = useRef<HTMLAnchorElement>(null);
+  const past = useScrolledPast(cta, scroll.stickyRef);
+  const period = newPeriod(scroll.selected, past, trip.start_date, trip.end_date, todayISO());
+  const newHref = period === null ? `${base}/new` : `${base}/new?period=${period}`;
   return (
     <>
       <AppHeader title="가계부" subtitle={trip.title} back="/trips" />
@@ -46,13 +57,25 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         people={list.solo ? null : list.everyone}
         mySpent={list.mySpent}
         statsHref={statsHref}
-      />
+      >
+        <Link
+          ref={cta}
+          href={newHref}
+          // cn 으로 감싼다 — buttonVariants 는 클래스를 병합하지 않아 기본 text-sm · font-medium 이 CTA 크기(16/700)를 이긴다
+          className={cn(buttonVariants({ variant: "brand", size: "cta" }), "mt-1")}
+        >
+          <Plus className="size-5" strokeWidth={2.4} aria-hidden="true" />
+          비용 추가
+        </Link>
+      </SummaryCard>
       <CalendarStrip
         cells={cells}
         selected={scroll.selected}
         onSelect={scroll.go}
         stripRef={scroll.stickyRef}
+        shown={past}
       />
+      <div aria-hidden="true" className="h-2 bg-surface-sunken" />
       <main className="flex flex-col gap-7 pt-4 pb-45">
         {list.allSections.map((s, i) => (
           <DayGroup
@@ -64,9 +87,16 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
           />
         ))}
       </main>
+      {/* 위의 「+ 비용 추가」 가 보이는 동안은 숨긴다 — 같은 버튼이 둘 보이지 않게 */}
       <Link
-        href={`${base}/new?period=${scroll.selected}`}
-        className={`fixed right-4 bottom-[calc(99px+env(safe-area-inset-bottom))] z-20 ${floatingAddClass(false)}`}
+        href={newHref}
+        aria-hidden={!past}
+        tabIndex={past ? undefined : -1}
+        className={cn(
+          "fixed right-4 bottom-[calc(99px+env(safe-area-inset-bottom))] z-20 transition-opacity duration-200",
+          floatingAddClass(false),
+          !past && "pointer-events-none opacity-0",
+        )}
       >
         <Plus className="size-5" strokeWidth={2.4} aria-hidden="true" />
         <span className="text-[15px] font-extrabold">비용 추가</span>

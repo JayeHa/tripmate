@@ -51,13 +51,17 @@ export function useCalendarScroll(
     };
   }
 
-  /** 붙어 있을 때 기준 요소의 아래 끝(뷰포트 y) */
+  /**
+   * 붙어 있을 때 기준 요소의 아래 끝(뷰포트 y). 기준 요소의 높이가 0 이면(모바일 — 목록을 밀지 않게 높이 0 칸 안에 날짜 줄을 띄운다)
+   * 안에 뜬 첫 자식의 높이를 쓴다
+   */
   function lineY() {
     const sticky = stickyRef.current;
     if (!sticky) return frame().top;
-    return (
-      frame().top + (Number.parseFloat(getComputedStyle(sticky).top) || 0) + sticky.offsetHeight
-    );
+    const child = sticky.firstElementChild as HTMLElement | null;
+    // 높이가 0 이면 안에 뜬 줄의 높이 — 0 은 「없음」 이라 `||` 로 넘긴다
+    const height = sticky.offsetHeight || (child?.offsetHeight ?? 0);
+    return frame().top + (Number.parseFloat(getComputedStyle(sticky).top) || 0) + height;
   }
 
   /** 잠금의 상태 — 아직 가는 중 · 목표에 닿음 · 시간이 지나 풀림 */
@@ -113,10 +117,10 @@ export function useCalendarScroll(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** 고른 칸이 띠 안에서 보이게 가로로 옮긴다(모바일 — 긴 여행은 띠가 가로로 넘친다) */
+  /** 고른 칸이 날짜 줄 안에서 보이게 가로로 옮긴다(모바일 — 긴 여행은 줄이 가로로 넘친다). 줄 = 칸의 부모 */
   useEffect(() => {
-    const strip = stickyRef.current;
-    const cell = strip?.querySelector<HTMLElement>(`[data-key="${selected}"]`);
+    const cell = stickyRef.current?.querySelector<HTMLElement>(`[data-key="${selected}"]`);
+    const strip = cell?.parentElement;
     if (!strip || !cell) return;
     const left = cell.offsetLeft - (strip.clientWidth - cell.offsetWidth) / 2;
     strip.scrollTo({ left, behavior: "smooth" });
