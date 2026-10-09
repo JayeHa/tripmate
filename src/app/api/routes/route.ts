@@ -8,7 +8,11 @@ import { computeDayRoute, type RoutePoint } from "@/entities/schedule-item/api/c
 // 배럴은 클라이언트 UI 까지 끌고 와서, 순수 판정 함수만 full path 로 가져온다
 // eslint-disable-next-line no-restricted-imports
 import { isMappedPlace, itemCoords } from "@/entities/schedule-item/model/place";
+import { routeError } from "@/shared/api/route-error";
 import { createClient } from "@/shared/api/supabase/server";
+
+/** 예상하지 못한 실패 때 화면에 보낼 문구 — 원인은 서버 로그에만 */
+const FAILED = "경로를 가져오지 못했어요";
 
 type Body = { tripId?: string; dayIndex?: number; travelMode?: TravelMode };
 
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "로그인이 필요해요" }, { status: 401 });
 
   // RLS 덕분에 멤버가 아니면 빈 배열. 대체 장소 줄은 동선이 아니라 뺀다
   const { data: items, error } = await supabase
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
     .eq("day_index", dayIndex)
     .is("alternative_of", null)
     .order("position");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return routeError(error, FAILED);
 
   const points: RoutePoint[] = (items ?? [])
     // 지도 핀과 같은 기준. 좌표가 있어도 flight · move 는 경유점이 아니다
@@ -67,8 +71,7 @@ export async function POST(request: NextRequest) {
   }
 
   const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY;
-  if (!apiKey)
-    return NextResponse.json({ error: "GOOGLE_MAPS_SERVER_KEY 미설정" }, { status: 500 });
+  if (!apiKey) return routeError(new Error("GOOGLE_MAPS_SERVER_KEY 미설정"), FAILED);
 
   try {
     const { polyline, legs } = await computeDayRoute(points, travelMode, apiKey);
@@ -83,9 +86,6 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ polyline: polyline || null, legs } satisfies DayRoute);
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "경로 계산 실패" },
-      { status: 502 },
-    );
+    return routeError(e, FAILED, 502);
   }
 }

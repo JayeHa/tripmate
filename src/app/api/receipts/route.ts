@@ -9,8 +9,12 @@ import {
   RECEIPT_MAX_BYTES,
   receiptKey,
 } from "@/entities/expense/lib/receipt-rules";
+import { routeError } from "@/shared/api/route-error";
 import { createReadUrls, createUploadUrl, removeFiles } from "@/shared/api/storage/receipts";
 import { createClient } from "@/shared/api/supabase/server";
+
+/** 예상하지 못한 실패 때 화면에 보낼 문구 — 원인은 서버 로그에만 */
+const FAILED = "영수증을 처리하지 못했어요";
 
 type Body =
   | { action: "upload"; tripId: string; mime: string; size: number }
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Body | null;
   if (!body?.tripId) return NextResponse.json({ error: "tripId 필요" }, { status: 400 });
   if (!(await isMember(body.tripId))) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "권한이 없어요" }, { status: 403 });
   }
   try {
     if (body.action === "upload") {
@@ -55,6 +59,6 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: "모르는 동작" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return routeError(e, FAILED);
   }
 }

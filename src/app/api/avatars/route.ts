@@ -10,8 +10,12 @@ import {
   isAvatarMime,
   isOwnAvatarKey,
 } from "@/entities/session/lib/avatar-rules";
+import { routeError } from "@/shared/api/route-error";
 import { avatarBase, createAvatarUploadUrl, removeAvatar } from "@/shared/api/storage/avatars";
 import { createClient } from "@/shared/api/supabase/server";
+
+/** 예상하지 못한 실패 때 화면에 보낼 문구 — 원인은 서버 로그에만 */
+const FAILED = "사진을 저장하지 못했어요";
 
 type Body = { action: "upload"; mime: string; size: number } | { action: "remove"; url: string };
 
@@ -26,7 +30,8 @@ export async function POST(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || user.is_anonymous) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!user || user.is_anonymous)
+    return NextResponse.json({ error: "권한이 없어요" }, { status: 403 });
   try {
     if (body?.action === "upload") {
       if (!isAvatarMime(body.mime) || !(body.size > 0 && body.size <= AVATAR_MAX_BYTES)) {
@@ -45,6 +50,6 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: "모르는 동작" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return routeError(e, FAILED);
   }
 }

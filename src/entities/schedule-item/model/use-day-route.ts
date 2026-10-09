@@ -2,25 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { postJson } from "@/shared/api/post-json";
 import { queryKeys } from "@/shared/api/query-keys";
 
 import type { DayRoute, TravelMode } from "./types";
 
-async function fetchDayRoute(
+/** 그날 경로 — 서버 라우트가 구글 경로 API 를 부르고 캐시한다 */
+function fetchDayRoute(
   tripId: string,
   dayIndex: number,
   travelMode: TravelMode,
 ): Promise<DayRoute> {
-  const res = await fetch("/api/routes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tripId, dayIndex, travelMode }),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(body?.error ?? "경로를 가져오지 못했어요");
-  }
-  return (await res.json()) as DayRoute;
+  return postJson<DayRoute>(
+    "/api/routes",
+    { tripId, dayIndex, travelMode },
+    "경로를 가져오지 못했어요",
+  );
 }
 
 /**
