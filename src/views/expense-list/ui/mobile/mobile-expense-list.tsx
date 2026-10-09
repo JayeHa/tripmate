@@ -58,7 +58,8 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         <Link
           ref={cta}
           href={newHref}
-          className={buttonVariants({ variant: "brand", size: "cta", className: "mt-1" })}
+          // cn 으로 감싼다 — buttonVariants 는 클래스를 병합하지 않아 기본 text-sm · font-medium 이 CTA 크기(16/700)를 이긴다
+          className={cn(buttonVariants({ variant: "brand", size: "cta" }), "mt-1")}
         >
           <Plus className="size-5" strokeWidth={2.4} aria-hidden="true" />
           비용 추가
