@@ -80,14 +80,30 @@ describe("filtersActive · moreCount", () => {
 
 describe("moreGroups", () => {
   it("걸 거리가 있는 묶음만 — 통화 2개 이상 · 일행 · 결제 예정 · 합계 제외", () => {
-    expect(moreGroups([expense()], true)).toEqual({
+    expect(moreGroups([expense()], true, NO_FILTERS)).toEqual({
       currencies: null,
       together: false,
       status: false,
       excluded: false,
     });
     const all = [expense(), expense({ currency: "JPY", paid: false, counted: false })];
-    expect(moreGroups(all, false)).toEqual({
+    expect(moreGroups(all, false, NO_FILTERS)).toEqual({
+      currencies: ["KRW", "JPY"],
+      together: true,
+      status: true,
+      excluded: true,
+    });
+  });
+
+  it("걸어 둔 필터의 묶음은 걸 거리가 없어져도 남긴다 — 패널에서 풀 수 있게", () => {
+    const set = {
+      ...NO_FILTERS,
+      currency: "JPY",
+      together: ["m:a"],
+      status: "planned" as const,
+      hideExcluded: true,
+    };
+    expect(moreGroups([expense()], true, set)).toEqual({
       currencies: ["KRW", "JPY"],
       together: true,
       status: true,

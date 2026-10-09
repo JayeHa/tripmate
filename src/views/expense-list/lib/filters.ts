@@ -78,13 +78,23 @@ export type MoreGroups = {
   excluded: boolean;
 };
 
-/** 여행 전체 비용으로 「필터 더보기」 묶음을 정한다(필터로 거른 결과가 아니라) */
-export function moreGroups(expenses: ExpenseWithSplits[], solo: boolean): MoreGroups {
-  const currencies = [...new Set(expenses.map((e) => e.currency))];
+/**
+ * 여행 전체 비용으로 「필터 더보기」 묶음을 정한다(필터로 거른 결과가 아니라).
+ * 이미 걸어 둔 필터의 묶음은 걸 거리가 없어져도 남긴다 — 마지막 결제 예정을 처리하거나 그 통화 비용을 지우면
+ * 묶음이 사라져 패널에서 풀 수 없게 된다. 걸린 통화가 더는 쓰이지 않아도 그 칩을 남긴다
+ */
+export function moreGroups(
+  expenses: ExpenseWithSplits[],
+  solo: boolean,
+  f: ExpenseFilters,
+): MoreGroups {
+  const used = [...new Set(expenses.map((e) => e.currency))];
+  const currencies =
+    f.currency === "all" || used.includes(f.currency) ? used : [...used, f.currency];
   return {
-    currencies: currencies.length > 1 ? currencies : null,
-    together: !solo,
-    status: expenses.some((e) => !e.paid),
-    excluded: expenses.some((e) => !e.counted),
+    currencies: currencies.length > 1 || f.currency !== "all" ? currencies : null,
+    together: !solo || f.together.length > 0,
+    status: expenses.some((e) => !e.paid) || f.status !== "all",
+    excluded: expenses.some((e) => !e.counted) || f.hideExcluded,
   };
 }

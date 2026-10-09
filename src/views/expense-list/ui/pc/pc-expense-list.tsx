@@ -112,7 +112,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
           <FilterBar
             pc={pc}
             {...options}
-            more={moreGroups(list.expenses, list.solo)}
+            more={moreGroups(list.expenses, list.solo, pc.filters)}
             onSort={pc.setSort}
             result={
               active
