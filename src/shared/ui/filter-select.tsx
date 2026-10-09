@@ -49,13 +49,29 @@ type FilterSelectProps = {
  * 필터 고르기(P33) — 칩을 누르면 아래 6px 에 목록이 뜨고, 고르면 바로 적용하고 닫힌다.
  * 칩 34 · r17 · 13/700 + ⌄ 14, 고르면 잉크 바탕에 고른 글자. 목록 최소 200 · r12 · 줄 40 · 14/600 · 고른 줄 블루 글자 + ✓.
  * 1024 아래는 바텀시트에서 고른다(layout="auto"). 브라우저 기본 select 는 필터에 쓰지 않는다.
- * 지금은 하나 고르기만 있다(여러 개 고르기는 쓰는 화면이 생길 때)
+ * 여러 개 고르기는 FilterMultiSelect
  */
 export function FilterSelect(props: FilterSelectProps) {
   const desktop = useMediaQuery("(min-width: 1024px)");
   // 화면 폭을 모르는 첫 렌더(서버 · 하이드레이션)는 드롭다운으로 그린다
   if ((props.layout ?? "auto") === "auto" && desktop === false) return <SheetFilter {...props} />;
   return <DropdownFilter {...props} />;
+}
+
+/** 칩 글 — 고른 것(없으면 label), fit 이면 겹쳐 그릴 모든 글 */
+function chipTexts(
+  label: string,
+  current: FilterOption | undefined,
+  options: FilterOption[],
+  width: "auto" | "fit",
+) {
+  return {
+    shown: { text: current?.label ?? label, icon: current?.chipIcon },
+    widest:
+      width === "fit"
+        ? [{ text: label }, ...options.map((o) => ({ text: o.label, icon: o.chipIcon }))]
+        : [],
+  };
 }
 
 /** 1024 아래 — 칩(또는 받은 버튼)을 누르면 바텀시트 */
@@ -76,7 +92,7 @@ function SheetFilter({
       aria-label={current ? `${label}: ${current.label}` : label}
       aria-haspopup="dialog"
     >
-      <ChipText label={label} current={current?.label} options={options} width={width} />
+      <ChipText {...chipTexts(label, current, options, width)} />
     </FilterChipButton>
   );
   return (
@@ -111,9 +127,7 @@ function DropdownFilter({
         aria-label={current && !trigger ? `${label}: ${current.label}` : label}
         render={trigger ?? <FilterChipButton selected={!!current} />}
       >
-        {trigger ? undefined : (
-          <ChipText label={label} current={current?.label} options={options} width={width} />
-        )}
+        {trigger ? undefined : <ChipText {...chipTexts(label, current, options, width)} />}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={align}

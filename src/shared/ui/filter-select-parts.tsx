@@ -2,7 +2,7 @@ import { cn } from "cn";
 import { ChevronDown } from "lucide-react";
 import type * as React from "react";
 
-import { DropdownMenuRadioItem } from "@/shared/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuRadioItem } from "@/shared/ui/dropdown-menu";
 
 export type FilterOption = {
   value: string;
@@ -11,6 +11,8 @@ export type FilterOption = {
   sub?: string;
   /** 줄 왼쪽에 그릴 것(예: 아바타) */
   icon?: React.ReactNode;
+  /** 고르면 칩 글자 앞에 그릴 것(예: 18 아바타) — 여럿 고르기는 처음 고른 것 하나 */
+  chipIcon?: React.ReactNode;
 };
 
 type FilterChipButtonProps = React.ComponentProps<"button"> & { selected: boolean };
@@ -30,36 +32,46 @@ export function FilterChipButton({ selected, className, ...props }: FilterChipBu
   );
 }
 
+/** 칩에 보일 수 있는 글 하나 — 앞에 그릴 것(아바타)이 있으면 함께 */
+export type ChipCandidate = { text: string; icon?: React.ReactNode };
+
 type ChipTextProps = {
-  label: string;
-  current: string | undefined;
-  options: FilterOption[];
-  width: "auto" | "fit";
+  shown: ChipCandidate;
+  /** fit — 칩이 보일 수 있는 모든 글. 같은 칸에 겹쳐 그려 가장 넓은 것에 폭을 맞춘다. auto 면 빈 배열 */
+  widest: ChipCandidate[];
 };
 
 /**
- * 칩 글자 + ⌄. fit 이면 모든 옵션 글자를 같은 칸에 겹쳐 그려(보이는 건 지금 글자 하나) 칸 폭이 가장 긴 글자에 맞춰진다 —
+ * 칩 글자 + ⌄. fit 이면 보일 수 있는 글을 모두 같은 칸에 겹쳐 그려(보이는 건 지금 글자 하나) 칸 폭이 가장 넓은 것에 맞춰진다 —
  * 재지 않고 CSS 로만 고정한다
  */
-export function ChipText({ label, current, options, width }: ChipTextProps) {
-  const shown = current ?? label;
+export function ChipText({ shown, widest }: ChipTextProps) {
   return (
     <>
       <span className="grid min-w-0">
-        {width === "fit" &&
-          [label, ...options.map((o) => o.label)].map((text) => (
-            <span
-              key={text}
-              aria-hidden="true"
-              className="invisible col-start-1 row-start-1 truncate"
-            >
-              {text}
-            </span>
-          ))}
-        <span className="col-start-1 row-start-1 truncate">{shown}</span>
+        {widest.map((c) => (
+          <ChipLine key={c.text} {...c} hidden />
+        ))}
+        <ChipLine {...shown} />
       </span>
       <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
     </>
+  );
+}
+
+/** 칩 글 한 줄 — 겹쳐 그리는 칸 하나. hidden 이면 자리만 차지한다 */
+function ChipLine({ text, icon, hidden }: ChipCandidate & { hidden?: boolean }) {
+  return (
+    <span
+      aria-hidden={hidden}
+      className={cn(
+        "col-start-1 row-start-1 flex min-w-0 items-center gap-1",
+        hidden && "invisible",
+      )}
+    >
+      {icon}
+      <span className="truncate">{text}</span>
+    </span>
   );
 }
 
@@ -80,5 +92,28 @@ export function OptionRow({ value, label, sub, icon }: FilterOption) {
       {/* 회색을 지킨다 — 포커스 때 자식 글자 색을 줄 색으로 맞추는 규칙(focus:**:text-inherit)보다 앞서게 */}
       {sub && <span className="shrink-0 text-xs font-medium text-ink-400!">{sub}</span>}
     </DropdownMenuRadioItem>
+  );
+}
+
+/** 여럿 고르기의 목록 한 줄 — 하나 고르기 줄과 같은 모양, 눌러도 닫히지 않는다 */
+export function MultiOptionRow({
+  checked,
+  onCheckedChange,
+  label,
+  icon,
+}: Pick<FilterOption, "label" | "icon"> & {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <DropdownMenuCheckboxItem
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      closeOnClick={false}
+      className="h-10 gap-3 rounded-button pr-9 pl-2.5 text-sm font-semibold text-ink-900 focus:bg-surface-muted focus:text-ink-900 focus:**:text-inherit **:data-[slot=dropdown-menu-checkbox-item-indicator]:right-2.5 data-checked:text-brand-text focus:data-checked:text-brand-text [&_[data-slot=dropdown-menu-checkbox-item-indicator]_svg]:text-brand"
+    >
+      {icon}
+      <span className="flex-1 truncate">{label}</span>
+    </DropdownMenuCheckboxItem>
   );
 }

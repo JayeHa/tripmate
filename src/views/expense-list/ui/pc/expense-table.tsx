@@ -1,18 +1,20 @@
 import type { Ref, RefObject } from "react";
 
+import type { ExpenseRowView } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { Segmented } from "@/shared/ui/segmented";
 
 import { homeModeLabel } from "../../lib/base-rate";
-import { periodLabel } from "../../lib/period";
-import type { ExpenseList, ExpenseListSection } from "../../model/use-expense-list";
+import type { TableGroup } from "../../lib/table-groups";
+import type { ExpenseList } from "../../model/use-expense-list";
 import type { AmountMode } from "../../model/use-pc-list";
 import { TABLE_COLUMNS } from "./columns";
 import { ExpenseTableRow } from "./expense-table-row";
 
 type ExpenseTableProps = {
-  sections: ExpenseListSection[];
+  /** 날짜 묶음, 금액순이면 한 묶음 */
+  groups: TableGroup<ExpenseRowView>[];
   list: ExpenseList;
   /** 고른 줄(오른쪽에 상세가 열린 비용) */
   selected: string | null;
@@ -26,17 +28,15 @@ type ExpenseTableProps = {
   /** 붙는 열 머리 — 그 아래 끝이 날짜 레일이 따라가는 기준선 */
   headRef: Ref<HTMLDivElement>;
   sectionRef: (key: string) => (el: HTMLElement | null) => void;
-  /** 묶음마다 키(레일과 같은 순서) */
-  keys: string[];
 };
 
 /**
- * PC 가계부 표 카드 — 스크롤 칸 안에 붙는 열 머리(38, 「결제 통화 | 원화 환산」 — 기준 화폐가 원화가 아니면 「JPY 환산」), 「엔 920 기준」 한 줄, 날짜 띠(회색 + 합계)와 줄들.
+ * PC 가계부 표 카드 — 스크롤 칸 안에 붙는 열 머리(38, 「결제 통화 | 원화 환산」 — 기준 화폐가 원화가 아니면 「JPY 환산」), 「엔 920 기준」 한 줄, 묶음 띠(회색 + 합계)와 줄들.
  * 빈 날은 「아직 지출이 없어요」
  */
 export function ExpenseTable(props: ExpenseTableProps) {
   const {
-    sections,
+    groups,
     list,
     selected,
     onSelect,
@@ -46,7 +46,6 @@ export function ExpenseTable(props: ExpenseTableProps) {
     scrollerRef,
     headRef,
     sectionRef,
-    keys,
   } = props;
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-divider">
@@ -75,42 +74,36 @@ export function ExpenseTable(props: ExpenseTableProps) {
           </div>
         </div>
         {rateLine && <p className="px-4 pt-1.5 text-right text-[11px] text-ink-350">{rateLine}</p>}
-        {sections.map((s, i) => {
-          const { label, date } = periodLabel(s.period, list.trip.start_date);
-          return (
-            <section key={keys[i]} ref={sectionRef(keys[i])}>
-              <div className="flex items-baseline border-y border-divider bg-surface-sunken px-4 py-2.5 text-[13px] font-semibold text-ink-450">
-                <h2>
-                  {s.period === "prep" ? "여행 준비" : `${label} · ${date.replace("/", " (")})`}
-                </h2>
-                <span className="flex-1" />
-                {s.rows.length > 0 && (
-                  <span>{formatMoney(s.total.home, list.trip.home_currency)}</span>
-                )}
+        {groups.map((g) => (
+          <section key={g.key} ref={sectionRef(g.key)}>
+            <div className="flex items-baseline border-y border-divider bg-surface-sunken px-4 py-2.5 text-[13px] font-semibold text-ink-450">
+              <h2>{g.title}</h2>
+              <span className="flex-1" />
+              {g.total !== null && <span>{formatMoney(g.total, list.trip.home_currency)}</span>}
+            </div>
+            {g.rows.length === 0 ? (
+              <p className="px-4 py-3.5 text-[13px] text-ink-350">아직 지출이 없어요</p>
+            ) : (
+              <div className="divide-y divide-surface-muted">
+                {g.rows.map(({ row, tag }) => (
+                  <ExpenseTableRow
+                    key={row.id}
+                    row={row}
+                    tag={tag}
+                    selected={selected === row.id}
+                    hasReceipt={list.receiptsOf(row.id).length > 0}
+                    onSelect={() => onSelect(row.id)}
+                    onMarkPaid={() => list.markPaid(row.id)}
+                    paying={list.paying === row.id}
+                    mode={mode}
+                    displayNameOf={list.displayNameOf}
+                    everyone={list.everyone}
+                  />
+                ))}
               </div>
-              {s.rows.length === 0 ? (
-                <p className="px-4 py-3.5 text-[13px] text-ink-350">아직 지출이 없어요</p>
-              ) : (
-                <div className="divide-y divide-surface-muted">
-                  {s.rows.map((row) => (
-                    <ExpenseTableRow
-                      key={row.id}
-                      row={row}
-                      selected={selected === row.id}
-                      hasReceipt={list.receiptsOf(row.id).length > 0}
-                      onSelect={() => onSelect(row.id)}
-                      onMarkPaid={() => list.markPaid(row.id)}
-                      paying={list.paying === row.id}
-                      mode={mode}
-                      displayNameOf={list.displayNameOf}
-                      everyone={list.everyone}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          );
-        })}
+            )}
+          </section>
+        ))}
         <div className="h-30" />
       </div>
     </div>

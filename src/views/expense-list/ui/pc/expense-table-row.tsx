@@ -15,6 +15,8 @@ import { TABLE_COLUMNS } from "./columns";
 
 type ExpenseTableRowProps = {
   row: ExpenseRowView;
+  /** 금액순일 때 이름 앞에 붙는 날 — 「day 2」 · 「준비」. 날짜 묶음이면 null */
+  tag: string | null;
   /** 오른쪽에 상세가 열린 줄 — 연한 파랑 */
   selected: boolean;
   /** 영수증이 붙어 있다 — 이름 옆 클립 */
@@ -36,11 +38,12 @@ function avatarTone(person: PersonRef | null) {
 }
 
 /**
- * PC 가계부 표 한 줄 — 카테고리 타일 28 + 이름 | 항목(배지 · 메모 아이콘, 아래 예정일 지남이나 연결 일정) |
+ * PC 가계부 표 한 줄 — 카테고리 타일 28 + 이름 | 항목(배지 · 금액순이면 날 태그 · 메모 아이콘, 아래 예정일 지남이나 연결 일정) |
  * 결제 · 함께 두 줄(아바타 18 + 「정원 결제」, 「함께 · 동규, 서연」) | 결제수단 | 금액(결제 통화 / 원화 환산). 합계에서 뺀 비용은 흐리다
  */
 export function ExpenseTableRow({
   row,
+  tag,
   selected,
   hasReceipt,
   onSelect,
@@ -71,6 +74,11 @@ export function ExpenseTableRow({
       <div className="flex min-w-0 flex-col gap-0.75">
         <div className="flex min-w-0 items-center gap-1.5">
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
+          {tag && (
+            <span className="flex h-5 shrink-0 items-center rounded-[5px] bg-surface-muted px-1.5 text-[11px] font-bold text-ink-500">
+              {tag}
+            </span>
+          )}
           <button
             type="button"
             onClick={onSelect}
