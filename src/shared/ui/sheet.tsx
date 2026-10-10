@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/shared/ui/button";
+import { TouchScrollGuard } from "@/shared/ui/touch-scroll-guard";
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -58,6 +59,7 @@ function SheetContent({
         )}
         {...props}
       >
+        <TouchScrollGuard />
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close
