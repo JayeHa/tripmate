@@ -7,6 +7,8 @@ import {
   blankStayForm,
   datesChanged,
   nameAfterPick,
+  registrationProblem,
+  stayFormForRegistration,
   stayFormFrom,
   toStayPayload,
 } from "./stay-form";
@@ -121,5 +123,82 @@ describe("stayFormFrom · datesChanged · nameAfterPick", () => {
     const auto = { ...blankStayForm(), name: loc.name, location: loc };
     expect(nameAfterPick(auto, { ...loc, name: "다른 호텔" })).toBe("다른 호텔");
     expect(nameAfterPick(auto, { ...loc, name: "", googlePlaceId: null })).toBe(loc.name);
+  });
+});
+
+describe("stayFormForRegistration", () => {
+  it("일정의 장소 · 아이콘 · 날짜로 채우고, 체크아웃 · 상태는 비운다", () => {
+    const v = stayFormForRegistration({
+      itemId: "i1",
+      emoji: "🛌",
+      checkIn: "2027-11-01",
+      place: {
+        name: "몬토레",
+        lat: 35.67,
+        lng: 139.76,
+        google_place_id: "g1",
+        address: "Ginza",
+        address_local: "銀座",
+        address_ko: "긴자",
+        gmap_url: null,
+      },
+    });
+    expect(v).toMatchObject({ name: "몬토레", emoji: "🛌", checkIn: "2027-11-01", checkOut: null });
+    expect(v.status).toBeNull();
+    expect(v.location).toMatchObject({ googlePlaceId: "g1", addressKo: "긴자", gmapUrl: "" });
+  });
+
+  it("좌표가 없는 옛 장소면 위치를 비워 다시 고르게 한다", () => {
+    const v = stayFormForRegistration({
+      itemId: "i1",
+      emoji: null,
+      checkIn: "2027-11-01",
+      place: {
+        name: "옛 숙소",
+        lat: null,
+        lng: null,
+        google_place_id: null,
+        address: null,
+        address_local: null,
+        address_ko: null,
+        gmap_url: null,
+      },
+    });
+    expect(v.location).toBeNull();
+    expect(v.emoji).toBe("");
+  });
+});
+
+describe("registrationProblem", () => {
+  const reg = {
+    itemId: "i1",
+    emoji: null,
+    checkIn: "2027-11-02",
+    place: {
+      name: "몬토레",
+      lat: 1,
+      lng: 1,
+      google_place_id: null,
+      address: null,
+      address_local: null,
+      address_ko: null,
+      gmap_url: null,
+    },
+  };
+
+  it("일정의 날이 숙박 날짜(양 끝 포함) 안이면 null, 날짜를 안 골랐으면 null", () => {
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-02", checkOut: "2027-11-03" }, reg),
+    ).toBeNull();
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-01", checkOut: "2027-11-02" }, reg),
+    ).toBeNull();
+    expect(registrationProblem({ ...filled(), checkOut: null }, reg)).toBeNull();
+  });
+
+  it("밖이면 그 날짜를 짚는다", () => {
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-03", checkOut: "2027-11-05" }, reg),
+    ).toBe("등록한 일정의 날짜(11.2)가 숙박 날짜 안에 들어가야 해요");
   });
 });

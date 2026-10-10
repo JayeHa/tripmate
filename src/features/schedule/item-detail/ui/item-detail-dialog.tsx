@@ -46,6 +46,8 @@ type ItemDetailDialogProps = {
   onExpense: (itemId: string, expenseId: string | null) => void;
   /** 숙소 연결 카드의 「숙소 정보 수정」 — 부른 쪽이 그 숙소의 숙소 창을 상세 위에 연다 */
   onEditStay: (stayId: string) => void;
+  /** 숙소 탭에 없는 숙소 일정의 「숙소로 등록」 — 부른 쪽이 이 일정으로 채운 새 숙소 폼을 상세 위에 연다 */
+  onRegisterStay: (item: ScheduleItem) => void;
 };
 
 /**
@@ -112,6 +114,7 @@ function MainDetail({
   onToast,
   onExpense,
   onEditStay,
+  onRegisterStay,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
@@ -139,6 +142,7 @@ function MainDetail({
         }}
         onEditPlace={onEditPlace}
         onEditStay={onEditStay}
+        onRegisterStay={onRegisterStay}
       />
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </div>

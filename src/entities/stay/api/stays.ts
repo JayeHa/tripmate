@@ -17,7 +17,8 @@ export async function fetchStays(tripId: string): Promise<Stay[]> {
 
 /**
  * 숙소 저장(save_stay, 0046) — 장소 · 숙소 · 묵는 날의 연결 카드를 한 트랜잭션으로.
- * stayId 가 null 이면 새 숙소. prune 이면 기간이 줄어 밀려난 연결 카드를 지운다
+ * stayId 가 null 이면 새 숙소. prune 이면 기간이 줄어 밀려난 연결 카드를 지운다.
+ * linkItemId 는 「숙소로 등록」 한 일정 카드 — 그 카드가 연결 카드가 되고 그날에는 카드를 또 만들지 않는다(0048)
  */
 export async function saveStay(
   tripId: string,
@@ -25,6 +26,7 @@ export async function saveStay(
   place: StayPlaceInput,
   fields: StayFieldsInput,
   prune: boolean,
+  linkItemId: string | null = null,
 ): Promise<StaySaveResult> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("save_stay", {
@@ -33,6 +35,7 @@ export async function saveStay(
     p_place: place,
     p_fields: fields,
     p_prune: prune,
+    p_link_item: linkItemId,
   });
   if (error) throw error;
   return data as StaySaveResult;

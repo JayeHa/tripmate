@@ -9,8 +9,11 @@ import {
   blankStayForm,
   datesChanged,
   nameAfterPick,
+  registrationProblem,
+  stayFormForRegistration,
   stayFormFrom,
   type StayFormValues,
+  type StayRegistration,
   toStayPayload,
 } from "../lib/stay-form";
 
@@ -25,6 +28,8 @@ type StayFormOptions = {
   trip: { start_date: string; end_date: string };
   /** 고치는 숙소. 새로 만들면 null */
   stay: Stay | null;
+  /** 「숙소로 등록」 — 새 숙소를 그 일정으로 채워 열고, 저장하면 그 카드를 연결한다. 고칠 때는 null */
+  registration?: StayRegistration | null;
   /** 밀려나는 카드를 세는 데 쓰는 일정 줄 */
   items: readonly { stay_id: string | null; alternative_of: string | null; day_index: number }[];
   onPickLocation: (req: LocationPickRequest) => void;
@@ -41,13 +46,12 @@ export function useStayForm({
   tripId,
   trip,
   stay,
+  registration = null,
   items,
   onPickLocation,
   onSaved,
 }: StayFormOptions) {
-  const [values, setValues] = useState<StayFormValues>(() =>
-    stay ? stayFormFrom(stay) : blankStayForm(),
-  );
+  const [values, setValues] = useState<StayFormValues>(() => initialValues(stay, registration));
   const [datesOpen, setDatesOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // 밀려나는 연결 카드 수 — 확인창을 띄우는 동안
@@ -82,6 +86,7 @@ export function useStayForm({
         place: payload.place,
         fields: payload.fields,
         prune,
+        linkItemId: stay ? null : (registration?.itemId ?? null),
       })
       .then(onSaved, () => undefined)
       .finally(() => {
@@ -94,6 +99,11 @@ export function useStayForm({
     const payload = toStayPayload(values);
     if (!payload.ok) {
       setError(payload.error);
+      return;
+    }
+    const outside = !stay && registration ? registrationProblem(values, registration) : null;
+    if (outside) {
+      setError(outside);
       return;
     }
     const pushed =
@@ -138,3 +148,9 @@ export function useStayForm({
 }
 
 export type StayFormState = ReturnType<typeof useStayForm>;
+
+/** 첫 폼 값 — 고치는 숙소 · 「숙소로 등록」 한 일정 · 빈 폼 순 */
+function initialValues(stay: Stay | null, registration: StayRegistration | null): StayFormValues {
+  if (stay) return stayFormFrom(stay);
+  return registration ? stayFormForRegistration(registration) : blankStayForm();
+}

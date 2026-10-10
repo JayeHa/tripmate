@@ -2027,17 +2027,18 @@ describe("프로필 사진 (0043)", () => {
   });
 });
 
-/** 숙소 저장 (0046) — { id, added, removed } */
+/** 숙소 저장 (0046 · 0048) — { id, added, removed }. linkItem 은 「숙소로 등록」 한 일정 카드 */
 async function saveStay(
   trip: string,
   stay: string | null,
   place: Record<string, unknown>,
   fields: Record<string, unknown>,
   prune = false,
+  linkItem: string | null = null,
 ) {
   const { rows } = await db.query<{ r: { id: string; added: number; removed: number } }>(
-    `select public.save_stay($1, $2, $3, $4, $5) r`,
-    [trip, stay, JSON.stringify(place), JSON.stringify(fields), prune],
+    `select public.save_stay($1, $2, $3, $4, $5, $6) r`,
+    [trip, stay, JSON.stringify(place), JSON.stringify(fields), prune, linkItem],
   );
   return rows[0].r;
 }
@@ -2058,7 +2059,7 @@ async function stayCards(stayId: string) {
   return rows;
 }
 
-describe("숙소 (0045 · 0046)", () => {
+describe("숙소 (0045 · 0046 · 0048 · 0049)", () => {
   const PLACE = {
     name: "호텔 몬토레 긴자",
     lat: 35.671,
@@ -2363,6 +2364,49 @@ describe("숙소 (0045 · 0046)", () => {
        from public.stays s join public.places p on p.id = s.place_id where s.id = '${r.id}'`,
     );
     expect(rows[0]).toEqual({ owner: A, card_owner: A });
+  });
+
+  it("숙소로 등록: 그 카드가 연결 카드가 되고(장소 · 아이콘 · 상태도 숙소 것으로), 그날에는 카드를 또 만들지 않는다", async () => {
+    const trip = await trip5();
+    const item = await addPlace(trip, 1, { name: "몬토레", lat: 35.6, lng: 139.7 });
+    const r = await saveStay(trip, null, PLACE, FIELDS, false, item);
+    expect(r.added).toBe(2);
+    const cards = await stayCards(r.id);
+    expect(cards.map((c) => [c.day_index, c.id === item])).toEqual([
+      [1, true],
+      [2, false],
+      [3, false],
+    ]);
+    expect(cards[0]).toMatchObject({ emoji: "🏨", status: "ok", place_id: cards[1].place_id });
+  });
+
+  it("숙소로 등록: 이미 연결된 카드 · 다른 여행 카드면 거부하고 숙소도 남기지 않는다", async () => {
+    const trip = await trip5();
+    const other = await trip5();
+    const foreign = await addPlace(other, 1, { name: "남의 여행", lat: 35.6, lng: 139.7 });
+    await expect(saveStay(trip, null, PLACE, FIELDS, false, foreign)).rejects.toThrow(
+      "item to link not found",
+    );
+    const linked = (await stayCards((await saveStay(trip, null, PLACE, FIELDS)).id))[0].id;
+    await expect(
+      saveStay(trip, null, { ...PLACE, google_place_id: "g-stay-2" }, FIELDS, false, linked),
+    ).rejects.toThrow("item to link not found");
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.stays where trip_id = '${trip}'`,
+    );
+    expect(rows[0].n).toBe(1);
+  });
+
+  it("숙소로 등록: 카드 날짜가 묵는 날 밖이면(폼에서 체크인을 바꿈) 거부한다 (0049)", async () => {
+    const trip = await trip5();
+    const item = await addPlace(trip, 0, { name: "몬토레", lat: 35.6, lng: 139.7 });
+    await expect(saveStay(trip, null, PLACE, FIELDS, false, item)).rejects.toThrow(
+      "outside the stay dates",
+    );
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.stays where trip_id = '${trip}'`,
+    );
+    expect(rows[0].n).toBe(0);
   });
 
   it("출발일을 옮기면 숙소 날짜도 같은 만큼 옮겨진다", async () => {

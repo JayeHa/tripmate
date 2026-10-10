@@ -6,6 +6,7 @@ import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
 
 import { type InfoRow, placeInfoRows } from "../lib/detail";
+import { RegisterStayNote } from "./register-stay-note";
 
 type PlaceInfoBandProps = {
   place: Place;
@@ -15,13 +16,22 @@ type PlaceInfoBandProps = {
   dow: number | null;
   /** 「장소 정보 수정」. 장소를 만든 사람이 아니면 null(버튼 숨김 — 장소는 만든 사람만 고친다) */
   onEdit: (() => void) | null;
+  /** 「숙소로 등록」 — 숙소에 연결되지 않은 숙소 일정만. 아니면 null(안내 숨김) */
+  onRegisterStay: (() => void) | null;
 };
 
 /**
  * 장소 정보 띠 — 헤더와 이어지는 연회색 띠에 「📍 도쿄 장소」 칩 · 표(설명 · 주소 · 별점 · 운영시간) · 링크 칩.
  * 다른 일정 · 여행과 함께 쓰는 정보라 「이번 일정」 과 칸을 나눈다. 오른쪽 위 「장소 정보 수정」 은 장소 입력 폼을 연다.
+ * 숙소 탭에 없는 숙소 일정이면 칩 줄 아래에 「숙소로 등록」 안내가 붙는다.
  */
-export function PlaceInfoBand({ place, cityName, dow, onEdit }: PlaceInfoBandProps) {
+export function PlaceInfoBand({
+  place,
+  cityName,
+  dow,
+  onEdit,
+  onRegisterStay,
+}: PlaceInfoBandProps) {
   const rows = placeInfoRows(place, dow);
   const links = [
     ...(isHttpUrl(place.gmap_url) ? [{ title: "구글맵", url: place.gmap_url, gmap: true }] : []),
@@ -40,6 +50,7 @@ export function PlaceInfoBand({ place, cityName, dow, onEdit }: PlaceInfoBandPro
           </button>
         )}
       </div>
+      {onRegisterStay && <RegisterStayNote onRegister={onRegisterStay} />}
       {rows.map((row) => (
         <InfoLine key={row.label} row={row} />
       ))}

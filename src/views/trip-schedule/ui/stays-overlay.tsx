@@ -26,6 +26,7 @@ export function StaysOverlay({ tripId, trip, items, stays, onToast }: StaysOverl
         open={stays.open}
         onOpenChange={stays.setOpen}
         initialStayId={stays.initialId}
+        registration={stays.registration}
         onPickLocation={stays.requestPick}
         onToast={onToast}
       />

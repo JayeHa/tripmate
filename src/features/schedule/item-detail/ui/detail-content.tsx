@@ -1,5 +1,5 @@
 import { type City, useTripCities } from "@/entities/city";
-import type { Memo, Place, TimelineRow } from "@/entities/schedule-item";
+import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { dayOfWeek } from "@/shared/lib/days";
 
@@ -26,6 +26,8 @@ type DetailContentProps = {
   onEditPlace: (place: Place, city: City | null) => void;
   /** 숙소 연결 카드의 「숙소 정보 수정」. 없으면(대체 장소의 상세) 「숙소 예약」 블록을 그리지 않는다 */
   onEditStay?: (stayId: string) => void;
+  /** 숙소 탭에 없는 숙소 일정의 「숙소로 등록」. 없으면(대체 장소의 상세) 안내를 그리지 않는다 */
+  onRegisterStay?: (item: ScheduleItem) => void;
 };
 
 /**
@@ -43,6 +45,7 @@ export function DetailContent({
   alternatives,
   onEditPlace,
   onEditStay,
+  onRegisterStay,
 }: DetailContentProps) {
   const { data: cities = [] } = useTripCities(tripId);
   const { data: user } = useUser();
@@ -59,6 +62,7 @@ export function DetailContent({
           cityName={city?.name ?? null}
           dow={dayOfWeek(startDate, item.day_index)}
           onEdit={canEditPlace ? () => onEditPlace(place, city) : null}
+          onRegisterStay={registerStayOf(item, onRegisterStay)}
         />
       )}
       {item.stay_id && onEditStay && (
@@ -78,4 +82,13 @@ export function DetailContent({
       />
     </>
   );
+}
+
+/** 「숙소로 등록」 — 숙소 카테고리인데 숙소에 연결되지 않은 장소 일정만. 아니면 null(안내 숨김) */
+function registerStayOf(
+  item: ScheduleItem,
+  onRegister: ((item: ScheduleItem) => void) | undefined,
+): (() => void) | null {
+  if (!onRegister || item.kind !== "place" || item.stay_id) return null;
+  return item.place?.category === "stay" ? () => onRegister(item) : null;
 }

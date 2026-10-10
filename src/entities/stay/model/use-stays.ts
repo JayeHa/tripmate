@@ -32,7 +32,9 @@ export function useSaveStay(tripId: string) {
       place: StayPlaceInput;
       fields: StayFieldsInput;
       prune: boolean;
-    }) => saveStay(tripId, v.stayId, v.place, v.fields, v.prune),
+      /** 「숙소로 등록」 한 일정 카드 */
+      linkItemId?: string | null;
+    }) => saveStay(tripId, v.stayId, v.place, v.fields, v.prune, v.linkItemId ?? null),
     onSuccess: invalidate,
   });
 }

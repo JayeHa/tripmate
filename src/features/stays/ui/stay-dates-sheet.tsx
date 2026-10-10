@@ -30,9 +30,8 @@ function hintOf(sel: DateSelection): string {
  * 양 끝 라벨은 체크인 · 체크아웃. 같은 날은 체크아웃이 될 수 없다(0박 없음 — 다시 누르면 새 체크인)
  */
 export function StayDatesSheet({ trip, checkIn, checkOut, onClose, onDone }: StayDatesSheetProps) {
-  const [sel, setSel] = useState<DateSelection>(
-    checkIn && checkOut ? { start: checkIn, end: checkOut } : null,
-  );
+  // 체크인만 정해져 있으면(「숙소로 등록」) 체크아웃만 고르면 되게 체크인을 잡아 둔다
+  const [sel, setSel] = useState<DateSelection>(checkIn ? { start: checkIn, end: checkOut } : null);
   const calendar = useRangeCalendar({
     selection: sel,
     others: [],
