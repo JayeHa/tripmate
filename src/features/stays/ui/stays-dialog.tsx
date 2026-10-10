@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-import { type Stay, type StaySaveResult, useStays } from "@/entities/stay";
+import type { Stay, StaySaveResult } from "@/entities/stay";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import { useCurrentStay } from "../model/use-current-stay";
 import type { LocationPickRequest } from "../model/use-stay-form";
 import { type StaysFlow, useStaysFlow } from "../model/use-stays-flow";
 import { StayDetail } from "./stay-detail";
@@ -64,12 +65,9 @@ function StaysBody({
   onClose,
   onLockChange,
 }: StaysBodyProps) {
-  const { data: stays = [] } = useStays(tripId);
   const flow = useStaysFlow(initialStayId, onClose);
   const { step } = flow;
-  const current = step.kind === "list" ? null : (stays.find((s) => s.id === step.id) ?? null);
-  // 상세를 보는 숙소가 지워졌으면(일행이) 목록으로
-  if (step.kind === "detail" && !current) flow.toList();
+  const { stays, current } = useCurrentStay(tripId, flow, onToast);
 
   /** 저장이 끝났다 — 새 숙소는 목록으로, 고친 숙소는 상세로 */
   function saved(result: StaySaveResult) {
