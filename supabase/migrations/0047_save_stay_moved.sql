@@ -1,7 +1,8 @@
 -- 숙소 저장 고치기(#182 리뷰).
 -- 숙소를 다른 곳(다른 구글 장소 · 다른 좌표)으로 옮기면, 지금 장소가 내 것이어도 고치지 않고 새 장소(또는 이미 가진 그 구글 장소)를 쓴다.
 -- 0046 은 내 장소를 그 자리에서 새 호텔로 바꿔, 같은 장소를 재사용하던 다른 여행의 숙소 · 카드까지 바뀌었다.
--- 이름 · 주소만 고친 경우에는 지금처럼 그 장소를 고친다. 그 밖은 0046 과 같다.
+-- 이름 · 주소만 고친 경우에는 지금처럼 그 장소를 고친다.
+-- 여행 기간도 for share 로 잠가 읽는다(여행 날짜 바꾸기와 겹쳐도 카드 날짜가 어긋나지 않게). 그 밖은 0046 과 같다.
 
 create or replace function public.save_stay(
   p_trip uuid, p_stay uuid, p_place jsonb, p_fields jsonb, p_prune boolean default false
@@ -43,8 +44,9 @@ begin
     raise exception 'stay dates are required';
   end if;
 
-  -- 여행 기간. RLS 로 안 보이면 null → 거부
-  select start_date, end_date into v_start, v_end from public.trips where id = p_trip;
+  -- 여행 기간. RLS 로 안 보이면 null → 거부. for share 로 잠가 읽는다 — 그사이 일행이 기간을 옮기면(update_trip_dates 의 for update)
+  -- 그 커밋을 기다렸다가 옮겨진 기간 · 숙소 날짜로 날 번호를 계산한다(잠그지 않으면 옛 기간으로 카드가 하루씩 밀린다)
+  select start_date, end_date into v_start, v_end from public.trips where id = p_trip for share;
   if v_start is null then
     raise exception 'trip not found or not a member';
   end if;
