@@ -2221,6 +2221,39 @@ describe("숙소 (0045 · 0046)", () => {
     expect(copy[0].card_place).toBe(pid[0].place_id);
   });
 
+  it("다른 호텔로 옮기면 내 장소를 고치지 않고 새 장소 — 같은 장소를 쓰는 다른 여행은 그대로", async () => {
+    const tripA = await trip5();
+    const a = await saveStay(tripA, null, { ...PLACE, google_place_id: "g-move-x" }, FIELDS);
+    const tripB = await newTrip("2027-12-01", "2027-12-05");
+    const b = await saveStay(
+      tripB,
+      null,
+      { ...PLACE, google_place_id: "g-move-x" },
+      { ...FIELDS, check_in_date: "2027-12-01", check_out_date: "2027-12-02" },
+    );
+    const placeOf = async (id: string) =>
+      (await db.query<{ place_id: string }>(`select place_id from public.stays where id = '${id}'`))
+        .rows[0].place_id;
+    // 같은 구글 장소라 두 숙소가 장소 하나를 쓴다
+    expect(await placeOf(a.id)).toBe(await placeOf(b.id));
+    const shared = await placeOf(a.id);
+    await saveStay(
+      tripB,
+      b.id,
+      { name: "호텔 Y", lat: 35.7, lng: 139.8, google_place_id: "g-move-y" },
+      { ...FIELDS, check_in_date: "2027-12-01", check_out_date: "2027-12-02" },
+    );
+    expect(await placeOf(b.id)).not.toBe(shared);
+    const { rows } = await db.query<{ name: string; google_place_id: string }>(
+      `select name, google_place_id from public.places where id = '${shared}'`,
+    );
+    expect(rows[0]).toEqual({ name: "호텔 몬토레 긴자", google_place_id: "g-move-x" });
+    expect((await stayCards(a.id)).every((c) => c.place_id === shared)).toBe(true);
+    // 이름만 고치면 그 장소를 고친다
+    await saveStay(tripA, a.id, { ...PLACE, google_place_id: "g-move-x", name: "몬토레" }, FIELDS);
+    expect(await placeOf(a.id)).toBe(shared);
+  });
+
   it("거부 + 롤백: 빈 이름 · 0박 · 위치 없음 · 멤버 아님(장소도 남지 않는다)", async () => {
     const trip = await trip5();
     expect(
