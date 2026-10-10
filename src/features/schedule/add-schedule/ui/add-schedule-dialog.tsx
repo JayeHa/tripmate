@@ -57,7 +57,14 @@ function AddScheduleBody({
   notice,
   onClose,
 }: AddScheduleBodyProps) {
-  const state = useAddSchedule({ tripId, initialDay, items, onDone: onClose, onDirectAdd });
+  const state = useAddSchedule({
+    tripId,
+    startDate,
+    initialDay,
+    items,
+    onDone: onClose,
+    onDirectAdd,
+  });
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       <AddScheduleHeader

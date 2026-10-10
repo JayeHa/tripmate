@@ -17,16 +17,20 @@ import {
   type CategoryFilter,
   chooseNew,
   chooseSaved,
+  chooseStay,
   type Chosen,
   filterSaved,
   scheduledKeys,
   toggleChosen,
 } from "../lib/chosen";
+import { useMyStays } from "./use-my-stays";
 
 export type AddScheduleTab = "rec" | "saved";
 
 type AddScheduleOptions = {
   tripId: string;
+  /** 여행 첫날(YYYY-MM-DD). 「내 숙소」 에서 담을 날에 묵는 숙소를 고른다 */
+  startDate: string;
   /** 처음 담을 날. 화면 안에서 바꿀 수 있다 */
   initialDay: number;
   /** 여행 전체 일정. 「일정에 있음」 과 그날의 기준 도시를 정한다 */
@@ -51,11 +55,13 @@ export type DirectAddRequest = {
 /**
  * 「일정 추가」 화면의 상태와 동작. 열릴 때마다 새로 마운트돼 처음 값에서 시작한다.
  * - 추천 장소: 큐레이션(#34) 전까지 구글 검색 결과로 대신한다. 검색어가 없으면 안내만
+ * - 추천 장소 맨 위 「내 숙소」: 이 여행의 숙소. 담으면 그 숙소의 연결 카드가 된다
  * - 저장한 장소: 이 여행 도시의 내 장소. 카테고리 · 검색어로 거른다
  * - 고른 곳은 하단 트레이에 고른 순서대로 모이고, 담기는 한 번에(add_schedule_places)
  */
 export function useAddSchedule({
   tripId,
+  startDate,
   initialDay,
   items,
   onDone,
@@ -93,6 +99,7 @@ export function useAddSchedule({
   const suggestions = usePlaceSuggestions(query, city);
   const inTrip = useMemo(() => scheduledKeys(items), [items]);
   const savedList = filterSaved(saved.data ?? [], category, query);
+  const myStays = useMyStays(tripId, startDate, dayIndex, items, query);
 
   /** 저장한 장소를 고르거나 뺀다 */
   function toggleSaved(place: Parameters<typeof chooseSaved>[0]) {
@@ -163,6 +170,12 @@ export function useAddSchedule({
     setCityId,
     suggestions,
     savedList,
+    myStays: myStays.rows,
+    /** 추천 결과에서 뺄 구글 id — 「내 숙소」 에 이미 있는 곳 */
+    stayGoogleIds: myStays.googleIds,
+    /** 「내 숙소」 를 고르거나 뺀다 */
+    toggleStay: (stay: Parameters<typeof chooseStay>[0]) =>
+      setChosen((list) => toggleChosen(list, chooseStay(stay))),
     savedCount: saved.data?.length ?? 0,
     savedLoading: saved.isPending,
     inTrip,

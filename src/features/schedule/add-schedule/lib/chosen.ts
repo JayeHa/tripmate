@@ -23,6 +23,11 @@ export function chooseSaved(place: Pick<Place, "id" | "name" | "google_place_id"
   return { key: savedKey(place), name: place.name, entry: { place_id: place.id } };
 }
 
+/** 「내 숙소」 를 트레이에 담을 모양으로. 담으면 그 숙소의 연결 카드가 된다 */
+export function chooseStay(stay: { id: string; place: { name: string } }): Chosen {
+  return { key: `stay:${stay.id}`, name: stay.place.name, entry: { stay_id: stay.id } };
+}
+
 /** 구글 검색 · 이름만 입력으로 고른 곳을 트레이에 담을 모양으로 */
 export function chooseNew(entry: Extract<ScheduleEntry, { name: string }>): Chosen {
   const key = entry.google_place_id ? `google:${entry.google_place_id}` : `name:${entry.name}`;
