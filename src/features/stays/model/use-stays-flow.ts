@@ -8,12 +8,10 @@ export type StaysStep =
 
 /**
  * 숙소 창 안의 화면 전환. 뒤로는 고치기 폼 → 상세, 새 숙소 폼 → 목록, 상세 → 목록, 목록 → 닫기.
- * 처음 열 때 보일 숙소(initialId)가 있으면 상세부터
+ * 처음 보일 화면(initial)은 여는 쪽이 정한다 — 목록 · 그 숙소의 상세 · 「숙소로 등록」 의 새 숙소 폼
  */
-export function useStaysFlow(initialId: string | null, onClose: () => void) {
-  const [step, setStep] = useState<StaysStep>(
-    initialId ? { kind: "detail", id: initialId } : { kind: "list" },
-  );
+export function useStaysFlow(initial: StaysStep, onClose: () => void) {
+  const [step, setStep] = useState<StaysStep>(initial);
   return {
     step,
     openDetail: (id: string) => setStep({ kind: "detail", id }),

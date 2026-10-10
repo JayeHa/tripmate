@@ -1,5 +1,6 @@
 import type { ReservationStatus } from "@/entities/schedule-item";
 import { type Stay, type StayFieldsInput, stayLinksOf, type StayPlaceInput } from "@/entities/stay";
+import type { Tables } from "@/shared/api/supabase/database.types";
 import type { PickedLocation } from "@/shared/lib/google-places";
 import { isTimeValue } from "@/shared/lib/time-input";
 import type { LinkDraft } from "@/shared/ui/link-rows";
@@ -42,6 +43,56 @@ export function blankStayForm(): StayFormValues {
   };
 }
 
+/** 폼을 채우는 데 쓰는 장소 칸 */
+type PlaceFields = Pick<
+  Tables<"places">,
+  | "name"
+  | "lat"
+  | "lng"
+  | "google_place_id"
+  | "address"
+  | "address_local"
+  | "address_ko"
+  | "gmap_url"
+>;
+
+/** 장소의 위치. 좌표가 없는 옛 장소면 null(다시 고르게) */
+function locationOf(p: PlaceFields): PickedLocation | null {
+  if (p.lat === null || p.lng === null) return null;
+  return {
+    lat: p.lat,
+    lng: p.lng,
+    googlePlaceId: p.google_place_id,
+    name: p.name,
+    address: p.address,
+    addressLocal: p.address_local,
+    addressKo: p.address_ko,
+    gmapUrl: p.gmap_url ?? "",
+  };
+}
+
+/** 「숙소로 등록」 — 숙소에 연결되지 않은 숙소 일정 카드에서 새 숙소를 만든다. 저장하면 그 카드가 연결 카드가 된다 */
+export type StayRegistration = {
+  /** 연결 카드가 될 일정 */
+  itemId: string;
+  place: PlaceFields;
+  /** 그 카드의 아이콘. 없으면 기본 🏨 */
+  emoji: string | null;
+  /** 그 카드의 날짜(YYYY-MM-DD) — 체크인 날로 채운다 */
+  checkIn: string;
+};
+
+/** 「숙소로 등록」 의 첫 폼 값 — 이름 · 아이콘 · 위치(주소 · 구글맵 · 좌표) · 체크인 날짜. 체크아웃은 사용자가 고른다 */
+export function stayFormForRegistration(r: StayRegistration): StayFormValues {
+  return {
+    ...blankStayForm(),
+    emoji: r.emoji ?? "",
+    name: r.place.name,
+    location: locationOf(r.place),
+    checkIn: r.checkIn,
+  };
+}
+
 /** 저장된 숙소를 폼 값으로. 위치는 장소에서 가져온다(좌표가 없는 옛 장소면 비워 다시 고르게) */
 export function stayFormFrom(stay: Stay): StayFormValues {
   const p = stay.place;
@@ -49,19 +100,7 @@ export function stayFormFrom(stay: Stay): StayFormValues {
     status: (stay.status as ReservationStatus | null) ?? null,
     emoji: stay.emoji ?? "",
     name: p.name,
-    location:
-      p.lat !== null && p.lng !== null
-        ? {
-            lat: p.lat,
-            lng: p.lng,
-            googlePlaceId: p.google_place_id,
-            name: p.name,
-            address: p.address,
-            addressLocal: p.address_local,
-            addressKo: p.address_ko,
-            gmapUrl: p.gmap_url ?? "",
-          }
-        : null,
+    location: locationOf(p),
     checkIn: stay.check_in_date,
     checkOut: stay.check_out_date,
     inTime: stay.check_in_time?.slice(0, 5) ?? "",

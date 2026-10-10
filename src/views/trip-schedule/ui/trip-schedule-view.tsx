@@ -52,7 +52,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   // 일정 추가 창 · 그 안의 「직접 추가」 장소 입력 폼
   const add = useDirectAdd(showDay);
   // 숙소 창과 그 위의 위치 고르기
-  const stays = useStaysOverlay(tripId);
+  const stays = useStaysOverlay(tripId, trip);
   // 상세를 연 일정. 줄은 모든 날짜에서 다시 찾는다 — 고친 내용이 바로 보이고, 지워지면 저절로 닫힌다
   const [openId, setOpenId] = useState<string | null>(null);
   // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
@@ -158,6 +158,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           onClose={() => setOpenId(null)}
           onEditPlace={overlays.openPlaceEdit}
           onEditStay={stays.openStay}
+          onRegisterStay={stays.registerStay}
           onAddAlternative={overlays.openAltAdd}
           onSwapped={(altId, message) => {
             setOpenId(altId);

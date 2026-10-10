@@ -7,6 +7,7 @@ import {
   blankStayForm,
   datesChanged,
   nameAfterPick,
+  stayFormForRegistration,
   stayFormFrom,
   toStayPayload,
 } from "./stay-form";
@@ -121,5 +122,48 @@ describe("stayFormFrom · datesChanged · nameAfterPick", () => {
     const auto = { ...blankStayForm(), name: loc.name, location: loc };
     expect(nameAfterPick(auto, { ...loc, name: "다른 호텔" })).toBe("다른 호텔");
     expect(nameAfterPick(auto, { ...loc, name: "", googlePlaceId: null })).toBe(loc.name);
+  });
+});
+
+describe("stayFormForRegistration", () => {
+  it("일정의 장소 · 아이콘 · 날짜로 채우고, 체크아웃 · 상태는 비운다", () => {
+    const v = stayFormForRegistration({
+      itemId: "i1",
+      emoji: "🛌",
+      checkIn: "2027-11-01",
+      place: {
+        name: "몬토레",
+        lat: 35.67,
+        lng: 139.76,
+        google_place_id: "g1",
+        address: "Ginza",
+        address_local: "銀座",
+        address_ko: "긴자",
+        gmap_url: null,
+      },
+    });
+    expect(v).toMatchObject({ name: "몬토레", emoji: "🛌", checkIn: "2027-11-01", checkOut: null });
+    expect(v.status).toBeNull();
+    expect(v.location).toMatchObject({ googlePlaceId: "g1", addressKo: "긴자", gmapUrl: "" });
+  });
+
+  it("좌표가 없는 옛 장소면 위치를 비워 다시 고르게 한다", () => {
+    const v = stayFormForRegistration({
+      itemId: "i1",
+      emoji: null,
+      checkIn: "2027-11-01",
+      place: {
+        name: "옛 숙소",
+        lat: null,
+        lng: null,
+        google_place_id: null,
+        address: null,
+        address_local: null,
+        address_ko: null,
+        gmap_url: null,
+      },
+    });
+    expect(v.location).toBeNull();
+    expect(v.emoji).toBe("");
   });
 });

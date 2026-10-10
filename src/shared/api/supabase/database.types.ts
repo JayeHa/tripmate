@@ -748,6 +748,7 @@ export type Database = {
           p_place: Json;
           p_fields: Json;
           p_prune?: boolean;
+          p_link_item?: string | null;
         };
         Returns: Json;
       };

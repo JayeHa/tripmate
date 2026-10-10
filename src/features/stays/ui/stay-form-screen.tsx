@@ -3,6 +3,7 @@
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 
+import type { StayRegistration } from "../lib/stay-form";
 import { useStayDelete } from "../model/use-stay-delete";
 import { type LocationPickRequest, useStayForm } from "../model/use-stay-form";
 import { DeleteStayConfirm, PruneCardsConfirm } from "./stay-confirms";
@@ -16,6 +17,8 @@ type StayFormScreenProps = {
   tripId: string;
   trip: { start_date: string; end_date: string };
   stay: Stay | null;
+  /** 「숙소로 등록」 — 새 숙소 폼을 그 일정으로 채운다 */
+  registration?: StayRegistration | null;
   items: readonly LinkedItem[];
   onPickLocation: (req: LocationPickRequest) => void;
   onBack: () => void;
@@ -29,6 +32,7 @@ export function StayFormScreen({
   tripId,
   trip,
   stay,
+  registration = null,
   items,
   onPickLocation,
   onBack,
@@ -36,7 +40,7 @@ export function StayFormScreen({
   onDeleted,
   onLockChange,
 }: StayFormScreenProps) {
-  const form = useStayForm({ tripId, trip, stay, items, onPickLocation, onSaved });
+  const form = useStayForm({ tripId, trip, stay, registration, items, onPickLocation, onSaved });
   useReportLock(form.locked, onLockChange);
   return (
     <>

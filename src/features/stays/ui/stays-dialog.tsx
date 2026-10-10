@@ -5,9 +5,10 @@ import { useState } from "react";
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import type { StayRegistration } from "../lib/stay-form";
 import { useCurrentStay } from "../model/use-current-stay";
 import type { LocationPickRequest } from "../model/use-stay-form";
-import { type StaysFlow, useStaysFlow } from "../model/use-stays-flow";
+import { type StaysFlow, type StaysStep, useStaysFlow } from "../model/use-stays-flow";
 import { StayDetail } from "./stay-detail";
 import { StayFormScreen } from "./stay-form-screen";
 import { StayList } from "./stay-list";
@@ -24,6 +25,8 @@ type StaysDialogProps = {
   onOpenChange: (open: boolean) => void;
   /** 열 때 바로 보일 숙소(연결 카드의 「숙소 정보 수정」). 없으면 목록부터 */
   initialStayId?: string | null;
+  /** 「숙소로 등록」 — 그 일정으로 채운 새 숙소 폼부터 연다. 저장하거나 뒤로 가면 창을 닫는다(일정 상세로 돌아간다) */
+  registration?: StayRegistration | null;
   /** 주소 칸 — 받는 쪽이 장소 입력 폼의 「위치만 고르기」 를 이 창 위에 띄운다 */
   onPickLocation: (req: LocationPickRequest) => void;
   onToast?: (text: string) => void;
@@ -60,17 +63,29 @@ function StaysBody({
   trip,
   items,
   initialStayId = null,
+  registration = null,
   onPickLocation,
   onToast,
   onClose,
   onLockChange,
 }: StaysBodyProps) {
-  const flow = useStaysFlow(initialStayId, onClose);
+  const flow = useStaysFlow(firstStep(initialStayId, registration), onClose);
   const { step } = flow;
   const { stays, current } = useCurrentStay(tripId, flow, onToast);
+  // 「숙소로 등록」 으로 연 새 숙소 폼 — 일정 상세에서 왔으니 끝나면 창을 닫는다
+  const registering = !!registration && step.kind === "form" && step.id === null;
 
-  /** 저장이 끝났다 — 새 숙소는 목록으로, 고친 숙소는 상세로 */
+  /** 저장이 끝났다 — 등록은 창을 닫고, 새 숙소는 목록으로, 고친 숙소는 상세로 */
   function saved(result: StaySaveResult) {
+    if (registering) {
+      onToast?.(
+        result.added > 0
+          ? `숙소로 등록했어요 · 일정에 카드 ${result.added}개 추가`
+          : "숙소로 등록했어요",
+      );
+      onClose();
+      return;
+    }
     onToast?.(savedToast(step.kind === "form" && step.id !== null, result));
     if (step.kind === "form" && step.id) flow.openDetail(step.id);
     else flow.toList();
@@ -92,9 +107,10 @@ function StaysBody({
           tripId={tripId}
           trip={trip}
           stay={step.id ? current : null}
+          registration={registering ? registration : null}
           items={items}
           onPickLocation={onPickLocation}
-          onBack={flow.back}
+          onBack={registering ? onClose : flow.back}
           onSaved={saved}
           onDeleted={(removed) => {
             onToast?.(removed > 0 ? `숙소와 일정 카드 ${removed}개를 지웠어요` : "숙소를 지웠어요");
@@ -121,6 +137,12 @@ function DetailScreen({ stay, tripId, flow }: DetailScreenProps) {
       <StayDetail tripId={tripId} stay={stay} />
     </>
   );
+}
+
+/** 처음 보일 화면 — 「숙소로 등록」 은 새 숙소 폼, 숙소를 골라 열었으면 그 상세, 아니면 목록 */
+function firstStep(initialStayId: string | null, registration: StayRegistration | null): StaysStep {
+  if (registration) return { kind: "form", id: null };
+  return initialStayId ? { kind: "detail", id: initialStayId } : { kind: "list" };
 }
 
 /** 저장 토스트 — 새 숙소는 넣은 카드 수, 고치기는 바뀐 카드 수 */
