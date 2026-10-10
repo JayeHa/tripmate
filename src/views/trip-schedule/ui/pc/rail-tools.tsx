@@ -12,7 +12,7 @@ export function RailTools({ stayCount, onOpenStays }: RailToolsProps) {
       <button
         type="button"
         onClick={onOpenStays}
-        className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-button bg-surface-muted text-[13px] font-bold text-ink-700 hover:bg-surface-sunken"
+        className="flex h-9 flex-1 items-center gap-1.5 rounded-button bg-surface-muted px-3 text-[13px] font-bold text-ink-700 hover:bg-surface-sunken"
       >
         <BedDouble className="size-4" strokeWidth={2} />
         숙소{stayCount > 0 && <span className="text-ink-400">{stayCount}</span>}

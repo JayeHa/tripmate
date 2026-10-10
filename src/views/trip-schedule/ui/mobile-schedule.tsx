@@ -1,32 +1,36 @@
 "use client";
 
-import { BedDouble } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ScheduleMap } from "@/entities/schedule-item";
 import { DayChips } from "@/features/schedule/day-selector";
 import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
+import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/shared/ui/app-header";
-import { IconButton } from "@/shared/ui/icon-button";
 
 import { mapDayOf } from "../lib/focus";
 import { useDayJumps } from "../model/use-day-jumps";
 import { useScrollFocus } from "../model/use-scroll-focus";
 import { useVisibleDay } from "../model/use-visible-day";
+import { useWindowScrolled } from "../model/use-window-scrolled";
 import { DayList } from "./day-list";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
+import { TripHeader } from "./trip-header";
 
 /**
  * 스크롤 강조 기준선 = sticky 영역(상단바 + 지도 + 날짜 칩) 아래로 이만큼.
  * 목록 맨 위에 온 장소가 강조되되, 핀으로 고르면 sticky 아래 36px(48 − 12)에 놓여 지도에 붙어 보이지 않는다
  */
 const FOCUS_LINE_OFFSET = 48;
+/** 여행 머리가 이만큼 올라가면 상단바에 작은 제목이 나타난다 */
+const TITLE_AFTER = 120;
 
 /**
- * 모바일 일정 — 상단바 아래에 [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 모든 날짜를 이어서 그린다.
+ * 모바일 일정 — 상단바 아래에 여행 머리(제목 · 날짜 · 일행 · 숙소 칩)가 지나가고, [접히는 지도 + 날짜 칩] 이 붙고(sticky) 그 아래 모든 날짜를 이어서 그린다.
+ * 상단바의 작은 제목은 여행 머리가 올라간 뒤에만 보인다.
  * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · `?day`)이고,
  * 칩을 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다(지도가 펼쳐져 있을 때만).
  */
@@ -45,6 +49,7 @@ export function MobileSchedule({
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
+  const scrolled = useWindowScrolled(TITLE_AFTER);
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stickyHeight = useElementHeight(stickyRef);
@@ -67,20 +72,20 @@ export function MobileSchedule({
 
   return (
     <>
-      {/* 상단바 오른쪽 숙소 버튼 — 시안의 여행 헤더 칩(항공편 · 숙소)을 만들 때 그리로 옮긴다(deviations.md) */}
       <AppHeader
-        title={trip?.title ?? "일정"}
-        back="/trips"
-        right={
-          <IconButton
-            label={stayCount > 0 ? `숙소 ${stayCount}` : "숙소"}
-            onClick={onOpenStays}
-            className="size-9"
+        title={
+          <span
+            className={cn(
+              "transition-opacity duration-200",
+              scrolled ? "opacity-100" : "opacity-0",
+            )}
           >
-            <BedDouble className="size-6" strokeWidth={2} />
-          </IconButton>
+            {trip?.title ?? "일정"}
+          </span>
         }
+        back="/trips"
       />
+      {trip && <TripHeader trip={trip} stayCount={stayCount} onOpenStays={onOpenStays} />}
       {/* 상단바 아래에 붙는 지도 + 날짜 칩. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
