@@ -40,6 +40,7 @@ function item(patch: ItemPatch): ScheduleItem {
     start_time: null,
     status: null,
     alternative_of: null,
+    stay_id: null,
     links: [],
     created_by: null,
     created_at: "",

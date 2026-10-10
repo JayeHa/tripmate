@@ -1,5 +1,6 @@
 "use client";
 
+import { BedDouble } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ScheduleMap } from "@/entities/schedule-item";
@@ -7,6 +8,7 @@ import { DayChips } from "@/features/schedule/day-selector";
 import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { AppHeader } from "@/shared/ui/app-header";
+import { IconButton } from "@/shared/ui/icon-button";
 
 import { mapDayOf } from "../lib/focus";
 import { useDayJumps } from "../model/use-day-jumps";
@@ -38,6 +40,8 @@ export function MobileSchedule({
   isPending,
   jump,
   startEditAt,
+  onOpenStays,
+  stayCount,
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
@@ -63,7 +67,20 @@ export function MobileSchedule({
 
   return (
     <>
-      <AppHeader title={trip?.title ?? "일정"} back="/trips" />
+      {/* 상단바 오른쪽 숙소 버튼 — 시안의 여행 헤더 칩(항공편 · 숙소)을 만들 때 그리로 옮긴다(deviations.md) */}
+      <AppHeader
+        title={trip?.title ?? "일정"}
+        back="/trips"
+        right={
+          <IconButton
+            label={stayCount > 0 ? `숙소 ${stayCount}` : "숙소"}
+            onClick={onOpenStays}
+            className="size-9"
+          >
+            <BedDouble className="size-6" strokeWidth={2} />
+          </IconButton>
+        }
+      />
       {/* 상단바 아래에 붙는 지도 + 날짜 칩. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>

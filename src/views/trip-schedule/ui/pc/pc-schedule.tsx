@@ -22,6 +22,7 @@ import type { ScheduleLayoutProps } from "../schedule-layout";
 import { DayPager } from "./day-pager";
 import { DayRail } from "./day-rail";
 import { DayViewToggle } from "./day-view-toggle";
+import { RailTools } from "./rail-tools";
 import { SplitPresets } from "./split-presets";
 
 /**
@@ -67,6 +68,8 @@ export function PcSchedule({
   jump,
   startEditAt,
   onGuide,
+  onOpenStays,
+  stayCount,
   ...body
 }: PcScheduleProps) {
   const split = useSplitWidth(SCHEDULE_SPLIT);
@@ -117,6 +120,7 @@ export function PcSchedule({
           day={edit.editing ? edit.day : day}
           onChange={pickDay}
           summaries={trip.day_summaries}
+          footer={<RailTools stayCount={stayCount} onOpenStays={onOpenStays} />}
         >
           <DayViewToggle
             mode={view.mode}

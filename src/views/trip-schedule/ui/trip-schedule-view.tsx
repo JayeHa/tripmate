@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
-import { AddScheduleDialog, type DirectAddRequest } from "@/features/schedule/add-schedule";
+import { AddScheduleDialog } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { useScheduleEdit } from "@/features/schedule/edit-mode";
 import { ItemDetailDialog } from "@/features/schedule/item-detail";
@@ -14,11 +14,14 @@ import { dayCount } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { useDetailOverlays } from "../model/use-detail-overlays";
+import { useDirectAdd } from "../model/use-direct-add";
 import { useScheduleSections } from "../model/use-schedule-sections";
+import { useStaysOverlay } from "../model/use-stays-overlay";
 import { DetailOverlays } from "./detail-overlays";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
 import type { DayJump, ScheduleLayoutProps } from "./schedule-layout";
+import { StaysOverlay } from "./stays-overlay";
 
 type TripScheduleViewProps = { tripId: string };
 
@@ -46,16 +49,10 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     setJump({ day: next, at: Date.now() });
   }
 
-  // 일정 추가 창을 연 날(그 날짜의 「일정 추가」 · 플로팅). null 이면 닫혀 있다
-  const [addDay, setAddDay] = useState<number | null>(null);
-  // 일정 추가의 「직접 추가」로 연 장소 입력 폼. 담으면 두 창을 모두 닫고 담은 날을 보인다.
-  // 일정 추가에 아직 담지 않은 고른 곳이 있으면 그 창은 닫지 않고 한 줄 알린다(닫으면 고른 곳이 사라진다)
-  const [direct, setDirect] = useState<DirectAddRequest | null>(null);
-  const [addNotice, setAddNotice] = useState<string | null>(null);
-  const directRef = useRef(direct);
-  useEffect(() => {
-    directRef.current = direct;
-  }, [direct]);
+  // 일정 추가 창 · 그 안의 「직접 추가」 장소 입력 폼
+  const add = useDirectAdd(showDay);
+  // 숙소 창과 그 위의 위치 고르기
+  const stays = useStaysOverlay(tripId);
   // 상세를 연 일정. 줄은 모든 날짜에서 다시 찾는다 — 고친 내용이 바로 보이고, 지워지면 저절로 닫힌다
   const [openId, setOpenId] = useState<string | null>(null);
   // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
@@ -80,23 +77,6 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const openRow = allRows.find((r) => r.item.id === openId) ?? null;
   if (openId && !openRow) setOpenId(null);
 
-  /**
-   * 직접 추가 요청 하나의 담기가 끝났다. 폼은 저장 중에 닫히지 않지만 오프라인으로 멈춘 동안은 닫을 수 있어서,
-   * 그 폼이 이미 닫혔으면(다른 요청이 열렸거나 아무것도 없으면) 창 닫기 · 날짜 이동을 하지 않는다
-   */
-  function finishDirect(req: DirectAddRequest) {
-    if (directRef.current !== req) return;
-    setDirect(null);
-    if (req.pendingCount > 0) {
-      setAddNotice(
-        `직접 추가한 곳을 day ${req.dayIndex + 1}에 담았어요. 고른 ${req.pendingCount}곳은 아직 담지 않았어요`,
-      );
-      return;
-    }
-    setAddDay(null);
-    showDay(req.dayIndex);
-  }
-
   const layout: ScheduleLayoutProps = {
     trip,
     totalDays,
@@ -108,14 +88,13 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     // 날짜 메모 줄은 일정 상세 대신 시간 · 메모만 고치는 창
     onOpen: (row) => (row.kind === "note" ? overlays.openNote(row.item) : setOpenId(row.item.id)),
     onEditMove: moveDialog.openFor,
-    onAddPlace: (d) => {
-      setAddNotice(null);
-      setAddDay(d);
-    },
+    onAddPlace: add.open,
     authorOf,
     onAddDayMemo: overlays.openDayMemo,
     edit,
     startEditAt: edit.opener,
+    onOpenStays: stays.openStays,
+    stayCount: stays.count,
   };
 
   return (
@@ -135,27 +114,37 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           tripId={tripId}
           startDate={trip.start_date}
           totalDays={totalDays}
-          initialDay={addDay ?? day}
+          initialDay={add.addDay ?? day}
           items={items}
-          open={addDay !== null}
-          onOpenChange={(open) => !open && setAddDay(null)}
-          onDirectAdd={setDirect}
-          notice={addNotice}
+          open={add.addDay !== null}
+          onOpenChange={(open) => !open && add.close()}
+          onDirectAdd={add.setDirect}
+          notice={add.notice}
         />
       )}
 
-      {direct && (
+      {add.direct && (
         <PlaceFormDialog
           tripId={tripId}
-          city={direct.city}
+          city={add.direct.city}
           mode={{
             kind: "add",
-            dayIndex: direct.dayIndex,
-            initialQuery: direct.name,
-            onSaved: () => finishDirect(direct),
+            dayIndex: add.direct.dayIndex,
+            initialQuery: add.direct.name,
+            onSaved: () => add.finish(add.direct!),
           }}
           open
-          onOpenChange={(open) => !open && setDirect(null)}
+          onOpenChange={(open) => !open && add.setDirect(null)}
+        />
+      )}
+
+      {trip && (
+        <StaysOverlay
+          tripId={tripId}
+          trip={trip}
+          items={items}
+          stays={stays}
+          onToast={overlays.showToast}
         />
       )}
 

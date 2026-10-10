@@ -29,8 +29,13 @@ export type CalendarDay = {
   selected: "start" | "end" | "middle" | "single" | null;
   /** 다른 여행 기간의 띠. 주가 바뀌는 칸에서도 둥글게 닫는다. */
   other: { roundStart: boolean; roundEnd: boolean } | null;
-  label: "오늘" | "다른 일정" | "출발" | "도착" | null;
+  label: "오늘" | "다른 일정" | "출발" | "도착" | "체크인" | "체크아웃" | null;
+  /** 점으로 표시할 기간 안의 날(숙박 날짜 달력의 여행 기간) */
+  mark: boolean;
 };
+
+/** 고른 기간 양 끝의 라벨 — 여행 기간은 출발 · 도착, 숙박 날짜는 체크인 · 체크아웃 */
+export type RangeLabels = { start: "출발" | "체크인"; end: "도착" | "체크아웃" };
 export type CalendarCell = { kind: "blank" } | CalendarDay;
 
 type MonthOptions = {
@@ -41,14 +46,28 @@ type MonthOptions = {
   /** 지난 날짜도 고를 수 있게 (수정 모드) */
   allowPast?: boolean;
   isHoliday?: (date: string) => boolean;
+  /** 점으로 표시할 기간(숙박 날짜 달력의 여행 기간). 띠(others)와 달리 칸을 차지하지 않는다 */
+  marked?: DateRange | null;
+  /** 양 끝 라벨. 기본은 출발 · 도착 */
+  labels?: RangeLabels;
 };
+
+const TRIP_LABELS: RangeLabels = { start: "출발", end: "도착" };
 
 /** 한 달의 칸. 앞쪽은 일요일 시작에 맞춰 빈 칸으로 채운다. */
 export function monthCells(year: number, month: number, opts: MonthOptions): CalendarCell[] {
   const first = new Date(year, month - 1, 1);
   const lead = getDay(first);
   const cells: CalendarCell[] = Array.from({ length: lead }, () => ({ kind: "blank" }));
-  const { today, selection, others, allowPast = false, isHoliday = () => false } = opts;
+  const {
+    today,
+    selection,
+    others,
+    allowPast = false,
+    isHoliday = () => false,
+    marked = null,
+    labels = TRIP_LABELS,
+  } = opts;
 
   for (let day = 1; day <= getDaysInMonth(first); day++) {
     const date = format(new Date(year, month - 1, day), "yyyy-MM-dd");
@@ -63,23 +82,28 @@ export function monthCells(year: number, month: number, opts: MonthOptions): Cal
       selected: null,
       other: null,
       label: date === today ? "오늘" : null,
+      mark: !!marked && date >= marked.start && date <= marked.end,
     };
 
-    const other = others.find((r) => date >= r.start && date <= r.end);
-    if (other) {
-      cell.other = {
-        roundStart: date === other.start || dow === 0,
-        roundEnd: date === other.end || dow === 6,
-      };
-      if (date === other.start) cell.label = "다른 일정";
-    }
+    applyOther(cell, others, dow);
 
     cell.selected = selectedPosition(selection, date);
-    const selectedLabel = labelOf(selection, cell.selected);
+    const selectedLabel = labelOf(selection, cell.selected, labels);
     if (selectedLabel) cell.label = selectedLabel;
     cells.push(cell);
   }
   return cells;
+}
+
+/** 「다른 일정」 띠 — 그 기간에 들면 띠(시작 · 끝과 주 경계에서 둥글게)와 시작 칸의 라벨 */
+function applyOther(cell: CalendarDay, others: readonly DateRange[], dow: number) {
+  const other = others.find((r) => cell.date >= r.start && cell.date <= r.end);
+  if (!other) return;
+  cell.other = {
+    roundStart: cell.date === other.start || dow === 0,
+    roundEnd: cell.date === other.end || dow === 6,
+  };
+  if (cell.date === other.start) cell.label = "다른 일정";
 }
 
 /** 고른 기간 안에서 date 의 위치. 기간 밖이면 null */
@@ -95,20 +119,25 @@ function selectedPosition(selection: DateSelection, date: string): CalendarDay["
   return "middle";
 }
 
-/** 고른 기간의 라벨. 도착은 도착일까지 골랐을 때만 붙는다 */
-function labelOf(selection: DateSelection, position: CalendarDay["selected"]) {
-  if (position === "start" || position === "single") return "출발";
-  if (position === "end" && selection?.end) return "도착";
+/** 고른 기간의 라벨. 끝 라벨은 끝 날짜까지 골랐을 때만 붙는다 */
+function labelOf(selection: DateSelection, position: CalendarDay["selected"], labels: RangeLabels) {
+  if (position === "start" || position === "single") return labels.start;
+  if (position === "end" && selection?.end) return labels.end;
   return null;
 }
 
 /**
  * 날짜를 눌렀을 때의 다음 선택.
  * 아직 없거나 둘 다 골랐으면 새 출발, 출발보다 앞을 누르면 새 출발, 그 밖엔 도착.
- * 출발일을 다시 누르면 당일치기가 된다.
+ * 출발일을 다시 누르면 당일치기가 된다. `minNights: 1`(숙박 날짜)이면 같은 날은 끝이 될 수 없어 새 시작이 된다
  */
-export function pickDate(selection: DateSelection, date: string): NonNullable<DateSelection> {
+export function pickDate(
+  selection: DateSelection,
+  date: string,
+  { minNights = 0 }: { minNights?: 0 | 1 } = {},
+): NonNullable<DateSelection> {
   if (!selection || selection.end || date < selection.start) return { start: date, end: null };
+  if (minNights === 1 && date === selection.start) return { start: date, end: null };
   return { start: selection.start, end: date };
 }
 

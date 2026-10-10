@@ -1,0 +1,135 @@
+"use client";
+
+import { useState } from "react";
+
+import { type Stay, type StaySaveResult, useStays } from "@/entities/stay";
+import { Dialog, DialogContent } from "@/shared/ui/dialog";
+
+import type { LocationPickRequest } from "../model/use-stay-form";
+import { type StaysFlow, useStaysFlow } from "../model/use-stays-flow";
+import { StayDetail } from "./stay-detail";
+import { StayFormScreen } from "./stay-form-screen";
+import { StayList } from "./stay-list";
+import { StaysHeader } from "./stays-header";
+
+type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
+
+type StaysDialogProps = {
+  tripId: string;
+  trip: { start_date: string; end_date: string };
+  /** 일정 줄 — 연결 카드 수를 센다 */
+  items: readonly LinkedItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** 열 때 바로 보일 숙소(연결 카드의 「숙소 정보 수정」). 없으면 목록부터 */
+  initialStayId?: string | null;
+  /** 주소 칸 — 받는 쪽이 장소 입력 폼의 「위치만 고르기」 를 이 창 위에 띄운다 */
+  onPickLocation: (req: LocationPickRequest) => void;
+  onToast?: (text: string) => void;
+};
+
+/**
+ * 숙소 창 — 목록 → 상세(예약 상태 바로 바꾸기) → 입력(새로 · 고치기). 1024px 아래는 전체 화면, 이상은 가운데 560×760.
+ * 저장 중에는 닫히지 않는다(locked). 닫히면 언마운트되어 다시 열면 목록부터
+ */
+export function StaysDialog({ open, onOpenChange, ...rest }: StaysDialogProps) {
+  const [locked, setLocked] = useState(false);
+  return (
+    <Dialog open={open} locked={locked} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="inset-0 flex h-dvh w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none bg-white p-0 ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(760px,calc(100dvh-2rem))] lg:w-140 lg:max-w-140 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
+      >
+        {open && (
+          <StaysBody {...rest} onClose={() => onOpenChange(false)} onLockChange={setLocked} />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type StaysBodyProps = Omit<StaysDialogProps, "open" | "onOpenChange"> & {
+  onClose: () => void;
+  onLockChange: (locked: boolean) => void;
+};
+
+/** 창 안 — 흐름(목록 · 상세 · 폼)에 따라 화면 하나 */
+function StaysBody({
+  tripId,
+  trip,
+  items,
+  initialStayId = null,
+  onPickLocation,
+  onToast,
+  onClose,
+  onLockChange,
+}: StaysBodyProps) {
+  const { data: stays = [] } = useStays(tripId);
+  const flow = useStaysFlow(initialStayId, onClose);
+  const { step } = flow;
+  const current = step.kind === "list" ? null : (stays.find((s) => s.id === step.id) ?? null);
+  // 상세를 보는 숙소가 지워졌으면(일행이) 목록으로
+  if (step.kind === "detail" && !current) flow.toList();
+
+  /** 저장이 끝났다 — 새 숙소는 목록으로, 고친 숙소는 상세로 */
+  function saved(result: StaySaveResult) {
+    onToast?.(savedToast(step.kind === "form" && step.id !== null, result));
+    if (step.kind === "form" && step.id) flow.openDetail(step.id);
+    else flow.toList();
+  }
+
+  return (
+    <div className="relative flex h-full min-h-0 flex-col">
+      {step.kind === "list" && (
+        <>
+          <StaysHeader title="숙소" back={{ kind: "close", onClick: onClose }} />
+          <StayList stays={stays} onOpen={flow.openDetail} onAdd={() => flow.openForm(null)} />
+        </>
+      )}
+      {step.kind === "detail" && current && (
+        <DetailScreen stay={current} tripId={tripId} flow={flow} />
+      )}
+      {step.kind === "form" && (
+        <StayFormScreen
+          tripId={tripId}
+          trip={trip}
+          stay={step.id ? current : null}
+          items={items}
+          onPickLocation={onPickLocation}
+          onBack={flow.back}
+          onSaved={saved}
+          onDeleted={(removed) => {
+            onToast?.(removed > 0 ? `숙소와 일정 카드 ${removed}개를 지웠어요` : "숙소를 지웠어요");
+            flow.toList();
+          }}
+          onLockChange={onLockChange}
+        />
+      )}
+    </div>
+  );
+}
+
+type DetailScreenProps = { stay: Stay; tripId: string; flow: StaysFlow };
+
+/** 상세 — 머리(← · 「숙소 정보」 · 수정) + 내용 */
+function DetailScreen({ stay, tripId, flow }: DetailScreenProps) {
+  return (
+    <>
+      <StaysHeader
+        title="숙소 정보"
+        back={{ kind: "back", onClick: flow.toList }}
+        action={{ label: "수정", onClick: () => flow.openForm(stay.id) }}
+      />
+      <StayDetail tripId={tripId} stay={stay} />
+    </>
+  );
+}
+
+/** 저장 토스트 — 새 숙소는 넣은 카드 수, 고치기는 바뀐 카드 수 */
+function savedToast(editing: boolean, r: StaySaveResult): string {
+  if (!editing)
+    return r.added > 0 ? `일정에 숙소 카드 ${r.added}개를 넣었어요` : "숙소를 등록했어요";
+  const parts = [r.added > 0 && `카드 ${r.added}개 추가`, r.removed > 0 && `${r.removed}개 삭제`];
+  const detail = parts.filter(Boolean).join(" · ");
+  return detail ? `숙소를 수정했어요 · ${detail}` : "숙소 정보를 수정했어요";
+}

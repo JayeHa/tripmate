@@ -77,6 +77,16 @@ function DayCell({ cell, size, onPick }: DayCellProps) {
         )}
       >
         {cell.day}
+        {/* 여행 기간 점(숙박 날짜 달력) — 숫자 아래, 고른 날은 흰색 */}
+        {cell.mark && (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute bottom-1 size-1 rounded-full",
+              edge ? "bg-white" : "bg-primary",
+            )}
+          />
+        )}
       </span>
       {cell.label && (
         <span
