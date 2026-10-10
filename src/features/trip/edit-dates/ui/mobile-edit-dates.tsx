@@ -34,7 +34,7 @@ export function MobileEditDates({ state, onClose, Title }: MobileEditDatesProps)
         <Title className="text-[26px] font-extrabold tracking-[-0.02em] text-ink-900">
           여행일정 수정
         </Title>
-        <p className="text-[15px] leading-normal text-ink-500">
+        <p className="text-[15px]/normal text-ink-500">
           {state.trip.title} · 바꿀 출발일과 도착일을 눌러 주세요.
         </p>
       </div>
