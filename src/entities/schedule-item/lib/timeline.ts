@@ -58,7 +58,16 @@ export type TimelineRow = {
   links: TimelineLink[];
   /** 이 일정의 대체 장소(일정 줄, 장소 포함 — 0024). 만든 순서 */
   alternatives: ScheduleItem[];
+  /** 숙소에 연결된 카드(stay_id)의 숙소 모양. 연결 없으면 null — 화면이 숙소 목록으로 채운다(withStayCards) */
+  stay: StayCardInfo | null;
 };
+
+/**
+ * 숙소 카드 모양 — 체크인 날 그 숙소의 맨 위 카드는 「자세히」(🛏️ 64 + 체크인 | 체크아웃 줄),
+ * 그 밖은 「간략히」(🛏️ 40 + 한 줄 「숙박 2/3박 · 체크아웃 11.4 10:00」)
+ */
+export type StayCardInfo =
+  { mode: "in"; inText: string; outText: string } | { mode: "mid"; line: string };
 
 type Located = { lat: number; lng: number };
 
@@ -180,6 +189,7 @@ export function buildTimeline(
       ...hoursOf(item, dow),
       links: linksFor(item),
       alternatives: altsByItem.get(item.id) ?? [],
+      stay: null,
     };
   });
 }

@@ -11,8 +11,11 @@ import {
   useMoves,
   useScheduleItems,
 } from "@/entities/schedule-item";
+import { useStays } from "@/entities/stay";
 import type { Trip } from "@/entities/trip";
 import { dayOfWeek } from "@/shared/lib/days";
+
+import { withStayCards } from "../lib/stay-cards";
 
 /** 날짜 하나의 타임라인 줄 */
 export type DaySectionData = { day: number; rows: TimelineRow[] };
@@ -22,7 +25,7 @@ const NO_ITEMS: ScheduleItem[] = [];
 
 /**
  * 이어서 보기의 날짜별 줄 — 일정 · 이동 기록 · 대체 장소 · 메모를 읽어 날마다 타임라인 줄을 만든다.
- * 요일별 운영시간은 그날 요일 값을 고른다. 일정 · 이동 기록이 그대로면 같은 배열을 준다
+ * 요일별 운영시간은 그날 요일 값을 고른다. 숙소에 연결된 카드는 숙소 모양(26b)을 붙인다. 일정 · 이동 기록이 그대로면 같은 배열을 준다
  */
 export function useScheduleSections(tripId: string, trip: Trip | undefined, totalDays: number) {
   const { data: items = NO_ITEMS, isPending, isSuccess: itemsReady } = useScheduleItems(tripId);
@@ -30,20 +33,21 @@ export function useScheduleSections(tripId: string, trip: Trip | undefined, tota
   const { data: moves, isSuccess: movesReady } = useMoves(tripId);
   const { data: alternatives } = useAlternatives(tripId);
   const { data: memos } = useMemos(tripId);
+  const { data: stays } = useStays(tripId);
   const startDate = trip?.start_date;
   const sections = useMemo<DaySectionData[]>(
     () =>
-      Array.from({ length: totalDays }, (_, day) => ({
-        day,
-        rows: buildTimeline(
+      Array.from({ length: totalDays }, (_, day) => {
+        const rows = buildTimeline(
           items.filter((it) => it.day_index === day),
           moves,
           startDate ? dayOfWeek(startDate, day) : null,
           alternatives,
           memos,
-        ),
-      })),
-    [items, moves, alternatives, memos, startDate, totalDays],
+        );
+        return { day, rows: startDate ? withStayCards(rows, stays ?? [], startDate, day) : rows };
+      }),
+    [items, moves, alternatives, memos, stays, startDate, totalDays],
   );
   return { items, isPending, itemsReady, movesReady, sections };
 }

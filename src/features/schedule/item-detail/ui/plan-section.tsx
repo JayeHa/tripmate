@@ -22,6 +22,7 @@ type PlanSectionProps = {
  * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크).
  * 「수정」 을 누르면 상세 위에 「이번 일정 수정」 창(모바일 시트 · PC 480 모달)이 뜬다.
  * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다. 대체 장소는 시간이 자리의 것이라 고칠 수 없다고 안내한다.
+ * 숙소 연결 카드는 예약 상태 줄이 없다 — 상태는 숙소 하나에만 있고 「숙소 예약」 블록이 보인다
  */
 export function PlanSection({ item, edit }: PlanSectionProps) {
   return (
@@ -59,7 +60,7 @@ function PlanView({ item }: PlanViewProps) {
   const isPlace = item.kind === "place";
   return (
     <div className="flex flex-col gap-2 text-sm/normal">
-      {isPlace && (
+      {isPlace && !item.stay_id && (
         <Line label="예약 상태">
           {status ? (
             <ReservationBadge status={status} />

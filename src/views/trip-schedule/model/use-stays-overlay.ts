@@ -12,12 +12,24 @@ import type { LocationPickRequest } from "@/features/stays";
  */
 export function useStaysOverlay(tripId: string) {
   const [open, setOpen] = useState(false);
+  // 열 때 바로 보일 숙소(연결 카드의 「숙소 정보 수정」). 목록부터면 null
+  const [initialId, setInitialId] = useState<string | null>(null);
   const [pick, setPick] = useState<LocationPickRequest | null>(null);
   const { data: stays } = useStays(tripId);
   const { data: cities = [] } = useTripCities(tripId);
   return {
     open,
-    openStays: () => setOpen(true),
+    initialId,
+    /** 숙소 목록부터 연다(레일 · 여행 머리 칩) */
+    openStays: () => {
+      setInitialId(null);
+      setOpen(true);
+    },
+    /** 그 숙소의 상세부터 연다(일정 상세의 「숙소 정보 수정」) */
+    openStay: (id: string) => {
+      setInitialId(id);
+      setOpen(true);
+    },
     setOpen,
     /** 레일 · 상단바 버튼의 숫자. 아직 못 읽었으면 0 */
     count: stays?.length ?? 0,

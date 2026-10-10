@@ -221,11 +221,13 @@ describe("buildTimeline", () => {
     expect(buildTimeline([week], [], 1)[0]).toMatchObject({
       hours: "월 11:00–22:00",
       hoursOff: false,
+      stay: null,
     });
     expect(buildTimeline([week], [], 0)[0]).toMatchObject({ hours: "일요일 휴무", hoursOff: true });
     expect(buildTimeline([base], [], 0)[0]).toMatchObject({
       hours: "10:00–20:00",
       hoursOff: false,
+      stay: null,
     });
   });
 
