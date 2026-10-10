@@ -124,7 +124,7 @@ function MainDetail({
   const locked = plan.locked || actions.locked || alternatives.locked;
   useReportLock(locked, onLockChange);
   const content = (
-    <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-7">
+    <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto px-5 pt-4 pb-7">
       <DetailContent
         tripId={tripId}
         startDate={startDate}

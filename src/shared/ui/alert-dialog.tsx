@@ -7,6 +7,7 @@ import { cn } from "cn";
 import * as React from "react";
 
 import { Button } from "@/shared/ui/button";
+import { TouchScrollGuard } from "@/shared/ui/touch-scroll-guard";
 
 type AlertDialogProps = AlertDialogPrimitive.Root.Props & {
   /** 요청이 서버에 가 있는 동안 — 바깥 누르기 · Esc 로 닫히지 않는다(Dialog 의 locked 와 같다) */
@@ -49,6 +50,7 @@ function AlertDialogOverlay({ className, ...props }: AlertDialogPrimitive.Backdr
 
 function AlertDialogContent({
   className,
+  children,
   size = "default",
   ...props
 }: AlertDialogPrimitive.Popup.Props & {
@@ -68,7 +70,10 @@ function AlertDialogContent({
           className,
         )}
         {...props}
-      />
+      >
+        <TouchScrollGuard />
+        {children}
+      </AlertDialogPrimitive.Popup>
     </AlertDialogPortal>
   );
 }

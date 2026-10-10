@@ -283,5 +283,9 @@
   }
   html {
     @apply font-sans;
+    /* 모바일에서 위아래로 밀 때 페이지가 좌우로 흔들리지 않게 — 화면보다 넓은 것이 있어도 가로로는 스크롤 · 고무줄 튕김을 하지 않는다.
+       clip 은 hidden 과 달리 스크롤 칸을 만들지 않아 sticky 머리가 그대로 붙는다 */
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 }

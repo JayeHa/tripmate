@@ -53,7 +53,7 @@ export function SheetDialog({
           </button>
         </div>
         {/* 안의 내용이 flex 로 줄어들지 않게 한 겹 감싼다 */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[calc(1.75rem+env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pb-[calc(1.75rem+env(safe-area-inset-bottom))]">
           {children}
         </div>
       </DialogContent>

@@ -157,6 +157,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 
 - **닫히는 동안 내용 유지** — `useHeldWhileClosing(open, value)`. 닫으며 대상을 null 로 바꾸면 페이드 아웃 동안 빈 틀이 보인다
 - **열 때마다 새로 그리기** — `useOpenCount(open)` 을 내용의 key 로. 값으로 비교하면 같은 대상을 다시 열 때 지난 입력이 남는다
+- **뒤 페이지 터치 스크롤** — iOS 에서는 Base UI 의 스크롤 잠금이 주소창이 접혀 있으면 듣지 않는다. `Dialog` · `Sheet` · `AlertDialog` 의 Popup 에 `TouchScrollGuard` 가 들어 있어 따로 할 일은 없다. Base UI 창 부품을 새로 감쌀 때는 Popup 자식으로 넣는다
 - **요청 중 닫기 막기** — 창에 `locked`(`Dialog` · `AlertDialog` · `SheetDialog` · `FlowDialog`), 안쪽 내용은 `useReportLock(locked, onLockChange)` 로 알린다.
   사라질 때 false 로 되돌려서, 저장하고 닫힌 뒤 잠김이 남지 않는다. 창 안의 ✕ · 취소 버튼은 각자 `disabled` 로 막는다
 
