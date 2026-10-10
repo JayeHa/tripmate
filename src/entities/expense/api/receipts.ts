@@ -1,3 +1,4 @@
+import { postJson } from "@/shared/api/post-json";
 import { createClient } from "@/shared/api/supabase/client";
 import type { Tables } from "@/shared/api/supabase/database.types";
 
@@ -14,15 +15,8 @@ export type ReceiptChange = {
 };
 
 /** 서명 주소 라우트를 부른다 — 저장소는 서버가 정한다(지금 Supabase Storage, 최종 R2) */
-async function callReceipts<T>(body: Record<string, unknown>): Promise<T> {
-  const res = await fetch("/api/receipts", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const json = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) throw new Error(json.error ?? `receipts ${res.status}`);
-  return json;
+function callReceipts<T>(body: Record<string, unknown>): Promise<T> {
+  return postJson<T>("/api/receipts", body, "영수증을 처리하지 못했어요");
 }
 
 /** 여행의 영수증 — 올린 순서 */

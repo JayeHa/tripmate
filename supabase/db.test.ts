@@ -2009,3 +2009,20 @@ describe("RLS", () => {
     );
   });
 });
+
+describe("프로필 사진 (0043)", () => {
+  it("가입하면 구글 사진이 지금 사진 · 기본 사진 둘 다에 들어간다", async () => {
+    const D = "44444444-4444-4444-4444-444444444444";
+    await db.exec(
+      `reset role; insert into auth.users (id, email, raw_user_meta_data)
+       values ('${D}', 'd@x', '{"full_name":"디","avatar_url":"https://g/p.jpg"}');`,
+    );
+    const { rows } = await db.query<{ avatar_url: string; default_avatar_url: string }>(
+      `select avatar_url, default_avatar_url from public.profiles where id = '${D}'`,
+    );
+    expect(rows[0]).toEqual({
+      avatar_url: "https://g/p.jpg",
+      default_avatar_url: "https://g/p.jpg",
+    });
+  });
+});

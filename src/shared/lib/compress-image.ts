@@ -10,10 +10,10 @@ export function fitSize(width: number, height: number, max = MAX_SIDE) {
 }
 
 /**
- * 사진을 줄여 JPEG 으로 — 긴 변 2000px. 브라우저가 그 사진을 못 읽으면(예: Chrome 의 HEIC) 원본 그대로 돌려준다.
+ * 사진을 줄여 JPEG 으로 — 긴 변 2000px(프로필 사진은 maxSide 로 더 작게). 브라우저가 그 사진을 못 읽으면(예: Chrome 의 HEIC) 원본 그대로 돌려준다.
  * 줄인 결과가 원본보다 크면 원본. PDF · 사진이 아닌 파일도 그대로
  */
-export async function compressImage(file: File): Promise<Blob> {
+export async function compressImage(file: File, maxSide = MAX_SIDE): Promise<Blob> {
   if (!file.type.startsWith("image/")) return file;
   let bitmap: ImageBitmap;
   try {
@@ -21,7 +21,7 @@ export async function compressImage(file: File): Promise<Blob> {
   } catch {
     return file;
   }
-  const { width, height } = fitSize(bitmap.width, bitmap.height);
+  const { width, height } = fitSize(bitmap.width, bitmap.height, maxSide);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
