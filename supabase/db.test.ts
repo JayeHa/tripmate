@@ -2059,7 +2059,7 @@ async function stayCards(stayId: string) {
   return rows;
 }
 
-describe("숙소 (0045 · 0046 · 0048)", () => {
+describe("숙소 (0045 · 0046 · 0048 · 0049)", () => {
   const PLACE = {
     name: "호텔 몬토레 긴자",
     lat: 35.671,
@@ -2395,6 +2395,18 @@ describe("숙소 (0045 · 0046 · 0048)", () => {
       `select count(*)::int n from public.stays where trip_id = '${trip}'`,
     );
     expect(rows[0].n).toBe(1);
+  });
+
+  it("숙소로 등록: 카드 날짜가 묵는 날 밖이면(폼에서 체크인을 바꿈) 거부한다 (0049)", async () => {
+    const trip = await trip5();
+    const item = await addPlace(trip, 0, { name: "몬토레", lat: 35.6, lng: 139.7 });
+    await expect(saveStay(trip, null, PLACE, FIELDS, false, item)).rejects.toThrow(
+      "outside the stay dates",
+    );
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.stays where trip_id = '${trip}'`,
+    );
+    expect(rows[0].n).toBe(0);
   });
 
   it("출발일을 옮기면 숙소 날짜도 같은 만큼 옮겨진다", async () => {

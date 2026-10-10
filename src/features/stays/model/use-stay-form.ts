@@ -9,6 +9,7 @@ import {
   blankStayForm,
   datesChanged,
   nameAfterPick,
+  registrationProblem,
   stayFormForRegistration,
   stayFormFrom,
   type StayFormValues,
@@ -98,6 +99,11 @@ export function useStayForm({
     const payload = toStayPayload(values);
     if (!payload.ok) {
       setError(payload.error);
+      return;
+    }
+    const outside = !stay && registration ? registrationProblem(values, registration) : null;
+    if (outside) {
+      setError(outside);
       return;
     }
     const pushed =

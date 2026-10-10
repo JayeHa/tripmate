@@ -93,6 +93,17 @@ export function stayFormForRegistration(r: StayRegistration): StayFormValues {
   };
 }
 
+/**
+ * 「숙소로 등록」 의 날짜 확인 — 등록한 일정의 날(체크인으로 채운 날)이 고른 숙박 날짜(양 끝 포함) 밖이면 문구, 아니면 null.
+ * 밖이면 그 카드가 묵는 날 밖의 연결 카드가 되므로 서버도 거부한다(0049). 날짜를 아직 안 골랐으면 toStayPayload 가 짚는다
+ */
+export function registrationProblem(v: StayFormValues, r: StayRegistration): string | null {
+  if (!v.checkIn || !v.checkOut) return null;
+  if (r.checkIn >= v.checkIn && r.checkIn <= v.checkOut) return null;
+  const [, m, d] = r.checkIn.split("-").map(Number);
+  return `등록한 일정의 날짜(${m}.${d})가 숙박 날짜 안에 들어가야 해요`;
+}
+
 /** 저장된 숙소를 폼 값으로. 위치는 장소에서 가져온다(좌표가 없는 옛 장소면 비워 다시 고르게) */
 export function stayFormFrom(stay: Stay): StayFormValues {
   const p = stay.place;

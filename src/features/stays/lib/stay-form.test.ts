@@ -7,6 +7,7 @@ import {
   blankStayForm,
   datesChanged,
   nameAfterPick,
+  registrationProblem,
   stayFormForRegistration,
   stayFormFrom,
   toStayPayload,
@@ -165,5 +166,39 @@ describe("stayFormForRegistration", () => {
     });
     expect(v.location).toBeNull();
     expect(v.emoji).toBe("");
+  });
+});
+
+describe("registrationProblem", () => {
+  const reg = {
+    itemId: "i1",
+    emoji: null,
+    checkIn: "2027-11-02",
+    place: {
+      name: "몬토레",
+      lat: 1,
+      lng: 1,
+      google_place_id: null,
+      address: null,
+      address_local: null,
+      address_ko: null,
+      gmap_url: null,
+    },
+  };
+
+  it("일정의 날이 숙박 날짜(양 끝 포함) 안이면 null, 날짜를 안 골랐으면 null", () => {
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-02", checkOut: "2027-11-03" }, reg),
+    ).toBeNull();
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-01", checkOut: "2027-11-02" }, reg),
+    ).toBeNull();
+    expect(registrationProblem({ ...filled(), checkOut: null }, reg)).toBeNull();
+  });
+
+  it("밖이면 그 날짜를 짚는다", () => {
+    expect(
+      registrationProblem({ ...filled(), checkIn: "2027-11-03", checkOut: "2027-11-05" }, reg),
+    ).toBe("등록한 일정의 날짜(11.2)가 숙박 날짜 안에 들어가야 해요");
   });
 });
