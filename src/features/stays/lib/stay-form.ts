@@ -109,7 +109,8 @@ export function toStayPayload(v: StayFormValues): StayPayload {
       gmap_url: loc.gmapUrl || null,
     },
     fields: {
-      emoji: v.emoji.trim() || null,
+      // 비우면 기본 🏨 을 저장한다 — 연결 카드에도 같은 아이콘이 보이게
+      emoji: v.emoji.trim() || STAY_DEFAULT_EMOJI,
       status: v.status,
       check_in_date: v.checkIn,
       check_out_date: v.checkOut,

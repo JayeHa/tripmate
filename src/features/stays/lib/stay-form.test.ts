@@ -70,7 +70,7 @@ describe("toStayPayload", () => {
         gmap_url: "https://maps/x",
       },
       fields: {
-        emoji: null,
+        emoji: "🏨",
         status: null,
         check_in_date: "2027-11-01",
         check_out_date: "2027-11-03",
