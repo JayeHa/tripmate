@@ -89,6 +89,27 @@ describe("monthCells", () => {
   });
 });
 
+describe("monthCells — 숙박 날짜", () => {
+  it("여행 기간은 점으로, 양 끝 라벨은 체크인 · 체크아웃", () => {
+    const cells = monthCells(2026, 10, {
+      today: TODAY,
+      selection: { start: "2026-10-20", end: "2026-10-22" },
+      others: [],
+      allowPast: true,
+      marked: { start: "2026-10-21", end: "2026-10-23" },
+      labels: { start: "체크인", end: "체크아웃" },
+    });
+    expect(at(cells, "2026-10-20").label).toBe("체크인");
+    expect(at(cells, "2026-10-22").label).toBe("체크아웃");
+    expect(
+      days(cells)
+        .filter((c) => c.mark)
+        .map((c) => c.day),
+    ).toEqual([21, 22, 23]);
+    expect(at(cells, "2026-10-20").mark).toBe(false);
+  });
+});
+
 describe("pickDate", () => {
   it("처음 누르면 출발", () => {
     expect(pickDate(null, "2026-10-20")).toEqual({ start: "2026-10-20", end: null });
@@ -112,6 +133,17 @@ describe("pickDate", () => {
     expect(pickDate({ start: "2026-10-20", end: null }, "2026-10-20")).toEqual({
       start: "2026-10-20",
       end: "2026-10-20",
+    });
+  });
+
+  it("숙박 날짜(minNights 1)는 같은 날을 다시 눌러도 끝이 되지 않는다", () => {
+    expect(pickDate({ start: "2026-10-20", end: null }, "2026-10-20", { minNights: 1 })).toEqual({
+      start: "2026-10-20",
+      end: null,
+    });
+    expect(pickDate({ start: "2026-10-20", end: null }, "2026-10-21", { minNights: 1 })).toEqual({
+      start: "2026-10-20",
+      end: "2026-10-21",
     });
   });
 

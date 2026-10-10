@@ -2,7 +2,13 @@
 
 import { useMemo } from "react";
 
-import { type DateRange, type DateSelection, monthCells, monthsSpanning } from "./calendar";
+import {
+  type DateRange,
+  type DateSelection,
+  monthCells,
+  monthsSpanning,
+  type RangeLabels,
+} from "./calendar";
 import { todayISO } from "./days";
 import { isHoliday } from "./holidays";
 
@@ -19,10 +25,14 @@ type Options = {
   others: readonly DateRange[];
   /** 처음 보일 달이 속한 날짜. 없으면 오늘 */
   focus?: string;
+  /** 점으로 표시할 기간(숙박 날짜 달력의 여행 기간) */
+  marked?: DateRange | null;
+  /** 양 끝 라벨. 기본은 출발 · 도착 */
+  labels?: RangeLabels;
 };
 
 /** 기간 달력에 그릴 달과 칸. 모바일·PC 가 같은 데이터를 다른 모양으로 그린다. */
-export function useRangeCalendar({ selection, others, focus }: Options) {
+export function useRangeCalendar({ selection, others, focus, marked, labels }: Options) {
   const today = todayISO();
   const center = focus ?? today;
   const { months, focusIndex } = useMemo(
@@ -30,6 +40,14 @@ export function useRangeCalendar({ selection, others, focus }: Options) {
     [center, today],
   );
   const cellsOf = (year: number, month: number) =>
-    monthCells(year, month, { today, selection, others, isHoliday, allowPast: true });
+    monthCells(year, month, {
+      today,
+      selection,
+      others,
+      isHoliday,
+      allowPast: true,
+      marked,
+      labels,
+    });
   return { months, cellsOf, focusIndex };
 }

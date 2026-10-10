@@ -37,7 +37,7 @@ export function MobileDateStep({ state, Title }: MobileDateStepProps) {
         <Title className="text-[26px] font-extrabold tracking-[-0.02em] text-ink-900">
           여행일정 등록
         </Title>
-        <p className="text-[15px] leading-normal text-ink-500">
+        <p className="text-[15px]/normal text-ink-500">
           {names} · 날짜에 맞춰 날씨와 여행 정보를 알려드려요.
         </p>
       </div>

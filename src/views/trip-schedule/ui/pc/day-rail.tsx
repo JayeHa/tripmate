@@ -13,11 +13,13 @@ type DayRailProps = {
   summaries: readonly (string | null)[];
   /** 제목 아래에 두는 것 — 「이어서 / 하루씩」 전환 */
   children?: ReactNode;
+  /** 레일 아래 고정 도구(숙소) */
+  footer?: ReactNode;
 };
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
- * 날마다 「day 2 11.1/일」 아래 하루 요약 2줄. 아래 도구(항공편 · 숙소)는 그 단계에서 붙인다.
+ * 날마다 「day 2 11.1/일」 아래 하루 요약 2줄. 아래는 고정 도구(footer — 숙소, 항공편은 #89)
  */
 export function DayRail({
   title,
@@ -27,6 +29,7 @@ export function DayRail({
   onChange,
   summaries,
   children,
+  footer,
 }: DayRailProps) {
   const total = dayCount(startDate, endDate);
   return (
@@ -78,6 +81,7 @@ export function DayRail({
           );
         })}
       </nav>
+      {footer}
     </aside>
   );
 }

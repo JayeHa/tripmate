@@ -288,6 +288,65 @@ export type Database = {
         };
         Relationships: [];
       };
+      stays: {
+        Row: {
+          id: string;
+          trip_id: string;
+          place_id: string;
+          emoji: string | null;
+          status: string | null;
+          check_in_date: string;
+          check_out_date: string;
+          check_in_time: string | null;
+          check_out_time: string | null;
+          memo: string | null;
+          links: Json;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          place_id: string;
+          emoji?: string | null;
+          status?: string | null;
+          check_in_date: string;
+          check_out_date: string;
+          check_in_time?: string | null;
+          check_out_time?: string | null;
+          memo?: string | null;
+          links?: Json;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          place_id?: string;
+          emoji?: string | null;
+          status?: string | null;
+          check_in_date?: string;
+          check_out_date?: string;
+          check_in_time?: string | null;
+          check_out_time?: string | null;
+          memo?: string | null;
+          links?: Json;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stays_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       schedule_items: {
         Row: {
           id: string;
@@ -302,6 +361,7 @@ export type Database = {
           start_time: string | null;
           status: string | null;
           alternative_of: string | null;
+          stay_id: string | null;
           links: Json;
           created_by: string | null;
           created_at: string;
@@ -320,6 +380,7 @@ export type Database = {
           start_time?: string | null;
           status?: string | null;
           alternative_of?: string | null;
+          stay_id?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -338,6 +399,7 @@ export type Database = {
           start_time?: string | null;
           status?: string | null;
           alternative_of?: string | null;
+          stay_id?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -678,6 +740,20 @@ export type Database = {
       add_schedule_places: {
         Args: { p_trip: string; p_day: number; p_places: Json };
         Returns: string[];
+      };
+      save_stay: {
+        Args: {
+          p_trip: string;
+          p_stay: string | null;
+          p_place: Json;
+          p_fields: Json;
+          p_prune?: boolean;
+        };
+        Returns: Json;
+      };
+      delete_stay: {
+        Args: { p_stay: string; p_delete_cards: boolean };
+        Returns: number;
       };
       create_place_schedule: {
         Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };

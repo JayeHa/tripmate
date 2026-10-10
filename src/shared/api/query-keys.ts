@@ -18,6 +18,8 @@ export const queryKeys = {
   /** 장소 쌍 사이의 이동 방법 (0011 moves) */
   moves: (tripId: string) => ["trips", tripId, "moves"] as const,
   memos: (tripId: string) => ["trips", tripId, "memos"] as const,
+  /** 숙소(장소 포함) — 체크인 순 */
+  stays: (tripId: string) => ["trips", tripId, "stays"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,

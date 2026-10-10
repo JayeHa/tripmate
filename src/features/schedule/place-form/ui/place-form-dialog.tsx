@@ -3,11 +3,12 @@
 import { useState } from "react";
 
 import { itemName, type Place, type ScheduleItem } from "@/entities/schedule-item";
-import type { SearchCity } from "@/shared/lib/google-places";
+import type { PickedLocation, SearchCity } from "@/shared/lib/google-places";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import { useLocationPick } from "../model/use-location-pick";
 import { usePlaceEditForm } from "../model/use-place-edit-form";
 import { usePlaceForm } from "../model/use-place-form";
 import { PlaceFormLayout } from "./place-form-layout";
@@ -32,17 +33,27 @@ type EditMode = {
   onSaved: (changed: boolean) => void;
 };
 
+/** 위치만 고르기 — ① 만 열고 「이 위치로 선택」 에서 고른 위치를 돌려준다(숙소 주소). 저장은 없다 */
+type LocationMode = {
+  kind: "location";
+  /** 이미 고른 위치(다시 고를 때). 없으면 비어서 시작한다 */
+  initial: PickedLocation | null;
+  title: string;
+  /** 골랐다(폼은 부른 쪽이 닫는다) */
+  onPicked: (location: PickedLocation) => void;
+};
+
 type PlaceFormDialogProps = {
   tripId: string;
   /** 검색 범위 · 처음 지도 중심 · 현지어 주소 · 「도쿄 장소」 안내의 도시. 없으면 제한 없이 찾고 고르기 전엔 지도가 없다 */
   city: (SearchCity & { name: string }) | null;
-  mode: AddMode | EditMode;
+  mode: AddMode | EditMode | LocationMode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
 /**
- * 장소 입력 폼 — 일정 직접 추가 · 장소 정보 수정. 1024px 아래는 전체 화면, 이상은 가운데 560×760 모달.
+ * 장소 입력 폼 — 일정 직접 추가 · 장소 정보 수정 · 위치만 고르기(숙소 주소). 1024px 아래는 전체 화면, 이상은 가운데 560×760 모달.
  * 이번 일정(상태 · 시간 · 메모)은 받지 않는다 — 일정 상세의 「이번 일정 · 수정」 에서 고친다.
  * 가이드 모드(장소만 저장)는 홈 가이드(#17)에서 붙인다.
  */
@@ -59,6 +70,7 @@ export function PlaceFormDialog({ open, onOpenChange, mode, ...rest }: PlaceForm
       >
         {open && mode.kind === "add" && <AddBody {...body} mode={mode} />}
         {open && mode.kind === "edit" && <EditBody {...body} mode={mode} />}
+        {open && mode.kind === "location" && <LocationBody {...body} mode={mode} />}
       </DialogContent>
     </Dialog>
   );
@@ -161,6 +173,22 @@ function EditBody({ tripId, city, mode, onClose, onLockChange }: BodyProps<EditM
       }
       saveLabel="저장"
       editing
+      locationFooter={null}
+    />
+  );
+}
+
+/** 위치만 고르기. 뒤로는 닫기, 「이 위치로 선택」 이 곧 완료 */
+function LocationBody({ tripId, city, mode, onClose }: BodyProps<LocationMode>) {
+  const form = useLocationPick({ tripId, city, initial: mode.initial, onPicked: mode.onPicked });
+  return (
+    <PlaceFormLayout
+      form={form}
+      cityName={city?.name ?? null}
+      title={mode.title}
+      subtitle={null}
+      back={{ label: "닫기", onClick: onClose }}
+      saveLabel=""
       locationFooter={null}
     />
   );

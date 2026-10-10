@@ -2026,3 +2026,353 @@ describe("프로필 사진 (0043)", () => {
     });
   });
 });
+
+/** 숙소 저장 (0046) — { id, added, removed } */
+async function saveStay(
+  trip: string,
+  stay: string | null,
+  place: Record<string, unknown>,
+  fields: Record<string, unknown>,
+  prune = false,
+) {
+  const { rows } = await db.query<{ r: { id: string; added: number; removed: number } }>(
+    `select public.save_stay($1, $2, $3, $4, $5) r`,
+    [trip, stay, JSON.stringify(place), JSON.stringify(fields), prune],
+  );
+  return rows[0].r;
+}
+
+/** 그 숙소의 타임라인 연결 카드 — 날짜 · 순서대로 */
+async function stayCards(stayId: string) {
+  const { rows } = await db.query<{
+    id: string;
+    day_index: number;
+    position: number;
+    emoji: string | null;
+    status: string | null;
+    place_id: string;
+  }>(
+    `select id, day_index, position, emoji, status, place_id from public.schedule_items
+     where stay_id = '${stayId}' and alternative_of is null order by day_index, position`,
+  );
+  return rows;
+}
+
+describe("숙소 (0045 · 0046)", () => {
+  const PLACE = {
+    name: "호텔 몬토레 긴자",
+    lat: 35.671,
+    lng: 139.765,
+    google_place_id: "g-stay-1",
+  };
+  const FIELDS = {
+    emoji: "🏨",
+    status: "ok",
+    check_in_date: "2027-11-01",
+    check_out_date: "2027-11-03",
+    check_in_time: "15:00",
+    check_out_time: "11:00",
+    memo: "확인번호 ABC",
+    links: [{ title: "체크인 가이드", url: "https://x" }],
+  };
+
+  /** 5일 여행(10.31 ~ 11.4) */
+  async function trip5() {
+    await as(A);
+    return newTrip("2027-10-31", "2027-11-04");
+  }
+
+  it("새 숙소: 장소(stay) · 숙소가 생기고 체크인~체크아웃(양 끝 포함)마다 그날 끝에 연결 카드", async () => {
+    const trip = await trip5();
+    const before = await addPlace(trip, 1, { name: "먼저 있던 곳", lat: 35.6, lng: 139.7 });
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    expect(r.added).toBe(3);
+    const cards = await stayCards(r.id);
+    expect(cards.map((c) => [c.day_index, c.emoji, c.status])).toEqual([
+      [1, "🏨", "ok"],
+      [2, "🏨", "ok"],
+      [3, "🏨", "ok"],
+    ]);
+    const { rows: first } = await db.query<{ position: number }>(
+      `select position from public.schedule_items where id = '${before}'`,
+    );
+    expect(cards[0].position).toBe(first[0].position + 1);
+    const { rows: p } = await db.query<{ category: string; created_by: string; name: string }>(
+      `select p.category, p.created_by, p.name from public.stays s join public.places p on p.id = s.place_id where s.id = '${r.id}'`,
+    );
+    expect(p[0]).toEqual({ category: "stay", created_by: A, name: "호텔 몬토레 긴자" });
+  });
+
+  it("숙박이 여행 밖으로 걸치면 안쪽 날만, 전부 밖이면 0장", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, {
+      ...FIELDS,
+      check_in_date: "2027-10-29",
+      check_out_date: "2027-11-01",
+    });
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([0, 1]);
+    const r2 = await saveStay(
+      trip,
+      null,
+      { ...PLACE, google_place_id: "g-stay-out" },
+      { ...FIELDS, check_in_date: "2027-11-10", check_out_date: "2027-11-12" },
+    );
+    expect(r2.added).toBe(0);
+  });
+
+  it("날짜를 안 바꾸면 지운 카드를 되살리지 않고, 날짜를 바꾸면 빈 날만 채운다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    const cards = await stayCards(r.id);
+    await db.query(`delete from public.schedule_items where id = '${cards[1].id}'`);
+    const again = await saveStay(trip, r.id, PLACE, { ...FIELDS, memo: "메모만" });
+    expect(again.added).toBe(0);
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([1, 3]);
+    const longer = await saveStay(trip, r.id, PLACE, { ...FIELDS, check_out_date: "2027-11-04" });
+    expect(longer.added).toBe(2);
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("기간을 줄일 때 — 남기면 연결 유지, 지우면 (옛 범위 ∖ 새 범위) 카드만. 범위 밖으로 옮겨 둔 카드는 건드리지 않는다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    const keep = await saveStay(trip, r.id, PLACE, { ...FIELDS, check_out_date: "2027-11-02" });
+    expect(keep.removed).toBe(0);
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([1, 2, 3]);
+    // 사용자가 범위 밖(day 0)으로 옮겨 둔 카드
+    const cards = await stayCards(r.id);
+    await db.query(`update public.schedule_items set day_index = 0 where id = '${cards[2].id}'`);
+    // 2~3 으로 옮기며 지우기: 옛 1~2 ∖ 새 2~3 = day 1 → 1장 지움, day 3 은 비어 채움. day 0 은 그대로
+    const pruned = await saveStay(
+      trip,
+      r.id,
+      PLACE,
+      { ...FIELDS, check_in_date: "2027-11-02", check_out_date: "2027-11-03" },
+      true,
+    );
+    expect([pruned.removed, pruned.added]).toEqual([1, 1]);
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([0, 2, 3]);
+  });
+
+  it("상태 · 아이콘을 바꾸면(직접 update 포함) 연결 카드에 반영되고, 삭제 시 남긴 카드는 그 모습 그대로 일반 카드", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    await db.query(`update public.stays set status = 'wait', emoji = '🛏️' where id = '${r.id}'`);
+    expect((await stayCards(r.id)).map((c) => [c.emoji, c.status])).toEqual([
+      ["🛏️", "wait"],
+      ["🛏️", "wait"],
+      ["🛏️", "wait"],
+    ]);
+    const ids = (await stayCards(r.id)).map((c) => c.id);
+    const { rows } = await db.query<{ n: number }>(`select public.delete_stay('${r.id}', false) n`);
+    expect(rows[0].n).toBe(0);
+    const { rows: left } = await db.query<{ stay_id: string | null; emoji: string; kind: string }>(
+      `select stay_id, emoji, kind from public.schedule_items where id = any($1::uuid[])`,
+      [ids],
+    );
+    expect(left).toHaveLength(3);
+    expect(left.every((c) => c.stay_id === null && c.emoji === "🛏️" && c.kind === "place")).toBe(
+      true,
+    );
+  });
+
+  it("삭제하며 카드도 지우면 연결 카드가 사라지고 장소는 남는다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    const { rows } = await db.query<{ n: number }>(`select public.delete_stay('${r.id}', true) n`);
+    expect(rows[0].n).toBe(3);
+    expect(await stayCards(r.id)).toEqual([]);
+    const { rows: p } = await db.query(
+      `select 1 from public.places where google_place_id = 'g-stay-1' and created_by = '${A}'`,
+    );
+    expect(p).toHaveLength(1);
+  });
+
+  it("이름을 바꿀 때: 주인은 장소를 고치고, 일행은 자기 사본으로 바꿔 끼운다(원본 그대로)", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    await saveStay(trip, r.id, { ...PLACE, name: "몬토레 긴자" }, FIELDS);
+    const { rows: own } = await db.query<{ name: string; n: number }>(
+      `select p.name, (select count(*)::int from public.places where google_place_id = 'g-stay-1') n
+       from public.stays s join public.places p on p.id = s.place_id where s.id = '${r.id}'`,
+    );
+    expect(own[0]).toEqual({ name: "몬토레 긴자", n: 1 });
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    // 바뀐 것이 없으면 건드리지 않는다
+    await saveStay(trip, r.id, { ...PLACE, name: "몬토레 긴자" }, { ...FIELDS, memo: "B 메모" });
+    await saveStay(trip, r.id, { ...PLACE, name: "몬토레 긴자 (수정)" }, FIELDS);
+    const { rows: copy } = await db.query<{ name: string; created_by: string; card_place: string }>(
+      `select p.name, p.created_by, (select place_id from public.schedule_items where stay_id = s.id limit 1) card_place
+       from public.stays s join public.places p on p.id = s.place_id where s.id = '${r.id}'`,
+    );
+    expect(copy[0].name).toBe("몬토레 긴자 (수정)");
+    expect(copy[0].created_by).toBe(B);
+    await as(A);
+    const { rows: orig } = await db.query<{ name: string }>(
+      `select name from public.places where google_place_id = 'g-stay-1' and created_by = '${A}'`,
+    );
+    expect(orig[0].name).toBe("몬토레 긴자");
+    const { rows: pid } = await db.query<{ place_id: string }>(
+      `select place_id from public.stays where id = '${r.id}'`,
+    );
+    expect(copy[0].card_place).toBe(pid[0].place_id);
+  });
+
+  it("다른 호텔로 옮기면 내 장소를 고치지 않고 새 장소 — 같은 장소를 쓰는 다른 여행은 그대로", async () => {
+    const tripA = await trip5();
+    const a = await saveStay(tripA, null, { ...PLACE, google_place_id: "g-move-x" }, FIELDS);
+    const tripB = await newTrip("2027-12-01", "2027-12-05");
+    const b = await saveStay(
+      tripB,
+      null,
+      { ...PLACE, google_place_id: "g-move-x" },
+      { ...FIELDS, check_in_date: "2027-12-01", check_out_date: "2027-12-02" },
+    );
+    const placeOf = async (id: string) =>
+      (await db.query<{ place_id: string }>(`select place_id from public.stays where id = '${id}'`))
+        .rows[0].place_id;
+    // 같은 구글 장소라 두 숙소가 장소 하나를 쓴다
+    expect(await placeOf(a.id)).toBe(await placeOf(b.id));
+    const shared = await placeOf(a.id);
+    await saveStay(
+      tripB,
+      b.id,
+      { name: "호텔 Y", lat: 35.7, lng: 139.8, google_place_id: "g-move-y" },
+      { ...FIELDS, check_in_date: "2027-12-01", check_out_date: "2027-12-02" },
+    );
+    expect(await placeOf(b.id)).not.toBe(shared);
+    const { rows } = await db.query<{ name: string; google_place_id: string }>(
+      `select name, google_place_id from public.places where id = '${shared}'`,
+    );
+    expect(rows[0]).toEqual({ name: "호텔 몬토레 긴자", google_place_id: "g-move-x" });
+    expect((await stayCards(a.id)).every((c) => c.place_id === shared)).toBe(true);
+    // 이름만 고치면 그 장소를 고친다
+    await saveStay(tripA, a.id, { ...PLACE, google_place_id: "g-move-x", name: "몬토레" }, FIELDS);
+    expect(await placeOf(a.id)).toBe(shared);
+  });
+
+  it("거부 + 롤백: 빈 이름 · 0박 · 위치 없음 · 멤버 아님(장소도 남지 않는다)", async () => {
+    const trip = await trip5();
+    expect(
+      await rejects(
+        `select public.save_stay('${trip}', null, '{"name":"","lat":1,"lng":1}', '${JSON.stringify(FIELDS)}')`,
+      ),
+    ).toMatch(/name/);
+    expect(
+      await rejects(
+        `select public.save_stay('${trip}', null, '{"name":"x","lat":1,"lng":1}', '${JSON.stringify({ ...FIELDS, check_out_date: "2027-11-01" })}')`,
+      ),
+    ).toMatch(/stays_dates_chk/);
+    expect(
+      await rejects(
+        `select public.save_stay('${trip}', null, '{"name":"x"}', '${JSON.stringify(FIELDS)}')`,
+      ),
+    ).toMatch(/location/);
+    await as(B);
+    expect(
+      await rejects(
+        `select public.save_stay('${trip}', null, '${JSON.stringify({ ...PLACE, google_place_id: "g-stay-b" })}', '${JSON.stringify(FIELDS)}')`,
+      ),
+    ).toMatch(/not a member/);
+    const { rows } = await db.query(
+      `select 1 from public.places where google_place_id = 'g-stay-b'`,
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("RLS: 멤버만 읽고, 연결 카드가 0장이어도 일행은 숙소 장소를 읽고 담을 수 있다. 남의 보관함 장소로는 못 만든다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    await db.query(`select public.delete_stay('${r.id}', true)`);
+    const r2 = await saveStay(trip, null, PLACE, FIELDS);
+    await db.query(`delete from public.schedule_items where stay_id = '${r2.id}'`);
+    await as(B);
+    expect((await db.query(`select 1 from public.stays where id = '${r2.id}'`)).rows).toHaveLength(
+      0,
+    );
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    const { rows: seen } = await db.query<{ name: string }>(
+      `select p.name from public.stays s join public.places p on p.id = s.place_id where s.id = '${r2.id}'`,
+    );
+    expect(seen[0].name).toBe("호텔 몬토레 긴자");
+    const { rows: pid } = await db.query<{ place_id: string }>(
+      `select place_id from public.stays where id = '${r2.id}'`,
+    );
+    await db.query(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, place_id) values ('${trip}', 0, 99, 'place', '${pid[0].place_id}')`,
+    );
+    // A 의 보관함에만 있는 장소로 B 가 숙소를 만들 수는 없다
+    await as(A);
+    const other = await newTrip("2027-12-01", "2027-12-03");
+    const mine = await saveStay(
+      other,
+      null,
+      { ...PLACE, google_place_id: "g-stay-private" },
+      { ...FIELDS, check_in_date: "2027-12-01", check_out_date: "2027-12-02" },
+    );
+    const { rows: priv } = await db.query<{ place_id: string }>(
+      `select place_id from public.stays where id = '${mine.id}'`,
+    );
+    await as(B);
+    expect(
+      await rejects(
+        `insert into public.stays (trip_id, place_id, check_in_date, check_out_date) values ('${trip}', '${priv[0].place_id}', '2027-11-01', '2027-11-02')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+
+  it("복합 FK: 다른 여행 숙소에 카드를 잇지 못하고, note 줄에는 stay_id 를 못 넣는다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    const other = await newTrip("2027-12-01", "2027-12-03");
+    const { rows: pid } = await db.query<{ place_id: string }>(
+      `select place_id from public.stays where id = '${r.id}'`,
+    );
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, place_id, stay_id) values ('${other}', 0, 0, 'place', '${pid[0].place_id}', '${r.id}')`,
+      ),
+    ).toMatch(/schedule_items_stay_fkey|row-level security/);
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, name, stay_id) values ('${trip}', 0, 50, 'note', '메모', '${r.id}')`,
+      ),
+    ).toMatch(/schedule_items_stay_kind_chk/);
+  });
+
+  it("멤버가 나가면 숙소와 연결 카드가 소유자 사본을 가리킨다", async () => {
+    const trip = await trip5();
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    const r = await saveStay(trip, null, { ...PLACE, google_place_id: "g-stay-leave" }, FIELDS);
+    await db.query(
+      `delete from public.trip_members where trip_id = '${trip}' and user_id = '${B}'`,
+    );
+    await as(A);
+    const { rows } = await db.query<{ owner: string; card_owner: string }>(
+      `select p.created_by owner,
+              (select p2.created_by from public.schedule_items si join public.places p2 on p2.id = si.place_id where si.stay_id = s.id limit 1) card_owner
+       from public.stays s join public.places p on p.id = s.place_id where s.id = '${r.id}'`,
+    );
+    expect(rows[0]).toEqual({ owner: A, card_owner: A });
+  });
+
+  it("출발일을 옮기면 숙소 날짜도 같은 만큼 옮겨진다", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    await db.query(`select public.update_trip_dates('${trip}', '2027-11-02', '2027-11-06')`);
+    const { rows } = await db.query<{ i: string; o: string }>(
+      `select check_in_date::text i, check_out_date::text o from public.stays where id = '${r.id}'`,
+    );
+    expect(rows[0]).toEqual({ i: "2027-11-03", o: "2027-11-05" });
+    expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([1, 2, 3]);
+  });
+});
