@@ -9,6 +9,7 @@ import { ExpenseBlock } from "./expense-block";
 import { MemoBlock } from "./memo-block";
 import { PlaceInfoBand } from "./place-info-band";
 import { PlanSection } from "./plan-section";
+import { StayBlock } from "./stay-block";
 
 type DetailContentProps = {
   tripId: string;
@@ -23,10 +24,12 @@ type DetailContentProps = {
   alternatives: AlternativesSlot | null;
   /** 「장소 정보 수정」 — 장소와 그 도시(위치를 바꿀 때 검색 범위)를 넘긴다 */
   onEditPlace: (place: Place, city: City | null) => void;
+  /** 숙소 연결 카드의 「숙소 정보 수정」. 없으면(대체 장소의 상세) 「숙소 예약」 블록을 그리지 않는다 */
+  onEditStay?: (stayId: string) => void;
 };
 
 /**
- * 일정 상세 본문 — 장소 정보(place 만) → 이번 일정 → 비용 → 메모 → 대체 장소(place 만, 대체 장소의 상세에서는 없다).
+ * 일정 상세 본문 — 장소 정보(place 만) → 숙소 예약(숙소 연결 카드만) → 이번 일정 → 비용 → 메모 → 대체 장소(place 만, 대체 장소의 상세에서는 없다).
  * 비용 · 메모 · 대체 장소 칸은 값이 있을 때만 보이고, 빈 칸은 맨 아래 「추가」 줄의 칩으로 모은다(다 차면 줄이 없다).
  * 바우처 · 할 일은 각 단계에서 같은 규칙으로 들어온다. 모바일 · PC 가 같은 본문을 쓴다
  */
@@ -39,6 +42,7 @@ export function DetailContent({
   onExpense,
   alternatives,
   onEditPlace,
+  onEditStay,
 }: DetailContentProps) {
   const { data: cities = [] } = useTripCities(tripId);
   const { data: user } = useUser();
@@ -56,6 +60,9 @@ export function DetailContent({
           dow={dayOfWeek(startDate, item.day_index)}
           onEdit={canEditPlace ? () => onEditPlace(place, city) : null}
         />
+      )}
+      {item.stay_id && onEditStay && (
+        <StayBlock tripId={tripId} stayId={item.stay_id} onEdit={onEditStay} />
       )}
       <PlanSection item={item} edit={plan} />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />

@@ -44,6 +44,8 @@ type ItemDetailDialogProps = {
   onToast: (message: string) => void;
   /** 비용 「+」 · 비용 줄 — 부른 쪽이 그 일정(itemId)의 비용 창을 상세 위에 연다. 새로 쓰면 expenseId 는 null */
   onExpense: (itemId: string, expenseId: string | null) => void;
+  /** 숙소 연결 카드의 「숙소 정보 수정」 — 부른 쪽이 그 숙소의 숙소 창을 상세 위에 연다 */
+  onEditStay: (stayId: string) => void;
 };
 
 /**
@@ -109,6 +111,7 @@ function MainDetail({
   onMemo,
   onToast,
   onExpense,
+  onEditStay,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
@@ -135,6 +138,7 @@ function MainDetail({
           onOpen: (alt) => onOpenAlternative(alt.id),
         }}
         onEditPlace={onEditPlace}
+        onEditStay={onEditStay}
       />
       {actions.error && <p className="text-[13px] text-destructive">{actions.error}</p>}
     </div>

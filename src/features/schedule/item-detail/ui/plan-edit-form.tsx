@@ -31,30 +31,33 @@ export function PlanEditForm({ item, edit }: PlanEditFormProps) {
   const isPlace = item.kind === "place";
   return (
     <div className="flex flex-col gap-3">
-      <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
-        <div
-          className={cn(
-            "grid gap-2",
-            isPlace ? "grid-cols-[56px]" : "grid-cols-[56px_minmax(0,1fr)]",
-          )}
-        >
-          <EmojiField
-            value={draft.emoji}
-            onChange={(emoji) => edit.set("emoji", emoji)}
-            defaultEmoji={item.place?.emoji ?? undefined}
-          />
-          {!isPlace && (
-            <input
-              value={draft.name}
-              onChange={(e) => edit.set("name", e.target.value)}
-              maxLength={100}
-              aria-label="제목"
-              className={`${inputClass} px-3`}
+      {/* 숙소 연결 카드의 아이콘 · 예약 상태는 숙소에서 정한다(숙소를 저장하면 덮인다) */}
+      {!item.stay_id && (
+        <EditField label={isPlace ? "아이콘" : "아이콘 · 제목"}>
+          <div
+            className={cn(
+              "grid gap-2",
+              isPlace ? "grid-cols-[56px]" : "grid-cols-[56px_minmax(0,1fr)]",
+            )}
+          >
+            <EmojiField
+              value={draft.emoji}
+              onChange={(emoji) => edit.set("emoji", emoji)}
+              defaultEmoji={item.place?.emoji ?? undefined}
             />
-          )}
-        </div>
-      </EditField>
-      {isPlace && (
+            {!isPlace && (
+              <input
+                value={draft.name}
+                onChange={(e) => edit.set("name", e.target.value)}
+                maxLength={100}
+                aria-label="제목"
+                className={`${inputClass} px-3`}
+              />
+            )}
+          </div>
+        </EditField>
+      )}
+      {isPlace && !item.stay_id && (
         <EditField label="예약 상태">
           <ReservationStatusPicker
             value={draft.status}

@@ -157,6 +157,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           isDesktop={isDesktop}
           onClose={() => setOpenId(null)}
           onEditPlace={overlays.openPlaceEdit}
+          onEditStay={stays.openStay}
           onAddAlternative={overlays.openAltAdd}
           onSwapped={(altId, message) => {
             setOpenId(altId);
