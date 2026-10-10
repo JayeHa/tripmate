@@ -6,25 +6,32 @@ import { hasScrollerFor } from "./touch-scroll";
 
 /** 지금 이 가드를 쓰는(열려 있는) 창 수 — 중첩 창이 있어도 리스너는 하나만 단다 */
 let users = 0;
-let last = { x: 0, y: 0 };
+let start = { x: 0, y: 0 };
+/** 이번 손짓을 막을지 — 첫 움직임에서 정하고 손가락을 뗄 때까지 유지한다. null 이면 아직 안 정함 */
+let blocking: boolean | null = null;
 
-/** 손가락을 댄 자리를 기억한다 */
+/** 손가락을 댄 자리를 기억하고, 이번 손짓의 판단을 비운다 */
 function onTouchStart(e: TouchEvent) {
   const t = e.touches[0];
-  if (t) last = { x: t.clientX, y: t.clientY };
+  if (t) start = { x: t.clientX, y: t.clientY };
+  blocking = null;
 }
 
 /**
- * 직전 자리에서 움직인 방향으로 스크롤될 칸이 손가락 아래에 없으면 기본 동작을 막는다.
- * 두 손가락(확대)은 건드리지 않는다
+ * 손짓의 첫 움직임에서, 그 방향으로 스크롤될 칸이 손가락 아래에 없으면 이번 손짓 내내 기본 동작을 막는다.
+ * 브라우저는 첫 touchmove 에서 스크롤을 시작할지 정하고 그 손짓 동안 같은 칸에 붙어 있어서(스크롤 래칭),
+ * 중간에 판단을 바꾸면 스크롤하던 목록이 끊긴다. 두 손가락(확대) · 확대한 상태의 화면 옮기기는 건드리지 않는다
  */
 function onTouchMove(e: TouchEvent) {
   const t = e.touches[0];
-  if (!t || e.touches.length > 1) return;
-  const dx = t.clientX - last.x;
-  const dy = t.clientY - last.y;
-  last = { x: t.clientX, y: t.clientY };
-  if (e.cancelable && !hasScrollerFor(e.target, dx, dy)) e.preventDefault();
+  if (!t || e.touches.length > 1 || (window.visualViewport?.scale ?? 1) > 1) return;
+  if (blocking === null) {
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (dx === 0 && dy === 0) return;
+    blocking = !hasScrollerFor(e.target, dx, dy);
+  }
+  if (blocking && e.cancelable) e.preventDefault();
 }
 
 /**
