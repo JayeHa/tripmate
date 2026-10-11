@@ -71,7 +71,9 @@ export function detailFields(
       label: "함께",
       value: `${withLine(row, ctx.displayNameOf, ctx.everyone)}${perPersonText(e, row.togetherPeople.length, ctx)}`,
     },
-    { label: "일정", value: row.linkName ?? "연결 안 함", muted: !row.linkName },
+    row.fromStay
+      ? { label: "연결", value: "숙소 정보" }
+      : { label: "일정", value: row.linkName ?? "연결 안 함", muted: !row.linkName },
     { label: "메모", value: memo || "없음", muted: !memo },
   ];
 }

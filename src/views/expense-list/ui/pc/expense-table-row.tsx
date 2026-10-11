@@ -1,4 +1,4 @@
-import { MapPin, Paperclip, StickyNote } from "lucide-react";
+import { Link2, MapPin, Paperclip, StickyNote } from "lucide-react";
 
 import {
   amountLines,
@@ -87,7 +87,12 @@ export function ExpenseTableRow({
           >
             {row.name}
           </button>
-          <NameMarks receipt={hasReceipt} memo={row.hasMemo} excluded={row.excluded} />
+          <NameMarks
+            stay={row.fromStay}
+            receipt={hasReceipt}
+            memo={row.hasMemo}
+            excluded={row.excluded}
+          />
         </div>
         {row.overdue ? (
           <span className="flex items-center gap-1.5 text-xs whitespace-nowrap text-status-wait-text">
@@ -144,12 +149,15 @@ export function ExpenseTableRow({
   );
 }
 
-type NameMarksProps = { receipt: boolean; memo: boolean; excluded: boolean };
+type NameMarksProps = { stay: boolean; receipt: boolean; memo: boolean; excluded: boolean };
 
-/** 항목명 뒤 표시 — 영수증 클립 · 메모 아이콘 · 「합계 제외」 배지(있는 것만) */
-function NameMarks({ receipt, memo, excluded }: NameMarksProps) {
+/** 항목명 뒤 표시 — 숙소 연결 · 영수증 클립 · 메모 아이콘 · 「합계 제외」 배지(있는 것만) */
+function NameMarks({ stay, receipt, memo, excluded }: NameMarksProps) {
   return (
     <>
+      {stay && (
+        <Link2 className="size-3.25 shrink-0 text-ink-350" aria-label="숙소 정보와 연결됨" />
+      )}
       {receipt && (
         <Paperclip className="size-3.25 shrink-0 text-ink-350" aria-label="영수증 있음" />
       )}

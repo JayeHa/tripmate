@@ -42,6 +42,8 @@ type CreateExpenseProps = EditorCommon & {
   itemId?: string;
   /** 주소의 period(prep · 0-base 날) — 처음 날짜. 없거나 모르는 값이면 여행 첫날 */
   period?: string | null;
+  /** 이 숙소의 결제로 만든다(숙소 화면의 「+ 결제 추가」) — 날짜는 여행준비부터 */
+  stay?: { id: string; name: string };
 };
 
 /**
@@ -58,6 +60,7 @@ export function CreateExpense({
   onLockChange,
   itemId,
   quick,
+  stay,
   onToast,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
@@ -73,7 +76,7 @@ export function CreateExpense({
       layout={layout}
       onClose={onClose}
       {...loaded.data}
-      defaultSpentOn={spentOnFromParam(period, trip.start_date, trip.end_date)}
+      defaultSpentOn={stay ? "" : spentOnFromParam(period, trip.start_date, trip.end_date)}
       presetItemId={itemId}
       defaultCurrency={startCurrency(
         [trip.home_currency, ...Object.keys(trip.exchange_rates)],
@@ -81,12 +84,13 @@ export function CreateExpense({
         (loaded.data.expenses ?? []).map((e) => e.currency),
       )}
       quick={quick}
+      stay={stay}
       onToast={onToast}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values, _opened, receipts) =>
         create.mutate(
-          { values, createdBy: currentUserId, receipts: receipts.attach },
+          { values, createdBy: currentUserId, receipts: receipts.attach, stayId: stay?.id },
           { onSuccess: onDone },
         )
       }
@@ -152,6 +156,7 @@ export function EditExpense({
       {...loaded.data}
       initial={initial}
       quick={quick}
+      stay={expense?.stay_id ? { name: expense.name } : undefined}
       onToast={onToast}
       receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}
       pending={update.isPending}

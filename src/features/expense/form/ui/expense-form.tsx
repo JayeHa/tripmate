@@ -24,7 +24,8 @@ import { FormMoreMenu } from "./form-more-menu";
 import { MoreFields } from "./more-fields";
 import { PeopleSection } from "./people-section";
 import { QuickSummary } from "./quick-summary";
-import { ScheduleFields } from "./schedule-fields";
+import { TopFields } from "./schedule-fields";
+import { StayPaySummary } from "./stay-pay-summary";
 import { SubmitBar } from "./submit-bar";
 
 /** 붙어 있던 영수증이 없을 때 — 렌더마다 새 배열을 만들지 않게 */
@@ -79,6 +80,8 @@ type ExpenseFormProps = {
   defaultCurrency?: string;
   /** 빠른 입력(일정에서 연 비용) — 일정 연결 · 카테고리 · 날짜 칸을 숨기고 맨 위에 글로 요약한다. 가계부에서 열면 모든 칸 */
   quick?: boolean;
+  /** 숙소 결제(숙소에 붙은 비용) — 이름 · 카테고리 · 일정 연결 칸 대신 맨 위에 숙소 이름을 글로, 날짜 칸만 둔다 */
+  stay?: { name: string };
   /** 짧은 알림(입력 칸 고정 · 풀기) — 화면이 하나를 그린다 */
   onToast?: (text: string) => void;
   /** 저장 — 수정이면 둘째 값이 폼을 연 때의 값, 셋째는 붙일 영수증 · 뗄 영수증 */
@@ -114,6 +117,7 @@ export function ExpenseForm({
   presetItemId,
   defaultCurrency,
   quick = false,
+  stay,
   onToast,
   onSubmit,
 }: ExpenseFormProps) {
@@ -131,10 +135,11 @@ export function ExpenseForm({
     hasReceipts: receipts.length > 0,
     defaultCurrency,
     presetItem: findItem([...items, ...alternatives], presetItemId),
+    stayName: stay?.name,
     onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),
   });
   const amountRef = useRef<HTMLInputElement>(null);
-  const linked = quick ? form.link.linked : null;
+  const linked = quick && !stay ? form.link.linked : null;
   return (
     <form onSubmit={form.submit} className={FRAME[layout].form}>
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
@@ -146,14 +151,16 @@ export function ExpenseForm({
         <FormMoreMenu onRate={form.openRate} />
       </header>
       <div className={FRAME[layout].body}>
+        {stay && <StayPaySummary name={stay.name} />}
         {linked && <QuickSummary form={form} linked={linked} />}
         <AmountField form={form} inputRef={amountRef} autoFocus={!initial} />
         <div className="relative flex flex-col gap-7 px-5 pt-6 pb-8">
-          <ScheduleFields
+          <TopFields
             form={form}
             trip={trip}
             items={items}
             alternatives={alternatives}
+            stay={!!stay}
             quick={linked !== null}
           />
           <PaymentField form={form} />

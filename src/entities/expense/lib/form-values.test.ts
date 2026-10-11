@@ -7,6 +7,7 @@ const saved: ExpenseWithSplits = {
   id: "e1",
   trip_id: "t",
   schedule_item_id: "s1",
+  stay_id: null,
   payer_id: "a",
   payer_guest_id: null,
   split_each: false,

@@ -36,6 +36,7 @@ function make(
     id,
     trip_id: "t",
     schedule_item_id: null,
+    stay_id: null,
     payer_id: payer,
     amount,
     currency,

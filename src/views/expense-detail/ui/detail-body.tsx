@@ -48,6 +48,7 @@ export function DetailBody({ expense, row, trip, receipts }: DetailBodyProps) {
       <dl className="flex flex-col border-t border-surface-muted">
         <Field label="날짜">{detailDateText(expense.spent_on, trip)}</Field>
         {row.linkName && <Field label="일정">{row.linkName}</Field>}
+        {row.fromStay && <Field label="연결">숙소 정보</Field>}
         <Field label="결제수단">{row.methodLabel}</Field>
         <Field label="결제한 사람">{row.payer ? <People people={[row.payer]} /> : "각자 냄"}</Field>
         <Field label="함께한 사람">

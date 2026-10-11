@@ -12,7 +12,10 @@ export function useStays(tripId: string) {
   return useQuery({ queryKey: queryKeys.stays(tripId), queryFn: () => fetchStays(tripId) });
 }
 
-/** 숙소가 바뀌면 다시 읽을 것 — 숙소 · 연결 카드(일정 · 경로) · 저장한 장소(새 장소가 생길 수 있다) */
+/**
+ * 숙소가 바뀌면 다시 읽을 것 — 숙소 · 연결 카드(일정 · 경로) · 저장한 장소(새 장소가 생길 수 있다) ·
+ * 가계부(숙소 결제의 이름이 장소를 따라가고, 숙소를 지우면 결제도 지워진다)
+ */
 function useInvalidateStays(tripId: string) {
   const qc = useQueryClient();
   return () => {
@@ -20,6 +23,7 @@ function useInvalidateStays(tripId: string) {
     void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
     void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
     void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) });
   };
 }
 

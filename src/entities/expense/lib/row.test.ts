@@ -50,6 +50,7 @@ describe("expenseRowView", () => {
       overdue: false,
       excluded: false,
       linkName: "텐동 카네코 한노스케",
+      fromStay: false,
     });
   });
 

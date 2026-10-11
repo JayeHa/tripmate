@@ -92,6 +92,12 @@ describe("startValues", () => {
     });
   });
 
+  it("숙소 결제 — 숙소 이름 · 카테고리 숙소 · 고른 날(여행준비), 일정 연결 없음", () => {
+    expect(
+      startValues({ ...base, defaultSpentOn: "", stayName: "호텔 몬토레 긴자" }),
+    ).toMatchObject({ name: "호텔 몬토레 긴자", category: "lodging", spentOn: "", itemId: "" });
+  });
+
   it("각자 냄 — 결제한 사람이 없다", () => {
     const each = startValues({ ...base, initial: { ...saved, payer: null, split_each: true } });
     expect(each).toMatchObject({ payer: null, splitEach: true });

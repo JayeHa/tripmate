@@ -13,19 +13,29 @@ import {
 } from "@/entities/stay";
 
 import { STAY_DEFAULT_EMOJI } from "../lib/stay-form";
+import type { StayPaymentRequest } from "../lib/stay-payment";
+import { useStayPayment } from "../model/use-stay-payment";
+import { PayOverdueBanner, StayPaymentField } from "./stay-payment";
 
-type StayDetailProps = { tripId: string; stay: Stay };
+type StayDetailProps = {
+  tripId: string;
+  stay: Stay;
+  /** 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다 */
+  onPayment: (req: StayPaymentRequest) => void;
+};
 
 /**
- * 숙소 상세 — 제목(아이콘 이름) · 기간 · 예약 상태(「수정」 없이 바로 바꾼다) · 표(주소 · 체크인 · 체크아웃 · 메모) · 링크.
- * 결제 · 바우처 칸은 그 단계(#88 ③ · 노트)에서 붙인다
+ * 숙소 상세 — (결제 예정일 지남 안내) · 제목(아이콘 이름) · 기간 · 예약 상태(「수정」 없이 바로 바꾼다) ·
+ * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제. 바우처 칸은 노트 단계에서 붙인다
  */
-export function StayDetail({ tripId, stay }: StayDetailProps) {
+export function StayDetail({ tripId, stay, onPayment }: StayDetailProps) {
   const status = useUpdateStayStatus(tripId);
+  const pay = useStayPayment(tripId, stay.id);
   const p = stay.place;
   const links = stayLinksOf(stay.links);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pt-1 pb-6">
+      <PayOverdueBanner pay={pay} />
       <div className="flex flex-col gap-1">
         <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
           {stay.emoji || STAY_DEFAULT_EMOJI} {p.name}
@@ -84,6 +94,10 @@ export function StayDetail({ tripId, stay }: StayDetailProps) {
           </Row>
         )}
       </dl>
+      <StayPaymentField
+        pay={pay}
+        onOpen={(expenseId) => onPayment({ stayId: stay.id, name: p.name, expenseId })}
+      />
     </div>
   );
 }

@@ -51,6 +51,8 @@ export type ExpenseRowView = {
   excluded: boolean;
   /** 연결한 일정 이름 */
   linkName: string | null;
+  /** 숙소의 결제 — 이름 · 카테고리를 숙소가 정한다. 이름 뒤에 연결 아이콘 */
+  fromStay: boolean;
 };
 
 type RowContext = {
@@ -128,6 +130,7 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     overdue: !e.paid && e.due_date !== null && e.due_date < ctx.today,
     excluded: !e.counted,
     linkName: e.schedule_item_id ? ctx.linkNameOf(e.schedule_item_id) : null,
+    fromStay: Boolean(e.stay_id),
   };
 }
 
