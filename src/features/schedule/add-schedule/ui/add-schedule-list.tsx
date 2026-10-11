@@ -6,6 +6,7 @@ import { PLACE_CATEGORIES, type PlaceCategory } from "@/entities/schedule-item";
 
 import { savedKey, savedMeta } from "../lib/chosen";
 import type { AddScheduleState } from "../model/use-add-schedule";
+import { MyStayRows } from "./my-stay-rows";
 import { PlaceRow } from "./place-row";
 
 type AddScheduleListProps = { state: AddScheduleState };
@@ -17,7 +18,7 @@ function categoryOf(value: string | null): PlaceCategory | null {
 
 /**
  * 목록 칸. 검색어가 있으면 맨 위에 「‘검색어’ 직접 추가」(장소 입력 폼), 그 아래 탭의 목록.
- * - 추천 장소: 구글 검색 결과(고른 도시 근처로 제한). 검색어가 없으면 안내
+ * - 추천 장소: 맨 위 「내 숙소」(이 여행의 숙소), 그 아래 구글 검색 결과(고른 도시 근처로 제한, 숙소와 같은 곳은 뺀다). 검색어가 없으면 안내
  * - 저장한 장소: 이 여행 도시의 내 장소
  */
 export function AddScheduleList({ state }: AddScheduleListProps) {
@@ -41,7 +42,14 @@ export function AddScheduleList({ state }: AddScheduleListProps) {
           </span>
         </button>
       )}
-      {state.tab === "rec" ? <SuggestionRows state={state} /> : <SavedRows state={state} />}
+      {state.tab === "rec" ? (
+        <>
+          <MyStayRows state={state} />
+          <SuggestionRows state={state} />
+        </>
+      ) : (
+        <SavedRows state={state} />
+      )}
     </div>
   );
 }
@@ -64,10 +72,13 @@ function SuggestionRows({ state }: AddScheduleListProps) {
       </div>
     );
   }
-  if (s.suggestions.length === 0) {
+  const rows = s.suggestions.filter(
+    (sug) => !state.stayGoogleIds.has(sug.placePrediction?.placeId ?? ""),
+  );
+  if (rows.length === 0) {
     return <Empty>검색 결과가 없어요. 위에서 직접 추가할 수 있어요.</Empty>;
   }
-  return s.suggestions.map((sug, i) => {
+  return rows.map((sug, i) => {
     const p = sug.placePrediction;
     if (!p) return null;
     return (

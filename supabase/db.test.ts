@@ -2059,7 +2059,7 @@ async function stayCards(stayId: string) {
   return rows;
 }
 
-describe("숙소 (0045 · 0046 · 0048 · 0049)", () => {
+describe("숙소 (0045 · 0046 · 0048 · 0049 · 0050)", () => {
   const PLACE = {
     name: "호텔 몬토레 긴자",
     lat: 35.671,
@@ -2407,6 +2407,32 @@ describe("숙소 (0045 · 0046 · 0048 · 0049)", () => {
       `select count(*)::int n from public.stays where trip_id = '${trip}'`,
     );
     expect(rows[0].n).toBe(0);
+  });
+
+  it("일정 추가 「내 숙소」: stay_id 로 담으면 그 숙소의 연결 카드(장소 · 아이콘 · 상태 복사), 다른 여행 숙소는 거부 (0050)", async () => {
+    const trip = await trip5();
+    const r = await saveStay(trip, null, PLACE, FIELDS);
+    const { rows } = await db.query<{ ids: string[] }>(
+      `select public.add_schedule_places($1, 1, $2) ids`,
+      [trip, JSON.stringify([{ stay_id: r.id }])],
+    );
+    const cards = await stayCards(r.id);
+    const added = cards.find((c) => c.id === rows[0].ids[0]);
+    expect(added).toMatchObject({
+      day_index: 1,
+      emoji: "🏨",
+      status: "ok",
+      place_id: cards[0].place_id,
+    });
+    expect(cards.filter((c) => c.day_index === 1)).toHaveLength(2);
+
+    const other = await trip5();
+    await expect(
+      db.query(`select public.add_schedule_places($1, 0, $2)`, [
+        other,
+        JSON.stringify([{ stay_id: r.id }]),
+      ]),
+    ).rejects.toThrow("stay not found");
   });
 
   it("출발일을 옮기면 숙소 날짜도 같은 만큼 옮겨진다", async () => {

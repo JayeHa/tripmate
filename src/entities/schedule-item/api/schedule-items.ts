@@ -106,8 +106,8 @@ export type PickedPlaceInput = {
   address: string | null;
 };
 
-/** 일정에 담을 한 곳: 저장한 장소(이미 있는 places 행) 또는 새로 고른 곳 */
-export type ScheduleEntry = { place_id: string } | PickedPlaceInput;
+/** 일정에 담을 한 곳: 저장한 장소(이미 있는 places 행) · 숙소(그 숙소의 연결 카드로, 0050) · 새로 고른 곳 */
+export type ScheduleEntry = { place_id: string } | { stay_id: string } | PickedPlaceInput;
 
 /**
  * 여러 곳을 고른 순서대로 그날 끝에 담는다(0016 add_schedule_places). 한 트랜잭션이라 하나가 실패하면 아무것도 안 남는다.
