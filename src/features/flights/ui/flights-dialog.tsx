@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { directionLabel, type Flight, type FlightSaveResult } from "@/entities/flight";
 import type { Memo } from "@/entities/schedule-item";
+import { useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { ScreenHeader } from "@/shared/ui/screen-header";
 
@@ -33,19 +34,23 @@ type FlightsDialogProps = {
 
 /**
  * 항공편 창 — 목록 → 상세 → 입력(새로 · 고치기). 1024px 아래는 전체 화면, 이상은 가운데 480×680.
- * 저장 중에는 닫히지 않는다(locked). 닫히면 언마운트되어 다시 열면 처음부터
+ * 저장 중에는 닫히지 않는다(locked). 닫히는 동안에도 내용을 그리고(페이드 아웃), 열 때마다 처음부터 다시 그린다(openCount 를 key 로)
  */
 export function FlightsDialog({ open, onOpenChange, ...rest }: FlightsDialogProps) {
   const [locked, setLocked] = useState(false);
+  const openCount = useOpenCount(open);
   return (
     <Dialog open={open} locked={locked} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         className="inset-0 flex h-dvh w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none bg-white p-0 ring-0 sm:max-w-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:h-[min(680px,calc(100dvh-2rem))] lg:w-120 lg:max-w-120 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
       >
-        {open && (
-          <FlightsBody {...rest} onClose={() => onOpenChange(false)} onLockChange={setLocked} />
-        )}
+        <FlightsBody
+          key={openCount}
+          {...rest}
+          onClose={() => onOpenChange(false)}
+          onLockChange={setLocked}
+        />
       </DialogContent>
     </Dialog>
   );
