@@ -30,7 +30,7 @@ type StaysDialogProps = {
   registration?: StayRegistration | null;
   /** 주소 칸 — 받는 쪽이 장소 입력 폼의 「위치만 고르기」 를 이 창 위에 띄운다 */
   onPickLocation: (req: LocationPickRequest) => void;
-  /** 결제 칸(상세 · 수정) — 받는 쪽이 비용 입력 창을 이 창 위에 띄운다 */
+  /** 결제 칸(상세 · 수정 · 새 숙소 초안) — 받는 쪽이 비용 입력 창을 이 창 위에 띄운다 */
   onPayment: (req: StayPaymentRequest) => void;
   onToast?: (text: string) => void;
 };
@@ -79,18 +79,18 @@ function StaysBody({
   // 「숙소로 등록」 으로 연 새 숙소 폼 — 일정 상세에서 왔으니 끝나면 창을 닫는다
   const registering = !!registration && step.kind === "form" && step.id === null;
 
-  /** 저장이 끝났다 — 등록은 창을 닫고, 새 숙소는 목록으로, 고친 숙소는 상세로 */
-  function saved(result: StaySaveResult) {
+  /**
+   * 저장이 끝났다 — 등록은 창을 닫고, 새 숙소는 목록으로, 고친 숙소는 상세로.
+   * 새 숙소의 결제만 실패했으면(paid false) 숙소는 저장됐으니 그대로 가고, 결제를 다시 넣으라고 알린다
+   */
+  function saved(result: StaySaveResult, paid: boolean) {
+    const editing = step.kind === "form" && step.id !== null;
+    const text = registering ? registeredToast(result) : savedToast(editing, result);
+    onToast?.(paid ? text : PAY_FAILED_TOAST);
     if (registering) {
-      onToast?.(
-        result.added > 0
-          ? `숙소로 등록했어요 · 일정에 카드 ${result.added}개 추가`
-          : "숙소로 등록했어요",
-      );
       onClose();
       return;
     }
-    onToast?.(savedToast(step.kind === "form" && step.id !== null, result));
     if (step.kind === "form" && step.id) flow.openDetail(step.id);
     else flow.toList();
   }
@@ -153,6 +153,15 @@ function DetailScreen({ stay, tripId, flow, onPayment }: DetailScreenProps) {
 function firstStep(initialStayId: string | null, registration: StayRegistration | null): StaysStep {
   if (registration) return { kind: "form", id: null };
   return initialStayId ? { kind: "detail", id: initialStayId } : { kind: "list" };
+}
+
+/** 새 숙소는 저장했지만 결제 초안을 만들지 못했다 */
+const PAY_FAILED_TOAST =
+  "숙소는 저장했지만 결제는 저장하지 못했어요. 숙소 정보에서 다시 넣어 주세요";
+
+/** 「숙소로 등록」 토스트 — 일정에 더한 카드 수 */
+function registeredToast(r: StaySaveResult): string {
+  return r.added > 0 ? `숙소로 등록했어요 · 일정에 카드 ${r.added}개 추가` : "숙소로 등록했어요";
 }
 
 /** 저장 토스트 — 새 숙소는 넣은 카드 수, 고치기는 바뀐 카드 수 */

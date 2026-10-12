@@ -33,8 +33,10 @@ type StayFormOptions = {
   /** 밀려나는 카드를 세는 데 쓰는 일정 줄 */
   items: readonly { stay_id: string | null; alternative_of: string | null; day_index: number }[];
   onPickLocation: (req: LocationPickRequest) => void;
-  /** 저장이 끝났다(폼은 부른 쪽이 닫는다) */
-  onSaved: (result: StaySaveResult) => void;
+  /** 새 숙소를 저장한 뒤 결제 초안을 그 숙소에 만든다(useStayPaymentDraft). 실패하면 false */
+  savePayment?: (stayId: string) => Promise<boolean>;
+  /** 저장이 끝났다(폼은 부른 쪽이 닫는다). paid — 결제 초안을 만들지 못했으면 false */
+  onSaved: (result: StaySaveResult, paid: boolean) => void;
 };
 
 /**
@@ -49,6 +51,7 @@ export function useStayForm({
   registration = null,
   items,
   onPickLocation,
+  savePayment,
   onSaved,
 }: StayFormOptions) {
   const [values, setValues] = useState<StayFormValues>(() => initialValues(stay, registration));
@@ -73,7 +76,7 @@ export function useStayForm({
     });
   }
 
-  /** 저장 — prune 이면 밀려난 카드를 지운다 */
+  /** 저장 — prune 이면 밀려난 카드를 지운다. 새 숙소면 이어서 결제 초안을 만든다(그동안도 저장 중) */
   function commit(prune: boolean) {
     const payload = toStayPayload(values);
     if (!payload.ok || savingRef.current) return;
@@ -88,7 +91,11 @@ export function useStayForm({
         prune,
         linkItemId: stay ? null : (registration?.itemId ?? null),
       })
-      .then(onSaved, () => undefined)
+      .then(
+        async (result) =>
+          onSaved(result, stay !== null || !savePayment || (await savePayment(result.id))),
+        () => undefined,
+      )
       .finally(() => {
         savingRef.current = false;
       });

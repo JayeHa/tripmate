@@ -95,8 +95,11 @@ export function StayDetail({ tripId, stay, onPayment }: StayDetailProps) {
         )}
       </dl>
       <StayPaymentField
-        pay={pay}
-        onOpen={(expenseId) => onPayment({ stayId: stay.id, name: p.name, expenseId })}
+        loaded={pay.loaded}
+        view={pay.view}
+        onOpen={() =>
+          onPayment({ kind: "saved", stayId: stay.id, name: p.name, expenseId: pay.expenseId })
+        }
       />
     </div>
   );

@@ -7,10 +7,11 @@ import type { StayRegistration } from "../lib/stay-form";
 import type { StayPaymentRequest } from "../lib/stay-payment";
 import { useStayDelete } from "../model/use-stay-delete";
 import { type LocationPickRequest, useStayForm } from "../model/use-stay-form";
+import { useStayPaymentDraft } from "../model/use-stay-payment-draft";
 import { DeleteStayConfirm, PruneCardsConfirm } from "./stay-confirms";
 import { StayDatesSheet } from "./stay-dates-sheet";
 import { StayForm } from "./stay-form";
-import { StayPaymentSection } from "./stay-payment";
+import { StayPaymentDraftSection, StayPaymentSection } from "./stay-payment";
 import { StaysHeader } from "./stays-header";
 
 type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
@@ -23,15 +24,19 @@ type StayFormScreenProps = {
   registration?: StayRegistration | null;
   items: readonly LinkedItem[];
   onPickLocation: (req: LocationPickRequest) => void;
-  /** 결제 칸(고칠 때) — 비용 입력 창을 여는 쪽(화면)에 넘긴다 */
+  /** 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다. 새 숙소는 초안으로 열린다 */
   onPayment: (req: StayPaymentRequest) => void;
   onBack: () => void;
-  onSaved: (result: StaySaveResult) => void;
+  /** paid — 새 숙소의 결제 초안을 만들지 못했으면 false(숙소는 저장됐다) */
+  onSaved: (result: StaySaveResult, paid: boolean) => void;
   onDeleted: (removed: number) => void;
   onLockChange: (locked: boolean) => void;
 };
 
-/** 숙소 입력 화면 — 머리(← · 「숙소 추가 / 숙소 수정」 · 완료) + 칸들, 위를 덮는 숙박 날짜 달력, 확인창들 */
+/**
+ * 숙소 입력 화면 — 머리(← · 「숙소 추가 / 숙소 수정」 · 완료) + 칸들, 위를 덮는 숙박 날짜 달력, 확인창들.
+ * 새 숙소의 결제는 초안으로 들고 있다가 숙소를 저장한 뒤 만든다 — 그동안도 저장 중이라 닫히지 않는다
+ */
 export function StayFormScreen({
   tripId,
   trip,
@@ -45,15 +50,25 @@ export function StayFormScreen({
   onDeleted,
   onLockChange,
 }: StayFormScreenProps) {
-  const form = useStayForm({ tripId, trip, stay, registration, items, onPickLocation, onSaved });
-  useReportLock(form.locked, onLockChange);
+  const payment = useStayPaymentDraft(tripId);
+  const form = useStayForm({
+    tripId,
+    trip,
+    stay,
+    registration,
+    items,
+    onPickLocation,
+    savePayment: payment.save,
+    onSaved,
+  });
+  useReportLock(form.locked || payment.saving, onLockChange);
   return (
     <>
       <StaysHeader
         title={stay ? "숙소 수정" : "숙소 추가"}
         back={{ kind: "back", onClick: onBack }}
-        action={{ label: "완료", onClick: form.submit, disabled: form.saving }}
-        locked={form.locked}
+        action={{ label: "완료", onClick: form.submit, disabled: form.saving || payment.saving }}
+        locked={form.locked || payment.saving}
       />
       {stay ? (
         <EditForm
@@ -65,7 +80,18 @@ export function StayFormScreen({
           onDeleted={onDeleted}
         />
       ) : (
-        <StayForm form={form} onDelete={null} />
+        <StayForm
+          form={form}
+          payment={
+            <StayPaymentDraftSection
+              tripId={tripId}
+              name={form.values.name}
+              payment={payment}
+              onPayment={onPayment}
+            />
+          }
+          onDelete={null}
+        />
       )}
       {form.datesOpen && (
         <StayDatesSheet

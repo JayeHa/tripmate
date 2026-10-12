@@ -1,21 +1,31 @@
 import { CircleAlert, Plus, Receipt } from "lucide-react";
 
-import type { StayPaymentRequest } from "../lib/stay-payment";
+import { todayISO } from "@/shared/lib/days";
+
+import {
+  type StayPaymentRequest,
+  type StayPaymentView,
+  stayPaymentView,
+} from "../lib/stay-payment";
+import { usePayerName } from "../model/use-payer-name";
 import { type StayPaymentState, useStayPayment } from "../model/use-stay-payment";
+import type { StayPaymentDraft } from "../model/use-stay-payment-draft";
 
 type StayPaymentFieldProps = {
-  pay: StayPaymentState;
-  /** 결제 칸을 연다 — 붙은 비용 id(수정), 없으면 null(새로 추가) */
-  onOpen: (expenseId: string | null) => void;
+  /** 결제 칸에 그릴 수 있다(가계부를 읽었다) */
+  loaded: boolean;
+  /** 결제 요약 — 없으면 「+ 결제 추가」 */
+  view: StayPaymentView | null;
+  /** 결제 칸을 연다(수정 · 새로 추가) */
+  onOpen: () => void;
 };
 
 /**
  * 「결제」 칸 — 결제가 있으면 한 줄 요약(영수증 아이콘 · 금액 / 결제한 사람 · 상태 + 「수정」), 없으면 점선 「+ 결제 추가」.
  * 아래에 가계부와 같은 비용이라는 안내. 가계부를 읽기 전에는 그리지 않는다
  */
-export function StayPaymentField({ pay, onOpen }: StayPaymentFieldProps) {
-  if (!pay.loaded) return null;
-  const { view } = pay;
+export function StayPaymentField({ loaded, view, onOpen }: StayPaymentFieldProps) {
+  if (!loaded) return null;
   return (
     <div className="flex flex-col gap-1.5 pt-1">
       <span className="text-[13px] font-bold text-ink-700">결제</span>
@@ -30,7 +40,7 @@ export function StayPaymentField({ pay, onOpen }: StayPaymentFieldProps) {
           </div>
           <button
             type="button"
-            onClick={() => onOpen(view.expenseId)}
+            onClick={onOpen}
             className="flex h-8.5 shrink-0 items-center rounded-button border border-line-strong px-3 text-[13px] font-bold text-ink-700 hover:bg-surface-sunken"
           >
             수정
@@ -39,7 +49,7 @@ export function StayPaymentField({ pay, onOpen }: StayPaymentFieldProps) {
       ) : (
         <button
           type="button"
-          onClick={() => onOpen(null)}
+          onClick={onOpen}
           className="flex h-12 items-center justify-center gap-1.5 rounded-card border-[1.5px] border-dashed border-line-dashed text-sm font-bold text-brand"
         >
           <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
@@ -91,6 +101,43 @@ type StayPaymentSectionProps = {
 export function StayPaymentSection({ tripId, stayId, name, onPayment }: StayPaymentSectionProps) {
   const pay = useStayPayment(tripId, stayId);
   return (
-    <StayPaymentField pay={pay} onOpen={(expenseId) => onPayment({ stayId, name, expenseId })} />
+    <StayPaymentField
+      loaded={pay.loaded}
+      view={pay.view}
+      onOpen={() => onPayment({ kind: "saved", stayId, name, expenseId: pay.expenseId })}
+    />
+  );
+}
+
+type StayPaymentDraftSectionProps = {
+  tripId: string;
+  /** 폼의 숙소 이름 — 비어 있으면 「숙소」 */
+  name: string;
+  payment: StayPaymentDraft;
+  onPayment: (req: StayPaymentRequest) => void;
+};
+
+/** 새 숙소 폼의 「결제」 칸 — 들고 있는 초안을 요약하고, 누르면 비용 입력 창을 초안으로 연다(숙소 「완료」 때 저장된다) */
+export function StayPaymentDraftSection({
+  tripId,
+  name,
+  payment,
+  onPayment,
+}: StayPaymentDraftSectionProps) {
+  const payerName = usePayerName(tripId);
+  const values = payment.draft?.values;
+  return (
+    <StayPaymentField
+      loaded
+      view={values ? stayPaymentView(values, payerName(values.payer), todayISO()) : null}
+      onOpen={() =>
+        onPayment({
+          kind: "draft",
+          name: name.trim() || "숙소",
+          draft: payment.draft,
+          onDraft: payment.setDraft,
+        })
+      }
+    />
   );
 }

@@ -49,3 +49,12 @@ export const expenseFormSchema = z
   });
 
 export type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+
+/**
+ * 아직 저장하지 않은 비용 — 비용 입력의 값과, 이미 저장소에 올렸지만 어디에도 붙지 않은 영수증.
+ * 새 숙소 폼처럼 붙일 곳이 아직 없을 때 들고 있다가, 그곳을 저장한 뒤 비용을 만든다
+ */
+export type ExpenseDraft = {
+  values: ExpenseFormValues;
+  receipts: { key: string; name: string; mime: string; size: number }[];
+};

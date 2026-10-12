@@ -2,18 +2,27 @@
 
 import { useState } from "react";
 
+import type { ExpenseDraft } from "@/entities/expense";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
+import { DraftExpense } from "./draft-expense";
 import { CreateExpense, EditExpense } from "./expense-editors";
 
 /**
- * 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결, 숙소에서 열면 그 숙소의 결제), 또는 그 비용 수정.
+ * 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결, 숙소에서 열면 그 숙소의 결제), 그 비용 수정,
+ * 또는 아직 저장하지 않은 숙소의 결제 초안(draft — 저장하지 않고 onDraft 로 돌려준다).
  * quick: 일정 상세에서 열었다 — 빠른 입력(일정 연결 · 카테고리 · 날짜 칸을 숨기고 요약)
  */
 export type ExpenseDialogTarget = { quick?: boolean } & (
   | { kind: "new"; itemId?: string; stay?: { id: string; name: string } }
   | { kind: "edit"; expenseId: string }
+  | {
+      kind: "draft";
+      name: string;
+      draft: ExpenseDraft | null;
+      onDraft: (draft: ExpenseDraft | null) => void;
+    }
 );
 
 type ExpenseDialogProps = {
@@ -46,7 +55,9 @@ export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialo
         className="flex h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:max-w-none lg:h-[min(760px,calc(100dvh-2rem))] lg:w-110 lg:rounded-sheet"
       >
         <DialogTitle className="sr-only">
-          {shown?.kind === "edit" ? "비용 수정" : "비용 추가"}
+          {shown?.kind === "edit" || (shown?.kind === "draft" && shown.draft)
+            ? "비용 수정"
+            : "비용 추가"}
         </DialogTitle>
         {shown?.kind === "new" && (
           <CreateExpense
@@ -73,6 +84,19 @@ export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialo
             onClose={close}
             onDone={onClose}
             onLockChange={setLocked}
+          />
+        )}
+        {shown?.kind === "draft" && (
+          <DraftExpense
+            key={opened}
+            tripId={tripId}
+            name={shown.name}
+            draft={shown.draft}
+            onDraft={shown.onDraft}
+            onToast={onToast}
+            layout="modal"
+            onClose={close}
+            onDone={onClose}
           />
         )}
       </DialogContent>
