@@ -63,13 +63,14 @@ type TopFieldsProps = {
   trip: Trip;
   items: ScheduleItem[];
   alternatives: ScheduleItem[];
-  stay: boolean;
+  /** 숙소 · 항공편 결제 */
+  payment: boolean;
   quick: boolean;
 };
 
-/** 금액 아래 첫 칸들 — 숙소 결제면 날짜만(이름 · 카테고리 · 연결은 숙소가 정한다), 아니면 일정 연결 → 카테고리 → 날짜 → 항목명 */
-export function TopFields({ form, trip, items, alternatives, stay, quick }: TopFieldsProps) {
-  if (stay) return <DayField form={form} trip={trip} />;
+/** 금액 아래 첫 칸들 — 숙소 · 항공편 결제면 날짜만(이름 · 카테고리 · 연결은 그쪽이 정한다), 아니면 일정 연결 → 카테고리 → 날짜 → 항목명 */
+export function TopFields({ form, trip, items, alternatives, payment, quick }: TopFieldsProps) {
+  if (payment) return <DayField form={form} trip={trip} />;
   return (
     <ScheduleFields
       form={form}

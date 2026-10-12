@@ -24,7 +24,7 @@ export function useStayPaymentDraft(tripId: string) {
         values: draft.values,
         createdBy: user.id,
         receipts: draft.receipts,
-        stayId,
+        owner: { kind: "stay", id: stayId },
       });
       return true;
     } catch {

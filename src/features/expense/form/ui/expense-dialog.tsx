@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { ExpenseDraft } from "@/entities/expense";
+import type { ExpenseDraft, PayFor, PaymentOwner } from "@/entities/expense";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
@@ -10,16 +10,16 @@ import { DraftExpense } from "./draft-expense";
 import { CreateExpense, EditExpense } from "./expense-editors";
 
 /**
- * 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결, 숙소에서 열면 그 숙소의 결제), 그 비용 수정,
- * 또는 아직 저장하지 않은 숙소의 결제 초안(draft — 저장하지 않고 onDraft 로 돌려준다).
+ * 연 비용 창 — 새로 추가(일정 상세에서 열면 그 일정에 연결, 숙소 · 항공편에서 열면 그 결제), 그 비용 수정,
+ * 또는 아직 저장하지 않은 숙소 · 항공편의 결제 초안(draft — 저장하지 않고 onDraft 로 돌려준다).
  * quick: 일정 상세에서 열었다 — 빠른 입력(일정 연결 · 카테고리 · 날짜 칸을 숨기고 요약)
  */
 export type ExpenseDialogTarget = { quick?: boolean } & (
-  | { kind: "new"; itemId?: string; stay?: { id: string; name: string } }
+  | { kind: "new"; itemId?: string; payFor?: PaymentOwner & { name: string } }
   | { kind: "edit"; expenseId: string }
   | {
       kind: "draft";
-      name: string;
+      payFor: PayFor;
       draft: ExpenseDraft | null;
       onDraft: (draft: ExpenseDraft | null) => void;
     }
@@ -64,7 +64,7 @@ export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialo
             key={opened}
             tripId={tripId}
             itemId={shown.itemId}
-            stay={shown.stay}
+            payFor={shown.payFor}
             quick={shown.quick}
             onToast={onToast}
             layout="modal"
@@ -90,7 +90,7 @@ export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialo
           <DraftExpense
             key={opened}
             tripId={tripId}
-            name={shown.name}
+            payFor={shown.payFor}
             draft={shown.draft}
             onDraft={shown.onDraft}
             onToast={onToast}

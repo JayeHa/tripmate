@@ -94,8 +94,22 @@ describe("startValues", () => {
 
   it("숙소 결제 — 숙소 이름 · 카테고리 숙소 · 고른 날(여행준비), 일정 연결 없음", () => {
     expect(
-      startValues({ ...base, defaultSpentOn: "", stayName: "호텔 몬토레 긴자" }),
+      startValues({
+        ...base,
+        defaultSpentOn: "",
+        payFor: { kind: "stay", name: "호텔 몬토레 긴자" },
+      }),
     ).toMatchObject({ name: "호텔 몬토레 긴자", category: "lodging", spentOn: "", itemId: "" });
+  });
+
+  it("항공편 결제 — 「제주항공 7C1181」 · 카테고리 항공", () => {
+    expect(
+      startValues({
+        ...base,
+        defaultSpentOn: "",
+        payFor: { kind: "flight", name: "제주항공 7C1181" },
+      }),
+    ).toMatchObject({ name: "제주항공 7C1181", category: "flight", spentOn: "" });
   });
 
   it("각자 냄 — 결제한 사람이 없다", () => {

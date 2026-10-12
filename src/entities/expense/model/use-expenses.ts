@@ -19,6 +19,7 @@ import {
   type UploadedReceipt,
 } from "../api/receipts";
 import { LINK_GONE } from "../lib/link-gone";
+import type { PaymentOwner } from "../lib/payment-owner";
 import type { ExpenseFormValues } from "./schema";
 
 export function useExpenses(tripId: string) {
@@ -35,15 +36,15 @@ export function useCreateExpense(tripId: string) {
       values,
       createdBy,
       receipts,
-      stayId,
+      owner,
     }: {
       values: ExpenseFormValues;
       createdBy: string;
       /** 이미 저장소에 올린 영수증 — 지출과 함께 붙인다 */
       receipts?: UploadedReceipt[];
-      /** 이 숙소의 결제로 만든다 */
-      stayId?: string | null;
-    }) => createExpense(tripId, values, createdBy, receipts, stayId),
+      /** 이 숙소 · 항공편의 결제로 만든다 */
+      owner?: PaymentOwner | null;
+    }) => createExpense(tripId, values, createdBy, receipts, owner),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.receipts(tripId) });
       return qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) });

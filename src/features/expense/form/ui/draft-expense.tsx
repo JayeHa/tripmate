@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import {
   type ExpenseDraft,
   type ExpenseReceipt,
+  type PayFor,
   type ReceiptChange,
   removeReceiptFiles,
 } from "@/entities/expense";
@@ -20,8 +21,8 @@ import { FormLoadError } from "./form-load-error";
 type DraftExpenseProps = {
   tripId: string;
   layout?: ExpenseFormLayout;
-  /** 숙소 이름 — 맨 위 「숙소 결제」 요약에 보인다(이름은 숙소를 저장할 때 DB 가 맞춘다) */
-  name: string;
+  /** 어느 쪽의 결제인지 · 이름 — 맨 위 「숙소 결제」 · 「항공편 결제」 요약에 보인다(이름은 저장할 때 DB 가 맞춘다) */
+  payFor: PayFor;
   /** 고치는 초안. 처음 넣으면 null */
   draft: ExpenseDraft | null;
   /** 「완료」 · 「삭제」 — 새 초안, 지웠으면 null */
@@ -41,7 +42,7 @@ type DraftExpenseProps = {
 export function DraftExpense({
   tripId,
   layout,
-  name,
+  payFor,
   draft,
   onDraft,
   onClose,
@@ -95,7 +96,7 @@ export function DraftExpense({
         readLastCurrency(trip.id),
         (loaded.data.expenses ?? []).map((e) => e.currency),
       )}
-      stay={{ name }}
+      payFor={payFor}
       onToast={onToast}
       onSubmit={(values, _opened, receipts) => submit(values, receipts)}
     />

@@ -69,7 +69,14 @@ export type StaysOverlayState = ReturnType<typeof useStaysOverlay>;
 
 /** 숙소의 결제 요청 → 비용 창 대상 */
 function paymentTarget(req: StayPaymentRequest): ExpenseDialogTarget {
-  if (req.kind === "draft") return req;
+  if (req.kind === "draft") {
+    return {
+      kind: "draft",
+      payFor: { kind: "stay", name: req.name },
+      draft: req.draft,
+      onDraft: req.onDraft,
+    };
+  }
   if (req.expenseId) return { kind: "edit", expenseId: req.expenseId };
-  return { kind: "new", stay: { id: req.stayId, name: req.name } };
+  return { kind: "new", payFor: { kind: "stay", id: req.stayId, name: req.name } };
 }

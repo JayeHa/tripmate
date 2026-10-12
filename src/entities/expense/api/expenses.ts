@@ -3,6 +3,7 @@ import { type Share, splitEqual, validateCustomShares } from "@/shared/lib/money
 
 import { insertColumns, sharesChanged, updateColumns } from "../lib/columns";
 import { withLinkGone } from "../lib/link-gone";
+import { ownerColumns, PAYMENT_OWNER, type PaymentOwner } from "../lib/payment-owner";
 import { personKey, personOfKey, type PersonRef } from "../lib/person";
 import type { ExpenseFormValues } from "../model/schema";
 import type { ExpenseWithSplits } from "../model/types";
@@ -55,23 +56,28 @@ function splitRow(expenseId: string, s: { person: PersonRef; share: number }) {
 /**
  * 지출을 만든다 — 지출 · 나눔 · 영수증 줄 순서로. 나눔이나 영수증 줄을 저장하지 못하면 지출도 되돌린다
  * (다시 저장해도 두 번 생기지 않게). 영수증 파일은 이미 저장소에 올라가 있다.
- * stayId 면 그 숙소의 결제 — 이름 · 카테고리는 DB 가 숙소에 맞추고, 숙소마다 하나뿐이다
+ * owner 면 그 숙소 · 항공편의 결제 — 이름 · 카테고리는 DB 가 그것에 맞추고, 숙소 · 항공편마다 하나뿐이다
  */
 export async function createExpense(
   tripId: string,
   values: ExpenseFormValues,
   createdBy: string,
   receipts: UploadedReceipt[] = [],
-  stayId: string | null = null,
+  owner: PaymentOwner | null = null,
 ): Promise<string> {
   const supabase = createClient();
   const shares = resolveShares(values);
   const { data, error } = await supabase
     .from("expenses")
-    .insert({ ...insertColumns(values), trip_id: tripId, created_by: createdBy, stay_id: stayId })
+    .insert({
+      ...insertColumns(values),
+      ...ownerColumns(owner),
+      trip_id: tripId,
+      created_by: createdBy,
+    })
     .select("id")
     .single();
-  if (error) throw stayPaidAlready(error) ?? withLinkGone(error);
+  if (error) throw paidAlready(error, owner) ?? ownerGone(error, owner) ?? withLinkGone(error);
 
   const { error: splitError } = await supabase
     .from("expense_splits")
@@ -119,10 +125,40 @@ export async function updateExpense(
   if (insError) throw insError;
 }
 
-/** 그사이 일행이 이 숙소의 결제를 먼저 넣었다(unique `expenses_stay_key`) — 알아볼 수 있는 오류로. 아니면 null */
-function stayPaidAlready(error: { code?: string; message: string }): Error | null {
-  if (error.code !== "23505" || !error.message.includes("expenses_stay_key")) return null;
-  return new Error("이 숙소에는 이미 결제가 있어요. 닫고 다시 열어 주세요");
+/**
+ * 그사이 일행이 이 숙소 · 항공편의 결제를 먼저 넣었다(unique `expenses_stay_key` · `expenses_flight_key`) — 알아볼 수 있는 오류로.
+ * 아니면 null
+ */
+function paidAlready(
+  error: { code?: string; message: string },
+  owner: PaymentOwner | null,
+): Error | null {
+  if (!owner || error.code !== "23505" || !error.message.includes(`expenses_${owner.kind}_key`)) {
+    return null;
+  }
+  return new Error(
+    `이 ${PAYMENT_OWNER[owner.kind].noun}에는 이미 결제가 있어요. 닫고 다시 열어 주세요`,
+  );
+}
+
+/** 숙소 · 항공편이 지워져 결제를 넣지 못했을 때 */
+const OWNER_GONE = {
+  stay: "이 숙소가 지워졌어요. 닫고 다시 열어 주세요",
+  flight: "이 항공편이 지워졌어요. 닫고 다시 열어 주세요",
+} as const;
+
+/**
+ * 저장하는 사이 일행이 이 숙소 · 항공편을 지웠다(트리거의 23503 「stay not found」 · 「flight not found」, 0056) —
+ * 알아볼 수 있는 오류로. 아니면 null
+ */
+function ownerGone(
+  error: { code?: string; message: string },
+  owner: PaymentOwner | null,
+): Error | null {
+  if (!owner || error.code !== "23503" || !error.message.includes(`${owner.kind} not found`)) {
+    return null;
+  }
+  return new Error(OWNER_GONE[owner.kind]);
 }
 
 /** 지출을 지운다 — 영수증 줄은 함께 지워지고(cascade), 그 파일은 지운 뒤 저장소에서 지운다 */

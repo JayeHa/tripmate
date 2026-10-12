@@ -88,7 +88,7 @@ export function ExpenseTableRow({
             {row.name}
           </button>
           <NameMarks
-            stay={row.fromStay}
+            ownerLink={row.ownerLink}
             receipt={hasReceipt}
             memo={row.hasMemo}
             excluded={row.excluded}
@@ -149,14 +149,20 @@ export function ExpenseTableRow({
   );
 }
 
-type NameMarksProps = { stay: boolean; receipt: boolean; memo: boolean; excluded: boolean };
+type NameMarksProps = {
+  /** 「숙소 정보」 · 「항공편 정보」 — 그 결제면 */
+  ownerLink: string | null;
+  receipt: boolean;
+  memo: boolean;
+  excluded: boolean;
+};
 
-/** 항목명 뒤 표시 — 숙소 연결 · 영수증 클립 · 메모 아이콘 · 「합계 제외」 배지(있는 것만) */
-function NameMarks({ stay, receipt, memo, excluded }: NameMarksProps) {
+/** 항목명 뒤 표시 — 숙소 · 항공편 연결 · 영수증 클립 · 메모 아이콘 · 「합계 제외」 배지(있는 것만) */
+function NameMarks({ ownerLink, receipt, memo, excluded }: NameMarksProps) {
   return (
     <>
-      {stay && (
-        <Link2 className="size-3.25 shrink-0 text-ink-350" aria-label="숙소 정보와 연결됨" />
+      {ownerLink && (
+        <Link2 className="size-3.25 shrink-0 text-ink-350" aria-label={`${ownerLink}와 연결됨`} />
       )}
       {receipt && (
         <Paperclip className="size-3.25 shrink-0 text-ink-350" aria-label="영수증 있음" />

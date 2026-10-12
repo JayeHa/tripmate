@@ -3,8 +3,11 @@
 import { Trash2 } from "lucide-react";
 
 import {
+  type Expense,
   type ExpenseFormValues,
   formValuesOf,
+  type PaymentOwner,
+  paymentOwnerOf,
   useCreateExpense,
   useDeleteExpense,
   useUpdateExpense,
@@ -42,8 +45,8 @@ type CreateExpenseProps = EditorCommon & {
   itemId?: string;
   /** 주소의 period(prep · 0-base 날) — 처음 날짜. 없거나 모르는 값이면 여행 첫날 */
   period?: string | null;
-  /** 이 숙소의 결제로 만든다(숙소 화면의 「+ 결제 추가」) — 날짜는 여행준비부터 */
-  stay?: { id: string; name: string };
+  /** 이 숙소 · 항공편의 결제로 만든다(그 화면의 「+ 결제 추가」) — 날짜는 여행준비부터 */
+  payFor?: PaymentOwner & { name: string };
 };
 
 /**
@@ -60,7 +63,7 @@ export function CreateExpense({
   onLockChange,
   itemId,
   quick,
-  stay,
+  payFor,
   onToast,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
@@ -76,7 +79,7 @@ export function CreateExpense({
       layout={layout}
       onClose={onClose}
       {...loaded.data}
-      defaultSpentOn={stay ? "" : spentOnFromParam(period, trip.start_date, trip.end_date)}
+      defaultSpentOn={payFor ? "" : spentOnFromParam(period, trip.start_date, trip.end_date)}
       presetItemId={itemId}
       defaultCurrency={startCurrency(
         [trip.home_currency, ...Object.keys(trip.exchange_rates)],
@@ -84,13 +87,18 @@ export function CreateExpense({
         (loaded.data.expenses ?? []).map((e) => e.currency),
       )}
       quick={quick}
-      stay={stay}
+      payFor={payFor}
       onToast={onToast}
       pending={create.isPending}
       submitError={create.error?.message}
       onSubmit={(values, _opened, receipts) =>
         create.mutate(
-          { values, createdBy: currentUserId, receipts: receipts.attach, stayId: stay?.id },
+          {
+            values,
+            createdBy: currentUserId,
+            receipts: receipts.attach,
+            owner: payFor ? { kind: payFor.kind, id: payFor.id } : null,
+          },
           { onSuccess: onDone },
         )
       }
@@ -156,7 +164,7 @@ export function EditExpense({
       {...loaded.data}
       initial={initial}
       quick={quick}
-      stay={expense?.stay_id ? { name: expense.name } : undefined}
+      payFor={payForOf(expense)}
       onToast={onToast}
       receipts={loaded.data.tripReceipts.filter((r) => r.expense_id === expenseId)}
       pending={update.isPending}
@@ -169,4 +177,10 @@ export function EditExpense({
       }
     />
   );
+}
+
+/** 저장된 비용이 숙소 · 항공편의 결제면 그 요약(맨 위 「… 결제」), 아니면 undefined */
+function payForOf(expense: Pick<Expense, "stay_id" | "flight_id" | "name"> | undefined) {
+  const kind = expense && paymentOwnerOf(expense);
+  return kind ? { kind, name: expense.name } : undefined;
 }

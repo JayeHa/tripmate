@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { fetchStayReceiptKeys, removeReceiptFiles, useExpenses } from "@/entities/expense";
+import { fetchPaymentReceiptKeys, removeReceiptFiles, useExpenses } from "@/entities/expense";
 import { deleteStay, linkedCardCount, useInvalidateStays } from "@/entities/stay";
 
 type StayDeleteOptions = {
@@ -23,7 +23,7 @@ async function deleteStayWithReceipts(
   stayId: string,
   deleteCards: boolean,
 ): Promise<number> {
-  const keys = await fetchStayReceiptKeys(stayId);
+  const keys = await fetchPaymentReceiptKeys({ kind: "stay", id: stayId });
   const removed = await deleteStay(stayId, deleteCards);
   await removeReceiptFiles(tripId, keys);
   return removed;

@@ -580,6 +580,7 @@ export type Database = {
           trip_id: string;
           schedule_item_id: string | null;
           stay_id: string | null;
+          flight_id: string | null;
           payer_id: string | null;
           payer_guest_id: string | null;
           split_each: boolean;
@@ -604,6 +605,7 @@ export type Database = {
           trip_id: string;
           schedule_item_id?: string | null;
           stay_id?: string | null;
+          flight_id?: string | null;
           payer_id?: string | null;
           payer_guest_id?: string | null;
           split_each?: boolean;
@@ -628,6 +630,7 @@ export type Database = {
           trip_id?: string;
           schedule_item_id?: string | null;
           stay_id?: string | null;
+          flight_id?: string | null;
           payer_id?: string | null;
           payer_guest_id?: string | null;
           split_each?: boolean;
