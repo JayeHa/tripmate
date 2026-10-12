@@ -36,7 +36,14 @@ export function useStayPaymentDraft(tripId: string) {
     }
   }
 
-  return { draft, setDraft, save, saving: create.isPending };
+  return {
+    draft,
+    setDraft,
+    save,
+    saving: create.isPending,
+    // 숙소 폼의 locked 와 같은 기준 — 오프라인으로 멈춘 동안은 창을 닫을 수 있게
+    locked: create.isPending && !create.isPaused,
+  };
 }
 
 export type StayPaymentDraft = ReturnType<typeof useStayPaymentDraft>;

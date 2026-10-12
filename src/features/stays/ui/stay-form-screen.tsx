@@ -61,14 +61,14 @@ export function StayFormScreen({
     savePayment: payment.save,
     onSaved,
   });
-  useReportLock(form.locked || payment.saving, onLockChange);
+  useReportLock(form.locked || payment.locked, onLockChange);
   return (
     <>
       <StaysHeader
         title={stay ? "숙소 수정" : "숙소 추가"}
         back={{ kind: "back", onClick: onBack }}
         action={{ label: "완료", onClick: form.submit, disabled: form.saving || payment.saving }}
-        locked={form.locked || payment.saving}
+        locked={form.locked || payment.locked}
       />
       {stay ? (
         <EditForm
