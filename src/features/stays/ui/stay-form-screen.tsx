@@ -87,6 +87,7 @@ export function StayFormScreen({
               tripId={tripId}
               name={form.values.name}
               payment={payment}
+              disabled={form.saving || payment.saving}
               onPayment={onPayment}
             />
           }

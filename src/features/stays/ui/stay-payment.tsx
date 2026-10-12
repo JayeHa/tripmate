@@ -18,13 +18,15 @@ type StayPaymentFieldProps = {
   view: StayPaymentView | null;
   /** 결제 칸을 연다(수정 · 새로 추가) */
   onOpen: () => void;
+  /** 누르지 못하게 — 숙소를 저장하는 동안 */
+  disabled?: boolean;
 };
 
 /**
  * 「결제」 칸 — 결제가 있으면 한 줄 요약(영수증 아이콘 · 금액 / 결제한 사람 · 상태 + 「수정」), 없으면 점선 「+ 결제 추가」.
  * 아래에 가계부와 같은 비용이라는 안내. 가계부를 읽기 전에는 그리지 않는다
  */
-export function StayPaymentField({ loaded, view, onOpen }: StayPaymentFieldProps) {
+export function StayPaymentField({ loaded, view, onOpen, disabled }: StayPaymentFieldProps) {
   if (!loaded) return null;
   return (
     <div className="flex flex-col gap-1.5 pt-1">
@@ -41,7 +43,8 @@ export function StayPaymentField({ loaded, view, onOpen }: StayPaymentFieldProps
           <button
             type="button"
             onClick={onOpen}
-            className="flex h-8.5 shrink-0 items-center rounded-button border border-line-strong px-3 text-[13px] font-bold text-ink-700 hover:bg-surface-sunken"
+            disabled={disabled}
+            className="flex h-8.5 shrink-0 items-center rounded-button border border-line-strong px-3 text-[13px] font-bold text-ink-700 hover:bg-surface-sunken disabled:opacity-50"
           >
             수정
           </button>
@@ -50,7 +53,8 @@ export function StayPaymentField({ loaded, view, onOpen }: StayPaymentFieldProps
         <button
           type="button"
           onClick={onOpen}
-          className="flex h-12 items-center justify-center gap-1.5 rounded-card border-[1.5px] border-dashed border-line-dashed text-sm font-bold text-brand"
+          disabled={disabled}
+          className="flex h-12 items-center justify-center gap-1.5 rounded-card border-[1.5px] border-dashed border-line-dashed text-sm font-bold text-brand disabled:opacity-50"
         >
           <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
           결제 추가
@@ -114,6 +118,11 @@ type StayPaymentDraftSectionProps = {
   /** 폼의 숙소 이름 — 비어 있으면 「숙소」 */
   name: string;
   payment: StayPaymentDraft;
+  /**
+   * 숙소를 저장하는 동안 막는다 — 저장은 누른 순간의 초안으로 결제를 만들므로, 그사이 초안을 고치면
+   * 이미 결제에 붙은 영수증 파일을 지울 수 있다
+   */
+  disabled: boolean;
   onPayment: (req: StayPaymentRequest) => void;
 };
 
@@ -122,6 +131,7 @@ export function StayPaymentDraftSection({
   tripId,
   name,
   payment,
+  disabled,
   onPayment,
 }: StayPaymentDraftSectionProps) {
   const payerName = usePayerName(tripId);
@@ -130,6 +140,7 @@ export function StayPaymentDraftSection({
     <StayPaymentField
       loaded
       view={values ? stayPaymentView(values, payerName(values.payer), todayISO()) : null}
+      disabled={disabled}
       onOpen={() =>
         onPayment({
           kind: "draft",
