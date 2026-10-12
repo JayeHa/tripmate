@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 
-import { directionLabel, type Flight, type FlightSaveResult } from "@/entities/flight";
+import { directionLabel, type FlightSaveResult } from "@/entities/flight";
 import type { Memo } from "@/entities/schedule-item";
 import { useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { ScreenHeader } from "@/shared/ui/screen-header";
 
 import { flightSavedToast } from "../lib/flight-form";
+import type { FlightExpenseRequest } from "../lib/flight-payment";
 import { useCurrentFlight } from "../model/use-current-flight";
 import { type FlightsStep, useFlightsFlow } from "../model/use-flights-flow";
-import { FlightDetail } from "./flight-detail";
+import { FlightDetailScreen } from "./flight-detail-screen";
 import { FlightFormScreen } from "./flight-form-screen";
 import { FlightList } from "./flight-list";
-import { FlightMemos } from "./flight-memos";
 
 type LinkedItem = { id: string; flight_id: string | null; alternative_of: string | null };
 
@@ -30,6 +30,8 @@ type FlightsDialogProps = {
   onToast?: (text: string) => void;
   /** 상세의 「+ 메모」(memo null) · 메모 누르기 — 창을 닫고 그 카드의 메모 작성 창을 연다. 없으면 메모 칸을 그리지 않는다 */
   onMemo?: (cardId: string, memo: Memo | null) => void;
+  /** 결제 칸 · 연결된 비용 — 비용 입력 창을 연다(화면이 그린다) */
+  onExpense: (req: FlightExpenseRequest) => void;
 };
 
 /**
@@ -69,6 +71,7 @@ function FlightsBody({
   initialFlightId = null,
   onToast,
   onMemo,
+  onExpense,
   onClose,
   onLockChange,
 }: FlightsBodyProps) {
@@ -103,7 +106,7 @@ function FlightsBody({
         </>
       )}
       {step.kind === "detail" && current && (
-        <DetailScreen
+        <FlightDetailScreen
           tripId={tripId}
           flight={current}
           direction={directionLabel(flights.indexOf(current), flights.length)}
@@ -111,6 +114,7 @@ function FlightsBody({
           onBack={flow.toList}
           onEdit={() => flow.openForm(current.id)}
           onMemo={onMemo}
+          onExpense={onExpense}
         />
       )}
       {step.kind === "form" && (
@@ -126,45 +130,9 @@ function FlightsBody({
             flow.toList();
           }}
           onLockChange={onLockChange}
+          onExpense={onExpense}
         />
       )}
     </div>
-  );
-}
-
-type DetailScreenProps = {
-  tripId: string;
-  flight: Flight;
-  direction: string;
-  /** 일정 카드 id — 없으면 메모 칸이 없다 */
-  cardId: string | null;
-  onBack: () => void;
-  onEdit: () => void;
-  onMemo?: (cardId: string, memo: Memo | null) => void;
-};
-
-/** 상세 — 머리(← · 「항공편 정보」 · 편집) + 내용. 일정 카드가 있으면 그 카드의 메모 칸 */
-function DetailScreen({
-  tripId,
-  flight,
-  direction,
-  cardId,
-  onBack,
-  onEdit,
-  onMemo,
-}: DetailScreenProps) {
-  return (
-    <>
-      <ScreenHeader
-        title="항공편 정보"
-        back={{ kind: "back", onClick: onBack }}
-        action={{ label: "편집", onClick: onEdit }}
-      />
-      <FlightDetail flight={flight} direction={direction}>
-        {cardId && onMemo && (
-          <FlightMemos tripId={tripId} cardId={cardId} onMemo={(memo) => onMemo(cardId, memo)} />
-        )}
-      </FlightDetail>
-    </>
   );
 }

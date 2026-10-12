@@ -10,15 +10,17 @@ type FlightDetailProps = {
   flight: Flight;
   /** 「가는 편」 · 「오는 편」 · 「항공편」 */
   direction: string;
-  /** 표 아래 칸들(메모) */
+  /** 표 바로 위 — 결제 예정일 지남 안내 */
+  banner?: ReactNode;
+  /** 표 아래 칸들(결제 · 연결된 비용 · 메모) */
   children?: ReactNode;
 };
 
 /**
  * 항공편 상세 — 탑승권(상태 배지 · 방향 · 날짜 · 노선) · 정보 표(항공편 · 출발 · 도착 · 예약번호). 예약번호가 없으면 그 줄은 숨긴다.
- * 표 아래에 받은 칸(메모)을 그린다. 결제 칸은 다음 단계에서 붙이고, 바우처 · 체크리스트는 노트 단계에서 붙인다
+ * 표 위에 받은 안내, 아래에 받은 칸(결제 · 연결된 비용 · 메모)을 그린다. 바우처 · 체크리스트는 노트 단계에서 붙인다
  */
-export function FlightDetail({ flight: f, direction, children }: FlightDetailProps) {
+export function FlightDetail({ flight: f, direction, banner, children }: FlightDetailProps) {
   const rows: [string, string][] = [
     ["항공편", `${f.airline_name} · ${f.airline_code}${f.flight_no}`],
     ["출발", `${flightDateLabel(f.dep_date)} ${hhmm(f.dep_time)} · ${airportName(f.dep_airport)}`],
@@ -37,6 +39,7 @@ export function FlightDetail({ flight: f, direction, children }: FlightDetailPro
         </div>
         <FlightRoute flight={f} />
       </div>
+      {banner}
       <dl className="flex flex-col">
         {rows.map(([label, value]) => (
           <div key={label} className="flex gap-3 border-b border-surface-muted py-2.75">

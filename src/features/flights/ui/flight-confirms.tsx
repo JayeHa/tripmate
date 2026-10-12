@@ -15,14 +15,17 @@ type DeleteFlightConfirmProps = {
   open: boolean;
   /** 일정 카드가 있다 — 함께 지워진다고 알린다 */
   hasCard: boolean;
+  /** 결제(가계부 비용)가 있다 — 함께 지워진다고 알린다 */
+  paid: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 };
 
-/** 항공편 삭제 확인 — 일정 카드가 있으면 그 카드 · 메모도 함께 지워진다고 알린다 */
+/** 항공편 삭제 확인 — 일정 카드가 있으면 그 카드 · 메모도, 결제가 있으면 가계부 기록도 함께 지워진다고 알린다 */
 export function DeleteFlightConfirm({
   open,
   hasCard,
+  paid,
   onCancel,
   onConfirm,
 }: DeleteFlightConfirmProps) {
@@ -35,6 +38,7 @@ export function DeleteFlightConfirm({
             {hasCard
               ? "일정 타임라인의 항공편 카드와 그 메모도 함께 지워져요."
               : "항공편 정보가 지워져요."}
+            {paid && " 결제 기록(가계부)도 함께 지워져요."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -15,6 +15,7 @@ import {
   type PaymentMethod,
 } from "../model/types";
 import { toHomeFor } from "./amounts";
+import { PAYMENT_OWNER, paymentOwnerOf } from "./payment-owner";
 import { payerOf, type PersonRef, splitPerson } from "./person";
 
 /** 목록 한 줄에 보이는 글 */
@@ -51,8 +52,8 @@ export type ExpenseRowView = {
   excluded: boolean;
   /** 연결한 일정 이름 */
   linkName: string | null;
-  /** 숙소의 결제 — 이름 · 카테고리를 숙소가 정한다. 이름 뒤에 연결 아이콘 */
-  fromStay: boolean;
+  /** 숙소 · 항공편의 결제면 「숙소 정보」 · 「항공편 정보」 — 이름 · 카테고리를 그쪽이 정한다. 이름 뒤에 연결 아이콘 */
+  ownerLink: string | null;
 };
 
 type RowContext = {
@@ -130,7 +131,7 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     overdue: !e.paid && e.due_date !== null && e.due_date < ctx.today,
     excluded: !e.counted,
     linkName: e.schedule_item_id ? ctx.linkNameOf(e.schedule_item_id) : null,
-    fromStay: Boolean(e.stay_id),
+    ownerLink: ownerLinkOf(e),
   };
 }
 
@@ -189,4 +190,10 @@ export function amountLines(
   if (mode === "home" && row.homeText)
     return { big: row.homeText, small: `${row.amountText}${rate}` };
   return { big: row.amountText, small: `${row.approxText}${rate}` };
+}
+
+/** 숙소 · 항공편 결제의 「연결」 글자. 아니면 null */
+function ownerLinkOf(e: Pick<ExpenseWithSplits, "stay_id" | "flight_id">): string | null {
+  const kind = paymentOwnerOf(e);
+  return kind ? PAYMENT_OWNER[kind].linkLabel : null;
 }

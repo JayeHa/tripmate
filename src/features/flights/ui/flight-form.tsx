@@ -17,13 +17,15 @@ type FlightFormProps = {
   form: FlightFormState;
   /** 고치는 중이면 맨 아래 「항공편 삭제」 */
   onDelete: (() => void) | null;
+  /** 예약번호 아래 「결제」 칸 — 고치는 항공편만(새 항공편은 다음 단계) */
+  payment?: ReactNode;
 };
 
 /**
- * 항공편 입력 칸들 — 예약 상태 → 출발일 → 항공편명 → 출발 공항 → 출발 시간 → 도착 공항 → 도착일 → 도착 시간 → 예약번호(선택).
+ * 항공편 입력 칸들 — 예약 상태 → 출발일 → 항공편명 → 출발 공항 → 출발 시간 → 도착 공항 → 도착일 → 도착 시간 → 예약번호(선택) → 결제.
  * 항공편명 · 공항은 누르면 찾기 화면으로 바뀐다. 도착일은 비어 있으면 출발일을 따라간다
  */
-export function FlightForm({ form, onDelete }: FlightFormProps) {
+export function FlightForm({ form, onDelete, payment }: FlightFormProps) {
   const { values: v, set } = form;
   const airline = v.airlineCode ? `${v.airlineName}(${v.airlineCode})${v.flightNo}` : "";
   return (
@@ -91,6 +93,7 @@ export function FlightForm({ form, onDelete }: FlightFormProps) {
           aria-label="예약번호"
         />
       </Row>
+      {payment && <div className="pt-4">{payment}</div>}
       {onDelete && (
         <button
           type="button"

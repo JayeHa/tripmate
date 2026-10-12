@@ -2743,6 +2743,114 @@ describe("항공편 (0052)", () => {
     ]);
     expect(await flightCards(r.id)).toMatchObject([{ id: card.id, day_index: 0 }]);
   });
+
+  /** 그 항공편의 결제를 넣는다 — 이름 · 카테고리는 일부러 다르게 (0055) */
+  async function payForFlight(trip: string, flight: string, extra = "") {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name, category, flight_id${extra ? ", stay_id" : ""})
+       values ('${trip}', '${A}', 188000, 'KRW', '아무 이름', 'food', '${flight}'${extra ? `, '${extra}'` : ""}) returning id`,
+    );
+    return rows[0].id;
+  }
+
+  /** 비용 한 줄의 이름 · 카테고리 · 일정 연결 */
+  async function expenseRow(id: string) {
+    const { rows } = await db.query<{
+      name: string;
+      category: string;
+      schedule_item_id: string | null;
+    }>(`select name, category, schedule_item_id from public.expenses where id = '${id}'`);
+    return rows[0];
+  }
+
+  it("결제: 이름 · 카테고리 · 일정 연결은 항공편이 정하고, 항공사 · 편명을 고치면 이름이 따라간다 (0055)", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    const id = await payForFlight(trip, r.id);
+    expect(await expenseRow(id)).toEqual({
+      name: "제주항공 7C1181",
+      category: "flight",
+      schedule_item_id: null,
+    });
+    const [card] = await flightCards(r.id);
+    await db.query(
+      `update public.expenses set name = '바꿈', category = 'other', schedule_item_id = '${card.id}' where id = '${id}'`,
+    );
+    expect(await expenseRow(id)).toEqual({
+      name: "제주항공 7C1181",
+      category: "flight",
+      schedule_item_id: null,
+    });
+    await saveFlight(trip, r.id, {
+      ...FIELDS,
+      airline_name: "티웨이항공",
+      airline_code: "TW",
+      flight_no: "211",
+    });
+    expect((await expenseRow(id)).name).toBe("티웨이항공 TW211");
+  });
+
+  it("결제: 항공편 하나에 하나, 다른 여행 항공편 · 숙소 결제와 겹치기는 거부, 항공편을 지우면 결제도 지운다 (0055)", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    const other = await trip5();
+    await expect(payForFlight(other, r.id)).rejects.toThrow("expenses_flight_fkey");
+    const stay = (
+      await saveStay(
+        trip,
+        null,
+        { name: "호텔", lat: 35.6, lng: 139.7, google_place_id: "g-flight-pay" },
+        { check_in_date: "2027-11-01", check_out_date: "2027-11-02", links: [] },
+      )
+    ).id;
+    await expect(payForFlight(trip, r.id, stay)).rejects.toThrow("expenses_one_owner_chk");
+    const id = await payForFlight(trip, r.id);
+    await expect(payForFlight(trip, r.id)).rejects.toThrow("expenses_flight_key");
+    await db.query(`delete from public.flights where id = '${r.id}'`);
+    expect(await expenseRow(id)).toBeUndefined();
+  });
+});
+
+describe("항공편 카드에 연결된 비용 → 항공편 결제 (0055)", () => {
+  const TRIP = "66666666-6666-6666-6666-666666666666";
+  const FLIGHT = "77777777-7777-7777-7777-777777777771";
+  const CARD = "88888888-8888-8888-8888-888888888881";
+
+  it("항공편마다 가장 먼저 만든 한 건만 결제가 되고, 나머지는 카드에 연결된 채 남는다", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0055"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('${TRIP}', '${A}', 't', '2027-10-31', '2027-11-04');
+      insert into public.flights (id, trip_id, airline_name, airline_code, flight_no, dep_airport, arr_airport, dep_date, dep_time, arr_date, arr_time)
+        values ('${FLIGHT}', '${TRIP}', '제주항공', '7C', '1181', 'ICN', 'NRT', '2027-10-31', '07:15', '2027-10-31', '09:40');
+      insert into public.schedule_items (id, trip_id, day_index, position, kind, flight_id, name)
+        values ('${CARD}', '${TRIP}', 0, 0, 'flight', '${FLIGHT}', 'ICN 07:15 - NRT 09:40');
+      insert into public.expenses (id, trip_id, payer_id, amount, currency, name, category, schedule_item_id, created_at) values
+        ('99999999-9999-9999-9999-999999999992', '${TRIP}', '${A}', 2, 'KRW', '나중', 'other', '${CARD}', '2027-01-02'),
+        ('99999999-9999-9999-9999-999999999991', '${TRIP}', '${A}', 1, 'KRW', '항공권', 'flight', '${CARD}', '2027-01-01');
+    `);
+    await applyMigration(pg, "0055_flight_expense.sql");
+    const { rows } = await pg.query(
+      `select id, name, category, flight_id, schedule_item_id from public.expenses order by id`,
+    );
+    expect(rows).toEqual([
+      {
+        id: "99999999-9999-9999-9999-999999999991",
+        name: "제주항공 7C1181",
+        category: "flight",
+        flight_id: FLIGHT,
+        schedule_item_id: null,
+      },
+      {
+        id: "99999999-9999-9999-9999-999999999992",
+        name: "나중",
+        category: "other",
+        flight_id: null,
+        schedule_item_id: CARD,
+      },
+    ]);
+  });
 });
 
 describe("옛 flight 줄 → 항공편 (0054)", () => {

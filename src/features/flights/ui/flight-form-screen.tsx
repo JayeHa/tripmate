@@ -4,12 +4,14 @@ import type { Flight, FlightSaveResult } from "@/entities/flight";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { ScreenHeader } from "@/shared/ui/screen-header";
 
+import type { FlightExpenseRequest } from "../lib/flight-payment";
 import { useFlightDelete } from "../model/use-flight-delete";
 import { type FlightFormState, useFlightForm } from "../model/use-flight-form";
 import { AirlineStep } from "./airline-step";
 import { AirportStep } from "./airport-step";
 import { CardOutConfirm, DeleteFlightConfirm } from "./flight-confirms";
 import { FlightForm } from "./flight-form";
+import { FlightPaymentSection } from "./flight-payment";
 
 type FlightFormScreenProps = {
   tripId: string;
@@ -22,6 +24,8 @@ type FlightFormScreenProps = {
   onSaved: (result: FlightSaveResult) => void;
   onDeleted: () => void;
   onLockChange: (locked: boolean) => void;
+  /** 고치는 항공편의 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다 */
+  onExpense: (req: FlightExpenseRequest) => void;
 };
 
 /**
@@ -37,6 +41,7 @@ export function FlightFormScreen({
   onSaved,
   onDeleted,
   onLockChange,
+  onExpense,
 }: FlightFormScreenProps) {
   const form = useFlightForm({ tripId, trip, flight, hasCard, onSaved });
   const del = useFlightDelete({ tripId, flightId: flight?.id ?? "", onDeleted });
@@ -47,7 +52,15 @@ export function FlightFormScreen({
       {form.screen.kind === "form" && (
         <>
           {del.error && <p className="px-6 pt-2 text-[13px] text-destructive">{del.error}</p>}
-          <FlightForm form={form} onDelete={flight && !del.deleting ? del.request : null} />
+          <FlightForm
+            form={form}
+            onDelete={flight && !del.deleting ? del.request : null}
+            payment={
+              flight && (
+                <FlightPaymentSection tripId={tripId} flight={flight} onExpense={onExpense} />
+              )
+            }
+          />
         </>
       )}
       {form.screen.kind === "airline" && <AirlineStep draft={form.airline} />}
@@ -64,6 +77,7 @@ export function FlightFormScreen({
       <DeleteFlightConfirm
         open={del.open}
         hasCard={hasCard}
+        paid={del.paid}
         onCancel={del.cancel}
         onConfirm={del.confirm}
       />

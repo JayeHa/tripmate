@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import type { Memo, TimelineRow } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
-import { FlightsDialog } from "@/features/flights";
 import { AddScheduleDialog } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { useScheduleEdit } from "@/features/schedule/edit-mode";
@@ -21,6 +20,7 @@ import { useFlightsOverlay } from "../model/use-flights-overlay";
 import { useScheduleSections } from "../model/use-schedule-sections";
 import { useStaysOverlay } from "../model/use-stays-overlay";
 import { DetailOverlays } from "./detail-overlays";
+import { FlightsOverlay } from "./flights-overlay";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
 import type { DayJump, ScheduleLayoutProps } from "./schedule-layout";
@@ -169,13 +169,11 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             stays={stays}
             onToast={overlays.showToast}
           />
-          <FlightsDialog
+          <FlightsOverlay
             tripId={tripId}
             trip={trip}
             items={items}
-            open={flights.open}
-            onOpenChange={flights.setOpen}
-            initialFlightId={flights.initialId}
+            flights={flights}
             onToast={overlays.showToast}
             onMemo={openFlightMemo}
           />

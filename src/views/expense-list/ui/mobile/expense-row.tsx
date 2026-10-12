@@ -49,8 +49,11 @@ export function ExpenseRow({
           >
             {row.name}
           </Link>
-          {row.fromStay && (
-            <Link2 className="size-3.5 shrink-0 text-ink-350" aria-label="숙소 정보와 연결됨" />
+          {row.ownerLink && (
+            <Link2
+              className="size-3.5 shrink-0 text-ink-350"
+              aria-label={`${row.ownerLink}와 연결됨`}
+            />
           )}
           {row.excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
         </div>

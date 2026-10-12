@@ -4,13 +4,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { useFlights } from "@/entities/flight";
+import type { ExpenseDialogTarget } from "@/features/expense/form";
+import type { FlightExpenseRequest } from "@/features/flights";
 import { queryKeys } from "@/shared/api/query-keys";
 
-/** 항공편 창 — 화면(TripScheduleView)이 쥐고 그린다. 목록부터 열거나(레일 · 여행 머리 칩) 한 항공편의 상세부터 연다(일정 카드) */
+/**
+ * 항공편 창과 그 위에 여는 비용 입력 창(결제 · 연결된 비용) — 화면(TripScheduleView)이 쥐고 FlightsOverlay 가 그린다.
+ * 항공편 창은 목록부터 열거나(레일 · 여행 머리 칩) 한 항공편의 상세부터 연다(일정 카드)
+ */
 export function useFlightsOverlay(tripId: string) {
   const [open, setOpen] = useState(false);
   // 처음 보일 항공편. null 이면 목록부터
   const [initialId, setInitialId] = useState<string | null>(null);
+  const [expense, setExpense] = useState<ExpenseDialogTarget | null>(null);
   const { data: flights } = useFlights(tripId);
   const qc = useQueryClient();
   return {
@@ -35,5 +41,18 @@ export function useFlightsOverlay(tripId: string) {
     },
     /** 레일 · 여행 머리 버튼의 숫자. 아직 못 읽었으면 0 */
     count: flights?.length ?? 0,
+    expense,
+    /** 결제 칸(붙은 비용이 있으면 그 수정, 없으면 그 항공편의 결제로 새 비용) · 연결된 비용 줄(그 비용 수정, 빠른 입력) */
+    openExpense: (req: FlightExpenseRequest) => setExpense(expenseTarget(req)),
+    closeExpense: () => setExpense(null),
   };
+}
+
+export type FlightsOverlayState = ReturnType<typeof useFlightsOverlay>;
+
+/** 항공편 창의 비용 요청 → 비용 창 대상 */
+function expenseTarget(req: FlightExpenseRequest): ExpenseDialogTarget {
+  if (req.kind === "linked") return { kind: "edit", expenseId: req.expenseId, quick: true };
+  if (req.expenseId) return { kind: "edit", expenseId: req.expenseId };
+  return { kind: "new", payFor: { kind: "flight", id: req.flightId, name: req.name } };
 }
