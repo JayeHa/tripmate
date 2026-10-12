@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { stayPaymentView } from "./stay-payment";
 
 const base = {
-  id: "e1",
   amount: 32000,
   currency: "JPY",
   paid: true,
@@ -14,7 +13,6 @@ const base = {
 describe("stayPaymentView", () => {
   it("결제 완료 — 금액 · 결제한 사람 · 상태", () => {
     expect(stayPaymentView(base, "정원", "2026-10-11")).toEqual({
-      expenseId: "e1",
       amountText: "¥32,000",
       sub: "정원 · 결제 완료",
       overdue: false,

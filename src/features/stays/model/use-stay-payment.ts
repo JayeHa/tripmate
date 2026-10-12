@@ -1,10 +1,10 @@
 "use client";
 
-import { payerOf, useExpenses, useMarkExpensePaid, useTripGuests } from "@/entities/expense";
-import { useMemberLookup } from "@/entities/trip-member";
+import { payerOf, useExpenses, useMarkExpensePaid } from "@/entities/expense";
 import { todayISO } from "@/shared/lib/days";
 
 import { stayPaymentView } from "../lib/stay-payment";
+import { usePayerName } from "./use-payer-name";
 
 /**
  * 숙소의 결제 — 가계부에서 이 숙소에 붙은 비용(`stay_id`)을 찾아 요약한다.
@@ -12,22 +12,15 @@ import { stayPaymentView } from "../lib/stay-payment";
  */
 export function useStayPayment(tripId: string, stayId: string) {
   const { data: expenses } = useExpenses(tripId);
-  const { data: guests = [] } = useTripGuests(tripId);
-  const member = useMemberLookup(tripId);
+  const payerName = usePayerName(tripId);
   const markPaid = useMarkExpensePaid(tripId);
   const expense = expenses?.find((e) => e.stay_id === stayId) ?? null;
 
-  /** 결제한 사람 이름 — 멤버는 표시 이름, 정산 인원은 그 이름 */
-  function payerName(): string {
-    const payer = expense && payerOf(expense);
-    if (!payer) return "";
-    if (payer.kind === "guest") return guests.find((g) => g.id === payer.id)?.name ?? "알 수 없음";
-    return member(payer.id)?.name ?? "알 수 없음";
-  }
-
   return {
     loaded: expenses !== undefined,
-    view: expense && stayPaymentView(expense, payerName(), todayISO()),
+    /** 붙어 있는 비용 — 없으면 null(「+ 결제 추가」) */
+    expenseId: expense?.id ?? null,
+    view: expense && stayPaymentView(expense, payerName(payerOf(expense)), todayISO()),
     /** 「결제 완료로」 — 예정일이 지난 결제 */
     markPaid: () => {
       if (expense) markPaid.mutate(expense.id);

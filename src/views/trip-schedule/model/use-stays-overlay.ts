@@ -59,15 +59,17 @@ export function useStaysOverlay(tripId: string, trip: { start_date: string } | n
     closePick: () => setPick(null),
     city: cities[0] ?? null,
     payment,
-    /** 숙소의 결제 — 붙은 비용이 있으면 그 수정, 없으면 그 숙소의 결제로 새 비용 */
-    openPayment: (req: StayPaymentRequest) =>
-      setPayment(
-        req.expenseId
-          ? { kind: "edit", expenseId: req.expenseId }
-          : { kind: "new", stay: { id: req.stayId, name: req.name } },
-      ),
+    /** 숙소의 결제 — 붙은 비용이 있으면 그 수정, 없으면 그 숙소의 결제로 새 비용. 새 숙소면 초안 */
+    openPayment: (req: StayPaymentRequest) => setPayment(paymentTarget(req)),
     closePayment: () => setPayment(null),
   };
 }
 
 export type StaysOverlayState = ReturnType<typeof useStaysOverlay>;
+
+/** 숙소의 결제 요청 → 비용 창 대상 */
+function paymentTarget(req: StayPaymentRequest): ExpenseDialogTarget {
+  if (req.kind === "draft") return req;
+  if (req.expenseId) return { kind: "edit", expenseId: req.expenseId };
+  return { kind: "new", stay: { id: req.stayId, name: req.name } };
+}
