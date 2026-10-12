@@ -17,7 +17,7 @@ type FlightFormProps = {
   form: FlightFormState;
   /** 고치는 중이면 맨 아래 「항공편 삭제」 */
   onDelete: (() => void) | null;
-  /** 예약번호 아래 「결제」 칸 — 고치는 항공편만(새 항공편은 다음 단계) */
+  /** 예약번호 아래 「결제」 칸 — 고치는 항공편은 저장된 결제, 새 항공편은 초안 */
   payment?: ReactNode;
 };
 

@@ -1,10 +1,14 @@
-import { PaymentField, paymentView, usePayerName } from "@/entities/expense";
+import {
+  type PaymentDraftState,
+  PaymentField,
+  paymentView,
+  usePayerName,
+} from "@/entities/expense";
 import { useMemberLookup } from "@/entities/trip-member";
 import { todayISO } from "@/shared/lib/days";
 
 import { STAY_LEDGER_LABEL, type StayPaymentRequest } from "../lib/stay-payment";
 import { useStayPayment } from "../model/use-stay-payment";
-import type { StayPaymentDraft } from "../model/use-stay-payment-draft";
 
 type StayPaymentSectionProps = {
   tripId: string;
@@ -31,7 +35,7 @@ type StayPaymentDraftSectionProps = {
   tripId: string;
   /** 폼의 숙소 이름 — 비어 있으면 「숙소」 */
   name: string;
-  payment: StayPaymentDraft;
+  payment: PaymentDraftState;
   /**
    * 숙소를 저장하는 동안 막는다 — 저장은 누른 순간의 초안으로 결제를 만들므로, 그사이 초안을 고치면
    * 이미 결제에 붙은 영수증 파일을 지울 수 있다

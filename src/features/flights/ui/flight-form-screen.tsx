@@ -1,17 +1,19 @@
 "use client";
 
+import { usePaymentDraft } from "@/entities/expense";
 import type { Flight, FlightSaveResult } from "@/entities/flight";
+import { useUser } from "@/entities/session";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { ScreenHeader } from "@/shared/ui/screen-header";
 
-import type { FlightExpenseRequest } from "../lib/flight-payment";
+import { type FlightExpenseRequest, flightPayName } from "../lib/flight-payment";
 import { useFlightDelete } from "../model/use-flight-delete";
 import { type FlightFormState, useFlightForm } from "../model/use-flight-form";
 import { AirlineStep } from "./airline-step";
 import { AirportStep } from "./airport-step";
 import { CardOutConfirm, DeleteFlightConfirm } from "./flight-confirms";
 import { FlightForm } from "./flight-form";
-import { FlightPaymentSection } from "./flight-payment";
+import { FlightPaymentDraftSection, FlightPaymentSection } from "./flight-payment";
 
 type FlightFormScreenProps = {
   tripId: string;
@@ -21,10 +23,11 @@ type FlightFormScreenProps = {
   /** 고치는 항공편에 일정 카드가 있다 */
   hasCard: boolean;
   onBack: () => void;
-  onSaved: (result: FlightSaveResult) => void;
+  /** paid — 새 항공편의 결제 초안을 만들지 못했으면 false(항공편은 저장됐다) */
+  onSaved: (result: FlightSaveResult, paid: boolean) => void;
   onDeleted: () => void;
   onLockChange: (locked: boolean) => void;
-  /** 고치는 항공편의 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다 */
+  /** 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다. 새 항공편은 초안으로 열린다 */
   onExpense: (req: FlightExpenseRequest) => void;
 };
 
@@ -43,12 +46,28 @@ export function FlightFormScreen({
   onLockChange,
   onExpense,
 }: FlightFormScreenProps) {
-  const form = useFlightForm({ tripId, trip, flight, hasCard, onSaved });
+  const { data: user } = useUser();
+  const payment = usePaymentDraft(tripId, "flight", user?.id);
+  const form = useFlightForm({
+    tripId,
+    trip,
+    flight,
+    hasCard,
+    savePayment: payment.save,
+    onSaved,
+  });
   const del = useFlightDelete({ tripId, flightId: flight?.id ?? "", onDeleted });
-  useReportLock(form.locked, onLockChange);
+  const locked = form.locked || payment.locked;
+  useReportLock(locked, onLockChange);
   return (
     <>
-      <FormHeader form={form} editing={flight !== null} onBack={onBack} />
+      <FormHeader
+        form={form}
+        editing={flight !== null}
+        saving={form.saving || payment.saving}
+        locked={locked}
+        onBack={onBack}
+      />
       {form.screen.kind === "form" && (
         <>
           {del.error && <p className="px-6 pt-2 text-[13px] text-destructive">{del.error}</p>}
@@ -56,8 +75,16 @@ export function FlightFormScreen({
             form={form}
             onDelete={flight && !del.deleting ? del.request : null}
             payment={
-              flight && (
+              flight ? (
                 <FlightPaymentSection tripId={tripId} flight={flight} onExpense={onExpense} />
+              ) : (
+                <FlightPaymentDraftSection
+                  tripId={tripId}
+                  name={form.values.airlineCode ? flightPayName(draftFlight(form)) : "항공편"}
+                  payment={payment}
+                  disabled={form.saving || payment.saving}
+                  onExpense={onExpense}
+                />
               )
             }
           />
@@ -87,10 +114,24 @@ export function FlightFormScreen({
 
 const AIRPORT_TITLE = { dep: "출발 공항", arr: "도착 공항" } as const;
 
-type FormHeaderProps = { form: FlightFormState; editing: boolean; onBack: () => void };
+/** 폼 값의 항공사 · 편명 — 새 결제 이름(flightPayName) */
+function draftFlight(form: FlightFormState) {
+  const v = form.values;
+  return { airline_name: v.airlineName, airline_code: v.airlineCode, flight_no: v.flightNo };
+}
+
+type FormHeaderProps = {
+  form: FlightFormState;
+  editing: boolean;
+  /** 항공편 · 결제 초안을 저장하는 중 — 「완료」 를 막는다 */
+  saving: boolean;
+  /** 닫지 못한다(요청이 서버에 가 있다) */
+  locked: boolean;
+  onBack: () => void;
+};
 
 /** 머리 — 입력 칸들은 「항공편 추가/수정 · 완료」, 「항공편명 등록 · 완료」, 공항 찾기는 제목만 */
-function FormHeader({ form, editing, onBack }: FormHeaderProps) {
+function FormHeader({ form, editing, saving, locked, onBack }: FormHeaderProps) {
   const { screen } = form;
   if (screen.kind === "airport") {
     return (
@@ -113,8 +154,8 @@ function FormHeader({ form, editing, onBack }: FormHeaderProps) {
     <ScreenHeader
       title={editing ? "항공편 수정" : "항공편 추가"}
       back={{ kind: "back", onClick: onBack }}
-      action={{ label: "완료", onClick: form.submit, disabled: !form.complete || form.saving }}
-      locked={form.locked}
+      action={{ label: "완료", onClick: form.submit, disabled: !form.complete || saving }}
+      locked={locked}
     />
   );
 }

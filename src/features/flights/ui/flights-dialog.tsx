@@ -85,10 +85,13 @@ function FlightsBody({
   const cardOf = (id: string) =>
     items.find((i) => i.flight_id === id && !i.alternative_of)?.id ?? null;
 
-  /** 저장이 끝났다 — 새 항공편은 목록으로, 고친 항공편은 상세로 */
-  function saved(result: FlightSaveResult) {
+  /**
+   * 저장이 끝났다 — 새 항공편은 목록으로, 고친 항공편은 상세로.
+   * 새 항공편의 결제만 실패했으면(paid false) 항공편은 저장됐으니 그대로 가고, 결제를 다시 넣으라고 알린다
+   */
+  function saved(result: FlightSaveResult, paid: boolean) {
     const editing = step.kind === "form" && step.id !== null;
-    onToast?.(flightSavedToast(editing, result.card));
+    onToast?.(paid ? flightSavedToast(editing, result.card) : PAY_FAILED_TOAST);
     if (editing) flow.openDetail(result.id);
     else flow.toList();
   }
@@ -136,3 +139,7 @@ function FlightsBody({
     </div>
   );
 }
+
+/** 새 항공편은 저장했지만 결제 초안을 만들지 못했다 */
+const PAY_FAILED_TOAST =
+  "항공편은 저장했지만 결제는 저장하지 못했어요. 항공편 정보에서 다시 넣어 주세요";

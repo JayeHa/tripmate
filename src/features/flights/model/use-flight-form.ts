@@ -30,15 +30,24 @@ type FlightFormOptions = {
   flight: Flight | null;
   /** 고치는 항공편에 일정 카드가 있다 — 탑승일을 기간 밖으로 옮기면 카드가 지워지니 먼저 묻는다 */
   hasCard: boolean;
-  /** 저장이 끝났다(폼은 부른 쪽이 닫는다) */
-  onSaved: (result: FlightSaveResult) => void;
+  /** 새 항공편을 저장한 뒤 결제 초안을 그 항공편에 만든다(usePaymentDraft). 실패하면 false */
+  savePayment?: (flightId: string) => Promise<boolean>;
+  /** 저장이 끝났다(폼은 부른 쪽이 닫는다). paid — 새 항공편의 결제 초안을 만들지 못했으면 false */
+  onSaved: (result: FlightSaveResult, paid: boolean) => void;
 };
 
 /**
  * 항공편 입력 폼의 상태 — 값 · 폼 안 화면(항공사 · 공항 찾기) · 저장.
  * 새 항공편은 「항공편명 등록」 부터 연다. 고칠 때 탑승일이 여행 기간 밖으로 나가 일정 카드가 지워지면 저장 전에 묻는다(confirming)
  */
-export function useFlightForm({ tripId, trip, flight, hasCard, onSaved }: FlightFormOptions) {
+export function useFlightForm({
+  tripId,
+  trip,
+  flight,
+  hasCard,
+  savePayment,
+  onSaved,
+}: FlightFormOptions) {
   const [values, setValues] = useState<FlightFormValues>(() =>
     flight ? flightFormFrom(flight) : blankFlightForm(trip.start_date),
   );
@@ -56,14 +65,21 @@ export function useFlightForm({ tripId, trip, flight, hasCard, onSaved }: Flight
     setValues((v) => ({ ...v, [key]: value }));
   }
 
-  /** 저장 — mutateAsync 라 저장 중 창이 닫혀(언마운트) 버려도 완료를 알린다 */
+  /**
+   * 저장 — mutateAsync 라 저장 중 창이 닫혀(언마운트) 버려도 완료를 알린다. 새 항공편이면 그 뒤에 결제 초안을 결제로 만든다
+   * (결제만 실패해도 항공편은 저장됐으니 되돌리지 않는다)
+   */
   function commit(fields: FlightFieldsInput) {
     if (savingRef.current) return;
     savingRef.current = true;
     setError(null);
     void save
       .mutateAsync({ flightId: flight?.id ?? null, fields })
-      .then(onSaved, () => undefined)
+      .then(
+        async (result) =>
+          onSaved(result, flight !== null || !savePayment || (await savePayment(result.id))),
+        () => undefined,
+      )
       .finally(() => {
         savingRef.current = false;
       });
