@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { airportName, type Flight, flightDateLabel, hhmm } from "@/entities/flight";
 import { ReservationBadge, type ReservationStatus } from "@/entities/schedule-item";
 
@@ -8,13 +10,15 @@ type FlightDetailProps = {
   flight: Flight;
   /** 「가는 편」 · 「오는 편」 · 「항공편」 */
   direction: string;
+  /** 표 아래 칸들(메모) */
+  children?: ReactNode;
 };
 
 /**
  * 항공편 상세 — 탑승권(상태 배지 · 방향 · 날짜 · 노선) · 정보 표(항공편 · 출발 · 도착 · 예약번호). 예약번호가 없으면 그 줄은 숨긴다.
- * 결제 · 메모 칸은 다음 단계에서 붙이고, 바우처 · 체크리스트는 노트 단계에서 붙인다
+ * 표 아래에 받은 칸(메모)을 그린다. 결제 칸은 다음 단계에서 붙이고, 바우처 · 체크리스트는 노트 단계에서 붙인다
  */
-export function FlightDetail({ flight: f, direction }: FlightDetailProps) {
+export function FlightDetail({ flight: f, direction, children }: FlightDetailProps) {
   const rows: [string, string][] = [
     ["항공편", `${f.airline_name} · ${f.airline_code}${f.flight_no}`],
     ["출발", `${flightDateLabel(f.dep_date)} ${hhmm(f.dep_time)} · ${airportName(f.dep_airport)}`],
@@ -43,6 +47,7 @@ export function FlightDetail({ flight: f, direction }: FlightDetailProps) {
           </div>
         ))}
       </dl>
+      {children}
       <ScheduleNotice />
     </div>
   );

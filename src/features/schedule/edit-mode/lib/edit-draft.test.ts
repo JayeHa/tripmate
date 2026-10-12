@@ -6,6 +6,7 @@ import {
   draftOf,
   editChanges,
   exceedsTripDays,
+  isSelectable,
   keepLive,
   moveSelected,
   removeSelected,
@@ -87,5 +88,12 @@ describe("편집 중 여행 기간이 바뀜", () => {
     // 6일로 늘었을 때 day 6(5) 을 보다가 다시 4일로 — 초안은 4일 그대로
     expect(tripDaysChange(draft, sums, 4, 5)).toBe("lastDay");
     expect(tripDaysChange(draft, sums, 4, 2)).toBeNull();
+  });
+});
+
+describe("isSelectable", () => {
+  it("항공편 카드(연결된 줄)만 잠그고, 연결 없는 옛 flight 줄은 고른다", () => {
+    expect(isSelectable({ flight_id: "f1" })).toBe(false);
+    expect(isSelectable({ flight_id: null })).toBe(true);
   });
 });

@@ -2724,4 +2724,88 @@ describe("항공편 (0052)", () => {
     expect(rows[0]).toEqual({ d: "2027-11-02", a: "2027-11-03" });
     expect((await flightCards(r.id))[0].day_index).toBe(0);
   });
+
+  it("일정 편집 저장: 항공편 카드는 지우지 않고 다른 날로 옮기지 않는다. 같은 날 안의 순서는 바뀐다 (0054)", async () => {
+    const trip = await trip5();
+    const a = await addPlace(trip, 0, { name: "먼저 있던 곳", lat: 35.6, lng: 139.7 });
+    const r = await saveFlight(trip, null, FIELDS);
+    const [card] = await flightCards(r.id);
+    await db.query(`select public.apply_schedule_edit($1, $2, $3, null)`, [
+      trip,
+      JSON.stringify({ 0: [card.id, a] }),
+      [],
+    ]);
+    expect(await flightCards(r.id)).toMatchObject([{ day_index: 0, position: 0 }]);
+    await db.query(`select public.apply_schedule_edit($1, $2, $3, null)`, [
+      trip,
+      JSON.stringify({ 0: [a], 1: [card.id] }),
+      [card.id],
+    ]);
+    expect(await flightCards(r.id)).toMatchObject([{ id: card.id, day_index: 0 }]);
+  });
+});
+
+describe("옛 flight 줄 → 항공편 (0054)", () => {
+  const TRIP = "44444444-4444-4444-4444-444444444444";
+
+  it("「AAA HH:MM - BBB HH:MM」 + 「항공사 · 편명」 이면 항공편을 만들어 잇고(자리 · 메모 · 상태 그대로), 아니면 옛 줄로 둔다", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0054"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x');
+      insert into public.trips (id, owner_id, title, start_date, end_date)
+        values ('${TRIP}', '${A}', 't', '2027-10-31', '2027-11-04');
+      insert into public.schedule_items (id, trip_id, day_index, position, kind, name, description, start_time, status, created_by) values
+        ('55555555-5555-5555-5555-555555555551', '${TRIP}', 0, 1, 'flight', 'ICN 07:15 - NRT 09:40', '제주항공 · 7C1181', '07:00', 'wait', '${A}'),
+        ('55555555-5555-5555-5555-555555555552', '${TRIP}', 4, 3, 'flight', 'NRT 23:30 - ICN 02:10', '에어프레미아 · YP732', null, null, '${A}'),
+        ('55555555-5555-5555-5555-555555555553', '${TRIP}', 2, 0, 'flight', '인천 → 나리타', '제주항공 · 7C1181', null, null, '${A}'),
+        ('55555555-5555-5555-5555-555555555554', '${TRIP}', 2, 1, 'flight', 'ICN 25:00 - NRT 09:40', '제주항공 · 7C1181', null, null, '${A}');
+      insert into public.memos (trip_id, schedule_item_id, body)
+        values ('${TRIP}', '55555555-5555-5555-5555-555555555551', '창가 자리');
+    `);
+    await applyMigration(pg, "0054_flight_cards_schedule.sql");
+    const flights = await pg.query(
+      `select f.airline_name, f.airline_code, f.flight_no, f.dep_airport, f.arr_airport, f.dep_date::text dep_date,
+              f.dep_time::text dep_time, f.arr_date::text arr_date, f.status, s.id item, s.position, s.start_time::text start_time
+       from public.flights f join public.schedule_items s on s.flight_id = f.id order by f.dep_date`,
+    );
+    expect(flights.rows).toEqual([
+      {
+        airline_name: "제주항공",
+        airline_code: "7C",
+        flight_no: "1181",
+        dep_airport: "ICN",
+        arr_airport: "NRT",
+        dep_date: "2027-10-31",
+        dep_time: "07:15:00",
+        arr_date: "2027-10-31",
+        status: "wait",
+        item: "55555555-5555-5555-5555-555555555551",
+        position: 1,
+        start_time: "07:15:00",
+      },
+      {
+        airline_name: "에어프레미아",
+        airline_code: "YP",
+        flight_no: "732",
+        dep_airport: "NRT",
+        arr_airport: "ICN",
+        dep_date: "2027-11-04",
+        dep_time: "23:30:00",
+        arr_date: "2027-11-05",
+        status: null,
+        item: "55555555-5555-5555-5555-555555555552",
+        position: 3,
+        start_time: "23:30:00",
+      },
+    ]);
+    const legacy = await pg.query(
+      `select id from public.schedule_items where flight_id is null order by id`,
+    );
+    expect(legacy.rows).toEqual([
+      { id: "55555555-5555-5555-5555-555555555553" },
+      { id: "55555555-5555-5555-5555-555555555554" },
+    ]);
+    const memos = await pg.query(`select body from public.memos`);
+    expect(memos.rows).toEqual([{ body: "창가 자리" }]);
+  });
 });

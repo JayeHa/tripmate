@@ -3,6 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
+import { isSelectable } from "../../lib/edit-draft";
 import type { ScheduleEditState } from "../../model/use-schedule-edit";
 import { DiscardConfirm } from "../discard-confirm";
 import { EditList } from "../edit-list";
@@ -64,7 +65,7 @@ export function MobileScheduleEditor({
           <p className="py-10 text-center text-sm text-ink-400">이 날은 일정이 비어 있어요</p>
         )}
         <EditList edit={edit} layout="mobile" />
-        {edit.rows.some((r) => r.kind !== "flight") && (
+        {edit.rows.some((r) => isSelectable(r.item)) && (
           <div className="px-5 pt-2.5 pb-2">
             <button
               type="button"
