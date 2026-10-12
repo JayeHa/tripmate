@@ -1,5 +1,7 @@
 "use client";
 
+import { usePaymentDraft } from "@/entities/expense";
+import { useUser } from "@/entities/session";
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { ScreenHeader } from "@/shared/ui/screen-header";
@@ -8,7 +10,6 @@ import type { StayRegistration } from "../lib/stay-form";
 import type { StayPaymentRequest } from "../lib/stay-payment";
 import { useStayDelete } from "../model/use-stay-delete";
 import { type LocationPickRequest, useStayForm } from "../model/use-stay-form";
-import { useStayPaymentDraft } from "../model/use-stay-payment-draft";
 import { DeleteStayConfirm, PruneCardsConfirm } from "./stay-confirms";
 import { StayDatesSheet } from "./stay-dates-sheet";
 import { StayForm } from "./stay-form";
@@ -50,7 +51,8 @@ export function StayFormScreen({
   onDeleted,
   onLockChange,
 }: StayFormScreenProps) {
-  const payment = useStayPaymentDraft(tripId);
+  const { data: user } = useUser();
+  const payment = usePaymentDraft(tripId, "stay", user?.id);
   const form = useStayForm({
     tripId,
     trip,

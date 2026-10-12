@@ -33,7 +33,7 @@ type StayFormOptions = {
   /** 밀려나는 카드를 세는 데 쓰는 일정 줄 */
   items: readonly { stay_id: string | null; alternative_of: string | null; day_index: number }[];
   onPickLocation: (req: LocationPickRequest) => void;
-  /** 새 숙소를 저장한 뒤 결제 초안을 그 숙소에 만든다(useStayPaymentDraft). 실패하면 false */
+  /** 새 숙소를 저장한 뒤 결제 초안을 그 숙소에 만든다(usePaymentDraft). 실패하면 false */
   savePayment?: (stayId: string) => Promise<boolean>;
   /** 저장이 끝났다(폼은 부른 쪽이 닫는다). paid — 결제 초안을 만들지 못했으면 false */
   onSaved: (result: StaySaveResult, paid: boolean) => void;

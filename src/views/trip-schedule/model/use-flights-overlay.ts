@@ -42,7 +42,10 @@ export function useFlightsOverlay(tripId: string) {
     /** 레일 · 여행 머리 버튼의 숫자. 아직 못 읽었으면 0 */
     count: flights?.length ?? 0,
     expense,
-    /** 결제 칸(붙은 비용이 있으면 그 수정, 없으면 그 항공편의 결제로 새 비용) · 연결된 비용 줄(그 비용 수정, 빠른 입력) */
+    /**
+     * 결제 칸(붙은 비용이 있으면 그 수정, 없으면 그 항공편의 결제로 새 비용, 새 항공편이면 초안) ·
+     * 연결된 비용 줄(그 비용 수정, 빠른 입력)
+     */
     openExpense: (req: FlightExpenseRequest) => setExpense(expenseTarget(req)),
     closeExpense: () => setExpense(null),
   };
@@ -53,6 +56,14 @@ export type FlightsOverlayState = ReturnType<typeof useFlightsOverlay>;
 /** 항공편 창의 비용 요청 → 비용 창 대상 */
 function expenseTarget(req: FlightExpenseRequest): ExpenseDialogTarget {
   if (req.kind === "linked") return { kind: "edit", expenseId: req.expenseId, quick: true };
+  if (req.kind === "draft") {
+    return {
+      kind: "draft",
+      payFor: { kind: "flight", name: req.name },
+      draft: req.draft,
+      onDraft: req.onDraft,
+    };
+  }
   if (req.expenseId) return { kind: "edit", expenseId: req.expenseId };
   return { kind: "new", payFor: { kind: "flight", id: req.flightId, name: req.name } };
 }
