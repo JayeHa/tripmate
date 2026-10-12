@@ -2701,6 +2701,19 @@ describe("항공편 (0052)", () => {
     ).toMatch(/schedule_items_flight_key/);
   });
 
+  it("기간을 늘려 탑승일이 들어오면 카드를 만들고, 줄여서 밖이 되면 카드는 마지막 날로 모인 채 남는다 (0053)", async () => {
+    const trip = await trip5();
+    const back = await saveFlight(trip, null, { ...FIELDS, dep_date: "2027-11-05" });
+    expect(await flightCards(back.id)).toHaveLength(0);
+    await addPlace(trip, 4, { name: "마지막 날 장소", lat: 35.6, lng: 139.7 });
+    await db.query(`select public.update_trip_dates('${trip}', '2027-10-31', '2027-11-05')`);
+    expect(await flightCards(back.id)).toMatchObject([
+      { day_index: 5, position: 0, name: "ICN 07:15 - NRT 09:40", status: "ok" },
+    ]);
+    await db.query(`select public.update_trip_dates('${trip}', '2027-10-31', '2027-11-04')`);
+    expect((await flightCards(back.id)).map((c) => c.day_index)).toEqual([4]);
+  });
+
   it("출발일을 옮기면 항공편 날짜도 같은 만큼 옮겨진다", async () => {
     const trip = await trip5();
     const r = await saveFlight(trip, null, { ...FIELDS, arr_date: "2027-11-01" });
