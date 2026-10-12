@@ -12,7 +12,8 @@ type DemoSeed = {
 /**
  * 데모용 시드. 디자인 시안의 도쿄 여행 샘플 데이터를 옮긴 것이다.
  * 시안처럼 한 줄에 장소 정보까지 적고, 시딩할 때 장소 · 일정으로 나눈다(seed-rows.ts, 0013).
- * 이동(move) 6개는 시안에서 빠졌다(이동은 장소 쌍의 기록, 0011). 하루 요약 · 일행 메모 · 항공편 연결(src)은 그 단계에서 채운다.
+ * 이동(move) 6개는 시안에서 빠졌다(이동은 장소 쌍의 기록, 0011). 하루 요약 · 일행 메모는 그 단계에서 채운다.
+ * flight 줄은 항공편과 함께 넣어 항공편 카드가 된다 — 제목 · 설명 · 시각은 항공편과 같은 값(0052 flight_card_name)으로 적는다
  */
 export const TOKYO_SEED = {
   trip: {
@@ -62,6 +63,17 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
+      flight: {
+        airline_name: "제주항공",
+        airline_code: "7C",
+        flight_no: "1181",
+        dep_airport: "ICN",
+        arr_airport: "NRT",
+        dep_date: "2026-10-31",
+        dep_time: "07:15",
+        arr_date: "2026-10-31",
+        arr_time: "09:40",
+      },
       memo: "비행 2시간 25분 · 도착 제3터미널 · 보잉 737 MAX 8\n휴대 10kg(55×40×20) · 위탁 15kg(3면 합 158cm)\n위탁 추가는 10/29 11:15까지 · 트립닷컴 1400829928891490",
     },
     {
@@ -934,6 +946,17 @@ export const TOKYO_SEED = {
       hours: null,
       gmap_url: null,
       links: [],
+      flight: {
+        airline_name: "에어프레미아",
+        airline_code: "YP",
+        flight_no: "732",
+        dep_airport: "NRT",
+        arr_airport: "ICN",
+        dep_date: "2026-11-04",
+        dep_time: "12:30",
+        arr_date: "2026-11-04",
+        arr_time: "15:20",
+      },
       memo: "비행 2시간 50분 · 출발 제2터미널 · 보잉 787-9\n휴대 10kg · 위탁 1개 15kg",
     },
   ],

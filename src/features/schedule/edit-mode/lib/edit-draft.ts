@@ -20,9 +20,12 @@ export function keepLive(draft: EditDraft, live: ReadonlySet<string>): EditDraft
   return draft.map((d) => d.filter((id) => live.has(id)));
 }
 
-/** 고를 수 있는 일정인지 — 항공편은 항공편 화면에서만 고치고 지운다(순서 끌기는 된다) */
-export function isSelectable(item: Pick<ScheduleItem, "kind">): boolean {
-  return item.kind !== "flight";
+/**
+ * 고를 수 있는 일정인지 — 항공편 카드(항공편에 연결된 줄)는 항공편 화면에서만 고치고 지운다(순서 끌기는 된다).
+ * 연결 없는 옛 flight 줄은 다른 일정처럼 고른다
+ */
+export function isSelectable(item: Pick<ScheduleItem, "flight_id">): boolean {
+  return item.flight_id === null;
 }
 
 /** 그날 안에서 from 번째를 to 번째로 옮긴다 */

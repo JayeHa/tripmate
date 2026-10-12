@@ -15,7 +15,7 @@ type Client = ReturnType<typeof createClient>;
 /**
  * 샘플 여행에 도시 · 장소 · 일정을 심는다. 실패해도 여행 자체는 볼 수 있어서 멈추지 않고 콘솔에만 남긴다.
  * 도시가 없으면 목록에 「도시 미정」으로 보이고, 일정이 없으면 빈 일정이 보인다.
- * 장소를 먼저 넣고 일정이 그 장소를 참조한다. 장소 id 는 미리 만들어 둔다(seed-rows.ts). 대체 장소 · 메모는 일정 다음에 넣는다.
+ * 장소 · 항공편을 먼저 넣고 일정이 그것을 참조한다. id 는 미리 만들어 둔다(seed-rows.ts). 대체 장소 · 메모는 일정 다음에 넣는다.
  */
 async function seedTrip(supabase: Client, tripId: string) {
   const { error: citiesError } = await supabase
@@ -36,6 +36,8 @@ async function seedTrip(supabase: Client, tripId: string) {
     .from("places")
     .insert(rows.places, { defaultToNull: false });
   if (placesError) return console.error("샘플 장소 삽입 실패", placesError);
+  const { error: flightsError } = await supabase.from("flights").insert(rows.flights);
+  if (flightsError) return console.error("샘플 항공편 삽입 실패", flightsError);
   const { error: itemsError } = await supabase
     .from("schedule_items")
     .insert(rows.items, { defaultToNull: false });

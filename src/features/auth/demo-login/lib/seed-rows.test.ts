@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { dayIndexToDate } from "@/shared/lib/days";
+
 import { toSeedRows } from "./seed-rows";
+import { TOKYO_SEED } from "./tokyo-seed";
 
 const opts = (() => {
   let n = 0;
@@ -145,5 +148,44 @@ describe("toSeedRows", () => {
     expect(items[0]).toMatchObject({ name: "집합\n07시\n★ 늦으면 무효" });
     expect(items[0]).not.toHaveProperty("memo");
     expect(memos).toEqual([]);
+  });
+
+  it("flight 줄의 항공편은 항공편 행이 되고 그 줄이 카드로 참조한다", () => {
+    const n = (() => {
+      let i = 0;
+      return () => `f${++i}`;
+    })();
+    const flight = {
+      airline_name: "제주항공",
+      airline_code: "7C",
+      flight_no: "1181",
+      dep_airport: "ICN",
+      arr_airport: "NRT",
+      dep_date: "2026-10-31",
+      dep_time: "07:15",
+      arr_date: "2026-10-31",
+      arr_time: "09:40",
+    };
+    const { flights, items } = toSeedRows(
+      [{ day_index: 0, position: 0, kind: "flight", name: "ICN 07:15 - NRT 09:40", flight }],
+      { tripId: "t", cityId: "tokyo", newId: n },
+    );
+    expect(flights).toEqual([{ ...flight, id: "f2", trip_id: "t" }]);
+    expect(items[0]).toMatchObject({ id: "f1", kind: "flight", flight_id: "f2" });
+    expect(items[0]).not.toHaveProperty("flight");
+  });
+});
+
+describe("TOKYO_SEED", () => {
+  it("flight 줄은 모두 항공편이 있고, 탑승일 · 제목 · 설명 · 시각이 항공편과 맞다", () => {
+    const rows = TOKYO_SEED.items.filter((i) => i.kind === "flight");
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const f = row.flight!;
+      expect(f.dep_date).toBe(dayIndexToDate(TOKYO_SEED.trip.start_date, row.day_index));
+      expect(row.name).toBe(`${f.dep_airport} ${f.dep_time} - ${f.arr_airport} ${f.arr_time}`);
+      expect(row.description).toBe(`${f.airline_name} · ${f.airline_code}${f.flight_no}`);
+      expect(row.start_time).toBe(`${f.dep_time}:00`);
+    }
   });
 });

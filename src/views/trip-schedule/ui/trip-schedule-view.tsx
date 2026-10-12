@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import type { Memo, TimelineRow } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
 import { FlightsDialog } from "@/features/flights";
@@ -81,6 +82,21 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const openRow = allRows.find((r) => r.item.id === openId) ?? null;
   if (openId && !openRow) setOpenId(null);
 
+  /** 카드를 눌렀다 — 날짜 메모는 시간 · 메모 창, 항공편 카드는 항공편 상세, 나머지는 일정 상세 */
+  function openCard(row: TimelineRow) {
+    if (row.kind === "note") overlays.openNote(row.item);
+    else if (row.item.flight_id) flights.openFlight(row.item.flight_id);
+    else setOpenId(row.item.id);
+  }
+
+  /** 항공편 상세의 메모 — 항공편 창을 닫고 그 카드의 메모 작성 창을 연다 */
+  function openFlightMemo(cardId: string, memo: Memo | null) {
+    const row = allRows.find((r) => r.item.id === cardId);
+    if (!row) return;
+    flights.setOpen(false);
+    overlays.openMemo(row, memo);
+  }
+
   const layout: ScheduleLayoutProps = {
     trip,
     totalDays,
@@ -89,8 +105,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     sections,
     isPending,
     jump,
-    // 날짜 메모 줄은 일정 상세 대신 시간 · 메모만 고치는 창
-    onOpen: (row) => (row.kind === "note" ? overlays.openNote(row.item) : setOpenId(row.item.id)),
+    onOpen: openCard,
     onEditMove: moveDialog.openFor,
     onAddPlace: add.open,
     authorOf,
@@ -160,7 +175,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             items={items}
             open={flights.open}
             onOpenChange={flights.setOpen}
+            initialFlightId={flights.initialId}
             onToast={overlays.showToast}
+            onMemo={openFlightMemo}
           />
         </>
       )}

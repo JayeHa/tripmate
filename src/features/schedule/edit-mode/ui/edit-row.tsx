@@ -13,7 +13,7 @@ type EditRowProps = {
   row: TimelineRow;
   index: number;
   selected: boolean;
-  /** 고를 수 있는지(항공편은 잠금) */
+  /** 고를 수 있는지(항공편 카드는 잠금) */
   selectable: boolean;
   onToggle: () => void;
   /** PC 는 오른쪽에 시간을 보이고 손잡이가 세로 점 */
@@ -81,9 +81,9 @@ export function EditRow({ row, index, selected, selectable, onToggle, layout }: 
             </span>
             {row.status && <ReservationBadge status={row.status} className="shrink-0" />}
           </span>
-          {(row.kind === "flight" || row.meta) && (
+          {(!selectable || row.meta) && (
             <span className="truncate text-[13px] text-ink-400">
-              {row.kind === "flight" ? "항공편 화면에서 수정·삭제" : row.meta}
+              {selectable ? row.meta : "항공편 화면에서 수정·삭제"}
             </span>
           )}
         </span>

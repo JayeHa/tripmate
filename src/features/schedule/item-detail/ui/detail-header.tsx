@@ -44,8 +44,8 @@ export function DetailHeader({
         </DialogTitle>
         <span className="text-[13px] text-ink-400">{when}</span>
       </div>
-      {/* 항공편은 항공편 화면에서 옮기고 지운다 */}
-      {row.kind !== "flight" && (
+      {/* 항공편 카드는 항공편 화면에서 옮기고 지운다(연결 없는 옛 줄은 메뉴가 있다) */}
+      {!item.flight_id && (
         <ItemMenu
           actions={actions}
           dayIndex={item.day_index}

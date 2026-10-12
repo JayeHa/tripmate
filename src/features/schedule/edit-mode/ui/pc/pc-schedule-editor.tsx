@@ -5,6 +5,7 @@ import { useState } from "react";
 import { dayParts } from "@/shared/lib/days";
 import { CheckMark } from "@/shared/ui/check-mark";
 
+import { isSelectable } from "../../lib/edit-draft";
 import type { ScheduleEditState } from "../../model/use-schedule-edit";
 import { DiscardConfirm } from "../discard-confirm";
 import { EditDaySelect } from "../edit-day-select";
@@ -21,7 +22,7 @@ type PcScheduleEditorProps = { edit: ScheduleEditState; startDate: string; total
 export function PcScheduleEditor({ edit, startDate, totalDays }: PcScheduleEditorProps) {
   const [confirming, setConfirming] = useState(false);
   const { date, dow } = dayParts(startDate, edit.day);
-  const canSelect = edit.rows.some((r) => r.kind !== "flight");
+  const canSelect = edit.rows.some((r) => isSelectable(r.item));
   return (
     <div className="flex min-h-full flex-col">
       <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-divider bg-white px-5 pt-4 pb-3.5">
