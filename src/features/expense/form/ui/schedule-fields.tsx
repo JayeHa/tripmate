@@ -57,3 +57,26 @@ export function ScheduleFields({ form, trip, items, alternatives, quick }: Sched
     </>
   );
 }
+
+type TopFieldsProps = {
+  form: ExpenseFormState;
+  trip: Trip;
+  items: ScheduleItem[];
+  alternatives: ScheduleItem[];
+  stay: boolean;
+  quick: boolean;
+};
+
+/** 금액 아래 첫 칸들 — 숙소 결제면 날짜만(이름 · 카테고리 · 연결은 숙소가 정한다), 아니면 일정 연결 → 카테고리 → 날짜 → 항목명 */
+export function TopFields({ form, trip, items, alternatives, stay, quick }: TopFieldsProps) {
+  if (stay) return <DayField form={form} trip={trip} />;
+  return (
+    <ScheduleFields
+      form={form}
+      trip={trip}
+      items={items}
+      alternatives={alternatives}
+      quick={quick}
+    />
+  );
+}

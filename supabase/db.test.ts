@@ -2446,3 +2446,74 @@ describe("숙소 (0045 · 0046 · 0048 · 0049 · 0050)", () => {
     expect((await stayCards(r.id)).map((c) => c.day_index)).toEqual([1, 2, 3]);
   });
 });
+
+describe("숙소 결제 (0051)", () => {
+  const PLACE = { name: "호텔 몬토레 긴자", lat: 35.671, lng: 139.765, google_place_id: "g-pay-1" };
+  const FIELDS = { check_in_date: "2027-11-01", check_out_date: "2027-11-03", links: [] };
+
+  /** 3일 여행과 그 숙소 */
+  async function setup() {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const stay = (await saveStay(trip, null, PLACE, FIELDS)).id;
+    return { trip, stay };
+  }
+
+  /** 그 숙소의 비용을 넣는다 — 이름 · 카테고리는 일부러 다르게 */
+  async function payFor(trip: string, stay: string) {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name, category, stay_id)
+       values ('${trip}', '${A}', 32000, 'JPY', '아무 이름', 'food', '${stay}') returning id`,
+    );
+    return rows[0].id;
+  }
+
+  /** 비용 한 줄의 이름 · 카테고리 · 일정 연결 */
+  async function expense(id: string) {
+    const { rows } = await db.query<{
+      name: string;
+      category: string;
+      schedule_item_id: string | null;
+    }>(`select name, category, schedule_item_id from public.expenses where id = '${id}'`);
+    return rows[0];
+  }
+
+  it("이름 · 카테고리 · 일정 연결은 숙소가 정한다(넣을 때 · 고칠 때)", async () => {
+    const { trip, stay } = await setup();
+    const id = await payFor(trip, stay);
+    expect(await expense(id)).toEqual({
+      name: "호텔 몬토레 긴자",
+      category: "lodging",
+      schedule_item_id: null,
+    });
+    const item = await addPlace(trip, 0, { name: "아무 곳", lat: 35.6, lng: 139.7 });
+    await db.query(
+      `update public.expenses set name = '바꿈', category = 'other', schedule_item_id = '${item}' where id = '${id}'`,
+    );
+    expect(await expense(id)).toMatchObject({ name: "호텔 몬토레 긴자", category: "lodging" });
+  });
+
+  it("숙소 하나에 비용 하나, 다른 여행의 숙소에는 붙지 않는다", async () => {
+    const { trip, stay } = await setup();
+    const other = await newTrip("2027-10-31", "2027-11-02");
+    await expect(payFor(other, stay)).rejects.toThrow("expenses_stay_fkey");
+    await payFor(trip, stay);
+    await expect(payFor(trip, stay)).rejects.toThrow("expenses_stay_key");
+  });
+
+  it("장소 이름을 고치거나 다른 장소로 옮기면 비용 이름이 따라간다", async () => {
+    const { trip, stay } = await setup();
+    const id = await payFor(trip, stay);
+    await saveStay(trip, stay, { ...PLACE, name: "몬토레 긴자" }, FIELDS);
+    expect((await expense(id)).name).toBe("몬토레 긴자");
+    await saveStay(trip, stay, { ...PLACE, name: "다른 호텔", google_place_id: "g-pay-2" }, FIELDS);
+    expect((await expense(id)).name).toBe("다른 호텔");
+  });
+
+  it("숙소를 지우면 비용도 지운다(카드를 남겨도)", async () => {
+    const { trip, stay } = await setup();
+    const id = await payFor(trip, stay);
+    await db.query(`select public.delete_stay('${stay}', false)`);
+    expect(await expense(id)).toBeUndefined();
+  });
+});

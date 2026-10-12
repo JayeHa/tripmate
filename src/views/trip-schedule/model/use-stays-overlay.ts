@@ -5,11 +5,12 @@ import { useState } from "react";
 import { useTripCities } from "@/entities/city";
 import type { ScheduleItem } from "@/entities/schedule-item";
 import { useStays } from "@/entities/stay";
-import type { LocationPickRequest, StayRegistration } from "@/features/stays";
+import type { ExpenseDialogTarget } from "@/features/expense/form";
+import type { LocationPickRequest, StayPaymentRequest, StayRegistration } from "@/features/stays";
 import { dayIndexToDate } from "@/shared/lib/days";
 
 /**
- * 숙소 창(목록 · 상세 · 입력)과, 그 위에 여는 장소 입력 폼의 「위치만 고르기」. 화면(TripScheduleView)이 쥐고 StaysOverlay 가 그린다.
+ * 숙소 창(목록 · 상세 · 입력)과, 그 위에 여는 장소 입력 폼의 「위치만 고르기」 · 결제 비용 입력 창. 화면(TripScheduleView)이 쥐고 StaysOverlay 가 그린다.
  * 위치 고르기의 도시(검색 범위 · 지도 중심)는 여행의 첫 도시. 여행(trip)은 「숙소로 등록」 의 체크인 날짜를 계산하는 데 쓴다 — 아직 못 읽었으면 등록을 열지 않는다
  */
 export function useStaysOverlay(tripId: string, trip: { start_date: string } | null | undefined) {
@@ -19,6 +20,7 @@ export function useStaysOverlay(tripId: string, trip: { start_date: string } | n
   // 「숙소로 등록」 으로 열 때 새 숙소 폼을 채울 일정. 아니면 null
   const [registration, setRegistration] = useState<StayRegistration | null>(null);
   const [pick, setPick] = useState<LocationPickRequest | null>(null);
+  const [payment, setPayment] = useState<ExpenseDialogTarget | null>(null);
   const { data: stays } = useStays(tripId);
   const { data: cities = [] } = useTripCities(tripId);
   return {
@@ -56,6 +58,15 @@ export function useStaysOverlay(tripId: string, trip: { start_date: string } | n
     requestPick: setPick,
     closePick: () => setPick(null),
     city: cities[0] ?? null,
+    payment,
+    /** 숙소의 결제 — 붙은 비용이 있으면 그 수정, 없으면 그 숙소의 결제로 새 비용 */
+    openPayment: (req: StayPaymentRequest) =>
+      setPayment(
+        req.expenseId
+          ? { kind: "edit", expenseId: req.expenseId }
+          : { kind: "new", stay: { id: req.stayId, name: req.name } },
+      ),
+    closePayment: () => setPayment(null),
   };
 }
 

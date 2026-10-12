@@ -17,6 +17,8 @@ type StartOptions = {
   presetItem?: ScheduleItem | null;
   /** 새 지출의 처음 통화(startCurrency) */
   defaultCurrency?: string;
+  /** 숙소 결제로 연 새 지출 — 그 숙소 이름 · 카테고리 숙소로 시작한다(DB 도 숙소에 맞춘다) */
+  stayName?: string;
 };
 
 /**
@@ -34,6 +36,7 @@ export function startValues({
   defaultSpentOn,
   presetItem,
   defaultCurrency,
+  stayName,
 }: StartOptions) {
   if (initial) return savedValues(initial);
   const blank = newValues(
@@ -42,6 +45,7 @@ export function startValues({
     me,
     defaultSpentOn,
   );
+  if (stayName !== undefined) return { ...blank, name: stayName, category: "lodging" as const };
   if (!presetItem) return blank;
   // 일정에서 연 새 지출 — 그 일정의 날 · 카테고리(일정 종류로), 대체 장소면 합계에서 뺀다(연결할 때와 같은 규칙)
   return {

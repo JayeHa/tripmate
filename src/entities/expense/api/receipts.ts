@@ -31,6 +31,19 @@ export async function fetchReceipts(tripId: string): Promise<ExpenseReceipt[]> {
   return data;
 }
 
+/**
+ * 숙소 결제 비용에 붙은 영수증 키. 숙소를 지우면 비용과 영수증 줄은 cascade 로 지워지지만 파일은 남아서,
+ * 지우기 전에 읽어 두고 지운 뒤 `removeReceiptFiles` 로 지운다. 못 읽으면 빈 목록(남은 파일은 #155 가 정리한다)
+ */
+export async function fetchStayReceiptKeys(stayId: string): Promise<string[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("expense_receipts")
+    .select("key, expenses!inner(stay_id)")
+    .eq("expenses.stay_id", stayId);
+  return (data ?? []).map((r) => r.key);
+}
+
 /** 파일 하나를 저장소에 올린다 — 서명 주소를 받아 그 주소로 PUT. 지출에는 아직 붙지 않는다 */
 export async function uploadReceipt(
   tripId: string,

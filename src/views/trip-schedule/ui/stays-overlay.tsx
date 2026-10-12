@@ -2,6 +2,7 @@
 
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
+import { ExpenseDialog } from "@/features/expense/form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { StaysDialog } from "@/features/stays";
 
@@ -15,7 +16,7 @@ type StaysOverlayProps = {
   onToast: (text: string) => void;
 };
 
-/** 숙소 창과, 주소 칸이 요청한 「위치만 고르기」(장소 입력 폼의 ① 만) — 숙소 창 위에 겹쳐 연다 */
+/** 숙소 창과, 그 위에 겹쳐 여는 주소 칸의 「위치만 고르기」(장소 입력 폼의 ① 만) · 결제 칸의 비용 입력 창 */
 export function StaysOverlay({ tripId, trip, items, stays, onToast }: StaysOverlayProps) {
   return (
     <>
@@ -28,6 +29,13 @@ export function StaysOverlay({ tripId, trip, items, stays, onToast }: StaysOverl
         initialStayId={stays.initialId}
         registration={stays.registration}
         onPickLocation={stays.requestPick}
+        onPayment={stays.openPayment}
+        onToast={onToast}
+      />
+      <ExpenseDialog
+        tripId={tripId}
+        target={stays.payment}
+        onClose={stays.closePayment}
         onToast={onToast}
       />
       {stays.pick && (

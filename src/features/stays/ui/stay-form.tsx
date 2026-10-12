@@ -18,15 +18,16 @@ import { AddressField } from "./address-field";
 
 type StayFormProps = {
   form: StayFormState;
+  /** 체크인/체크아웃 시간 아래 「결제」 칸 — 고칠 때만(새 숙소는 아직 붙일 숙소가 없다) */
+  payment?: ReactNode;
   /** 고치는 중이면 맨 아래 「숙소 삭제」 */
   onDelete: (() => void) | null;
 };
 
 /**
- * 숙소 입력 칸들(README 「숙소 입력 간소화」 순서) — 예약 상태 → 주소 → 아이콘 · 이름 → 숙박 날짜 → 체크인/체크아웃 시간 → 메모 → 링크.
- * 결제(요약)는 #88 ③ 에서 붙인다
+ * 숙소 입력 칸들 — 예약 상태 → 주소 → 아이콘 · 이름 → 숙박 날짜 → 체크인/체크아웃 시간 → 결제(요약) → 메모 → 링크
  */
-export function StayForm({ form, onDelete }: StayFormProps) {
+export function StayForm({ form, payment, onDelete }: StayFormProps) {
   const { values: v, set } = form;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-1 pb-7">
@@ -70,6 +71,7 @@ export function StayForm({ form, onDelete }: StayFormProps) {
           />
         </Field>
       </div>
+      {payment}
       <Field
         label={
           <>

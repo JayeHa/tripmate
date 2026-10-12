@@ -6,6 +6,7 @@ import type { Stay, StaySaveResult } from "@/entities/stay";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
 import type { StayRegistration } from "../lib/stay-form";
+import type { StayPaymentRequest } from "../lib/stay-payment";
 import { useCurrentStay } from "../model/use-current-stay";
 import type { LocationPickRequest } from "../model/use-stay-form";
 import { type StaysFlow, type StaysStep, useStaysFlow } from "../model/use-stays-flow";
@@ -29,6 +30,8 @@ type StaysDialogProps = {
   registration?: StayRegistration | null;
   /** 주소 칸 — 받는 쪽이 장소 입력 폼의 「위치만 고르기」 를 이 창 위에 띄운다 */
   onPickLocation: (req: LocationPickRequest) => void;
+  /** 결제 칸(상세 · 수정) — 받는 쪽이 비용 입력 창을 이 창 위에 띄운다 */
+  onPayment: (req: StayPaymentRequest) => void;
   onToast?: (text: string) => void;
 };
 
@@ -65,6 +68,7 @@ function StaysBody({
   initialStayId = null,
   registration = null,
   onPickLocation,
+  onPayment,
   onToast,
   onClose,
   onLockChange,
@@ -100,7 +104,7 @@ function StaysBody({
         </>
       )}
       {step.kind === "detail" && current && (
-        <DetailScreen stay={current} tripId={tripId} flow={flow} />
+        <DetailScreen stay={current} tripId={tripId} flow={flow} onPayment={onPayment} />
       )}
       {step.kind === "form" && (
         <StayFormScreen
@@ -110,6 +114,7 @@ function StaysBody({
           registration={registering ? registration : null}
           items={items}
           onPickLocation={onPickLocation}
+          onPayment={onPayment}
           onBack={registering ? onClose : flow.back}
           onSaved={saved}
           onDeleted={(removed) => {
@@ -123,10 +128,15 @@ function StaysBody({
   );
 }
 
-type DetailScreenProps = { stay: Stay; tripId: string; flow: StaysFlow };
+type DetailScreenProps = {
+  stay: Stay;
+  tripId: string;
+  flow: StaysFlow;
+  onPayment: (req: StayPaymentRequest) => void;
+};
 
 /** 상세 — 머리(← · 「숙소 정보」 · 수정) + 내용 */
-function DetailScreen({ stay, tripId, flow }: DetailScreenProps) {
+function DetailScreen({ stay, tripId, flow, onPayment }: DetailScreenProps) {
   return (
     <>
       <StaysHeader
@@ -134,7 +144,7 @@ function DetailScreen({ stay, tripId, flow }: DetailScreenProps) {
         back={{ kind: "back", onClick: flow.toList }}
         action={{ label: "수정", onClick: () => flow.openForm(stay.id) }}
       />
-      <StayDetail tripId={tripId} stay={stay} />
+      <StayDetail tripId={tripId} stay={stay} onPayment={onPayment} />
     </>
   );
 }
