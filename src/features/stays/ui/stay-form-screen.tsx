@@ -111,6 +111,7 @@ function EditForm({ form, tripId, stay, items, onPayment, onDeleted }: EditFormP
       <DeleteStayConfirm
         open={del.open}
         count={del.count}
+        paid={del.paid}
         onCancel={del.cancel}
         onConfirm={del.confirm}
       />
