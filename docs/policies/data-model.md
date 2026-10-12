@@ -45,6 +45,7 @@ erDiagram
   schedule_items |o--o{ expenses : "schedule_item_id"
   stays |o--o| expenses : "stay_id"
   flights |o--o| expenses : "flight_id"
+  trips ||--o{ checklist_items : ""
   expenses ||--o{ expense_splits : ""
   trip_guests |o--o{ expenses : "payer_guest_id"
   trip_guests |o--o{ expense_splits : "guest_id"
@@ -64,6 +65,7 @@ erDiagram
 | `places`           | **장소** — 다음 여행에서도 맞는 정보(이름 · 위치 · 카테고리 · 별점 · 설명 · 링크)                                                                                       | 사람 · 도시 |
 | `stays`            | **숙소 예약** — 장소(`place_id`, category stay)에 붙는 아이콘 · 예약 상태 · 숙박 날짜 · 체크인/아웃 시각 · 메모 · 링크. 묵는 날마다 일정 카드(`schedule_items.stay_id`) | 여행        |
 | `flights`          | **항공편** — 항공사(이름 · 코드) · 편명 · 출발/도착 공항 · 날짜 · 시각 · 예약 상태 · 예약번호. 탑승일 day 끝에 일정 카드 하나(`schedule_items.flight_id`)               | 여행        |
+| `checklist_items`  | **노트 · 체크리스트** — 상태(해야 할 것 · 기타 · 완료) · 제목 · 마감일 · 메모 · 링크 · 홈에 고정한 사람                                                                 | 여행        |
 | `schedule_items`   | **일정** — 이번 방문에만 맞는 정보(날짜 · 순서 · 시각 · 예약 상태 · 메모). 대체 장소도 일정 줄(`alternative_of`)                                                        | 여행        |
 | `memos`            | 일정에 붙는 메모 하나(작성자 · 본문 · ★ 중요 · 링크)                                                                                                                    | 여행        |
 | `moves`            | 두 장소 사이의 이동 방법(수단 · 상세)                                                                                                                                   | 여행        |
@@ -89,6 +91,8 @@ erDiagram
 **숙소 결제 = 가계부 비용 한 건**(0051, #88 ③). 숙소의 결제는 `expenses.stay_id` 가 붙은 비용 하나다 — 숙소 화면과 가계부가 같은 줄을 보고 고친다. 숙소 하나에 비용은 하나(unique)이고, 숙소를 지우면 비용도 지운다(카드를 남겨도). 이름 · 카테고리는 숙소가 정한다 — 이름 = 숙소 장소 이름, 카테고리 = 숙소(`lodging`), 일정 연결 없음. 어느 경로로 저장하든 트리거(`set_stay_expense_fields`)가 덮어쓰고, 숙소의 장소가 바뀌거나(`sync_stay_expense_name`) 장소 이름이 바뀌면(`sync_place_stay_expenses`) 따라간다. 나머지(금액 · 통화 · 날짜 · 결제수단 · 결제 상태 · 사람 · 메모 · 영수증 · 합계 포함)는 일반 비용처럼 고친다. 비용을 지우면 숙소는 결제 없음으로 돌아간다.
 
 **항공편 결제 = 가계부 비용 한 건**(0055, #89 ③). 숙소 결제와 같다 — `expenses.flight_id` 가 붙은 비용 하나, 항공편 하나에 하나(unique), 항공편을 지우면 비용도 지운다. 이름(「제주항공 7C1181」, `flight_expense_name`) · 카테고리(`flight`) · 일정 연결 없음은 트리거(`set_flight_expense_fields`)가 덮어쓰고, 항공사 · 편명을 고치면 이름이 따라간다(`sync_flight_expense_name`). 한 비용이 숙소 결제이면서 항공편 결제일 수는 없다(`expenses_one_owner_chk`). 결제를 넣는 사이 숙소 · 항공편이 지워졌으면 두 트리거가 23503 「stay not found」 · 「flight not found」 로 멈추고, 화면은 「… 지워졌어요」 로 알린다(0056). 0055 전에 항공편 카드에 「일정 연결」 로 붙어 있던 비용은 항공편마다 가장 먼저 만든 한 건을 그 항공편의 결제로 옮겼다(이름 · 카테고리가 바뀐다, 2026-10-13 사용자 결정). 나머지와 그 뒤에 카드에 연결한 비용은 카드에 연결된 채 남아 항공편 상세의 「연결된 비용」 에 보인다.
+
+**체크리스트**(0057, #16). 노트의 체크리스트 항목(`checklist_items`)은 일행이 함께 보고 고친다(여행 멤버 누구나). 상태는 해야 할 것(`todo`) · 기타(`etc`) · 완료(`done`), 마감일은 날짜만. 「홈에 고정」 은 고정한 사람(`pinned_by`)을 적어 일행 모두에게 보이고 누구나 푼다(2026-10-13 사용자 결정, 홈 화면은 #17). 일정 · 항공편 · 숙소 연결은 다음 단계에서 더한다.
 
 **메모는 목록이다**(0027, `memos`). 메모 하나가 한 줄이고 작성자 · ★ 중요 · 링크(제목 + URL)를 갖는다. 장소 · 항공편 일정 줄에 붙어(대체 장소 줄도) 「바꾸기」 하면 장소를 따라가고, 일정을 지우면 함께 지워진다. **날짜 메모(note 일정)에는 붙지 않는다** — 날짜 메모는 글 한 칸(`name`, 여러 줄 · 중요는 앞에 「★ 」)이고 「시간 + 메모」 창으로만 고친다(0029, 예전에 붙은 메모는 글 아래에 합쳤다). 여행 멤버 누구나 쓰고 고치고 지운다(사용자 결정 2026-10-05). 예전 일정 메모 칸(`schedule_items.memo`)은 줄마다 메모 하나로 옮기고 지웠다.
 
@@ -128,6 +132,7 @@ erDiagram
 | `places`                      | 만든 사람 + 그 장소를 일정에 쓰는 여행의 멤버 | 만든 사람 = 나                                                         | **만든 사람만**            | **만든 사람만**, 쓰는 일정이 있으면 불가                                        | 허용                                                               | `places_*` 정책 · FK `restrict`                              |
 | `stays`                       | 멤버                                          | 멤버 + 붙일 수 있는 장소만(`can_attach_place`)                         | 멤버                       | 멤버. 연결 카드는 남기거나 함께 지운다(`delete_stay`)                           | 허용                                                               | `stays_all`                                                  |
 | `flights`                     | 멤버                                          | 멤버                                                                   | 멤버                       | 멤버. 연결 카드도 함께(cascade)                                                 | 허용                                                               | `flights_all`                                                |
+| `checklist_items`             | 멤버                                          | 멤버                                                                   | 멤버                       | 멤버                                                                            | 허용                                                               | `checklist_items_all`                                        |
 | `schedule_items`              | 멤버                                          | 멤버 + 붙일 수 있는 장소만                                             | 멤버 + 붙일 수 있는 장소만 | 멤버                                                                            | 허용                                                               | `items_all` · `can_attach_place`                             |
 | `memos`                       | 멤버                                          | 멤버(작성자 = 나, 트리거)                                              | 멤버(작성자는 그대로)      | 멤버                                                                            | 허용                                                               | `memos_all` · `keep_memo_author` · 복합 FK                   |
 | `moves`                       | 멤버                                          | 멤버 + 두 일정이 같은 여행                                             | 같음                       | 멤버                                                                            | 허용                                                               | `moves_all` · 복합 FK                                        |
@@ -157,6 +162,7 @@ erDiagram
 | 숙소 카드는 같은 여행의 숙소에만 붙고(place 일정만), 숙소를 지우면 연결만 풀린다                                                                                             | 복합 FK `schedule_items_stay_fkey` `on delete set null (stay_id)` · check `schedule_items_stay_kind_chk`                                                         |
 | 항공편 카드는 같은 여행의 항공편에만 붙고(flight 일정만), 항공편 하나에 하나, 항공편을 지우면 함께 지워진다                                                                  | 복합 FK `schedule_items_flight_fkey` `on delete cascade` · check `schedule_items_flight_kind_chk` · unique `schedule_items_flight_key`                           | 항공편 (0052) › 복합 FK …                                                                                                                                               |
 | 항공편 코드는 IATA 모양(항공사 2 · 공항 3 · 편명 숫자 1–4), 도착일 ≥ 출발일, 예약번호 50자                                                                                   | `flights` check · `flights_dates_chk`                                                                                                                            | 항공편 (0052) › 거부 + 롤백 …                                                                                                                                           |
+| 체크리스트 제목은 1–100자(앞뒤 공백 제외), 메모 2000자, 상태는 todo · etc · done                                                                                             | `checklist_items` check                                                                                                                                          | 체크리스트 (0057) › 거부 …                                                                                                                                              |
 | 항공편 카드는 탑승일이 기간 안일 때만 그날에 하나, 글자 · 시각 · 상태는 항공편을 따른다                                                                                      | `save_flight` · 트리거 `sync_flight_card`                                                                                                                        | 항공편 (0052) › 새 항공편 … / 고치면 … / 탑승일이 기간 밖이면 …                                                                                                         |
 | 항공편 카드는 일정 편집으로 지우거나 다른 날로 옮기지 못한다(같은 날 안의 순서만)                                                                                            | `apply_schedule_edit`(0054) — 건너뛴다. **단, `schedule_items` 직접 delete · update 는 RLS(멤버)만 본다**                                                        | 항공편 (0052) › 일정 편집 저장: 항공편 카드는 …                                                                                                                         |
 | 숙소는 0박이 없다(체크아웃 > 체크인), 메모 2000자, 링크는 배열                                                                                                               | check `stays_dates_chk` · `stays` check                                                                                                                          |
@@ -265,10 +271,10 @@ erDiagram
 
 ## 실시간
 
-`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` · `trip_guests` · `settlements` · `expense_receipts` · `stays` · `flights` 를 발행한다.
+`supabase_realtime` 에 `trips` · `trip_members` · `schedule_items` · `memos` · `moves` · `places` · `expenses` · `expense_splits` · `trip_guests` · `settlements` · `expense_receipts` · `stays` · `flights` · `checklist_items` 를 발행한다.
 여행 화면은 여행 하나에 채널 하나를 열고(`features/trip/realtime-sync`) 변경이 오면 해당 쿼리를 다시 읽는다.
 
-- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places` · `trip_guests` · `settlements` · `expense_receipts` · `stays` · `flights`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
+- 삭제 이벤트에도 옛 행 전체가 실리게 `replica identity full` 을 둔다(`schedule_items` · `memos` · `moves` · `expenses` · `expense_splits` · `places` · `trip_guests` · `settlements` · `expense_receipts` · `stays` · `flights` · `checklist_items`). Supabase 는 replica identity 가 full 일 때만 삭제 이벤트를 필터할 수 있다 — 그래야 `trip_id` 필터가 삭제에도 걸린다. `trip_members` 는 full 이 아니다(기본값은 옛 행에 PK 칸만 싣고, `trip_id` 는 PK 에 들어 있다). PK 칸만으로 삭제 필터가 걸리는지는 확인이 필요하다 — 안 되면 멤버를 내보내도 다른 화면의 멤버 목록이 바로 바뀌지 않는다(#73)
 - **삭제 이벤트에는 RLS 가 적용되지 않는다**(지워진 행은 권한을 확인할 수 없다). 필터 없이 구독하는 `places` · `expense_splits` 는 남의 삭제 이벤트가 올 수 있어 확인이 필요하다(#73)
 - 근거: <https://supabase.com/docs/guides/realtime/postgres-changes> (2026-10-04 확인)
 - `places` · `expense_splits` 는 `trip_id` 가 없어 필터 없이 구독한다. RLS 로 볼 수 있는 행만 온다

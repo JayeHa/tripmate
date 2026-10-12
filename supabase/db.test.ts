@@ -2931,3 +2931,59 @@ describe("옛 flight 줄 → 항공편 (0054)", () => {
     expect(memos.rows).toEqual([{ body: "창가 자리" }]);
   });
 });
+
+describe("체크리스트 (0057)", () => {
+  /** 항목을 넣고 id 를 돌려준다 */
+  async function addItem(trip: string, fields: Record<string, unknown> = {}) {
+    const cols = { title: "입국 QR 만들기", ...fields };
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.checklist_items (trip_id, ${Object.keys(cols).join(", ")})
+       values ($1, ${Object.keys(cols)
+         .map((_, i) => `$${i + 2}`)
+         .join(", ")}) returning id`,
+      [trip, ...Object.values(cols)],
+    );
+    return rows[0].id;
+  }
+
+  it("기본값 — 해야 할 것 · 마감 없음 · 빈 메모 · 링크 없음 · 만든 사람", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const id = await addItem(trip);
+    const { rows } = await db.query(
+      `select status, due_date, body, links, pinned_by, created_by from public.checklist_items where id = '${id}'`,
+    );
+    expect(rows[0]).toEqual({
+      status: "todo",
+      due_date: null,
+      body: "",
+      links: [],
+      pinned_by: null,
+      created_by: A,
+    });
+  });
+
+  it("거부: 빈 제목 · 100자 넘는 제목 · 모르는 상태 · 링크가 배열이 아님", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    for (const bad of [
+      { title: "  " },
+      { title: "가".repeat(101) },
+      { status: "later" },
+      { links: JSON.stringify({ url: "x" }) },
+    ]) {
+      await expect(addItem(trip, bad)).rejects.toThrow();
+    }
+  });
+
+  it("RLS: 멤버만 읽고 고친다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const id = await addItem(trip);
+    await as(B);
+    expect(
+      (await db.query(`select 1 from public.checklist_items where id = '${id}'`)).rows,
+    ).toHaveLength(0);
+    await expect(addItem(trip)).rejects.toThrow(/row-level security/);
+  });
+});
