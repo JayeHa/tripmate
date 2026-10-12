@@ -57,6 +57,7 @@ function item(placeId: string, patch: Partial<ScheduleItem> = {}): ScheduleItem 
     status: null,
     alternative_of: null,
     stay_id: null,
+    flight_id: null,
     links: [],
     created_by: null,
     created_at: "",

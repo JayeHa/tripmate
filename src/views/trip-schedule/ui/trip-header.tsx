@@ -1,6 +1,6 @@
 "use client";
 
-import { BedDouble } from "lucide-react";
+import { BedDouble, Plane } from "lucide-react";
 import { useState } from "react";
 
 import type { Trip } from "@/entities/trip";
@@ -17,14 +17,22 @@ type TripHeaderProps = {
   trip: Trip;
   stayCount: number;
   onOpenStays: () => void;
+  flightCount: number;
+  onOpenFlights: () => void;
 };
 
 /**
- * 모바일 일정의 여행 머리(TripHeader) — 제목 26/800 · 날짜 · 여행지, 일행 아바타 40 + 「+ 일행초대」, 아래 칩(숙소 N).
- * 상단바 아래에서 함께 스크롤되어 올라간다(sticky 지도 위). 항공편 칩은 #89, 체크리스트 · 가계부 칩은 그 화면이 생길 때.
+ * 모바일 일정의 여행 머리(TripHeader) — 제목 26/800 · 날짜 · 여행지, 일행 아바타 40 + 「+ 일행초대」, 아래 칩(항공편 N · 숙소 N).
+ * 상단바 아래에서 함께 스크롤되어 올라간다(sticky 지도 위). 체크리스트 · 가계부 칩은 그 화면이 생길 때.
  * 시안의 「연인과 | 치이카와 · 러닝 · 카와고에」 줄은 그런 데이터가 없어 여행지(destination)만 보인다
  */
-export function TripHeader({ trip, stayCount, onOpenStays }: TripHeaderProps) {
+export function TripHeader({
+  trip,
+  stayCount,
+  onOpenStays,
+  flightCount,
+  onOpenFlights,
+}: TripHeaderProps) {
   const { data: members = [] } = useTripMembers(trip.id);
   const [inviteOpen, setInviteOpen] = useState(false);
   return (
@@ -55,6 +63,11 @@ export function TripHeader({ trip, stayCount, onOpenStays }: TripHeaderProps) {
         </Button>
       </div>
       <div className="flex flex-wrap gap-2 px-5 pt-3.5 pb-5.5">
+        <Button variant="chip" size="chip" onClick={onOpenFlights}>
+          <Plane className="size-4" strokeWidth={2} />
+          항공편
+          {flightCount > 0 && <span className="font-bold text-brand-text">{flightCount}</span>}
+        </Button>
         <Button variant="chip" size="chip" onClick={onOpenStays}>
           <BedDouble className="size-4" strokeWidth={2} />
           숙소

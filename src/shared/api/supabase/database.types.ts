@@ -347,6 +347,63 @@ export type Database = {
           },
         ];
       };
+      flights: {
+        Row: {
+          id: string;
+          trip_id: string;
+          airline_name: string;
+          airline_code: string;
+          flight_no: string;
+          dep_airport: string;
+          arr_airport: string;
+          dep_date: string;
+          dep_time: string;
+          arr_date: string;
+          arr_time: string;
+          status: string | null;
+          booking_ref: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          airline_name: string;
+          airline_code: string;
+          flight_no: string;
+          dep_airport: string;
+          arr_airport: string;
+          dep_date: string;
+          dep_time: string;
+          arr_date: string;
+          arr_time: string;
+          status?: string | null;
+          booking_ref?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          airline_name?: string;
+          airline_code?: string;
+          flight_no?: string;
+          dep_airport?: string;
+          arr_airport?: string;
+          dep_date?: string;
+          dep_time?: string;
+          arr_date?: string;
+          arr_time?: string;
+          status?: string | null;
+          booking_ref?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       schedule_items: {
         Row: {
           id: string;
@@ -362,6 +419,7 @@ export type Database = {
           status: string | null;
           alternative_of: string | null;
           stay_id: string | null;
+          flight_id: string | null;
           links: Json;
           created_by: string | null;
           created_at: string;
@@ -381,6 +439,7 @@ export type Database = {
           status?: string | null;
           alternative_of?: string | null;
           stay_id?: string | null;
+          flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -400,6 +459,7 @@ export type Database = {
           status?: string | null;
           alternative_of?: string | null;
           stay_id?: string | null;
+          flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
           created_at?: string;
@@ -753,6 +813,10 @@ export type Database = {
           p_prune?: boolean;
           p_link_item?: string | null;
         };
+        Returns: Json;
+      };
+      save_flight: {
+        Args: { p_trip: string; p_flight: string | null; p_fields: Json };
         Returns: Json;
       };
       delete_stay: {

@@ -70,6 +70,8 @@ export function PcSchedule({
   onGuide,
   onOpenStays,
   stayCount,
+  onOpenFlights,
+  flightCount,
   ...body
 }: PcScheduleProps) {
   const split = useSplitWidth(SCHEDULE_SPLIT);
@@ -120,7 +122,14 @@ export function PcSchedule({
           day={edit.editing ? edit.day : day}
           onChange={pickDay}
           summaries={trip.day_summaries}
-          footer={<RailTools stayCount={stayCount} onOpenStays={onOpenStays} />}
+          footer={
+            <RailTools
+              stayCount={stayCount}
+              onOpenStays={onOpenStays}
+              flightCount={flightCount}
+              onOpenFlights={onOpenFlights}
+            />
+          }
         >
           <DayViewToggle
             mode={view.mode}

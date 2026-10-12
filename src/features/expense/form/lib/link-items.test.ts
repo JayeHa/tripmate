@@ -25,6 +25,7 @@ function item({ category = null, lat = 1, ...patch }: Patch): ScheduleItem {
     status: null,
     alternative_of: null,
     stay_id: null,
+    flight_id: null,
     links: [],
     created_by: null,
     created_at: "",

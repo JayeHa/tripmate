@@ -1,20 +1,21 @@
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
-import { DialogTitle } from "@/shared/ui/dialog";
 
-type StaysHeaderProps = {
+import { DialogTitle } from "./dialog";
+
+type ScreenHeaderProps = {
   title: string;
   /** 왼쪽 — 닫기(✕) 또는 뒤로(←) */
   back: { kind: "close" | "back"; onClick: () => void };
-  /** 오른쪽 글자 버튼(상세의 「수정」 · 폼의 「완료」) */
+  /** 오른쪽 글자 버튼(상세의 「수정」 · 「편집」 · 폼의 「완료」) */
   action?: { label: string; onClick: () => void; disabled?: boolean } | null;
   /** 요청이 서버에 가 있는 동안 — 뒤로를 막는다 */
   locked?: boolean;
 };
 
-/** 숙소 창 머리 56 — ✕/← 24 · 제목 18/700 · 오른쪽 글자 버튼 */
-export function StaysHeader({ title, back, action = null, locked = false }: StaysHeaderProps) {
+/** 창 안 화면의 머리 56(숙소 · 항공편 창) — ✕/← 24 · 제목 18/700 · 오른쪽 글자 버튼 */
+export function ScreenHeader({ title, back, action = null, locked = false }: ScreenHeaderProps) {
   const Icon = back.kind === "close" ? X : ArrowLeft;
   return (
     <div className="flex h-14 shrink-0 items-center gap-3.5 pr-6 pl-5">

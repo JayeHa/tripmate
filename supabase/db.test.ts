@@ -2517,3 +2517,198 @@ describe("숙소 결제 (0051)", () => {
     expect(await expense(id)).toBeUndefined();
   });
 });
+
+describe("항공편 (0052)", () => {
+  const FIELDS = {
+    airline_name: "제주항공",
+    airline_code: "7C",
+    flight_no: "1181",
+    dep_airport: "ICN",
+    arr_airport: "NRT",
+    dep_date: "2027-10-31",
+    dep_time: "07:15",
+    arr_date: "",
+    arr_time: "09:40",
+    status: "ok",
+    booking_ref: " ABC123 ",
+  };
+
+  /** 항공편 저장(save_flight) */
+  async function saveFlight(trip: string, flight: string | null, fields: Record<string, unknown>) {
+    const { rows } = await db.query<{ r: { id: string; card: string | null } }>(
+      `select public.save_flight($1, $2, $3) r`,
+      [trip, flight, JSON.stringify(fields)],
+    );
+    return rows[0].r;
+  }
+
+  /** 그 항공편의 일정 카드 */
+  async function flightCards(flightId: string) {
+    const { rows } = await db.query<{
+      id: string;
+      day_index: number;
+      position: number;
+      name: string;
+      description: string;
+      start_time: string;
+      status: string | null;
+    }>(
+      `select id, day_index, position, name, description, start_time::text, status from public.schedule_items
+       where flight_id = '${flightId}' order by day_index`,
+    );
+    return rows;
+  }
+
+  /** 5일 여행(10.31 ~ 11.4) */
+  async function trip5() {
+    await as(A);
+    return newTrip("2027-10-31", "2027-11-04");
+  }
+
+  it("새 항공편: 도착일이 비면 출발일, 탑승일 끝에 카드(제목 · 설명 · 시각 · 상태)", async () => {
+    const trip = await trip5();
+    await addPlace(trip, 0, { name: "먼저 있던 곳", lat: 35.6, lng: 139.7 });
+    const r = await saveFlight(trip, null, FIELDS);
+    expect(r.card).toBe("added");
+    const { rows } = await db.query<{ arr: string; ref: string }>(
+      `select arr_date::text arr, booking_ref ref from public.flights where id = '${r.id}'`,
+    );
+    expect(rows[0]).toEqual({ arr: "2027-10-31", ref: "ABC123" });
+    expect(await flightCards(r.id)).toMatchObject([
+      {
+        day_index: 0,
+        position: 1,
+        name: "ICN 07:15 - NRT 09:40",
+        description: "제주항공 · 7C1181",
+        start_time: "07:15:00",
+        status: "ok",
+      },
+    ]);
+  });
+
+  it("고치면 카드 글자가 따라가고, 기간 안에서 날짜를 바꾸면 새 날 끝으로 옮긴다(메모 유지)", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    const [card] = await flightCards(r.id);
+    await db.query(
+      `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${card.id}', '창가 자리')`,
+    );
+    const same = await saveFlight(trip, r.id, { ...FIELDS, dep_time: "08:00", status: "" });
+    expect(same.card).toBeNull();
+    expect((await flightCards(r.id))[0]).toMatchObject({
+      name: "ICN 08:00 - NRT 09:40",
+      start_time: "08:00:00",
+      status: null,
+    });
+    await addPlace(trip, 2, { name: "그날 장소", lat: 35.6, lng: 139.7 });
+    const moved = await saveFlight(trip, r.id, { ...FIELDS, dep_date: "2027-11-02" });
+    expect(moved.card).toBe("moved");
+    expect(await flightCards(r.id)).toMatchObject([{ id: card.id, day_index: 2, position: 1 }]);
+    const memos = await db.query(
+      `select 1 from public.memos where schedule_item_id = '${card.id}'`,
+    );
+    expect(memos.rows).toHaveLength(1);
+  });
+
+  it("탑승일이 기간 밖이면 카드가 없고, 밖으로 옮기면 카드(메모 포함)를 지우고, 다시 안으로 오면 만든다", async () => {
+    const trip = await trip5();
+    const outside = await saveFlight(trip, null, { ...FIELDS, dep_date: "2027-10-30" });
+    expect(outside.card).toBeNull();
+    expect(await flightCards(outside.id)).toHaveLength(0);
+
+    const r = await saveFlight(trip, null, FIELDS);
+    const [card] = await flightCards(r.id);
+    await db.query(
+      `insert into public.memos (trip_id, schedule_item_id, body) values ('${trip}', '${card.id}', '메모')`,
+    );
+    expect((await saveFlight(trip, r.id, { ...FIELDS, dep_date: "2027-11-05" })).card).toBe(
+      "removed",
+    );
+    expect(await flightCards(r.id)).toHaveLength(0);
+    expect(
+      (await db.query(`select 1 from public.memos where schedule_item_id = '${card.id}'`)).rows,
+    ).toHaveLength(0);
+    expect((await saveFlight(trip, r.id, FIELDS)).card).toBe("added");
+  });
+
+  it("항공편을 지우면 카드도 지워진다", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    await db.query(`delete from public.flights where id = '${r.id}'`);
+    expect(await flightCards(r.id)).toHaveLength(0);
+  });
+
+  it("거부 + 롤백: 코드 모양 · 도착일이 출발일보다 앞섬 · 출발일 없음 · 멤버 아님", async () => {
+    const trip = await trip5();
+    const bad = [
+      { ...FIELDS, airline_code: "7c" },
+      { ...FIELDS, flight_no: "12345" },
+      { ...FIELDS, dep_airport: "IC" },
+      { ...FIELDS, arr_date: "2027-10-30" },
+      { ...FIELDS, dep_date: "" },
+      { ...FIELDS, airline_name: " " },
+    ];
+    for (const f of bad) {
+      expect(
+        await rejects(`select public.save_flight('${trip}', null, '${JSON.stringify(f)}')`),
+      ).not.toBeNull();
+    }
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.flights where trip_id = '${trip}'`,
+    );
+    expect(rows[0].n).toBe(0);
+    await as(B);
+    expect(
+      await rejects(`select public.save_flight('${trip}', null, '${JSON.stringify(FIELDS)}')`),
+    ).toMatch(/not a member/);
+  });
+
+  it("RLS: 멤버만 읽고 고친다. 남의 여행 항공편은 고칠 수 없다", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    await as(B);
+    expect((await db.query(`select 1 from public.flights where id = '${r.id}'`)).rows).toHaveLength(
+      0,
+    );
+    expect(
+      await rejects(`select public.save_flight('${trip}', '${r.id}', '${JSON.stringify(FIELDS)}')`),
+    ).toMatch(/not a member/);
+  });
+
+  it("복합 FK: 다른 여행 항공편에 카드를 잇지 못하고, place 줄에는 flight_id 를 못 넣는다. 항공편 하나에 카드 하나", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    // 카드가 없는(기간 밖) 항공편 — unique 보다 FK 를 먼저 보게
+    const lone = await saveFlight(trip, null, { ...FIELDS, dep_date: "2027-10-30" });
+    const other = await trip5();
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, name, flight_id)
+         values ('${other}', 0, 9, 'flight', 'x', '${lone.id}')`,
+      ),
+    ).toMatch(/schedule_items_flight_fkey/);
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, name, flight_id)
+         values ('${trip}', 1, 9, 'place', 'x', '${lone.id}')`,
+      ),
+    ).toMatch(/schedule_items_flight_kind_chk/);
+    expect(
+      await rejects(
+        `insert into public.schedule_items (trip_id, day_index, position, kind, name, flight_id)
+         values ('${trip}', 1, 9, 'flight', 'x', '${r.id}')`,
+      ),
+    ).toMatch(/schedule_items_flight_key/);
+  });
+
+  it("출발일을 옮기면 항공편 날짜도 같은 만큼 옮겨진다", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, { ...FIELDS, arr_date: "2027-11-01" });
+    await db.query(`select public.update_trip_dates('${trip}', '2027-11-02', '2027-11-06')`);
+    const { rows } = await db.query<{ d: string; a: string }>(
+      `select dep_date::text d, arr_date::text a from public.flights where id = '${r.id}'`,
+    );
+    expect(rows[0]).toEqual({ d: "2027-11-02", a: "2027-11-03" });
+    expect((await flightCards(r.id))[0].day_index).toBe(0);
+  });
+});

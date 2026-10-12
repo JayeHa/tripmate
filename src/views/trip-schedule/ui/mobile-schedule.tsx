@@ -46,6 +46,8 @@ export function MobileSchedule({
   startEditAt,
   onOpenStays,
   stayCount,
+  onOpenFlights,
+  flightCount,
   ...body
 }: ScheduleLayoutProps) {
   const [mapOpen, setMapOpen] = useState(true);
@@ -85,7 +87,15 @@ export function MobileSchedule({
         }
         back="/trips"
       />
-      {trip && <TripHeader trip={trip} stayCount={stayCount} onOpenStays={onOpenStays} />}
+      {trip && (
+        <TripHeader
+          trip={trip}
+          stayCount={stayCount}
+          onOpenStays={onOpenStays}
+          flightCount={flightCount}
+          onOpenFlights={onOpenFlights}
+        />
+      )}
       {/* 상단바 아래에 붙는 지도 + 날짜 칩. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
       <div ref={stickyRef} className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 bg-white">
         <MapPanel open={mapOpen} onToggle={() => setMapOpen((o) => !o)}>
