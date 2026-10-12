@@ -3,6 +3,7 @@
 import { Link as LinkIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { PaymentField, PayOverdueBanner } from "@/entities/expense";
 import { type ReservationStatus, ReservationStatusPicker } from "@/entities/schedule-item";
 import {
   type Stay,
@@ -13,9 +14,8 @@ import {
 } from "@/entities/stay";
 
 import { STAY_DEFAULT_EMOJI } from "../lib/stay-form";
-import type { StayPaymentRequest } from "../lib/stay-payment";
+import { STAY_LEDGER_LABEL, type StayPaymentRequest } from "../lib/stay-payment";
 import { useStayPayment } from "../model/use-stay-payment";
-import { PayOverdueBanner, StayPaymentField } from "./stay-payment";
 
 type StayDetailProps = {
   tripId: string;
@@ -94,9 +94,10 @@ export function StayDetail({ tripId, stay, onPayment }: StayDetailProps) {
           </Row>
         )}
       </dl>
-      <StayPaymentField
+      <PaymentField
         loaded={pay.loaded}
         view={pay.view}
+        ledgerLabel={STAY_LEDGER_LABEL}
         onOpen={() =>
           onPayment({ kind: "saved", stayId: stay.id, name: p.name, expenseId: pay.expenseId })
         }
