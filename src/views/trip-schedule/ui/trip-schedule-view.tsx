@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
+import { FlightsDialog } from "@/features/flights";
 import { AddScheduleDialog } from "@/features/schedule/add-schedule";
 import { useDayParam } from "@/features/schedule/day-selector";
 import { useScheduleEdit } from "@/features/schedule/edit-mode";
@@ -15,6 +16,7 @@ import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
+import { useFlightsOverlay } from "../model/use-flights-overlay";
 import { useScheduleSections } from "../model/use-schedule-sections";
 import { useStaysOverlay } from "../model/use-stays-overlay";
 import { DetailOverlays } from "./detail-overlays";
@@ -53,6 +55,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const add = useDirectAdd(showDay);
   // 숙소 창과 그 위의 위치 고르기
   const stays = useStaysOverlay(tripId, trip);
+  // 항공편 창
+  const flights = useFlightsOverlay(tripId);
   // 상세를 연 일정. 줄은 모든 날짜에서 다시 찾는다 — 고친 내용이 바로 보이고, 지워지면 저절로 닫힌다
   const [openId, setOpenId] = useState<string | null>(null);
   // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
@@ -95,6 +99,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     startEditAt: edit.opener,
     onOpenStays: stays.openStays,
     stayCount: stays.count,
+    onOpenFlights: flights.openFlights,
+    flightCount: flights.count,
   };
 
   return (
@@ -138,14 +144,25 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
         />
       )}
 
+      {/* 일정 화면에서 여는 하위 창 — 숙소(+ 위치 고르기 · 결제) · 항공편 */}
       {trip && (
-        <StaysOverlay
-          tripId={tripId}
-          trip={trip}
-          items={items}
-          stays={stays}
-          onToast={overlays.showToast}
-        />
+        <>
+          <StaysOverlay
+            tripId={tripId}
+            trip={trip}
+            items={items}
+            stays={stays}
+            onToast={overlays.showToast}
+          />
+          <FlightsDialog
+            tripId={tripId}
+            trip={trip}
+            items={items}
+            open={flights.open}
+            onOpenChange={flights.setOpen}
+            onToast={overlays.showToast}
+          />
+        </>
       )}
 
       {trip && isDesktop !== null && (

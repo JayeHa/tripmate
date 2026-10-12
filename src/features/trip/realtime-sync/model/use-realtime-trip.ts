@@ -42,6 +42,12 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "stays", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.stays(tripId) }),
       )
+      // 항공편 자체만 — 연결 카드의 변경은 schedule_items 이벤트로 온다
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "flights", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.flights(tripId) }),
+      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },

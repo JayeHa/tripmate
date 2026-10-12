@@ -2,6 +2,7 @@
 
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
+import { ScreenHeader } from "@/shared/ui/screen-header";
 
 import type { StayRegistration } from "../lib/stay-form";
 import type { StayPaymentRequest } from "../lib/stay-payment";
@@ -12,7 +13,6 @@ import { DeleteStayConfirm, PruneCardsConfirm } from "./stay-confirms";
 import { StayDatesSheet } from "./stay-dates-sheet";
 import { StayForm } from "./stay-form";
 import { StayPaymentDraftSection, StayPaymentSection } from "./stay-payment";
-import { StaysHeader } from "./stays-header";
 
 type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
 
@@ -64,7 +64,7 @@ export function StayFormScreen({
   useReportLock(form.locked || payment.locked, onLockChange);
   return (
     <>
-      <StaysHeader
+      <ScreenHeader
         title={stay ? "숙소 수정" : "숙소 추가"}
         back={{ kind: "back", onClick: onBack }}
         action={{ label: "완료", onClick: form.submit, disabled: form.saving || payment.saving }}

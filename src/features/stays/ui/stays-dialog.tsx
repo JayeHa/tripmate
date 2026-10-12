@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import { ScreenHeader } from "@/shared/ui/screen-header";
 
 import type { StayRegistration } from "../lib/stay-form";
 import type { StayPaymentRequest } from "../lib/stay-payment";
@@ -13,7 +14,6 @@ import { type StaysFlow, type StaysStep, useStaysFlow } from "../model/use-stays
 import { StayDetail } from "./stay-detail";
 import { StayFormScreen } from "./stay-form-screen";
 import { StayList } from "./stay-list";
-import { StaysHeader } from "./stays-header";
 
 type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
 
@@ -99,7 +99,7 @@ function StaysBody({
     <div className="relative flex h-full min-h-0 flex-col">
       {step.kind === "list" && (
         <>
-          <StaysHeader title="숙소" back={{ kind: "close", onClick: onClose }} />
+          <ScreenHeader title="숙소" back={{ kind: "close", onClick: onClose }} />
           <StayList stays={stays} onOpen={flow.openDetail} onAdd={() => flow.openForm(null)} />
         </>
       )}
@@ -139,7 +139,7 @@ type DetailScreenProps = {
 function DetailScreen({ stay, tripId, flow, onPayment }: DetailScreenProps) {
   return (
     <>
-      <StaysHeader
+      <ScreenHeader
         title="숙소 정보"
         back={{ kind: "back", onClick: flow.toList }}
         action={{ label: "수정", onClick: () => flow.openForm(stay.id) }}

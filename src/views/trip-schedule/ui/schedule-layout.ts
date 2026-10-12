@@ -35,7 +35,10 @@ export type ScheduleLayoutProps = {
   edit: ScheduleEditState;
   /** 「편집」(day 헤더 · 플로팅) — 그 날로 편집을 여는 동작. 일정 · 여행을 읽는 동안은 undefined */
   startEditAt: (day: number) => (() => void) | undefined;
-  /** 숙소 창(PC 레일 아래 · 모바일 상단바) */
+  /** 숙소 창(PC 레일 아래 · 모바일 여행 머리) */
   onOpenStays: () => void;
   stayCount: number;
+  /** 항공편 창(PC 레일 아래 · 모바일 여행 머리) */
+  onOpenFlights: () => void;
+  flightCount: number;
 };
