@@ -2809,6 +2809,20 @@ describe("항공편 (0052)", () => {
     await db.query(`delete from public.flights where id = '${r.id}'`);
     expect(await expenseRow(id)).toBeUndefined();
   });
+
+  it("결제: 지워진 항공편 · 숙소에 넣으면 23503 「… not found」 (0056)", async () => {
+    const trip = await trip5();
+    const r = await saveFlight(trip, null, FIELDS);
+    await db.query(`delete from public.flights where id = '${r.id}'`);
+    expect(
+      await rejects(`insert into public.expenses (trip_id, payer_id, amount, currency, name, category, flight_id)
+       values ('${trip}', '${A}', 1, 'KRW', 'x', 'food', '${r.id}')`),
+    ).toMatch(/flight not found/);
+    expect(
+      await rejects(`insert into public.expenses (trip_id, payer_id, amount, currency, name, category, stay_id)
+       values ('${trip}', '${A}', 1, 'KRW', 'x', 'food', gen_random_uuid())`),
+    ).toMatch(/stay not found/);
+  });
 });
 
 describe("항공편 카드에 연결된 비용 → 항공편 결제 (0055)", () => {

@@ -77,7 +77,7 @@ export async function createExpense(
     })
     .select("id")
     .single();
-  if (error) throw paidAlready(error, owner) ?? withLinkGone(error);
+  if (error) throw paidAlready(error, owner) ?? ownerGone(error, owner) ?? withLinkGone(error);
 
   const { error: splitError } = await supabase
     .from("expense_splits")
@@ -139,6 +139,26 @@ function paidAlready(
   return new Error(
     `이 ${PAYMENT_OWNER[owner.kind].noun}에는 이미 결제가 있어요. 닫고 다시 열어 주세요`,
   );
+}
+
+/** 숙소 · 항공편이 지워져 결제를 넣지 못했을 때 */
+const OWNER_GONE = {
+  stay: "이 숙소가 지워졌어요. 닫고 다시 열어 주세요",
+  flight: "이 항공편이 지워졌어요. 닫고 다시 열어 주세요",
+} as const;
+
+/**
+ * 저장하는 사이 일행이 이 숙소 · 항공편을 지웠다(트리거의 23503 「stay not found」 · 「flight not found」, 0056) —
+ * 알아볼 수 있는 오류로. 아니면 null
+ */
+function ownerGone(
+  error: { code?: string; message: string },
+  owner: PaymentOwner | null,
+): Error | null {
+  if (!owner || error.code !== "23503" || !error.message.includes(`${owner.kind} not found`)) {
+    return null;
+  }
+  return new Error(OWNER_GONE[owner.kind]);
 }
 
 /** 지출을 지운다 — 영수증 줄은 함께 지워지고(cascade), 그 파일은 지운 뒤 저장소에서 지운다 */
