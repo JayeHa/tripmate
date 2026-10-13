@@ -50,10 +50,8 @@ export function ChecklistEditor({
     tripId,
     item,
     title,
-    onDone: (toast) => {
-      onClose();
-      if (toast) onToast(toast);
-    },
+    onClose,
+    onToast,
   });
   useReportLock(form.locked, onLockChange);
   return (
