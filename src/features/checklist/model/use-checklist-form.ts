@@ -90,7 +90,8 @@ export function useChecklistForm({ tripId, item, title, onClose, onToast }: Chec
     },
     editing: item !== null,
     pending,
-    canSave: values.title.trim().length > 0,
+    /** 제목이 있고, 저장에 남길 내 정보(useUser)가 온 뒤 */
+    canSave: values.title.trim().length > 0 && !!user,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: mutations.some((m) => m.isPending && !m.isPaused),
     error: error ?? errorOf(mutations.map((m) => m.error).find(Boolean)),
