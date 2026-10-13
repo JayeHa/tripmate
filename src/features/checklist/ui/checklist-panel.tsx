@@ -51,7 +51,8 @@ const NO_TARGETS: ChecklistTargetRef[] = [];
 
 /**
  * 대상 항목 · 그 연결과 창을 보일지 — 읽기 · 편집 대상이 목록에 없으면(일행이 지웠다) 보이지 않는다.
- * 연결을 아직 못 읽었으면 보이지 않는다 — 편집 폼은 연 때의 연결에서 시작해, 빈 채로 열면 저장 때 비교가 틀린다
+ * 편집은 연결을 다 읽은 뒤에 보인다 — 폼은 연 때의 연결에서 시작해, 빈 채로 열면 저장 때 비교가 틀린다.
+ * 읽기는 기다리지 않는다(연결을 못 읽어도 — 실패 · 오프라인 — 항목은 열리고 칩만 빈다)
  */
 export function useChecklistTargetItem(tripId: string, target: ChecklistTarget | null) {
   const { data: items } = useChecklist(tripId);
@@ -61,6 +62,6 @@ export function useChecklistTargetItem(tripId: string, target: ChecklistTarget |
   // 쿼리 데이터가 바뀔 때만 다시 묶는다 — 같은 항목의 연결 배열이 렌더마다 새로 생기지 않게
   const byItem = useMemo(() => (rows ? targetsByItem(rows) : null), [rows]);
   const targets = (item && byItem?.get(item.id)) ?? NO_TARGETS;
-  const ready = item !== null && rows !== undefined;
+  const ready = item !== null && (target?.mode === "view" || rows !== undefined);
   return { item, targets, visible: target !== null && (target.mode === "new" || ready) };
 }
