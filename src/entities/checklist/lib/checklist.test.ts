@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ChecklistItem } from "../model/types";
 import { dueReadView, dueView } from "./due";
 import { checklistGroups, openCount, toggledStatus } from "./groups";
+import { checklistLinksOf } from "./links";
 
 /** 상태 · 마감 · 넣은 시각만 있는 항목 */
 const item = (id: string, status: string, due: string | null, created = "2026-10-01T00:00:00Z") =>
@@ -55,5 +56,22 @@ describe("dueReadView", () => {
       text: "10/16(금) 까지",
       soon: false,
     });
+  });
+});
+
+describe("checklistLinksOf", () => {
+  it("모양이 다르거나 http(s) 가 아닌 주소는 뺀다", () => {
+    expect(
+      checklistLinksOf([
+        { title: "a", url: "https://a.example" },
+        { url: "HTTP://b.example" },
+        { title: "x", url: "javascript:alert(1)" },
+        { title: "y", url: "" },
+        "nope",
+      ]),
+    ).toEqual([
+      { title: "a", url: "https://a.example" },
+      { title: "", url: "HTTP://b.example" },
+    ]);
   });
 });
