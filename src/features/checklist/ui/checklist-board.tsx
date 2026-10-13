@@ -7,6 +7,7 @@ import {
   type ChecklistStatus,
   toggledStatus,
   useChecklist,
+  usePendingChecklistIds,
   useSetChecklistStatus,
 } from "@/entities/checklist";
 import { todayISO } from "@/shared/lib/days";
@@ -36,6 +37,7 @@ const DOT: Record<ChecklistStatus, string> = {
 export function ChecklistBoard({ tripId, stickyTop, onToast }: ChecklistBoardProps) {
   const { data: items, isPending } = useChecklist(tripId);
   const setStatus = useSetChecklistStatus(tripId);
+  const pending = usePendingChecklistIds(tripId);
   const today = todayISO();
   return (
     <div className="flex flex-col">
@@ -54,12 +56,13 @@ export function ChecklistBoard({ tripId, stickyTop, onToast }: ChecklistBoardPro
               key={g.status}
               group={g}
               today={today}
-              onToggle={(id, status) =>
+              onToggle={(id, status) => {
+                if (pending.includes(id)) return;
                 // 결과는 호출마다 받는다 — mutate 의 콜백은 마지막 호출에만 실행돼 연달아 누르면 앞의 실패를 놓친다
                 void setStatus
                   .mutateAsync({ id, status: toggledStatus(status) })
-                  .catch(() => onToast("바꾸지 못했어요. 다시 시도해 주세요"))
-              }
+                  .catch(() => onToast("바꾸지 못했어요. 다시 시도해 주세요"));
+              }}
             />
           ))}
         </div>
