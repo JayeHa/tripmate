@@ -48,10 +48,14 @@ function dotDate(iso: string): string {
   return `${Number(m)}.${Number(d)}`;
 }
 
-/** 일정 카드 한 줄 → 고르기 줄. 항공편 카드는 그 항공편을 고르는 줄이 된다. 연결할 수 없으면(메모 · 항공편 없음) null */
+/**
+ * 일정 카드 한 줄 → 고르기 줄. 항공편 카드는 그 항공편을 고르는 줄이 된다.
+ * 날짜 묶음에 넣지 않으면 null — 메모 · 항공편을 못 찾은 카드, 숙소 밤 카드(`stay_id`). 숙소 카드는 묵는 날마다 있어
+ * 같은 호텔이 여러 번 나오고, 카드에 붙이면 숙박 날짜를 줄일 때 카드와 함께 연결이 사라진다 — 숙소는 「숙소」 묶음에서 고른다
+ */
 function optionOf(item: ScheduleItem, flights: Map<string, Flight>): TargetOption | null {
   const kind = kindOf(item);
-  if (kind === "note") return null;
+  if (kind === "note" || item.stay_id) return null;
   if (kind === "flight") {
     const flight = item.flight_id ? flights.get(item.flight_id) : undefined;
     if (!flight) return null;

@@ -33,6 +33,13 @@ const SRC: TargetSources = {
     }),
     item({ id: "n1", kind: "note", day_index: 0, position: 1, name: "환전" }),
     item({
+      id: "h1",
+      day_index: 0,
+      position: 3,
+      stay_id: "s1",
+      place: { name: "호텔 몬토레 긴자", category: "stay" },
+    }),
+    item({
       id: "p1",
       day_index: 0,
       position: 2,
@@ -52,7 +59,7 @@ const SRC: TargetSources = {
 };
 
 describe("checklist target options", () => {
-  it("날마다 일정 카드(항공편 카드는 그 항공편, 메모는 빼고) + 맨 끝 숙소 묶음", () => {
+  it("날마다 일정 카드(항공편 카드는 그 항공편, 메모 · 숙소 밤 카드는 빼고) + 맨 끝 숙소 묶음", () => {
     const groups = targetGroups(SRC, new Set());
     expect(groups.map((g) => [g.key, g.short, g.items.map((i) => i.id)])).toEqual([
       ["0", "day 1", ["flight:f1", "schedule_item:p1"]],
