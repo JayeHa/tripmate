@@ -1,14 +1,30 @@
 "use client";
 
+import { useMediaQuery } from "@/shared/lib/use-media-query";
+import { Toast } from "@/shared/ui/toast";
+
+import { useNotes } from "../model/use-notes";
+import { MobileNotes } from "./mobile-notes";
+import { PcNotes } from "./pc-notes";
+
+type TripNotesViewProps = { tripId: string };
+
 /**
- * 노트. 할 일 · 준비물 · 쇼핑 · 바우처 네 탭은 아직이다.
- * 라우트 구조를 먼저 맞추려고 자리만 잡아 둔다.
+ * 노트 — 체크리스트 · 바우처 · 준비물 · 쇼핑. 상태(탭 · 숫자 · 토스트)는 useNotes 가 쥐고, 배치는 모바일(탭 칩) · PC(왼쪽 메뉴)가 그린다.
+ * 첫 렌더(하이드레이션)에서는 화면 폭을 몰라 아무 레이아웃도 그리지 않는다. 바우처 · 준비물 · 쇼핑은 아직 「준비 중」
  */
-export function TripNotesView() {
+export function TripNotesView({ tripId }: TripNotesViewProps) {
+  const notes = useNotes(tripId);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  if (isDesktop === null) return null;
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
-      <p className="text-[17px] font-bold text-ink-900">노트는 준비 중이에요</p>
-      <p className="text-sm text-ink-400">할 일과 준비물, 바우처를 여기서 모아 볼 거예요.</p>
-    </main>
+    <>
+      {isDesktop ? (
+        <PcNotes tripId={tripId} notes={notes} />
+      ) : (
+        <MobileNotes tripId={tripId} notes={notes} />
+      )}
+      <Toast message={notes.toast} onDone={notes.clearToast} />
+    </>
   );
 }

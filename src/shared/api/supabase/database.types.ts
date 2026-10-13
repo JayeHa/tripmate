@@ -347,6 +347,48 @@ export type Database = {
           },
         ];
       };
+      checklist_items: {
+        Row: {
+          id: string;
+          trip_id: string;
+          status: string;
+          title: string;
+          due_date: string | null;
+          body: string;
+          links: Json;
+          pinned_by: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          status?: string;
+          title: string;
+          due_date?: string | null;
+          body?: string;
+          links?: Json;
+          pinned_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          status?: string;
+          title?: string;
+          due_date?: string | null;
+          body?: string;
+          links?: Json;
+          pinned_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       flights: {
         Row: {
           id: string;

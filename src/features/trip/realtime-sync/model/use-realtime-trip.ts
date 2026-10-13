@@ -50,6 +50,11 @@ export function useRealtimeTrip(tripId: string) {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "checklist_items", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
       )
