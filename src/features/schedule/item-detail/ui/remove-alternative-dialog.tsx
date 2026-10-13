@@ -1,3 +1,4 @@
+import { checklistUnlinkNote } from "@/entities/checklist";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
 
-import { linkedChecklistNote, linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
+import { linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
 
 type RemoveAlternativeDialogProps = {
   open: boolean;
@@ -32,7 +33,7 @@ export function RemoveAlternativeDialog({
   expenses,
   checklistCount,
 }: RemoveAlternativeDialogProps) {
-  const checklistNote = linkedChecklistNote(checklistCount);
+  const checklistNote = checklistUnlinkNote(checklistCount);
   const expenseNote = linkedExpenseNote(expenses);
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

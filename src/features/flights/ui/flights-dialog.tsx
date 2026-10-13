@@ -118,6 +118,7 @@ function FlightsBody({
           onEdit={() => flow.openForm(current.id)}
           onMemo={onMemo}
           onExpense={onExpense}
+          onToast={onToast}
         />
       )}
       {step.kind === "form" && (

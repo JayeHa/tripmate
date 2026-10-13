@@ -3,6 +3,7 @@
 import { Link as LinkIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { LinkedChecklist, useLinkedChecklist } from "@/entities/checklist";
 import { PaymentField, PayOverdueBanner } from "@/entities/expense";
 import { type ReservationStatus, ReservationStatusPicker } from "@/entities/schedule-item";
 import {
@@ -22,14 +23,17 @@ type StayDetailProps = {
   stay: Stay;
   /** 결제 칸 — 비용 입력 창을 여는 쪽(화면)에 넘긴다 */
   onPayment: (req: StayPaymentRequest) => void;
+  /** 체크리스트를 완료했다 · 실패했다 — 토스트는 화면이 그린다 */
+  onToast: (text: string) => void;
 };
 
 /**
  * 숙소 상세 — (결제 예정일 지남 안내) · 제목(아이콘 이름) · 기간 · 예약 상태(「수정」 없이 바로 바꾼다) ·
- * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제. 바우처 칸은 노트 단계에서 붙인다
+ * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제 · 이 숙소에 연결된 끝나지 않은 체크리스트. 바우처 칸은 노트 단계에서 붙인다
  */
-export function StayDetail({ tripId, stay, onPayment }: StayDetailProps) {
+export function StayDetail({ tripId, stay, onPayment, onToast }: StayDetailProps) {
   const status = useUpdateStayStatus(tripId);
+  const checklist = useLinkedChecklist(tripId, [{ kind: "stay", id: stay.id }], onToast);
   const pay = useStayPayment(tripId, stay.id);
   const p = stay.place;
   const links = stayLinksOf(stay.links);
@@ -102,6 +106,7 @@ export function StayDetail({ tripId, stay, onPayment }: StayDetailProps) {
           onPayment({ kind: "saved", stayId: stay.id, name: p.name, expenseId: pay.expenseId })
         }
       />
+      <LinkedChecklist tripId={tripId} items={checklist.items} onComplete={checklist.complete} />
     </div>
   );
 }

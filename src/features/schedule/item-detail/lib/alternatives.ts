@@ -47,11 +47,6 @@ export function hasOwnRecord(
   return !!alt.status || memoCount > 0 || links > 0 || expenseCount > 0 || checklistCount > 0;
 }
 
-/** 지우기 · 빼기 확인창에 덧붙일 체크리스트 안내 — 항목은 노트에 남고 연결만 풀린다. 연결이 없으면 null */
-export function linkedChecklistNote(count: number): string | null {
-  return count > 0 ? `연결된 체크리스트 ${count}개는 연결만 풀리고 노트에 남아요.` : null;
-}
-
 /** 일정 줄에 연결된 비용 — 전체 수와 그중 합계에서 빠진 수 */
 export type LinkedExpenses = { count: number; excluded: number };
 

@@ -57,14 +57,25 @@ export function openChecklistFor(
 }
 
 /**
+ * 대상들에 연결된 항목 수(상태 상관없이, 겹치면 한 번) — 대상을 지우면 이 연결이 풀린다고 알릴 때
+ */
+export function checklistCountFor(index: ChecklistIndex, refs: ChecklistTargetRef[]): number {
+  const ids = new Set(refs.flatMap((ref) => index.get(targetKey(ref))?.map((i) => i.id) ?? []));
+  return ids.size;
+}
+
+/**
  * 일정 카드들에 직접 연결된 항목 수(상태 상관없이, 겹치면 한 번) — 일정을 지우면 이 연결이 풀린다고 알릴 때.
  * 그 카드의 숙소 · 항공편에 연결된 항목은 세지 않는다(일정을 지워도 그대로다)
  */
 export function linkedChecklistCount(index: ChecklistIndex, scheduleItemIds: string[]): number {
-  const ids = new Set(
-    scheduleItemIds.flatMap(
-      (id) => index.get(targetKey({ kind: "schedule_item", id }))?.map((i) => i.id) ?? [],
-    ),
+  return checklistCountFor(
+    index,
+    scheduleItemIds.map((id) => ({ kind: "schedule_item", id })),
   );
-  return ids.size;
+}
+
+/** 지우기 · 빼기 확인창에 덧붙일 안내 — 항목은 노트에 남고 연결만 풀린다. 연결이 없으면 null */
+export function checklistUnlinkNote(count: number): string | null {
+  return count > 0 ? `연결된 체크리스트 ${count}개는 연결만 풀리고 노트에 남아요.` : null;
 }

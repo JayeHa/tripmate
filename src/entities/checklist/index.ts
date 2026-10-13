@@ -6,4 +6,6 @@ export * from "./lib/links";
 export * from "./lib/targets";
 export * from "./model/types";
 export * from "./model/use-checklist";
+export * from "./model/use-linked-checklist";
 export * from "./ui/checklist-row";
+export * from "./ui/linked-checklist";
