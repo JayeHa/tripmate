@@ -3064,20 +3064,33 @@ describe("체크리스트 연결 (0058)", () => {
     expect(await targets(id)).toEqual([`f:${flight}`]);
   });
 
-  it("대상이나 항목을 지우면 연결만 지운다", async () => {
-    const { trip, card, flight } = await setup();
+  it("대상(일정 카드 · 항공편 · 숙소)이나 항목을 지우면 연결만 지운다", async () => {
+    const { trip, card, flight, stay } = await setup();
     const id = await save(trip, null, { title: "x" }, [
       { schedule_item_id: card },
       { flight_id: flight },
+      { stay_id: stay },
     ]);
     await db.query(`delete from public.schedule_items where id = '${card}'`);
+    expect(await targets(id)).toEqual([`f:${flight}`, `h:${stay}`].sort());
+    await db.query(`delete from public.stays where id = '${stay}'`);
     expect(await targets(id)).toEqual([`f:${flight}`]);
-    await db.query(`delete from public.checklist_items where id = '${id}'`);
+    await db.query(`delete from public.flights where id = '${flight}'`);
+    expect(await targets(id)).toEqual([]);
     expect(
-      (await db.query(`select 1 from public.checklist_targets where flight_id = '${flight}'`)).rows,
+      (await db.query(`select 1 from public.checklist_items where id = '${id}'`)).rows,
+    ).toHaveLength(1);
+
+    // 항목을 지우면 연결만 — 대상은 남는다
+    const more = await setup();
+    const again = await save(more.trip, null, { title: "z" }, [{ flight_id: more.flight }]);
+    await db.query(`delete from public.checklist_items where id = '${again}'`);
+    expect(
+      (await db.query(`select 1 from public.checklist_targets where flight_id = '${more.flight}'`))
+        .rows,
     ).toHaveLength(0);
     expect(
-      (await db.query(`select 1 from public.flights where id = '${flight}'`)).rows,
+      (await db.query(`select 1 from public.flights where id = '${more.flight}'`)).rows,
     ).toHaveLength(1);
   });
 
