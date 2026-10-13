@@ -13,3 +13,22 @@ export const CHECKLIST_STATUS_LABEL: Record<ChecklistStatus, string> = {
   etc: "기타",
   done: "완료",
 };
+
+/** 링크 한 줄(저장된 것) */
+export type ChecklistLink = { title: string; url: string };
+
+/** 추가 · 편집 창이 저장하는 칸 */
+export type ChecklistFields = {
+  status: ChecklistStatus;
+  title: string;
+  /** 「YYYY-MM-DD」, 없으면 null */
+  due_date: string | null;
+  body: string;
+  links: ChecklistLink[];
+  /** 홈에 고정한 사람. 고정하지 않으면 null */
+  pinned_by: string | null;
+};
+
+/** 추가 · 편집 창 저장 — 새 항목은 모든 칸, 편집은 바뀐 칸만 */
+export type ChecklistSave =
+  { id: null; fields: ChecklistFields } | { id: string; fields: Partial<ChecklistFields> };

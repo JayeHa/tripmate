@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import { useAddDayMemo } from "@/entities/schedule-item";
+import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { toDayMemoText } from "../lib/day-memo";
-import { useMountedDone } from "./use-mounted-done";
 
 /**
  * 날짜 메모 쓰기 — 고른 날(「변경 ⌄」 으로 바꾼다)의 맨 끝에 note 일정 한 줄. ☆/★ 중요는 글 앞 「★ 」 로 남긴다.

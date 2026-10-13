@@ -7,9 +7,9 @@ import {
   useDeleteScheduleItem,
   useUpdateScheduleItem,
 } from "@/entities/schedule-item";
+import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { type NoteDraft, noteDraftOf, toNotePatch } from "../lib/day-memo";
-import { useMountedDone } from "./use-mounted-done";
 
 /**
  * 날짜 메모 고치기 — 시간(선택) · 글. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.

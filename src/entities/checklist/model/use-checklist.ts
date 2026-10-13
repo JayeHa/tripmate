@@ -4,8 +4,15 @@ import { useMutation, useMutationState, useQuery, useQueryClient } from "@tansta
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { addChecklistItem, fetchChecklist, setChecklistStatus } from "../api/checklist";
-import type { ChecklistItem, ChecklistStatus } from "./types";
+import {
+  addChecklistItem,
+  deleteChecklistItem,
+  fetchChecklist,
+  saveChecklistItem,
+  setChecklistPin,
+  setChecklistStatus,
+} from "../api/checklist";
+import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "./types";
 
 /** 여행의 체크리스트 */
 export function useChecklist(tripId: string) {
@@ -73,5 +80,47 @@ export function usePendingChecklistIds(tripId: string): string[] {
   return useMutationState({
     filters: { mutationKey: statusKey(tripId), status: "pending" },
     select: (m) => (m.state.variables as { id: string } | undefined)?.id ?? "",
+  });
+}
+
+/** 추가 · 편집 창 저장(id 가 null 이면 새로, 아니면 바뀐 칸만) — 끝나면 목록을 다시 읽는다 */
+export function useSaveChecklistItem(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: ChecklistSave) => saveChecklistItem(tripId, v),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+  });
+}
+
+/** 지우기 — 끝나면 목록을 다시 읽는다 */
+export function useDeleteChecklistItem(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteChecklistItem(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+  });
+}
+
+/**
+ * 읽기 화면의 「홈에 고정」 — 누르면 바로 바뀌고(화면 먼저) 서버에 보낸다. 실패하면 그 항목만 되돌린다
+ */
+export function useSetChecklistPin(tripId: string) {
+  const qc = useQueryClient();
+  const key = queryKeys.checklist(tripId);
+  /** 캐시의 그 항목 고정만 바꾼다 */
+  const setPinIn = (id: string, pinnedBy: string | null) =>
+    qc.setQueryData<ChecklistItem[]>(key, (items) =>
+      items?.map((i) => (i.id === id ? { ...i, pinned_by: pinnedBy } : i)),
+    );
+  return useMutation({
+    mutationFn: (v: { id: string; pinnedBy: string | null }) => setChecklistPin(v.id, v.pinnedBy),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: key });
+      const before = qc.getQueryData<ChecklistItem[]>(key)?.find((i) => i.id === v.id);
+      setPinIn(v.id, v.pinnedBy);
+      return { before: before?.pinned_by ?? null };
+    },
+    onError: (_e, v, ctx) => setPinIn(v.id, ctx?.before ?? null),
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   });
 }

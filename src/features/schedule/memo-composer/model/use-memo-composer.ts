@@ -10,9 +10,9 @@ import {
   useDeleteMemo,
   useUpdateMemo,
 } from "@/entities/schedule-item";
+import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { type MemoDraft, memoDraftOf, samePayload, toMemoPayload } from "../lib/memo-draft";
-import { useMountedDone } from "./use-mounted-done";
 
 type MemoComposerOptions = {
   tripId: string;

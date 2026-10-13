@@ -36,3 +36,14 @@ export function dueView(due: string, today: string): DueView {
   const days = daysUntil(due, today);
   return { text: `${dueDateText(due)} · ${ddayText(days)}`, soon: days <= 7 };
 }
+
+/**
+ * 읽기 화면의 마감 줄 — 「10/16(금) 까지 · D-3」. 완료한 항목은 D-day 없이 「10/16(금) 까지」, 주황도 아니다.
+ * 7일 안(지난 것 포함)이면 주황
+ */
+export function dueReadView(due: string, today: string, done: boolean): DueView {
+  const head = `${dueDateText(due)} 까지`;
+  if (done) return { text: head, soon: false };
+  const days = daysUntil(due, today);
+  return { text: `${head} · ${ddayText(days)}`, soon: days <= 7 };
+}

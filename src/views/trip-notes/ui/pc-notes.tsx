@@ -1,18 +1,16 @@
 "use client";
 
-import { ListTodo } from "lucide-react";
-
 import { cn } from "@/shared/lib/utils";
 
 import { NOTE_TAB_INFO, NOTE_TABS } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
 import { NotesTabBody } from "./notes-tab-body";
+import { PcChecklistPane } from "./pc-checklist-pane";
 
 type PcNotesProps = { tripId: string; notes: NotesState };
 
 /**
- * PC 노트 — 왼쪽 220 세로 메뉴(아이콘 · 이름 · 숫자) + 본문. 체크리스트는 목록 400 + 오른쪽 상세 칸
- * (항목 열기는 다음 단계라 지금은 안내만)
+ * PC 노트 — 왼쪽 220 세로 메뉴(아이콘 · 이름 · 숫자) + 본문. 체크리스트는 목록 400 + 오른쪽 상세 칸(고른 항목의 읽기 · 편집)
  */
 export function PcNotes({ tripId, notes }: PcNotesProps) {
   return (
@@ -36,12 +34,7 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
         <div className={cn("min-w-0 flex-1", notes.tab === "checklist" && "w-100 flex-none")}>
           <NotesTabBody tripId={tripId} notes={notes} stickyTop="top-(--shell-top)" />
         </div>
-        {notes.tab === "checklist" && (
-          <aside className="sticky top-(--shell-top) flex h-[calc(100dvh-var(--shell-top))] min-w-0 flex-1 flex-col items-center justify-center gap-3 border-l border-divider bg-white">
-            <ListTodo className="size-9 text-line-strong" aria-hidden="true" />
-            <p className="text-sm text-ink-350">항목을 고르면 여기에 자세히 보여요</p>
-          </aside>
-        )}
+        {notes.tab === "checklist" && <PcChecklistPane tripId={tripId} notes={notes} />}
       </div>
     </main>
   );
