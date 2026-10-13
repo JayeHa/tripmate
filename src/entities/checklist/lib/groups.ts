@@ -9,7 +9,8 @@ import {
 export type ChecklistGroup = { status: ChecklistStatus; label: string; items: ChecklistItem[] };
 
 /**
- * 마감순 — 마감일이 이른 것부터, 마감 없는 것은 뒤. 같으면 나중에 넣은 것이 위(빠른 추가가 그 묶음 위에 보이게)
+ * 마감순 — 마감일이 이른 것부터, 마감 없는 것은 뒤. 같으면 나중에 넣은 것이 위.
+ * 빠른 추가(마감 없음)는 마감 없는 것들 중 맨 위 — 마감 있는 항목이 있으면 그 아래에 붙는다
  */
 function byDue(a: ChecklistItem, b: ChecklistItem): number {
   const due = (a.due_date ?? "9").localeCompare(b.due_date ?? "9");
