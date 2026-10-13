@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { ChecklistItem } from "@/entities/checklist";
 
-import { blankChecklistForm, checklistFormFrom, toChecklistFields } from "./checklist-form";
+import {
+  blankChecklistForm,
+  checklistFormFrom,
+  toChecklistFields,
+  toChecklistPatch,
+} from "./checklist-form";
 
 /** 저장된 항목 하나 */
 const saved = {
@@ -48,7 +53,6 @@ describe("checklist form", () => {
         ],
       },
       "u-me",
-      null,
     );
     expect(r).toEqual({
       ok: true,
@@ -63,22 +67,33 @@ describe("checklist form", () => {
     });
   });
 
-  it("고정 — 새로 고정하면 나, 이미 고정된 것은 처음 고정한 사람", () => {
-    const form = { ...checklistFormFrom(saved) };
-    const pinnedBy = (before: string | null) => {
-      const r = toChecklistFields(form, "u-me", before);
-      return r.ok ? r.fields.pinned_by : "error";
-    };
-    expect(pinnedBy(null)).toBe("u-me");
-    expect(pinnedBy("u-friend")).toBe("u-friend");
-    expect(toChecklistFields({ ...form, pinned: false }, "u-me", "u-friend")).toMatchObject({
+  it("편집 — 연 때와 달라진 칸만 보낸다(상태 · 고정은 건드리지 않으면 빠진다)", () => {
+    const opened = checklistFormFrom(saved);
+    expect(toChecklistPatch(opened, opened, "u-me")).toEqual({ ok: true, patch: {} });
+    expect(toChecklistPatch({ ...opened, title: " 환전하기 " }, opened, "u-me")).toEqual({
       ok: true,
-      fields: { pinned_by: null },
+      patch: { title: "환전하기" },
+    });
+    expect(toChecklistPatch({ ...opened, pinned: false }, opened, "u-me")).toEqual({
+      ok: true,
+      patch: { pinned_by: null },
+    });
+    expect(
+      toChecklistPatch({ ...opened, pinned: false }, { ...opened, pinned: false }, "u-me"),
+    ).toEqual({
+      ok: true,
+      patch: {},
+    });
+    expect(
+      toChecklistPatch({ ...opened, pinned: true }, { ...opened, pinned: false }, "u-me"),
+    ).toEqual({ ok: true, patch: { pinned_by: "u-me" } });
+    expect(toChecklistPatch({ ...opened, title: " " }, opened, "u-me")).toMatchObject({
+      ok: false,
     });
   });
 
   it("제목이 비었거나 링크가 http(s) 가 아니면 저장하지 않는다", () => {
-    expect(toChecklistFields(blankChecklistForm("  "), "u", null)).toEqual({
+    expect(toChecklistFields(blankChecklistForm("  "), "u")).toEqual({
       ok: false,
       error: "제목을 입력해 주세요",
     });
@@ -86,7 +101,6 @@ describe("checklist form", () => {
       toChecklistFields(
         { ...blankChecklistForm("여권"), links: [{ title: "", url: "example.com" }] },
         "u",
-        null,
       ),
     ).toMatchObject({ ok: false });
   });

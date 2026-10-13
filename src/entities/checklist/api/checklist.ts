@@ -1,6 +1,6 @@
 import { createClient } from "@/shared/api/supabase/client";
 
-import type { ChecklistFields, ChecklistItem, ChecklistStatus } from "../model/types";
+import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "../model/types";
 
 /** 고치려는 항목이 없다 — 그사이 일행이 지웠다 */
 export const CHECKLIST_GONE = "이미 지워진 항목이에요";
@@ -44,13 +44,12 @@ export async function setChecklistStatus(id: string, status: ChecklistStatus): P
 }
 
 /**
- * 추가 · 편집 창 저장 — id 가 없으면 새로 넣고, 있으면 그 항목을 고친다.
+ * 추가 · 편집 창 저장 — id 가 없으면 새로 넣고, 있으면 그 항목의 받은 칸만 고친다.
  * 고칠 때 0행이면(그사이 일행이 지웠다) 던진다
  */
 export async function saveChecklistItem(
   tripId: string,
-  id: string | null,
-  fields: ChecklistFields,
+  { id, fields }: ChecklistSave,
 ): Promise<ChecklistItem> {
   const supabase = createClient();
   if (id === null) {

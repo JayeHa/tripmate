@@ -28,3 +28,7 @@ export type ChecklistFields = {
   /** 홈에 고정한 사람. 고정하지 않으면 null */
   pinned_by: string | null;
 };
+
+/** 추가 · 편집 창 저장 — 새 항목은 모든 칸, 편집은 바뀐 칸만 */
+export type ChecklistSave =
+  { id: null; fields: ChecklistFields } | { id: string; fields: Partial<ChecklistFields> };

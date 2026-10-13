@@ -12,7 +12,7 @@ import {
   setChecklistPin,
   setChecklistStatus,
 } from "../api/checklist";
-import type { ChecklistFields, ChecklistItem, ChecklistStatus } from "./types";
+import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "./types";
 
 /** 여행의 체크리스트 */
 export function useChecklist(tripId: string) {
@@ -83,12 +83,11 @@ export function usePendingChecklistIds(tripId: string): string[] {
   });
 }
 
-/** 추가 · 편집 창 저장(id 가 null 이면 새로) — 끝나면 목록을 다시 읽는다 */
+/** 추가 · 편집 창 저장(id 가 null 이면 새로, 아니면 바뀐 칸만) — 끝나면 목록을 다시 읽는다 */
 export function useSaveChecklistItem(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: { id: string | null; fields: ChecklistFields }) =>
-      saveChecklistItem(tripId, v.id, v.fields),
+    mutationFn: (v: ChecklistSave) => saveChecklistItem(tripId, v),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
   });
 }

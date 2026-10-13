@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   CHECKLIST_GONE,
   type ChecklistItem,
+  type ChecklistSave,
   useDeleteChecklistItem,
   useSaveChecklistItem,
 } from "@/entities/checklist";
@@ -16,6 +17,7 @@ import {
   checklistFormFrom,
   type ChecklistFormValues,
   toChecklistFields,
+  toChecklistPatch,
 } from "../lib/checklist-form";
 
 type ChecklistFormOptions = {
@@ -33,9 +35,11 @@ type ChecklistFormOptions = {
  * 끝났을 때 이 창이 아직 떠 있을 때만 닫는다(늦게 끝난 요청이 그사이 연 다른 항목 창을 닫지 않게)
  */
 export function useChecklistForm({ tripId, item, title, onDone }: ChecklistFormOptions) {
-  const [values, setValues] = useState<ChecklistFormValues>(() =>
+  // 연 때의 값 — 편집 저장은 이것과 달라진 칸만 보낸다
+  const [initial] = useState<ChecklistFormValues>(() =>
     item ? checklistFormFrom(item) : blankChecklistForm(title),
   );
+  const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const { data: user } = useUser();
   const save = useSaveChecklistItem(tripId);
@@ -56,15 +60,17 @@ export function useChecklistForm({ tripId, item, title, onDone }: ChecklistFormO
     /** 검증해 저장한다(새 항목이면 넣고, 아니면 고친다) */
     save: () => {
       if (pending || !user) return;
-      const result = toChecklistFields(values, user.id, item?.pinned_by ?? null);
+      const result = toSave(item, values, initial, user.id);
       if (!result.ok) {
         setError(result.error);
         return;
       }
       setError(null);
-      void save
-        .mutateAsync({ id: item?.id ?? null, fields: result.fields })
-        .then(finish, () => undefined);
+      if (result.save.id !== null && Object.keys(result.save.fields).length === 0) {
+        finish();
+        return;
+      }
+      void save.mutateAsync(result.save).then(finish, () => undefined);
     },
     /** 고치는 항목을 지운다(확인창을 거친 뒤) */
     destroy: () => {
@@ -78,6 +84,21 @@ export function useChecklistForm({ tripId, item, title, onDone }: ChecklistFormO
     locked: mutations.some((m) => m.isPending && !m.isPaused),
     error: error ?? errorOf(mutations.map((m) => m.error).find(Boolean)),
   };
+}
+
+/** 저장할 것 — 새 항목은 모든 칸, 편집은 연 때와 달라진 칸만 */
+function toSave(
+  item: ChecklistItem | null,
+  values: ChecklistFormValues,
+  initial: ChecklistFormValues,
+  userId: string,
+): { ok: true; save: ChecklistSave } | { ok: false; error: string } {
+  if (!item) {
+    const r = toChecklistFields(values, userId);
+    return r.ok ? { ok: true, save: { id: null, fields: r.fields } } : r;
+  }
+  const r = toChecklistPatch(values, initial, userId);
+  return r.ok ? { ok: true, save: { id: item.id, fields: r.patch } } : r;
 }
 
 /** 요청 실패 문구 — 그사이 지워진 항목이면 그대로 알리고, 그 밖은 다시 시도 */
