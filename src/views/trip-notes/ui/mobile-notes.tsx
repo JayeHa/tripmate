@@ -1,5 +1,6 @@
 "use client";
 
+import { ChecklistSheet } from "@/features/checklist";
 import { FilterChip } from "@/shared/ui/filter-chip";
 
 import { NOTE_TAB_INFO, NOTE_TABS } from "../lib/tabs";
@@ -10,7 +11,7 @@ type MobileNotesProps = { tripId: string; notes: NotesState };
 
 /**
  * 모바일 노트 — 위에 붙은 머리(「노트」 · 탭 칩 줄, 넘치면 가로 스크롤) + 회색 바탕의 탭 내용.
- * 머리 높이(제목 52 + 탭 48 = 100)만큼 아래에 체크리스트 빠른 추가 바가 붙는다
+ * 머리 높이(제목 52 + 탭 48 = 100)만큼 아래에 체크리스트 빠른 추가 바가 붙는다. 체크리스트 항목은 바텀시트로 연다
  */
 export function MobileNotes({ tripId, notes }: MobileNotesProps) {
   return (
@@ -44,6 +45,7 @@ export function MobileNotes({ tripId, notes }: MobileNotesProps) {
         notes={notes}
         stickyTop="top-[calc(var(--shell-top)+6.25rem)]"
       />
+      <ChecklistSheet tripId={tripId} detail={notes.checklistDetail} onToast={notes.showToast} />
     </main>
   );
 }

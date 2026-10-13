@@ -189,13 +189,15 @@
   --color-tag-link: #4b5563;
   --color-tag-link-bg: #e9ebee;
 
-  /* 체크리스트 — 마감이 7일 안(지난 것 포함)인 마감 칩 · 타임라인 「체크리스트 N」 칩, 「기타」 상태(점 · 칩), 「완료」 점 */
+  /* 체크리스트 — 마감이 7일 안(지난 것 포함)인 마감 칩 · 타임라인 「체크리스트 N」 칩, 「기타」 상태(점 · 칩), 「완료」 점 · 읽기 화면 상태 칩 */
   --color-checklist-due: #c2410c;
   --color-checklist-due-bg: #fff1e6;
   --color-checklist-etc: #f59e0b;
   --color-checklist-etc-text: #a16207;
   --color-checklist-etc-bg: #fff4db;
   --color-checklist-done: #aeb4bc;
+  --color-checklist-done-text: #6b7280;
+  --color-checklist-done-bg: #f1f2f4;
 
   /* Avatar */
   --color-avatar: #4b6584;

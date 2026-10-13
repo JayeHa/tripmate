@@ -18,7 +18,15 @@ type NotesTabBodyProps = {
 /** 지금 탭의 내용 — 체크리스트, 아직 만들지 않은 탭은 「준비 중」 */
 export function NotesTabBody({ tripId, notes, stickyTop }: NotesTabBodyProps) {
   if (notes.tab === "checklist") {
-    return <ChecklistBoard tripId={tripId} stickyTop={stickyTop} onToast={notes.showToast} />;
+    return (
+      <ChecklistBoard
+        tripId={tripId}
+        stickyTop={stickyTop}
+        onToast={notes.showToast}
+        onOpen={notes.checklistDetail.open}
+        onNew={notes.checklistDetail.openNew}
+      />
+    );
   }
   return (
     <EmptyState

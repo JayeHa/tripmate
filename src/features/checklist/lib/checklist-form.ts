@@ -1,0 +1,74 @@
+import {
+  type ChecklistFields,
+  type ChecklistItem,
+  checklistLinksOf,
+  type ChecklistStatus,
+} from "@/entities/checklist";
+import type { LinkDraft } from "@/shared/ui/link-rows";
+
+/** 제목 · 메모 최대 글자(DB 검사와 같다) */
+export const TITLE_MAX = 100;
+export const BODY_MAX = 2000;
+
+/** 추가 · 편집 창의 값 — 입력 칸이 다루는 그대로. 저장할 때 toChecklistFields 로 바꾼다 */
+export type ChecklistFormValues = {
+  status: ChecklistStatus;
+  title: string;
+  /** 「YYYY-MM-DD」 또는 ""(없음) */
+  due: string;
+  body: string;
+  links: LinkDraft[];
+  pinned: boolean;
+};
+
+/** 새 항목 — 「해야 할 것」, 빠른 추가 바에 치던 제목을 그대로 가져온다 */
+export function blankChecklistForm(title: string): ChecklistFormValues {
+  return { status: "todo", title: title.trim(), due: "", body: "", links: [], pinned: false };
+}
+
+/** 저장된 항목을 폼 값으로 */
+export function checklistFormFrom(item: ChecklistItem): ChecklistFormValues {
+  return {
+    status: item.status as ChecklistStatus,
+    title: item.title,
+    due: item.due_date ?? "",
+    body: item.body,
+    links: checklistLinksOf(item.links),
+    pinned: item.pinned_by !== null,
+  };
+}
+
+export type ChecklistPayload = { ok: true; fields: ChecklistFields } | { ok: false; error: string };
+
+/** http(s) 링크인지 */
+const isHttp = (url: string) => /^https?:\/\//i.test(url);
+
+/**
+ * 폼 값을 저장할 칸으로. 제목이 비었거나 링크 주소가 http(s) 가 아니면 문구를 돌려준다. 빈 링크 줄은 버린다.
+ * 고정: 이미 고정된 항목이면 처음 고정한 사람을 그대로 두고, 새로 고정하면 나(userId)를 남긴다
+ */
+export function toChecklistFields(
+  v: ChecklistFormValues,
+  userId: string,
+  pinnedBefore: string | null,
+): ChecklistPayload {
+  const title = v.title.trim();
+  if (!title) return { ok: false, error: "제목을 입력해 주세요" };
+  const links = v.links
+    .map((l) => ({ title: l.title.trim(), url: l.url.trim() }))
+    .filter((l) => l.url);
+  if (links.some((l) => !isHttp(l.url))) {
+    return { ok: false, error: "링크 주소는 http:// 나 https:// 로 시작해야 해요" };
+  }
+  return {
+    ok: true,
+    fields: {
+      status: v.status,
+      title: title.slice(0, TITLE_MAX),
+      due_date: v.due || null,
+      body: v.body.trim().slice(0, BODY_MAX),
+      links,
+      pinned_by: v.pinned ? (pinnedBefore ?? userId) : null,
+    },
+  };
+}
