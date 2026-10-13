@@ -25,6 +25,8 @@ type AlternativeHeaderProps = {
   memoCount: number;
   /** 이 대체 장소에 연결된 비용 — 빼기 전에 물을지 · 무엇을 알릴지 정한다 */
   linkedExpenses: LinkedExpenses;
+  /** 이 대체 장소에 직접 연결된 체크리스트 항목 수 — 빼면 연결이 풀리므로 묻는다 */
+  checklistCount: number;
   actions: AlternativeActions;
   /** 요청이 서버에 가 있는 동안 — 뒤로 · 닫기를 막는다 */
   locked: boolean;
@@ -41,6 +43,7 @@ export function AlternativeHeader({
   alt,
   memoCount,
   linkedExpenses,
+  checklistCount,
   actions,
   locked,
   onBack,
@@ -90,7 +93,7 @@ export function AlternativeHeader({
             variant="destructive"
             disabled={actions.pending}
             onClick={() =>
-              hasOwnRecord(alt, memoCount, linkedExpenses.count)
+              hasOwnRecord(alt, memoCount, linkedExpenses.count, checklistCount)
                 ? setConfirming(true)
                 : actions.remove(alt)
             }
@@ -121,6 +124,7 @@ export function AlternativeHeader({
         onOpenChange={setConfirming}
         onConfirm={() => actions.remove(alt)}
         expenses={linkedExpenses}
+        checklistCount={checklistCount}
       />
     </div>
   );

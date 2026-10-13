@@ -14,6 +14,7 @@ import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayCount } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
+import { useChecklistChips } from "../model/use-checklist-chips";
 import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
@@ -63,6 +64,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   // 상세 · 카드 위에 여는 창들(장소 정보 수정 · 대체 장소 직접 추가 · 메모 작성 · 토스트)
   const overlays = useDetailOverlays();
   const authorOf = useMemberLookup(tripId);
+  const checklistOf = useChecklistChips(tripId);
   // 일정 편집. 마치면 마지막으로 편집하던 날로 간다
   const edit = useScheduleEdit({
     tripId,
@@ -109,6 +111,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     onEditMove: moveDialog.openFor,
     onAddPlace: add.open,
     authorOf,
+    checklistOf,
     onAddDayMemo: overlays.openDayMemo,
     edit,
     startEditAt: edit.opener,

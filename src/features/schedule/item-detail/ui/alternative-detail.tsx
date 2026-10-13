@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { linkedChecklistCount, useChecklistIndex } from "@/entities/checklist";
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
 import {
@@ -39,6 +40,8 @@ type AlternativeDetailProps = {
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
   /** 비용 쓰기 · 고치기 — 이 대체 장소 줄에 연결된다 */
   onExpense: (itemId: string, expenseId: string | null) => void;
+  /** 체크리스트 칸의 완료 · 실패 토스트 */
+  onToast: (message: string) => void;
 };
 
 /**
@@ -58,12 +61,14 @@ export function AlternativeDetail({
   onSwapped,
   onMemo,
   onExpense,
+  onToast,
 }: AlternativeDetailProps) {
   const plan = usePlanEdit(tripId, alt);
   const actions = useAlternativeActions(tripId, row.item, onSwapped);
   const locked = plan.locked || actions.locked;
   const { data: memos = [] } = useMemos(tripId);
   const { data: expenses = [] } = useExpenses(tripId);
+  const checklist = useChecklistIndex(tripId);
   useReportLock(locked, onLockChange);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
@@ -79,6 +84,7 @@ export function AlternativeDetail({
         plan={plan}
         onMemo={(memo) => onMemo(altRow, memo)}
         onExpense={(expenseId) => onExpense(alt.id, expenseId)}
+        onToast={onToast}
         alternatives={null}
         onEditPlace={onEditPlace}
       />
@@ -91,6 +97,7 @@ export function AlternativeDetail({
       alt={alt}
       memoCount={altRow.memos.length}
       linkedExpenses={linkedExpensesOf(expenses, alt.id)}
+      checklistCount={linkedChecklistCount(checklist, [alt.id])}
       actions={actions}
       locked={locked}
       onBack={onBack}

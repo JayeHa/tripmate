@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -13,6 +14,7 @@ import {
   setChecklistPin,
   setChecklistStatus,
 } from "../api/checklist";
+import { type ChecklistIndex, checklistIndex } from "../lib/by-target";
 import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "./types";
 
 /** 여행의 체크리스트 */
@@ -90,6 +92,16 @@ export function useChecklistTargets(tripId: string) {
     queryKey: queryKeys.checklistTargets(tripId),
     queryFn: () => fetchChecklistTargets(tripId),
   });
+}
+
+/**
+ * 대상(일정 카드 · 항공편 · 숙소)마다 연결된 항목 — 목록 · 연결을 읽기 전에는 빈 색인.
+ * 쿼리 데이터가 바뀔 때만 다시 만든다
+ */
+export function useChecklistIndex(tripId: string): ChecklistIndex {
+  const { data: items } = useChecklist(tripId);
+  const { data: rows } = useChecklistTargets(tripId);
+  return useMemo(() => checklistIndex(items ?? [], rows ?? []), [items, rows]);
 }
 
 /** 목록과 연결을 다시 읽는다 — 저장 · 지우기는 둘 다 바꾼다(항목을 지우면 연결도 지워진다) */

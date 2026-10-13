@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 
-import { linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
+import { linkedChecklistNote, linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
 import type { ItemActions } from "../model/use-item-actions";
 
 /** 메뉴 줄 — 모바일 44 · 15 · 아이콘 18, PC 40 · 14 · 아이콘 16 */
@@ -37,6 +37,8 @@ type ItemMenuProps = {
   alternativeCount: number;
   /** 이 일정과 그 대체 장소에 연결된 비용 — 지워지지 않고 가계부에 남는다고 알린다 */
   linkedExpenses: LinkedExpenses;
+  /** 이 일정과 그 대체 장소에 연결된 체크리스트 항목 수 — 연결만 풀리고 노트에 남는다고 알린다 */
+  checklistCount: number;
   startDate: string;
   totalDays: number;
 };
@@ -50,9 +52,11 @@ export function ItemMenu({
   dayIndex,
   alternativeCount,
   linkedExpenses,
+  checklistCount,
   startDate,
   totalDays,
 }: ItemMenuProps) {
+  const checklistNote = linkedChecklistNote(checklistCount);
   const expenseNote = linkedExpenseNote(linkedExpenses);
   const [open, setOpen] = useState(false);
   const [pickingDay, setPickingDay] = useState(false);
@@ -118,6 +122,7 @@ export function ItemMenu({
                 ? `이 일정의 메모 · 링크와 대체 장소 ${alternativeCount}곳이 함께 지워져요.`
                 : "이 일정의 메모 · 링크가 함께 지워져요."}{" "}
               장소는 저장한 장소에 남아요.
+              {checklistNote && ` ${checklistNote}`}
               {expenseNote && ` ${expenseNote}`}
             </AlertDialogDescription>
           </AlertDialogHeader>

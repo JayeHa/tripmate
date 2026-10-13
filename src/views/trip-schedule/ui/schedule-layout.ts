@@ -31,6 +31,8 @@ export type ScheduleLayoutProps = {
   onAddDayMemo: (day: number) => void;
   /** 메모 작성자 표시 */
   authorOf: (authorId: string | null) => MemoAuthor | null;
+  /** 카드의 「체크리스트 N」 칩 — 끝나지 않은 항목 수와 노트 체크리스트 주소 */
+  checklistOf: (row: TimelineRow) => { count: number; href: string };
   /** 일정 편집. 열려 있으면 모바일은 화면 전체를, PC 는 목록 칸을 편집 화면으로 바꾼다 */
   edit: ScheduleEditState;
   /** 「편집」(day 헤더 · 플로팅) — 그 날로 편집을 여는 동작. 일정 · 여행을 읽는 동안은 undefined */

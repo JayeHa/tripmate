@@ -5,6 +5,7 @@ import type { Place, ScheduleItem } from "@/entities/schedule-item";
 import {
   alternativeChoices,
   hasOwnRecord,
+  linkedChecklistNote,
   linkedExpenseNote,
   linkedExpensesOf,
   swapDoneMessage,
@@ -88,12 +89,20 @@ describe("alternativeChoices", () => {
 });
 
 describe("hasOwnRecord", () => {
-  it("예약 상태 · 메모 · 일정 링크 · 연결된 비용 중 하나라도 있으면 true", () => {
+  it("예약 상태 · 메모 · 일정 링크 · 연결된 비용 · 체크리스트 중 하나라도 있으면 true", () => {
     expect(hasOwnRecord(item("a"), 0)).toBe(false);
     expect(hasOwnRecord(item("a", { status: "ok" }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 1)).toBe(true);
     expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 0, 2)).toBe(true);
+    expect(hasOwnRecord(item("a"), 0, 0, 1)).toBe(true);
+  });
+});
+
+describe("linkedChecklistNote", () => {
+  it("연결이 있을 때만 안내한다", () => {
+    expect(linkedChecklistNote(0)).toBeNull();
+    expect(linkedChecklistNote(2)).toBe("연결된 체크리스트 2개는 연결만 풀리고 노트에 남아요.");
   });
 });
 
