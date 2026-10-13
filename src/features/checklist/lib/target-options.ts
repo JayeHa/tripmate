@@ -16,8 +16,13 @@ import { dayLabel, dayParts } from "@/shared/lib/days";
 /** 연결 고르기 · 이름에 쓰는 여행의 것들 */
 export type TargetSources = {
   startDate: string;
-  /** 타임라인 일정(대체 장소 제외) */
+  /** 타임라인 일정(대체 장소 제외) — 고르기 창에 나온다 */
   items: ScheduleItem[];
+  /**
+   * 대체 장소 줄 — 고르지는 않고 이름만 찾는다. 대체 장소 「바꾸기」 는 id 를 그대로 두고 원래 일정을 대체 장소 줄로
+   * 바꾸므로, 연결했던 일정이 여기로 옮겨 올 수 있다
+   */
+  alternatives: ScheduleItem[];
   flights: Flight[];
   stays: Stay[];
 };
@@ -106,19 +111,26 @@ export function targetGroups(src: TargetSources, picked: Set<string>): TargetGro
     : groups;
 }
 
+/** 이름을 찾지 못한 대상 — 그사이 지워져 목록을 다시 읽는 중이거나 모르는 대상. 그래도 줄을 그려 풀 수 있게 */
+export const TARGET_UNKNOWN = "찾을 수 없는 일정";
+
 /**
- * 연결 대상의 이름 — 일정 「10.31 · 모구모구 본포」 · 항공편 「항공 · 7C1181 (10/31)」 · 숙소 「숙소 · 호텔 몬토레 긴자」.
- * 대상을 찾지 못하면(그사이 지워졌거나 아직 못 읽었다) null
+ * 연결 대상의 이름 — 일정 「10.31 · 모구모구 본포」(대체 장소가 됐으면 뒤에 「(대체 장소)」) ·
+ * 항공편 「항공 · 7C1181 (10/31)」 · 숙소 「숙소 · 호텔 몬토레 긴자」. 찾지 못하면 TARGET_UNKNOWN
  */
-export function targetLabel(ref: ChecklistTargetRef, src: TargetSources): string | null {
+export function targetLabel(ref: ChecklistTargetRef, src: TargetSources): string {
   if (ref.kind === "flight") {
     const f = src.flights.find((x) => x.id === ref.id);
-    return f ? `항공 · ${flightCode(f)} (${slashDate(f.dep_date)})` : null;
+    return f ? `항공 · ${flightCode(f)} (${slashDate(f.dep_date)})` : TARGET_UNKNOWN;
   }
   if (ref.kind === "stay") {
     const s = src.stays.find((x) => x.id === ref.id);
-    return s ? `숙소 · ${s.place.name}` : null;
+    return s ? `숙소 · ${s.place.name}` : TARGET_UNKNOWN;
   }
   const item = src.items.find((x) => x.id === ref.id);
-  return item ? `${dayParts(src.startDate, item.day_index).date} · ${itemName(item)}` : null;
+  if (item) return `${dayParts(src.startDate, item.day_index).date} · ${itemName(item)}`;
+  const alt = src.alternatives.find((x) => x.id === ref.id);
+  return alt
+    ? `${dayParts(src.startDate, alt.day_index).date} · ${itemName(alt)} (대체 장소)`
+    : TARGET_UNKNOWN;
 }

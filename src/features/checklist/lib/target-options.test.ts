@@ -20,6 +20,7 @@ function item(patch: Record<string, unknown>) {
 
 const SRC: TargetSources = {
   startDate: "2027-10-31",
+  alternatives: [item({ id: "a1", day_index: 1, place: { name: "이치란", category: "food" } })],
   items: [
     item({ id: "p2", day_index: 1, position: 0, place: { name: "모구모구", category: "food" } }),
     item({
@@ -67,10 +68,11 @@ describe("checklist target options", () => {
     expect(groups.map((g) => g.key)).toEqual(["0"]);
   });
 
-  it("이름 — 일정 「날짜 · 이름」 · 항공 · 숙소, 못 찾으면 null", () => {
+  it("이름 — 일정 「날짜 · 이름」(대체 장소가 됐으면 표시) · 항공 · 숙소, 못 찾으면 「찾을 수 없는 일정」", () => {
     expect(targetLabel({ kind: "schedule_item", id: "p2" }, SRC)).toBe("11.1 · 모구모구");
     expect(targetLabel({ kind: "flight", id: "f1" }, SRC)).toBe("항공 · 7C1181 (10/31)");
     expect(targetLabel({ kind: "stay", id: "s1" }, SRC)).toBe("숙소 · 호텔 몬토레 긴자");
-    expect(targetLabel({ kind: "stay", id: "gone" }, SRC)).toBeNull();
+    expect(targetLabel({ kind: "schedule_item", id: "a1" }, SRC)).toBe("11.1 · 이치란 (대체 장소)");
+    expect(targetLabel({ kind: "stay", id: "gone" }, SRC)).toBe("찾을 수 없는 일정");
   });
 });

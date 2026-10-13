@@ -17,7 +17,7 @@ type TargetFieldProps = {
 /**
  * 「연결된 일정」 칸 — 고른 대상마다 회색 줄(40 · r10, 이름 14/600 · ✕), 아래 「+ 일정 연결」(공용 일정 연결 칸, 늘 비어 있다).
  * 고르기 창은 날마다 일정 카드 · 항공편, 맨 끝 숙소 묶음이고 이미 고른 것은 빠진다. 창의 「연결 안 함」 은 아무것도 바꾸지 않는다.
- * 그사이 지워진 대상(이름을 못 찾음)은 줄을 그리지 않는다 — 저장해도 DB 가 이미 연결을 지웠다
+ * 이름을 못 찾은 대상도 「찾을 수 없는 일정」 줄로 그려 ✕ 로 풀 수 있게 한다(목록을 읽기 전에는 줄을 그리지 않는다)
  */
 export function TargetField({ tripId, value, onChange }: TargetFieldProps) {
   const sources = useTargetSources(tripId);
@@ -31,12 +31,7 @@ export function TargetField({ tripId, value, onChange }: TargetFieldProps) {
         })),
       }))
     : [];
-  const rows = sources
-    ? value.flatMap((ref) => {
-        const label = targetLabel(ref, sources);
-        return label ? [{ ref, label }] : [];
-      })
-    : [];
+  const rows = sources ? value.map((ref) => ({ ref, label: targetLabel(ref, sources) })) : [];
   return (
     <div className="flex flex-col gap-1.5">
       {rows.map(({ ref, label }) => (

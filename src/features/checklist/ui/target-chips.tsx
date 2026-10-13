@@ -7,14 +7,14 @@ import { useTargetSources } from "../model/use-target-sources";
 
 type TargetChipsProps = { tripId: string; targets: ChecklistTargetRef[] };
 
-/** 읽기 화면의 「연결된 일정」 칩(28 · 13/600 회색 바탕). 이름을 찾은 대상만 그리고, 하나도 없으면 칸을 그리지 않는다 */
+/**
+ * 읽기 화면의 「연결된 일정」 칩(28 · 13/600 회색 바탕). 이름을 못 찾은 대상은 「찾을 수 없는 일정」.
+ * 연결이 없거나 일정 · 항공편 · 숙소를 아직 못 읽었으면 칸을 그리지 않는다
+ */
 export function TargetChips({ tripId, targets }: TargetChipsProps) {
   const sources = useTargetSources(tripId);
   const chips = sources
-    ? targets.flatMap((ref) => {
-        const label = targetLabel(ref, sources);
-        return label ? [{ key: targetKey(ref), label }] : [];
-      })
+    ? targets.map((ref) => ({ key: targetKey(ref), label: targetLabel(ref, sources) }))
     : [];
   if (chips.length === 0) return null;
   return (
