@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { ChecklistItem } from "../model/types";
+import type { ChecklistItem, ChecklistTargetRow } from "../model/types";
 import { dueReadView, dueView } from "./due";
 import { checklistGroups, openCount, toggledStatus } from "./groups";
 import { checklistLinksOf } from "./links";
+import { targetColumns, targetFromKey, targetKey, targetsByItem } from "./targets";
 
 /** 상태 · 마감 · 넣은 시각만 있는 항목 */
 const item = (id: string, status: string, due: string | null, created = "2026-10-01T00:00:00Z") =>
@@ -73,5 +74,37 @@ describe("checklistLinksOf", () => {
       { title: "a", url: "https://a.example" },
       { title: "", url: "HTTP://b.example" },
     ]);
+  });
+});
+
+describe("checklist targets", () => {
+  it("대상 ↔ 글자 · 저장 칸", () => {
+    const ref = { kind: "flight", id: "f1" } as const;
+    expect(targetFromKey(targetKey(ref))).toEqual(ref);
+    expect(targetFromKey("nope:x")).toBeNull();
+    expect(targetFromKey("stay:")).toBeNull();
+    expect(targetColumns({ kind: "schedule_item", id: "s1" })).toEqual({ schedule_item_id: "s1" });
+  });
+
+  it("항목마다 연결한 순서대로 묶는다", () => {
+    const row = (item_id: string, created_at: string, cols: Partial<ChecklistTargetRow>) =>
+      ({
+        item_id,
+        created_at,
+        schedule_item_id: null,
+        flight_id: null,
+        stay_id: null,
+        ...cols,
+      }) as ChecklistTargetRow;
+    const map = targetsByItem([
+      row("a", "2027-01-02", { stay_id: "h1" }),
+      row("b", "2027-01-01", { flight_id: "f1" }),
+      row("a", "2027-01-01", { schedule_item_id: "s1" }),
+    ]);
+    expect(map.get("a")).toEqual([
+      { kind: "schedule_item", id: "s1" },
+      { kind: "stay", id: "h1" },
+    ]);
+    expect(map.get("b")).toEqual([{ kind: "flight", id: "f1" }]);
   });
 });

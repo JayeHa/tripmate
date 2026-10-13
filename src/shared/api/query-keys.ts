@@ -24,6 +24,7 @@ export const queryKeys = {
   flights: (tripId: string) => ["trips", tripId, "flights"] as const,
   /** 노트 · 체크리스트 */
   checklist: (tripId: string) => ["trips", tripId, "checklist"] as const,
+  checklistTargets: (tripId: string) => ["trips", tripId, "checklist-targets"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,

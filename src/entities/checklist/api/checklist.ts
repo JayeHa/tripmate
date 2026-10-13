@@ -1,6 +1,12 @@
 import { createClient } from "@/shared/api/supabase/client";
 
-import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "../model/types";
+import { targetColumns } from "../lib/targets";
+import type {
+  ChecklistItem,
+  ChecklistSave,
+  ChecklistStatus,
+  ChecklistTargetRow,
+} from "../model/types";
 
 /** 고치려는 항목이 없다 — 그사이 일행이 지웠다 */
 export const CHECKLIST_GONE = "이미 지워진 항목이에요";
@@ -43,32 +49,34 @@ export async function setChecklistStatus(id: string, status: ChecklistStatus): P
   if (data.length === 0) throw new Error(CHECKLIST_GONE);
 }
 
-/**
- * 추가 · 편집 창 저장 — id 가 없으면 새로 넣고, 있으면 그 항목의 받은 칸만 고친다.
- * 고칠 때 0행이면(그사이 일행이 지웠다) 던진다
- */
-export async function saveChecklistItem(
-  tripId: string,
-  { id, fields }: ChecklistSave,
-): Promise<ChecklistItem> {
+/** 여행의 체크리스트 연결 — 항목마다 묶는 것은 화면이 한다(targetsByItem) */
+export async function fetchChecklistTargets(tripId: string): Promise<ChecklistTargetRow[]> {
   const supabase = createClient();
-  if (id === null) {
-    const { data, error } = await supabase
-      .from("checklist_items")
-      .insert({ trip_id: tripId, ...fields })
-      .select("*")
-      .single();
-    if (error) throw error;
-    return data;
-  }
   const { data, error } = await supabase
-    .from("checklist_items")
-    .update(fields)
-    .eq("id", id)
-    .select("*");
+    .from("checklist_targets")
+    .select("*")
+    .eq("trip_id", tripId)
+    .order("created_at");
   if (error) throw error;
-  if (data.length === 0) throw new Error(CHECKLIST_GONE);
-  return data[0];
+  return data;
+}
+
+/**
+ * 추가 · 편집 창 저장(save_checklist_item, 0058) — 항목 칸과 연결을 한 트랜잭션으로. 항목 id 를 돌려준다.
+ * 고칠 항목이 없으면(그사이 일행이 지웠다) 던진다. 그사이 지워진 대상은 DB 가 건너뛴다
+ */
+export async function saveChecklistItem(tripId: string, save: ChecklistSave): Promise<string> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("save_checklist_item", {
+    p_trip: tripId,
+    p_id: save.id,
+    p_fields: save.fields,
+    p_add: save.add.map(targetColumns),
+    p_remove: save.remove.map(targetColumns),
+  });
+  if (error?.code === "P0002") throw new Error(CHECKLIST_GONE);
+  if (error) throw error;
+  return data;
 }
 
 /** 홈에 고정 · 풀기 — 고정한 사람을 남긴다(null 이면 푼다). 0행이면 던진다 */

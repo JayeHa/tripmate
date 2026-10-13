@@ -389,6 +389,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      checklist_targets: {
+        Row: {
+          id: string;
+          trip_id: string;
+          item_id: string;
+          schedule_item_id: string | null;
+          flight_id: string | null;
+          stay_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          item_id: string;
+          schedule_item_id?: string | null;
+          flight_id?: string | null;
+          stay_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          item_id?: string;
+          schedule_item_id?: string | null;
+          flight_id?: string | null;
+          stay_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       flights: {
         Row: {
           id: string;
@@ -863,6 +893,16 @@ export type Database = {
       save_flight: {
         Args: { p_trip: string; p_flight: string | null; p_fields: Json };
         Returns: Json;
+      };
+      save_checklist_item: {
+        Args: {
+          p_trip: string;
+          p_id: string | null;
+          p_fields: Json;
+          p_add?: Json;
+          p_remove?: Json;
+        };
+        Returns: string;
       };
       delete_stay: {
         Args: { p_stay: string; p_delete_cards: boolean };

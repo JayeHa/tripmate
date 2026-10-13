@@ -6,6 +6,7 @@ import {
   CHECKLIST_STATUS_LABEL,
   CHECKLIST_STATUSES,
   type ChecklistItem,
+  type ChecklistTargetRef,
 } from "@/entities/checklist";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
@@ -19,11 +20,14 @@ import { BODY_MAX, TITLE_MAX } from "../lib/checklist-form";
 import { type ChecklistFormState, useChecklistForm } from "../model/use-checklist-form";
 import { DeleteChecklistButton } from "./delete-checklist-button";
 import { PanelHeader } from "./panel-header";
+import { TargetField } from "./target-field";
 
 type ChecklistEditorProps = {
   tripId: string;
   /** 고치는 항목. 새로 넣으면 null */
   item: ChecklistItem | null;
+  /** 고치는 항목의 연결. 새 항목이면 빈 목록 */
+  targets: ChecklistTargetRef[];
   /** 새 항목의 처음 제목 */
   title: string;
   onClose: () => void;
@@ -40,6 +44,7 @@ type ChecklistEditorProps = {
 export function ChecklistEditor({
   tripId,
   item,
+  targets,
   title,
   onClose,
   onToast,
@@ -49,6 +54,7 @@ export function ChecklistEditor({
   const form = useChecklistForm({
     tripId,
     item,
+    targets,
     title,
     onClose,
     onToast,
@@ -66,7 +72,7 @@ export function ChecklistEditor({
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3">
         <div className="flex flex-col gap-4">
-          <EditorFields form={form} />
+          <EditorFields tripId={tripId} form={form} />
           {form.error && <p className="text-[13px] text-destructive">{form.error}</p>}
         </div>
       </div>
@@ -85,10 +91,10 @@ export function ChecklistEditor({
   );
 }
 
-type EditorFieldsProps = { form: ChecklistFormState };
+type EditorFieldsProps = { tripId: string; form: ChecklistFormState };
 
 /** 입력 칸들 */
-function EditorFields({ form }: EditorFieldsProps) {
+function EditorFields({ tripId, form }: EditorFieldsProps) {
   const { values: v, set } = form;
   return (
     <>
@@ -129,6 +135,9 @@ function EditorFields({ form }: EditorFieldsProps) {
           aria-label="마감일"
         />
       </Field>
+      <Field label="연결된 일정" hint="일정 카드에 표시돼요">
+        <TargetField tripId={tripId} value={v.targets} onChange={(t) => set("targets", t)} />
+      </Field>
       <Field label="메모">
         <Textarea
           value={v.body}
@@ -152,15 +161,22 @@ function EditorFields({ form }: EditorFieldsProps) {
   );
 }
 
-type FieldProps = { label: string; optional?: boolean; children: ReactNode };
+type FieldProps = {
+  label: string;
+  optional?: boolean;
+  /** 이름 옆 회색 괄호 글자 — optional 이면 「선택」 */
+  hint?: string;
+  children: ReactNode;
+};
 
-/** 칸 — 13/700 이름(선택이면 「(선택)」) + 입력 */
-function Field({ label, optional = false, children }: FieldProps) {
+/** 칸 — 13/700 이름(옆에 회색 「(선택)」 · 안내) + 입력 */
+function Field({ label, optional = false, hint, children }: FieldProps) {
+  const aside = hint ?? (optional ? "선택" : null);
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[13px] font-bold text-ink-700">
         {label}
-        {optional && <span className="font-medium text-ink-350"> (선택)</span>}
+        {aside && <span className="font-medium text-ink-350"> ({aside})</span>}
       </span>
       {children}
     </div>

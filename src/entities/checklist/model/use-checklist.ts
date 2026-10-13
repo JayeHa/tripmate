@@ -8,6 +8,7 @@ import {
   addChecklistItem,
   deleteChecklistItem,
   fetchChecklist,
+  fetchChecklistTargets,
   saveChecklistItem,
   setChecklistPin,
   setChecklistStatus,
@@ -83,21 +84,39 @@ export function usePendingChecklistIds(tripId: string): string[] {
   });
 }
 
-/** 추가 · 편집 창 저장(id 가 null 이면 새로, 아니면 바뀐 칸만) — 끝나면 목록을 다시 읽는다 */
-export function useSaveChecklistItem(tripId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (v: ChecklistSave) => saveChecklistItem(tripId, v),
-    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+/** 여행의 체크리스트 연결(일정 카드 · 항공편 · 숙소) */
+export function useChecklistTargets(tripId: string) {
+  return useQuery({
+    queryKey: queryKeys.checklistTargets(tripId),
+    queryFn: () => fetchChecklistTargets(tripId),
   });
 }
 
-/** 지우기 — 끝나면 목록을 다시 읽는다 */
-export function useDeleteChecklistItem(tripId: string) {
+/** 목록과 연결을 다시 읽는다 — 저장 · 지우기는 둘 다 바꾼다(항목을 지우면 연결도 지워진다) */
+function useInvalidateChecklist(tripId: string) {
   const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.checklistTargets(tripId) }),
+    ]);
+}
+
+/** 추가 · 편집 창 저장(항목 칸 + 연결, id 가 null 이면 새로) — 끝나면 목록 · 연결을 다시 읽는다 */
+export function useSaveChecklistItem(tripId: string) {
+  const invalidate = useInvalidateChecklist(tripId);
+  return useMutation({
+    mutationFn: (v: ChecklistSave) => saveChecklistItem(tripId, v),
+    onSettled: invalidate,
+  });
+}
+
+/** 지우기 — 끝나면 목록 · 연결을 다시 읽는다 */
+export function useDeleteChecklistItem(tripId: string) {
+  const invalidate = useInvalidateChecklist(tripId);
   return useMutation({
     mutationFn: (id: string) => deleteChecklistItem(id),
-    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+    onSettled: invalidate,
   });
 }
 

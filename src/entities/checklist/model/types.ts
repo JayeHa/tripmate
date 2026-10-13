@@ -29,6 +29,24 @@ export type ChecklistFields = {
   pinned_by: string | null;
 };
 
-/** 추가 · 편집 창 저장 — 새 항목은 모든 칸, 편집은 바뀐 칸만 */
+/** 연결 대상의 종류 — 일정 카드 · 항공편 · 숙소 */
+export type ChecklistTargetKind = "schedule_item" | "flight" | "stay";
+
+/** 연결 대상 하나 */
+export type ChecklistTargetRef = { kind: ChecklistTargetKind; id: string };
+
+/** 연결 한 줄(저장된 것) — 어느 항목이 무엇에 붙었는지 */
+export type ChecklistTargetRow = Tables<"checklist_targets">;
+
+/**
+ * 추가 · 편집 창 저장 — 새 항목은 모든 칸 · 고른 연결, 편집은 바뀐 칸 · 더하고 뺀 연결만
+ * (그사이 일행이 바꾼 다른 칸 · 연결을 덮지 않게)
+ */
 export type ChecklistSave =
-  { id: null; fields: ChecklistFields } | { id: string; fields: Partial<ChecklistFields> };
+  | { id: null; fields: ChecklistFields; add: ChecklistTargetRef[]; remove: [] }
+  | {
+      id: string;
+      fields: Partial<ChecklistFields>;
+      add: ChecklistTargetRef[];
+      remove: ChecklistTargetRef[];
+    };

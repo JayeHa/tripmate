@@ -20,10 +20,11 @@ type ChecklistSheetProps = {
  */
 export function ChecklistSheet({ tripId, detail, onToast }: ChecklistSheetProps) {
   const [locked, setLocked] = useState(false);
-  const { item, visible } = useChecklistTargetItem(tripId, detail.target);
-  // 대상 · 항목을 따로 잡는다 — 둘 다 상태 · 쿼리의 같은 참조라 렌더마다 바뀌지 않는다
+  const { item, targets, visible } = useChecklistTargetItem(tripId, detail.target);
+  // 대상 · 항목 · 연결을 따로 잡는다 — 모두 상태 · 쿼리의 같은 참조라 렌더마다 바뀌지 않는다
   const target = useHeldWhileClosing(visible, detail.target);
   const shownItem = useHeldWhileClosing(visible, item);
+  const shownTargets = useHeldWhileClosing(visible, targets);
   return (
     <Dialog open={visible} locked={locked} onOpenChange={(open) => !open && detail.close()}>
       <DialogContent
@@ -36,6 +37,7 @@ export function ChecklistSheet({ tripId, detail, onToast }: ChecklistSheetProps)
             tripId={tripId}
             target={target}
             item={shownItem}
+            targets={shownTargets}
             onEdit={detail.edit}
             onClose={detail.close}
             onToast={onToast}

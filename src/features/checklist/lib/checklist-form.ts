@@ -3,6 +3,8 @@ import {
   type ChecklistItem,
   checklistLinksOf,
   type ChecklistStatus,
+  type ChecklistTargetRef,
+  targetKey,
 } from "@/entities/checklist";
 import type { LinkDraft } from "@/shared/ui/link-rows";
 
@@ -19,15 +21,28 @@ export type ChecklistFormValues = {
   body: string;
   links: LinkDraft[];
   pinned: boolean;
+  /** 연결된 일정 · 항공편 · 숙소 — 고른 순서대로 */
+  targets: ChecklistTargetRef[];
 };
 
 /** 새 항목 — 「해야 할 것」, 빠른 추가 바에 치던 제목을 그대로 가져온다 */
 export function blankChecklistForm(title: string): ChecklistFormValues {
-  return { status: "todo", title: title.trim(), due: "", body: "", links: [], pinned: false };
+  return {
+    status: "todo",
+    title: title.trim(),
+    due: "",
+    body: "",
+    links: [],
+    pinned: false,
+    targets: [],
+  };
 }
 
-/** 저장된 항목을 폼 값으로 */
-export function checklistFormFrom(item: ChecklistItem): ChecklistFormValues {
+/** 저장된 항목과 그 연결을 폼 값으로 */
+export function checklistFormFrom(
+  item: ChecklistItem,
+  targets: ChecklistTargetRef[],
+): ChecklistFormValues {
   return {
     status: item.status as ChecklistStatus,
     title: item.title,
@@ -35,6 +50,7 @@ export function checklistFormFrom(item: ChecklistItem): ChecklistFormValues {
     body: item.body,
     links: checklistLinksOf(item.links),
     pinned: item.pinned_by !== null,
+    targets,
   };
 }
 
@@ -88,4 +104,17 @@ export function toChecklistPatch(
     }
   }
   return { ok: true, patch: patch as Partial<ChecklistFields> };
+}
+
+/** 연결 바꾼 것 — 연 때(before)에 없던 대상은 add, 빠진 대상은 remove */
+export function targetChanges(
+  now: ChecklistTargetRef[],
+  before: ChecklistTargetRef[],
+): { add: ChecklistTargetRef[]; remove: ChecklistTargetRef[] } {
+  const nowKeys = new Set(now.map(targetKey));
+  const beforeKeys = new Set(before.map(targetKey));
+  return {
+    add: now.filter((t) => !beforeKeys.has(targetKey(t))),
+    remove: before.filter((t) => !nowKeys.has(targetKey(t))),
+  };
 }

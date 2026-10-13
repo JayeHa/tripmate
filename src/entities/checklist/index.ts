@@ -2,6 +2,7 @@ export * from "./api/checklist";
 export * from "./lib/due";
 export * from "./lib/groups";
 export * from "./lib/links";
+export * from "./lib/targets";
 export * from "./model/types";
 export * from "./model/use-checklist";
 export * from "./ui/checklist-row";
