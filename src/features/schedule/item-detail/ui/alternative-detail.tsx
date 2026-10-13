@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { linkedChecklistCount, useChecklistIndex } from "@/entities/checklist";
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
 import {
@@ -67,6 +68,7 @@ export function AlternativeDetail({
   const locked = plan.locked || actions.locked;
   const { data: memos = [] } = useMemos(tripId);
   const { data: expenses = [] } = useExpenses(tripId);
+  const checklist = useChecklistIndex(tripId);
   useReportLock(locked, onLockChange);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
@@ -95,6 +97,7 @@ export function AlternativeDetail({
       alt={alt}
       memoCount={altRow.memos.length}
       linkedExpenses={linkedExpensesOf(expenses, alt.id)}
+      checklistCount={linkedChecklistCount(checklist, [alt.id])}
       actions={actions}
       locked={locked}
       onBack={onBack}
