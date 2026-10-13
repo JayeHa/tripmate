@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ChecklistItem, ChecklistTargetRow } from "../model/types";
+import { cardTargets, checklistIndex, linkedChecklistCount, openChecklistFor } from "./by-target";
 import { dueReadView, dueView } from "./due";
 import { checklistGroups, openCount, toggledStatus } from "./groups";
 import { checklistLinksOf } from "./links";
@@ -106,5 +107,43 @@ describe("checklist targets", () => {
       { kind: "stay", id: "h1" },
     ]);
     expect(map.get("b")).toEqual([{ kind: "flight", id: "f1" }]);
+  });
+});
+
+describe("checklist by target", () => {
+  /** 항목 하나 */
+  const it_ = (id: string, status: string, due: string | null = null) =>
+    ({ id, status, due_date: due, created_at: "2027-01-01" }) as ChecklistItem;
+  /** 연결 한 줄 */
+  const link = (item_id: string, cols: Partial<ChecklistTargetRow>) =>
+    ({
+      item_id,
+      created_at: "2027-01-01",
+      schedule_item_id: null,
+      flight_id: null,
+      stay_id: null,
+      ...cols,
+    }) as ChecklistTargetRow;
+
+  it("카드 · 그 숙소에 연결된 끝나지 않은 항목 — 겹치면 한 번, 마감순, 완료 · 지운 항목은 빠진다", () => {
+    const index = checklistIndex(
+      [it_("a", "todo"), it_("b", "etc", "2027-10-20"), it_("c", "done")],
+      [
+        link("a", { schedule_item_id: "card" }),
+        link("a", { stay_id: "h1" }),
+        link("b", { stay_id: "h1" }),
+        link("c", { schedule_item_id: "card" }),
+        link("gone", { schedule_item_id: "card" }),
+      ],
+    );
+    const card = { id: "card", flight_id: null, stay_id: "h1" };
+    expect(cardTargets(card)).toEqual([
+      { kind: "schedule_item", id: "card" },
+      { kind: "stay", id: "h1" },
+    ]);
+    expect(openChecklistFor(index, cardTargets(card)).map((i) => i.id)).toEqual(["b", "a"]);
+    expect(index.get("schedule_item:card")?.map((i) => i.id)).toEqual(["a", "c"]);
+    // 지울 때 풀리는 연결 — 카드에 직접 붙은 것만(완료 포함, 숙소 연결은 빼고)
+    expect(linkedChecklistCount(index, ["card", "alt"])).toBe(2);
   });
 });

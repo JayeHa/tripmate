@@ -1,4 +1,5 @@
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, ListTodo } from "lucide-react";
+import Link from "next/link";
 
 import { cn } from "@/shared/lib/utils";
 
@@ -23,6 +24,8 @@ type ItemCardProps = {
   onToggle: () => void;
   onOpen: () => void;
   authorOf: (authorId: string | null) => MemoAuthor | null;
+  /** 끝나지 않은 체크리스트 수와 노트 체크리스트 주소 — 수가 0 이거나 없으면 칩을 그리지 않는다 */
+  checklist?: { count: number; href: string };
 };
 
 /**
@@ -32,7 +35,7 @@ type ItemCardProps = {
  * 식사(food)는 배경 대신 오른쪽 위 64px 사진 칸(지금은 🍽️ 자리표시)을 두고 제목 · 설명이 그 자리를 비운다.
  * 숙소에 연결된 카드는 같은 자리에 🛏️ — 「자세히」(64 + 아래 체크인 | 체크아웃 줄) · 「간략히」(40 · 낮은 카드 · 설명 대신 「숙박 2/3박 …」)
  */
-export function ItemCard({ row, open, onToggle, onOpen, authorOf }: ItemCardProps) {
+export function ItemCard({ row, open, onToggle, onOpen, authorOf, checklist }: ItemCardProps) {
   const look = lookOf(row);
   return (
     <div
@@ -67,6 +70,15 @@ export function ItemCard({ row, open, onToggle, onOpen, authorOf }: ItemCardProp
       </button>
       {look.meta && <p className={cn("text-sm text-ink-400", look.pad)}>{look.meta}</p>}
       {row.stay?.mode === "in" && <StayTimes inText={row.stay.inText} outText={row.stay.outText} />}
+      {checklist && checklist.count > 0 && (
+        <Link
+          href={checklist.href}
+          className="relative inline-flex h-6 items-center gap-1 self-start rounded-full bg-checklist-due-bg px-2 text-xs font-bold text-checklist-due"
+        >
+          <ListTodo className="size-3.25" aria-hidden="true" />
+          체크리스트 {checklist.count}
+        </Link>
+      )}
       <AlternativesLine alternatives={row.alternatives} />
       <LinkChips links={row.links} />
       {/* 그날 휴무는 메모를 접어도 보이게 칩으로 — 펼친 메모 칸의 「운영 …」 은 영업하는 날만 */}

@@ -15,6 +15,7 @@ type DayListProps = Pick<
   | "onAddPlace"
   | "onAddDayMemo"
   | "authorOf"
+  | "checklistOf"
   | "startEditAt"
 > & {
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 */

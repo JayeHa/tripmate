@@ -1,4 +1,5 @@
 export * from "./api/checklist";
+export * from "./lib/by-target";
 export * from "./lib/due";
 export * from "./lib/groups";
 export * from "./lib/links";

@@ -39,6 +39,8 @@ type AlternativeDetailProps = {
   onMemo: (row: TimelineRow, memo: Memo | null) => void;
   /** 비용 쓰기 · 고치기 — 이 대체 장소 줄에 연결된다 */
   onExpense: (itemId: string, expenseId: string | null) => void;
+  /** 체크리스트 칸의 완료 · 실패 토스트 */
+  onToast: (message: string) => void;
 };
 
 /**
@@ -58,6 +60,7 @@ export function AlternativeDetail({
   onSwapped,
   onMemo,
   onExpense,
+  onToast,
 }: AlternativeDetailProps) {
   const plan = usePlanEdit(tripId, alt);
   const actions = useAlternativeActions(tripId, row.item, onSwapped);
@@ -79,6 +82,7 @@ export function AlternativeDetail({
         plan={plan}
         onMemo={(memo) => onMemo(altRow, memo)}
         onExpense={(expenseId) => onExpense(alt.id, expenseId)}
+        onToast={onToast}
         alternatives={null}
         onEditPlace={onEditPlace}
       />

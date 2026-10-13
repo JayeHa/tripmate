@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { linkedChecklistCount, useChecklistIndex } from "@/entities/checklist";
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
 import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
@@ -124,6 +125,7 @@ function MainDetail({
   });
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
   const { data: expenses = [] } = useExpenses(tripId);
+  const checklist = useChecklistIndex(tripId);
   const locked = plan.locked || actions.locked || alternatives.locked;
   useReportLock(locked, onLockChange);
   const content = (
@@ -135,6 +137,7 @@ function MainDetail({
         plan={plan}
         onMemo={(memo) => onMemo(row, memo)}
         onExpense={(expenseId) => onExpense(row.item.id, expenseId)}
+        onToast={onToast}
         alternatives={{
           actions: alternatives,
           onAdd: (city) => onAddAlternative(row.item, city),
@@ -158,6 +161,10 @@ function MainDetail({
         row.item.id,
         ...row.alternatives.map((alt) => alt.id),
       )}
+      checklistCount={linkedChecklistCount(checklist, [
+        row.item.id,
+        ...row.alternatives.map((alt) => alt.id),
+      ])}
       locked={locked}
       onClose={onClose}
     />

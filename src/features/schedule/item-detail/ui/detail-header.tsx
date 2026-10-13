@@ -15,6 +15,8 @@ type DetailHeaderProps = {
   actions: ItemActions;
   /** 이 일정과 그 대체 장소에 연결된 비용 — 삭제 확인에서 알린다 */
   linkedExpenses: LinkedExpenses;
+  /** 이 일정과 그 대체 장소에 연결된 체크리스트 항목 수 — 삭제 확인에서 알린다 */
+  checklistCount: number;
   /** 요청이 서버에 가 있는 동안 — 닫기를 막는다 */
   locked: boolean;
   onClose: () => void;
@@ -27,6 +29,7 @@ export function DetailHeader({
   totalDays,
   actions,
   linkedExpenses,
+  checklistCount,
   locked,
   onClose,
 }: DetailHeaderProps) {
@@ -51,6 +54,7 @@ export function DetailHeader({
           dayIndex={item.day_index}
           alternativeCount={row.alternatives.length}
           linkedExpenses={linkedExpenses}
+          checklistCount={checklistCount}
           startDate={startDate}
           totalDays={totalDays}
         />
