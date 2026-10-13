@@ -2987,3 +2987,132 @@ describe("체크리스트 (0057)", () => {
     await expect(addItem(trip)).rejects.toThrow(/row-level security/);
   });
 });
+
+describe("체크리스트 연결 (0058)", () => {
+  /** 여행 하나에 장소 일정 · 항공편 · 숙소를 하나씩 */
+  async function setup() {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const card = await addPlace(trip, 0, { name: "모구모구 본포", lat: 35.66, lng: 139.7 });
+    const { rows: f } = await db.query<{ id: string }>(
+      `insert into public.flights (trip_id, airline_name, airline_code, flight_no, dep_airport, arr_airport, dep_date, dep_time, arr_date, arr_time)
+       values ('${trip}', '제주항공', '7C', '1181', 'ICN', 'NRT', '2027-10-31', '07:15', '2027-10-31', '09:40') returning id`,
+    );
+    const { rows: s } = await db.query<{ id: string }>(
+      `insert into public.stays (trip_id, place_id, check_in_date, check_out_date)
+       select '${trip}', place_id, '2027-10-31', '2027-11-01' from public.schedule_items where id = '${card}' returning id`,
+    );
+    return { trip, card, flight: f[0].id, stay: s[0].id };
+  }
+
+  /** 항목 저장(save_checklist_item) — 항목 id */
+  async function save(
+    trip: string,
+    id: string | null,
+    fields: Record<string, unknown>,
+    add: Record<string, string>[] = [],
+    remove: Record<string, string>[] = [],
+  ) {
+    const { rows } = await db.query<{ id: string }>(
+      `select public.save_checklist_item($1, $2, $3, $4, $5) id`,
+      [trip, id, JSON.stringify(fields), JSON.stringify(add), JSON.stringify(remove)],
+    );
+    return rows[0].id;
+  }
+
+  /** 그 항목의 연결 — 「s:…」 · 「f:…」 · 「h:…」 정렬 */
+  async function targets(item: string) {
+    const { rows } = await db.query<{ t: string }>(
+      `select coalesce('s:' || schedule_item_id, 'f:' || flight_id, 'h:' || stay_id) t
+       from public.checklist_targets where item_id = '${item}' order by 1`,
+    );
+    return rows.map((r) => r.t);
+  }
+
+  it("새 항목을 연결과 함께 넣고, 편집은 받은 칸 · 더하고 뺀 연결만 바꾼다", async () => {
+    const { trip, card, flight, stay } = await setup();
+    const id = await save(trip, null, { title: "입장 방식 확인", status: "etc" }, [
+      { schedule_item_id: card },
+      { flight_id: flight },
+    ]);
+    expect(await targets(id)).toEqual([`f:${flight}`, `s:${card}`].sort());
+
+    // 이미 있는 연결을 또 더하면 건너뛴다. 뺀 것만 빠진다
+    await save(
+      trip,
+      id,
+      { title: "입장 방식 확인하기" },
+      [{ stay_id: stay }, { flight_id: flight }],
+      [{ schedule_item_id: card }],
+    );
+    expect(await targets(id)).toEqual([`f:${flight}`, `h:${stay}`].sort());
+    const { rows } = await db.query(
+      `select status, title, body from public.checklist_items where id = '${id}'`,
+    );
+    expect(rows[0]).toEqual({ status: "etc", title: "입장 방식 확인하기", body: "" });
+  });
+
+  it("그사이 지워진 대상 · 다른 여행의 대상은 건너뛰고 나머지는 저장한다", async () => {
+    const { trip, card, flight } = await setup();
+    const other = await setup();
+    await db.query(`delete from public.schedule_items where id = '${card}'`);
+    const id = await save(trip, null, { title: "x" }, [
+      { schedule_item_id: card },
+      { schedule_item_id: other.card },
+      { flight_id: flight },
+    ]);
+    expect(await targets(id)).toEqual([`f:${flight}`]);
+  });
+
+  it("대상이나 항목을 지우면 연결만 지운다", async () => {
+    const { trip, card, flight } = await setup();
+    const id = await save(trip, null, { title: "x" }, [
+      { schedule_item_id: card },
+      { flight_id: flight },
+    ]);
+    await db.query(`delete from public.schedule_items where id = '${card}'`);
+    expect(await targets(id)).toEqual([`f:${flight}`]);
+    await db.query(`delete from public.checklist_items where id = '${id}'`);
+    expect(
+      (await db.query(`select 1 from public.checklist_targets where flight_id = '${flight}'`)).rows,
+    ).toHaveLength(0);
+    expect(
+      (await db.query(`select 1 from public.flights where id = '${flight}'`)).rows,
+    ).toHaveLength(1);
+  });
+
+  it("거부: 대상이 둘 · 없음, 다른 여행의 대상을 직접 넣기, 고칠 항목이 없음", async () => {
+    const { trip, card, flight } = await setup();
+    const other = await setup();
+    const id = await save(trip, null, { title: "x" });
+    expect(
+      await rejects(
+        `select public.save_checklist_item('${trip}', '${id}', '{}', '${JSON.stringify([{ schedule_item_id: card, flight_id: flight }])}')`,
+      ),
+    ).toMatch(/checklist_targets_one_chk/);
+    expect(
+      await rejects(`select public.save_checklist_item('${trip}', '${id}', '{}', '[{}]')`),
+    ).toMatch(/checklist_targets_one_chk/);
+    expect(
+      await rejects(
+        `insert into public.checklist_targets (trip_id, item_id, schedule_item_id) values ('${trip}', '${id}', '${other.card}')`,
+      ),
+    ).toMatch(/checklist_targets_schedule_fkey/);
+    expect(
+      await rejects(`select public.save_checklist_item('${other.trip}', '${id}', '{"title":"y"}')`),
+    ).toMatch(/checklist item not found/);
+  });
+
+  it("RLS: 멤버만 읽고 고친다", async () => {
+    const { trip, card } = await setup();
+    const id = await save(trip, null, { title: "x" }, [{ schedule_item_id: card }]);
+    await as(B);
+    expect((await db.query(`select 1 from public.checklist_targets`)).rows).toHaveLength(0);
+    expect(
+      await rejects(`select public.save_checklist_item('${trip}', '${id}', '{"title":"y"}')`),
+    ).toMatch(/checklist item not found/);
+    expect(
+      await rejects(`select public.save_checklist_item('${trip}', null, '{"title":"y"}')`),
+    ).toMatch(/row-level security/);
+  });
+});

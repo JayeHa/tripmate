@@ -14,7 +14,7 @@ type PcChecklistPaneProps = { tripId: string; notes: NotesState };
  */
 export function PcChecklistPane({ tripId, notes }: PcChecklistPaneProps) {
   const detail = notes.checklistDetail;
-  const { item, visible } = useChecklistTargetItem(tripId, detail.target);
+  const { item, targets, visible } = useChecklistTargetItem(tripId, detail.target);
   return (
     <aside className="sticky top-(--shell-top) flex h-[calc(100dvh-var(--shell-top))] min-w-0 flex-1 flex-col border-l border-divider bg-white">
       {visible && detail.target ? (
@@ -23,6 +23,7 @@ export function PcChecklistPane({ tripId, notes }: PcChecklistPaneProps) {
           tripId={tripId}
           target={detail.target}
           item={item}
+          targets={targets}
           onEdit={detail.edit}
           onClose={detail.close}
           onToast={notes.showToast}

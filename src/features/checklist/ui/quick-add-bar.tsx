@@ -12,7 +12,7 @@ type QuickAddBarProps = {
 };
 
 /**
- * 목록 맨 위 빠른 추가 바(48 · r12 · 흰 바탕, 누르면 블루 테두리) — 「+」 · 입력 · 글이 있으면 「추가」 · 「자세히」(마감일 · 메모까지 넣는 폼).
+ * 목록 맨 위 빠른 추가 바(48 · r12 · 흰 바탕, 누르면 블루 테두리) — 「+」 · 입력 · 글이 있으면 「추가」 · 「자세히」(마감일 · 연결 · 메모까지 넣는 폼).
  * 붙는 위치(sticky)는 감싸는 쪽이 정한다
  */
 export function QuickAddBar({ tripId, onToast, onDetail }: QuickAddBarProps) {
@@ -44,7 +44,7 @@ export function QuickAddBar({ tripId, onToast, onDetail }: QuickAddBarProps) {
           onDetail(quick.text);
           quick.setText("");
         }}
-        title="마감일·메모까지 자세히 입력"
+        title="마감일·연결까지 자세히 입력"
         className="flex h-8.5 shrink-0 items-center gap-1 rounded-button px-2.5 text-[13px] font-bold text-ink-500 hover:bg-surface-muted"
       >
         <SlidersHorizontal className="size-3.75" aria-hidden="true" />

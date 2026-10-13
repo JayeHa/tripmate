@@ -22,7 +22,7 @@ export type LinkPickGroup = {
   key: string;
   /** 「day 2」 — 칸 글자 · 날짜 필터 */
   short: string;
-  /** 「11.1 (일)」 */
+  /** 「11.1 (일)」. 날짜가 없는 묶음(체크리스트의 「숙소」)이면 "" — 머리에 short 만 */
   date: string;
   items: LinkPickItem[];
 };

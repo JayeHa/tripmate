@@ -5,6 +5,7 @@ import type { ChecklistItem } from "@/entities/checklist";
 import {
   blankChecklistForm,
   checklistFormFrom,
+  targetChanges,
   toChecklistFields,
   toChecklistPatch,
 } from "./checklist-form";
@@ -28,17 +29,19 @@ describe("checklist form", () => {
       body: "",
       links: [],
       pinned: false,
+      targets: [],
     });
   });
 
   it("저장된 항목을 폼으로 — 모양이 다른 링크는 뺀다", () => {
-    expect(checklistFormFrom(saved)).toEqual({
+    expect(checklistFormFrom(saved, [])).toEqual({
       status: "etc",
       title: "환전",
       due: "2026-10-20",
       body: "공항 말고 시내에서",
       links: [{ title: "환율", url: "https://example.com" }],
       pinned: true,
+      targets: [],
     });
   });
 
@@ -68,7 +71,7 @@ describe("checklist form", () => {
   });
 
   it("편집 — 연 때와 달라진 칸만 보낸다(상태 · 고정은 건드리지 않으면 빠진다)", () => {
-    const opened = checklistFormFrom(saved);
+    const opened = checklistFormFrom(saved, []);
     expect(toChecklistPatch(opened, opened, "u-me")).toEqual({ ok: true, patch: {} });
     expect(toChecklistPatch({ ...opened, title: " 환전하기 " }, opened, "u-me")).toEqual({
       ok: true,
@@ -103,5 +106,13 @@ describe("checklist form", () => {
         "u",
       ),
     ).toMatchObject({ ok: false });
+  });
+
+  it("연결 — 연 때에 없던 것은 더하고, 빠진 것은 뺀다", () => {
+    const a = { kind: "schedule_item", id: "a" } as const;
+    const b = { kind: "flight", id: "b" } as const;
+    const c = { kind: "stay", id: "c" } as const;
+    expect(targetChanges([a, c], [a, b])).toEqual({ add: [c], remove: [b] });
+    expect(targetChanges([a], [a])).toEqual({ add: [], remove: [] });
   });
 });

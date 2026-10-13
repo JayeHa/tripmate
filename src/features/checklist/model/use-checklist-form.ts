@@ -6,6 +6,7 @@ import {
   CHECKLIST_GONE,
   type ChecklistItem,
   type ChecklistSave,
+  type ChecklistTargetRef,
   useDeleteChecklistItem,
   useSaveChecklistItem,
 } from "@/entities/checklist";
@@ -16,6 +17,7 @@ import {
   blankChecklistForm,
   checklistFormFrom,
   type ChecklistFormValues,
+  targetChanges,
   toChecklistFields,
   toChecklistPatch,
 } from "../lib/checklist-form";
@@ -24,6 +26,8 @@ type ChecklistFormOptions = {
   tripId: string;
   /** 고치는 항목. 새로 넣으면 null */
   item: ChecklistItem | null;
+  /** 고치는 항목의 연결(연 때). 새 항목이면 빈 목록 */
+  targets: ChecklistTargetRef[];
   /** 새 항목의 처음 제목(빠른 추가 바에 치던 것) */
   title: string;
   /** 저장 · 삭제가 끝나면 창을 닫는다 — 이 창이 아직 떠 있을 때만 부른다 */
@@ -38,10 +42,17 @@ type ChecklistFormOptions = {
  * 요청 중에 다른 항목으로 옮겨(PC 칸은 잠금이 없다) 이 창이 사라졌으면 실패를 보여 줄 곳이 없어 토스트로 알린다.
  * 삭제 토스트는 언제나 띄운다
  */
-export function useChecklistForm({ tripId, item, title, onClose, onToast }: ChecklistFormOptions) {
+export function useChecklistForm({
+  tripId,
+  item,
+  targets,
+  title,
+  onClose,
+  onToast,
+}: ChecklistFormOptions) {
   // 연 때의 값 — 편집 저장은 이것과 달라진 칸만 보낸다
   const [initial] = useState<ChecklistFormValues>(() =>
-    item ? checklistFormFrom(item) : blankChecklistForm(title),
+    item ? checklistFormFrom(item, targets) : blankChecklistForm(title),
   );
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +85,7 @@ export function useChecklistForm({ tripId, item, title, onClose, onToast }: Chec
         return;
       }
       setError(null);
-      if (result.save.id !== null && Object.keys(result.save.fields).length === 0) {
+      if (result.save.id !== null && unchanged(result.save)) {
         finish();
         return;
       }
@@ -107,10 +118,18 @@ function toSave(
 ): { ok: true; save: ChecklistSave } | { ok: false; error: string } {
   if (!item) {
     const r = toChecklistFields(values, userId);
-    return r.ok ? { ok: true, save: { id: null, fields: r.fields } } : r;
+    return r.ok
+      ? { ok: true, save: { id: null, fields: r.fields, add: values.targets, remove: [] } }
+      : r;
   }
   const r = toChecklistPatch(values, initial, userId);
-  return r.ok ? { ok: true, save: { id: item.id, fields: r.patch } } : r;
+  const changes = targetChanges(values.targets, initial.targets);
+  return r.ok ? { ok: true, save: { id: item.id, fields: r.patch, ...changes } } : r;
+}
+
+/** 편집에서 바꾼 것이 없다 — 칸 · 연결 모두 그대로 */
+function unchanged(save: ChecklistSave): boolean {
+  return Object.keys(save.fields).length === 0 && save.add.length === 0 && save.remove.length === 0;
 }
 
 /** 창 안에 보일 실패 문구 — 실패한 요청이 없으면 null */

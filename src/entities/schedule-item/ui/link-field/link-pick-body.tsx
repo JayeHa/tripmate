@@ -97,7 +97,7 @@ export function LinkPickBody({ groups, value, defaultDay, onPick }: LinkPickBody
         {shown.map((g) => (
           <section key={g.key}>
             <h3 className="px-2 pt-3 pb-1 text-[13px] font-semibold text-ink-450">
-              {g.short} · {g.date}
+              {g.date ? `${g.short} · ${g.date}` : g.short}
             </h3>
             {g.items.map((item) => {
               const on = item.id === value;

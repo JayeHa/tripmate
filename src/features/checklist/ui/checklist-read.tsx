@@ -8,6 +8,7 @@ import {
   type ChecklistItem,
   checklistLinksOf,
   type ChecklistStatus,
+  type ChecklistTargetRef,
   dueReadView,
   toggledStatus,
   usePendingChecklistIds,
@@ -20,10 +21,13 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 
 import { PanelHeader } from "./panel-header";
+import { TargetChips } from "./target-chips";
 
 type ChecklistReadProps = {
   tripId: string;
   item: ChecklistItem;
+  /** 이 항목의 연결 */
+  targets: ChecklistTargetRef[];
   onEdit: () => void;
   onClose: () => void;
   onToast: (text: string) => void;
@@ -38,12 +42,13 @@ const STATUS_CHIP: Record<ChecklistStatus, string> = {
 };
 
 /**
- * 체크리스트 읽기 — 상태 칩 · 제목 20/800 · 마감(「까지 · D-N」) · 메모 상자 · 링크 칩, 아래 「편집」 | 「완료로 표시」(완료면 「되돌리기」).
+ * 체크리스트 읽기 — 상태 칩 · 제목 20/800 · 마감(「까지 · D-N」) · 연결된 일정 칩 · 메모 상자 · 링크 칩, 아래 「편집」 | 「완료로 표시」(완료면 「되돌리기」).
  * 「홈에 고정」 은 여기서 바로 저장한다. 「완료로 표시」 는 바로 닫고 토스트로 알린다(실패하면 되돌리고 다시 알린다)
  */
 export function ChecklistRead({
   tripId,
   item,
+  targets,
   onEdit,
   onClose,
   onToast,
@@ -109,6 +114,7 @@ export function ChecklistRead({
             </span>
           )}
         </div>
+        <TargetChips tripId={tripId} targets={targets} />
         {body && (
           <ReadSection label="메모">
             <p className="rounded-card bg-surface-sunken px-3.5 py-3 text-[15px]/[1.6] whitespace-pre-line text-ink-800">
@@ -134,7 +140,7 @@ export function ChecklistRead({
             </div>
           </ReadSection>
         )}
-        {!body && links.length === 0 && (
+        {!body && links.length === 0 && targets.length === 0 && (
           <p className="text-sm text-ink-350">
             메모나 링크가 없어요. 「편집」에서 추가할 수 있어요.
           </p>
