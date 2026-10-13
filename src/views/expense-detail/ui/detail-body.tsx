@@ -59,7 +59,7 @@ export function DetailBody({ expense, row, trip, receipts }: DetailBodyProps) {
       {memo && (
         <section className="flex flex-col gap-2">
           <h3 className="text-[13px] font-bold text-ink-400">메모</h3>
-          <p className="rounded-memo bg-surface-memo px-3.5 py-3 text-sm leading-[1.55] whitespace-pre-line text-ink-800">
+          <p className="rounded-memo bg-surface-memo px-3.5 py-3 text-sm/[1.55] whitespace-pre-line text-ink-800">
             {memo}
           </p>
         </section>
