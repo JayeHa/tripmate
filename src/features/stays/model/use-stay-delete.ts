@@ -9,7 +9,10 @@ import {
   useChecklistIndex,
 } from "@/entities/checklist";
 import { fetchPaymentReceiptKeys, removeReceiptFiles, useExpenses } from "@/entities/expense";
+import { useAlternatives } from "@/entities/schedule-item";
 import { deleteStay, linkedCardCount, useInvalidateStays } from "@/entities/stay";
+
+import { stayCardRefs } from "../lib/stay-delete";
 
 type StayDeleteOptions = {
   tripId: string;
@@ -52,14 +55,8 @@ export function useStayDelete({ tripId, stayId, items, onDeleted }: StayDeleteOp
   const invalidate = useInvalidateStays(tripId);
   const index = useChecklistIndex(tripId);
   const stayRef: ChecklistTargetRef = { kind: "stay", id: stayId };
-  const cardIds = new Set(
-    items.filter((i) => i.stay_id === stayId && i.alternative_of === null).map((i) => i.id),
-  );
-  const cardRefs = items
-    .filter(
-      (i) => cardIds.has(i.id) || (i.alternative_of !== null && cardIds.has(i.alternative_of)),
-    )
-    .map((i): ChecklistTargetRef => ({ kind: "schedule_item", id: i.id }));
+  const { data: alternatives = [] } = useAlternatives(tripId);
+  const cardRefs = stayCardRefs(items, alternatives, stayId);
   const stayCount = checklistCountFor(index, [stayRef]);
   const remove = useMutation({
     mutationFn: (deleteCards: boolean) => deleteStayWithReceipts(tripId, stayId, deleteCards),
