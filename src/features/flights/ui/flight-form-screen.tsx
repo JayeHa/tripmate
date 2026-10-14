@@ -20,8 +20,8 @@ type FlightFormScreenProps = {
   trip: { start_date: string; end_date: string };
   /** 고치는 항공편. 새로 만들면 null */
   flight: Flight | null;
-  /** 고치는 항공편에 일정 카드가 있다 */
-  hasCard: boolean;
+  /** 고치는 항공편의 일정 카드 id. 카드가 없거나 새 항공편이면 null */
+  cardId: string | null;
   onBack: () => void;
   /** paid — 새 항공편의 결제 초안을 만들지 못했으면 false(항공편은 저장됐다) */
   onSaved: (result: FlightSaveResult, paid: boolean) => void;
@@ -39,7 +39,7 @@ export function FlightFormScreen({
   tripId,
   trip,
   flight,
-  hasCard,
+  cardId,
   onBack,
   onSaved,
   onDeleted,
@@ -47,6 +47,7 @@ export function FlightFormScreen({
   onExpense,
 }: FlightFormScreenProps) {
   const { data: user } = useUser();
+  const hasCard = cardId !== null;
   const payment = usePaymentDraft(tripId, "flight", user?.id);
   const form = useFlightForm({
     tripId,
@@ -56,7 +57,7 @@ export function FlightFormScreen({
     savePayment: payment.save,
     onSaved,
   });
-  const del = useFlightDelete({ tripId, flightId: flight?.id ?? "", onDeleted });
+  const del = useFlightDelete({ tripId, flightId: flight?.id ?? "", cardId, onDeleted });
   const locked = form.locked || payment.locked;
   useReportLock(locked, onLockChange);
   return (
