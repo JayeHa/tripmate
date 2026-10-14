@@ -15,8 +15,10 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery(queryKeys.myProfile)).toBe(false);
   });
 
-  it("영수증 줄은 남기고, 만료되는 읽기 주소는 남기지 않는다", () => {
+  it("영수증 · 바우처 줄은 남기고, 만료되는 읽기 주소는 남기지 않는다", () => {
     expect(shouldPersistQuery(queryKeys.receipts("t1"))).toBe(true);
     expect(shouldPersistQuery([...queryKeys.receipts("t1"), "urls", "t1/a.jpg"])).toBe(false);
+    expect(shouldPersistQuery(queryKeys.vouchers("t1"))).toBe(true);
+    expect(shouldPersistQuery([...queryKeys.vouchers("t1"), "urls", "t1/a.pdf"])).toBe(false);
   });
 });

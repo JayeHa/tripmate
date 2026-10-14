@@ -25,6 +25,8 @@ export const queryKeys = {
   /** 노트 · 체크리스트 */
   checklist: (tripId: string) => ["trips", tripId, "checklist"] as const,
   checklistTargets: (tripId: string) => ["trips", tripId, "checklist-targets"] as const,
+  /** 노트 · 바우처. 파일 읽기 주소는 그 아래 "urls" */
+  vouchers: (tripId: string) => ["trips", tripId, "vouchers"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
@@ -42,8 +44,10 @@ export const queryKeys = {
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (queryKey[0] === "cities") return true;
-  // 영수증 읽기 주소는 1시간이면 만료돼 저장하지 않는다
-  if (queryKey[2] === "receipts" && queryKey[3] === "urls") return false;
+  // 영수증 · 바우처 읽기 주소는 1시간이면 만료돼 저장하지 않는다
+  if ((queryKey[2] === "receipts" || queryKey[2] === "vouchers") && queryKey[3] === "urls") {
+    return false;
+  }
   return queryKey[0] === "trips" && queryKey[2] !== "route";
 }
 
