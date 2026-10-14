@@ -7,6 +7,8 @@ import { EmptyState } from "@/shared/ui/empty-state";
 
 import { NOTE_TAB_INFO } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
+import { useVoucherList } from "../model/use-voucher-list";
+import { VoucherList } from "./voucher-list";
 
 type NotesTabBodyProps = {
   tripId: string;
@@ -15,7 +17,7 @@ type NotesTabBodyProps = {
   stickyTop: string;
 };
 
-/** 지금 탭의 내용 — 체크리스트, 아직 만들지 않은 탭은 「준비 중」 */
+/** 지금 탭의 내용 — 체크리스트 · 바우처, 아직 만들지 않은 탭은 「준비 중」 */
 export function NotesTabBody({ tripId, notes, stickyTop }: NotesTabBodyProps) {
   if (notes.tab === "checklist") {
     return (
@@ -28,12 +30,21 @@ export function NotesTabBody({ tripId, notes, stickyTop }: NotesTabBodyProps) {
       />
     );
   }
+  if (notes.tab === "voucher") return <VoucherTab tripId={tripId} />;
   return (
     <EmptyState
       icon={Construction}
       title="준비 중이에요"
-      description={`${NOTE_TAB_INFO[notes.tab].label} 탭은 곧 열려요. 체크리스트부터 먼저 쓸 수 있어요.`}
+      description={`${NOTE_TAB_INFO[notes.tab].label} 탭은 곧 열려요. 체크리스트 · 바우처부터 먼저 쓸 수 있어요.`}
       className="py-20"
     />
   );
+}
+
+type VoucherTabProps = { tripId: string };
+
+/** 바우처 탭 — 목록 상태는 이 탭이 열려 있을 때만 쥔다 */
+function VoucherTab({ tripId }: VoucherTabProps) {
+  const list = useVoucherList(tripId);
+  return <VoucherList list={list} />;
 }

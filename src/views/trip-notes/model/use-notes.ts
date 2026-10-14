@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { openCount, useChecklist } from "@/entities/checklist";
+import { useVouchers } from "@/entities/voucher";
 import { useChecklistDetail } from "@/features/checklist";
 import type { ToastMessage } from "@/shared/ui/toast";
 
@@ -19,6 +20,7 @@ export function useNotes(tripId: string) {
   const pathname = usePathname();
   const tab = parseNoteTab(useSearchParams().get("tab"));
   const { data: checklist } = useChecklist(tripId);
+  const { data: vouchers } = useVouchers(tripId);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const checklistDetail = useChecklistDetail();
   return {
@@ -27,7 +29,7 @@ export function useNotes(tripId: string) {
     /** 탭 · 메뉴의 숫자 — 아직 없는 탭은 null */
     counts: {
       checklist: checklist ? String(openCount(checklist)) : null,
-      voucher: null,
+      voucher: vouchers ? String(vouchers.length) : null,
       pack: null,
       shop: null,
     } satisfies Record<NoteTab, string | null>,

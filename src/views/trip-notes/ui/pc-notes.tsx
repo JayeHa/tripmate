@@ -1,6 +1,9 @@
 "use client";
 
+import { Ticket } from "lucide-react";
+
 import { cn } from "@/shared/lib/utils";
+import { EmptyState } from "@/shared/ui/empty-state";
 
 import { NOTE_TAB_INFO, NOTE_TABS } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
@@ -10,7 +13,8 @@ import { PcChecklistPane } from "./pc-checklist-pane";
 type PcNotesProps = { tripId: string; notes: NotesState };
 
 /**
- * PC 노트 — 왼쪽 220 세로 메뉴(아이콘 · 이름 · 숫자) + 본문. 체크리스트는 목록 400 + 오른쪽 상세 칸(고른 항목의 읽기 · 편집)
+ * PC 노트 — 왼쪽 220 세로 메뉴(아이콘 · 이름 · 숫자) + 본문. 체크리스트는 목록 400 + 오른쪽 상세 칸(고른 항목의 읽기 · 편집),
+ * 바우처는 목록 440 + 오른쪽 상세 칸
  */
 export function PcNotes({ tripId, notes }: PcNotesProps) {
   return (
@@ -31,10 +35,25 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
         ))}
       </nav>
       <div className="flex min-w-0 flex-1">
-        <div className={cn("min-w-0 flex-1", notes.tab === "checklist" && "w-100 flex-none")}>
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 flex-col",
+            notes.tab === "checklist" && "w-100 flex-none",
+            notes.tab === "voucher" && "w-110 flex-none border-r border-divider",
+          )}
+        >
           <NotesTabBody tripId={tripId} notes={notes} stickyTop="top-(--shell-top)" />
         </div>
         {notes.tab === "checklist" && <PcChecklistPane tripId={tripId} notes={notes} />}
+        {notes.tab === "voucher" && (
+          <div className="min-w-0 flex-1 bg-white">
+            <EmptyState
+              icon={Ticket}
+              title="바우처를 고르면 여기에 자세히 보여요"
+              className="sticky top-(--shell-top) py-40"
+            />
+          </div>
+        )}
       </div>
     </main>
   );
