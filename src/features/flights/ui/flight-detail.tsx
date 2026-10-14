@@ -12,13 +12,13 @@ type FlightDetailProps = {
   direction: string;
   /** 표 바로 위 — 결제 예정일 지남 안내 */
   banner?: ReactNode;
-  /** 표 아래 칸들(결제 · 연결된 비용 · 메모) */
+  /** 표 아래 칸들(결제 · 연결된 비용 · 체크리스트 · 메모) */
   children?: ReactNode;
 };
 
 /**
  * 항공편 상세 — 탑승권(상태 배지 · 방향 · 날짜 · 노선) · 정보 표(항공편 · 출발 · 도착 · 예약번호). 예약번호가 없으면 그 줄은 숨긴다.
- * 표 위에 받은 안내, 아래에 받은 칸(결제 · 연결된 비용 · 메모)을 그린다. 바우처 · 체크리스트는 노트 단계에서 붙인다
+ * 표 위에 받은 안내, 아래에 받은 칸(결제 · 연결된 비용 · 체크리스트 · 메모)을 그린다. 바우처는 노트 단계에서 붙인다
  */
 export function FlightDetail({ flight: f, direction, banner, children }: FlightDetailProps) {
   const rows: [string, string][] = [

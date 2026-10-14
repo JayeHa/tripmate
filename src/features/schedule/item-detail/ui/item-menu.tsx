@@ -3,6 +3,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Ellipsis, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { checklistUnlinkNote } from "@/entities/checklist";
 import { dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -23,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 
-import { linkedChecklistNote, linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
+import { linkedExpenseNote, type LinkedExpenses } from "../lib/alternatives";
 import type { ItemActions } from "../model/use-item-actions";
 
 /** 메뉴 줄 — 모바일 44 · 15 · 아이콘 18, PC 40 · 14 · 아이콘 16 */
@@ -56,7 +57,7 @@ export function ItemMenu({
   startDate,
   totalDays,
 }: ItemMenuProps) {
-  const checklistNote = linkedChecklistNote(checklistCount);
+  const checklistNote = checklistUnlinkNote(checklistCount);
   const expenseNote = linkedExpenseNote(linkedExpenses);
   const [open, setOpen] = useState(false);
   const [pickingDay, setPickingDay] = useState(false);

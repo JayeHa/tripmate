@@ -118,6 +118,7 @@ function FlightsBody({
           onEdit={() => flow.openForm(current.id)}
           onMemo={onMemo}
           onExpense={onExpense}
+          onToast={onToast}
         />
       )}
       {step.kind === "form" && (
@@ -125,7 +126,7 @@ function FlightsBody({
           tripId={tripId}
           trip={trip}
           flight={step.id ? current : null}
-          hasCard={step.id ? cardOf(step.id) !== null : false}
+          cardId={step.id ? cardOf(step.id) : null}
           onBack={flow.back}
           onSaved={saved}
           onDeleted={() => {

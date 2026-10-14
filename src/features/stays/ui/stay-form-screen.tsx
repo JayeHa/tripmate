@@ -15,7 +15,12 @@ import { StayDatesSheet } from "./stay-dates-sheet";
 import { StayForm } from "./stay-form";
 import { StayPaymentDraftSection, StayPaymentSection } from "./stay-payment";
 
-type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
+type LinkedItem = {
+  id: string;
+  stay_id: string | null;
+  alternative_of: string | null;
+  day_index: number;
+};
 
 type StayFormScreenProps = {
   tripId: string;
@@ -141,6 +146,7 @@ function EditForm({ form, tripId, stay, items, onPayment, onDeleted }: EditFormP
         open={del.open}
         count={del.count}
         paid={del.paid}
+        checklist={del.checklist}
         onCancel={del.cancel}
         onConfirm={del.confirm}
       />

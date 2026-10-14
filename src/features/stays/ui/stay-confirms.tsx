@@ -1,5 +1,6 @@
 "use client";
 
+import { checklistUnlinkNote } from "@/entities/checklist";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,11 @@ type DeleteStayConfirmProps = {
   count: number;
   /** 결제(가계부 비용)가 있다 — 함께 지워진다고 알린다 */
   paid: boolean;
+  /**
+   * 풀리는 체크리스트 연결(완료 포함) — stay 는 숙소에 연결한 항목, cards 는 숙소에는 없고 연결 카드에만 붙은 항목
+   * (카드를 「지우기」 할 때만 풀린다)
+   */
+  checklist: { stay: number; cards: number };
   onCancel: () => void;
   /** deleteCards — 카드도 지우기 */
   onConfirm: (deleteCards: boolean) => void;
@@ -56,16 +62,22 @@ const PAID_NOTE = " 결제 기록(가계부)도 함께 지워져요.";
 
 /**
  * 숙소 삭제 확인 — 연결 카드가 있으면 「연결된 일정 카드 N개도 지울까요?」(남기기 / 지우기), 없으면 「숙소를 삭제할까요?」.
- * 결제가 있으면 어느 쪽이든 가계부 기록도 지워진다고 덧붙인다
+ * 결제가 있으면 어느 쪽이든 가계부 기록도 지워진다고, 체크리스트 연결이 있으면 연결만 풀리고 노트에 남는다고 덧붙인다
  */
 export function DeleteStayConfirm({
   open,
   count,
   paid,
+  checklist,
   onCancel,
   onConfirm,
 }: DeleteStayConfirmProps) {
   const paidNote = paid ? PAID_NOTE : "";
+  const stayNote = noteText(checklistUnlinkNote(checklist.stay));
+  const cardNote =
+    checklist.cards > 0
+      ? ` 카드를 지우면 카드에 연결된 체크리스트 ${checklist.cards}개도 연결만 풀려요.`
+      : "";
   return (
     <AlertDialog open={open} onOpenChange={(next) => !next && onCancel()}>
       <AlertDialogContent>
@@ -75,6 +87,8 @@ export function DeleteStayConfirm({
               <AlertDialogTitle>연결된 일정 카드 {count}개도 지울까요?</AlertDialogTitle>
               <AlertDialogDescription>
                 남기면 일반 장소 카드로 바뀌어요.{paidNote}
+                {stayNote}
+                {cardNote}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -89,7 +103,7 @@ export function DeleteStayConfirm({
             <AlertDialogHeader>
               <AlertDialogTitle>숙소를 삭제할까요?</AlertDialogTitle>
               <AlertDialogDescription>
-                숙소 정보가 지워져요.{paidNote} 장소는 보관함에 남아요.
+                숙소 정보가 지워져요.{paidNote} 장소는 보관함에 남아요.{stayNote}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -103,4 +117,9 @@ export function DeleteStayConfirm({
       </AlertDialogContent>
     </AlertDialog>
   );
+}
+
+/** 문장 앞에 띄어쓰기를 붙인다. 없으면 빈 글자 */
+function noteText(note: string | null): string {
+  return note ? ` ${note}` : "";
 }

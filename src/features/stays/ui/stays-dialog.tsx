@@ -15,7 +15,12 @@ import { StayDetail } from "./stay-detail";
 import { StayFormScreen } from "./stay-form-screen";
 import { StayList } from "./stay-list";
 
-type LinkedItem = { stay_id: string | null; alternative_of: string | null; day_index: number };
+type LinkedItem = {
+  id: string;
+  stay_id: string | null;
+  alternative_of: string | null;
+  day_index: number;
+};
 
 type StaysDialogProps = {
   tripId: string;
@@ -104,7 +109,13 @@ function StaysBody({
         </>
       )}
       {step.kind === "detail" && current && (
-        <DetailScreen stay={current} tripId={tripId} flow={flow} onPayment={onPayment} />
+        <DetailScreen
+          stay={current}
+          tripId={tripId}
+          flow={flow}
+          onPayment={onPayment}
+          onToast={onToast}
+        />
       )}
       {step.kind === "form" && (
         <StayFormScreen
@@ -133,10 +144,11 @@ type DetailScreenProps = {
   tripId: string;
   flow: StaysFlow;
   onPayment: (req: StayPaymentRequest) => void;
+  onToast?: (text: string) => void;
 };
 
 /** 상세 — 머리(← · 「숙소 정보」 · 수정) + 내용 */
-function DetailScreen({ stay, tripId, flow, onPayment }: DetailScreenProps) {
+function DetailScreen({ stay, tripId, flow, onPayment, onToast }: DetailScreenProps) {
   return (
     <>
       <ScreenHeader
@@ -144,7 +156,12 @@ function DetailScreen({ stay, tripId, flow, onPayment }: DetailScreenProps) {
         back={{ kind: "back", onClick: flow.toList }}
         action={{ label: "수정", onClick: () => flow.openForm(stay.id) }}
       />
-      <StayDetail tripId={tripId} stay={stay} onPayment={onPayment} />
+      <StayDetail
+        tripId={tripId}
+        stay={stay}
+        onPayment={onPayment}
+        onToast={(text) => onToast?.(text)}
+      />
     </>
   );
 }

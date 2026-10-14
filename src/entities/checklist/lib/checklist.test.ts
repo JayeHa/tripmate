@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { ChecklistItem, ChecklistTargetRow } from "../model/types";
-import { cardTargets, checklistIndex, linkedChecklistCount, openChecklistFor } from "./by-target";
+import {
+  cardTargets,
+  checklistCountFor,
+  checklistIndex,
+  checklistUnlinkNote,
+  linkedChecklistCount,
+  openChecklistFor,
+} from "./by-target";
 import { dueReadView, dueView } from "./due";
 import { checklistGroups, openCount, toggledStatus } from "./groups";
 import { checklistLinksOf } from "./links";
@@ -145,5 +152,18 @@ describe("checklist by target", () => {
     expect(index.get("schedule_item:card")?.map((i) => i.id)).toEqual(["a", "c"]);
     // 지울 때 풀리는 연결 — 카드에 직접 붙은 것만(완료 포함, 숙소 연결은 빼고)
     expect(linkedChecklistCount(index, ["card", "alt"])).toBe(2);
+    // 숙소를 지울 때 — 숙소와 카드에 걸린 항목, 겹치면 한 번
+    expect(checklistCountFor(index, [{ kind: "stay", id: "h1" }])).toBe(2);
+    expect(
+      checklistCountFor(index, [
+        { kind: "stay", id: "h1" },
+        { kind: "schedule_item", id: "card" },
+      ]),
+    ).toBe(3);
+  });
+
+  it("연결이 있을 때만 풀린다고 안내한다", () => {
+    expect(checklistUnlinkNote(0)).toBeNull();
+    expect(checklistUnlinkNote(2)).toBe("연결된 체크리스트 2개는 연결만 풀리고 노트에 남아요.");
   });
 });
