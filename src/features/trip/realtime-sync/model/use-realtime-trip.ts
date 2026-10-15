@@ -63,7 +63,8 @@ export function useRealtimeTrip(tripId: string) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "vouchers", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId) }),
+        // 줄만 다시 읽는다 — 읽기 주소(urls)는 키가 그대로면 다시 받지 않는다
+        () => void qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
       )
       .on(
         "postgres_changes",
