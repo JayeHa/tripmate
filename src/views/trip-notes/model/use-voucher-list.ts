@@ -53,7 +53,8 @@ export function useVoucherList(tripId: string) {
     const dayOf = (v: Voucher) => (src ? voucherDay(v, src, totalDays) : null);
     return (vouchers ?? []).filter((v) => matchesFilters(v, filters, dayOf, FILTER_ALL));
   }, [vouchers, filters, src, totalDays]);
-  const thumbKeys = filtered.flatMap((v) => (v.thumb_key ? [v.thumb_key] : []));
+  // 걸러지기 전 전체에서 모은다 — 칩을 바꿔도 키 목록이 같아 주소를 다시 받지 않는다
+  const thumbKeys = (vouchers ?? []).flatMap((v) => (v.thumb_key ? [v.thumb_key] : []));
   const { data: urls = {} } = useVoucherUrls(tripId, thumbKeys);
 
   // 사람 필터는 나를 먼저
