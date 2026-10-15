@@ -3250,4 +3250,41 @@ describe("바우처 (0059)", () => {
       ),
     ).toMatch(/row-level security/);
   });
+
+  it("거부: 다른 여행의 항공편 · 숙소, 키가 있는 줄을 다른 여행으로 옮기기, 남의 바우처 · 파일 고치기 · 지우기", async () => {
+    const { trip } = await setup();
+    const other = await setup();
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, flight_id)
+      values ('${trip}', 'x', '${other.flight}')`),
+    ).toMatch(/vouchers_flight_fkey/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, stay_id)
+      values ('${trip}', 'x', '${other.stay}')`),
+    ).toMatch(/vouchers_stay_fkey/);
+    // 두 여행 모두 멤버여도 파일 키는 원래 여행 폴더라 옮길 수 없다
+    const keyed = await add(trip, { thumb_key: `${trip}/t.jpg` });
+    expect(
+      await rejects(`update public.vouchers set trip_id = '${other.trip}' where id = '${keyed}'`),
+    ).toMatch(/vouchers_keys_chk/);
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('vouchers', '${trip}/t.jpg')`,
+    );
+    await as(B);
+    // RLS 는 오류 없이 0줄 — 줄 · 파일이 그대로인지로 확인한다
+    await db.query(`update public.vouchers set title = 'B' where id = '${keyed}'`);
+    await db.query(`delete from public.vouchers where id = '${keyed}'`);
+    expect(
+      (await db.query(`select 1 from storage.objects where bucket_id = 'vouchers'`)).rows,
+    ).toHaveLength(0);
+    await db.query(`delete from storage.objects where bucket_id = 'vouchers'`);
+    await as(A);
+    expect(
+      (await db.query<{ title: string }>(`select title from public.vouchers where id = '${keyed}'`))
+        .rows,
+    ).toEqual([{ title: "입장권" }]);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/t.jpg'`)).rows,
+    ).toHaveLength(1);
+  });
 });
