@@ -20,7 +20,8 @@ export type PickedFile = {
 
 /**
  * 바우처 원본 칸 — 고르면 줄이지 않고 바로 저장소에 올린다(원본 그대로, 20MB 까지). 바꿔 고르면 앞서 올린 새 파일은 지운다.
- * 저장하지 않고 창이 사라지면 올린 새 파일을 지운다(올리는 중이면 끝난 뒤). 저장했으면 `keep()` 으로 남긴다.
+ * 저장하지 않고 창이 사라지면 올린 새 파일을 지운다(올리는 중이면 끝난 뒤). 저장을 시작하면 `keep()` 으로 저장 쪽에 넘긴다 —
+ * 저장은 창이 사라진 뒤에도 이어지므로, 그 사이 이 칸이 지우면 줄이 지워진 키를 가리킨다. 저장이 실패하면 `release()` 로 되돌려 받는다.
  * 이미 붙어 있던 원본은 여기서 지우지 않는다 — 저장이 끝난 뒤 바꾼 원본을 지우는 것은 저장 쪽 일이다
  */
 export function useVoucherFile(tripId: string, voucher: Voucher | null) {
@@ -81,9 +82,13 @@ export function useVoucherFile(tripId: string, voucher: Voucher | null) {
     /** 보이는 파일 이름 · 종류 — 새로 고른 것, 없으면 붙어 있던 것 */
     name: picked?.file.name ?? voucher?.file_name ?? null,
     mime: picked?.file.type ?? voucher?.file_mime ?? null,
-    /** 저장했다 — 창이 사라져도 새 파일을 지우지 않는다 */
+    /** 저장을 시작했다 — 이제 창이 사라져도 새 파일을 지우지 않는다(실패하면 저장 쪽이 지운다) */
     keep: () => {
       live.current.kept = true;
+    },
+    /** 저장이 실패했다(창이 떠 있다) — 다시 이 칸이 맡아, 닫거나 바꿔 고르면 지운다 */
+    release: () => {
+      live.current.kept = false;
     },
   };
 }

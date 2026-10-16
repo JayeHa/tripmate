@@ -68,6 +68,14 @@ export function useVoucherForm({ tripId, voucher, onClose, onToast }: VoucherFor
     }
     setError(null);
     setPreparing(true);
+    // 고른 새 원본은 이제 저장 쪽이 맡는다 — 저장 중 창이 사라져도 지우지 않고, 실패하면 여기서 정리한다
+    const pickedKey = file.picked?.key ?? null;
+    file.keep();
+    /** 저장 실패 — 창이 떠 있으면 원본 칸에 돌려주고, 사라졌으면 고른 원본을 지운다 */
+    const dropPicked = () => {
+      if (mounted.current) file.release();
+      else if (pickedKey) void removeVoucherFiles(tripId, [pickedKey]);
+    };
     let prepared;
     try {
       prepared = await prepareVoucherFiles({
@@ -77,6 +85,7 @@ export function useVoucherForm({ tripId, voucher, onClose, onToast }: VoucherFor
         pages: result.fields.pages,
       });
     } catch {
+      dropPicked();
       if (mounted.current) setError("파일을 올리지 못했어요. 잠시 후 다시 시도해 주세요.");
       return;
     } finally {
@@ -91,13 +100,13 @@ export function useVoucherForm({ tripId, voucher, onClose, onToast }: VoucherFor
     }
     try {
       const id = await save.mutateAsync(toSave);
-      file.keep();
       void removeReplaced(tripId, id, prepared.replaced);
       if (prepared.drawFailed) onToast("PDF 를 그림으로 만들지 못해 원본으로 보여요");
       else onToast(voucher ? "바우처를 수정했어요" : "바우처를 추가했어요");
       finish();
     } catch (e) {
       void removeVoucherFiles(tripId, prepared.created);
+      dropPicked();
       if (!mounted.current) onToast(messageOf(e));
     }
   }
