@@ -31,3 +31,29 @@ export const VOUCHER_GROUP_LABEL: Record<VoucherGroup, string> = {
   schedule: "일정",
   etc: "기타",
 };
+
+/** 폼이 저장하는 칸 — 여행 · 고정 · 만든 사람 · 시각은 빼고 */
+export type VoucherFields = Pick<
+  Voucher,
+  | "title"
+  | "file_key"
+  | "file_name"
+  | "file_mime"
+  | "file_size"
+  | "pages"
+  | "page_keys"
+  | "thumb_key"
+  | "owners"
+  | "numbers"
+  | "schedule_item_id"
+  | "flight_id"
+  | "stay_id"
+  | "use_date"
+  | "site_title"
+  | "site_url"
+  | "memo"
+>;
+
+/** 저장 — id 가 null 이면 새로 넣고(모든 칸), 아니면 그 칸들만 고친다 */
+export type VoucherSave =
+  { id: null; fields: VoucherFields } | { id: string; fields: Partial<VoucherFields> };
