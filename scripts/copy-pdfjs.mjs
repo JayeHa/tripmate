@@ -17,9 +17,10 @@ if (!existsSync(join(out, "pdf.worker.min.mjs"))) {
   // 다른 버전 폴더는 지운다 — 쓰지 않는 파일이 배포에 쌓이지 않게
   rmSync(outRoot, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  cpSync(join(pkgDir, "legacy/build/pdf.worker.min.mjs"), join(out, "pdf.worker.min.mjs"));
   for (const dir of ["cmaps", "standard_fonts", "wasm", "iccs"]) {
     cpSync(join(pkgDir, dir), join(out, dir), { recursive: true });
   }
+  // 워커는 마지막에 — 「복사를 마쳤는가」 표시를 겸해서, 중간에 멈추면 다음 실행이 처음부터 다시 복사한다
+  cpSync(join(pkgDir, "legacy/build/pdf.worker.min.mjs"), join(out, "pdf.worker.min.mjs"));
   console.log(`pdfjs-dist ${version} → public/pdfjs/${version}`);
 }
