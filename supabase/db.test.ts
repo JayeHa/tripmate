@@ -3129,3 +3129,162 @@ describe("체크리스트 연결 (0058)", () => {
     ).toMatch(/row-level security/);
   });
 });
+
+describe("바우처 (0059)", () => {
+  /** 여행 하나에 장소 일정 · 항공편 · 숙소를 하나씩 */
+  async function setup() {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const card = await addPlace(trip, 0, { name: "치이카와 파크", lat: 35.73, lng: 139.72 });
+    const { rows: f } = await db.query<{ id: string }>(
+      `insert into public.flights (trip_id, airline_name, airline_code, flight_no, dep_airport, arr_airport, dep_date, dep_time, arr_date, arr_time)
+       values ('${trip}', '제주항공', '7C', '1181', 'ICN', 'NRT', '2027-10-31', '07:15', '2027-10-31', '09:40') returning id`,
+    );
+    const { rows: s } = await db.query<{ id: string }>(
+      `insert into public.stays (trip_id, place_id, check_in_date, check_out_date)
+       select '${trip}', place_id, '2027-10-31', '2027-11-01' from public.schedule_items where id = '${card}' returning id`,
+    );
+    return { trip, card, flight: f[0].id, stay: s[0].id };
+  }
+
+  /** 바우처 한 줄을 넣는다 — id */
+  async function add(trip: string, cols: Record<string, unknown> = {}) {
+    const keys = Object.keys(cols);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.vouchers (trip_id, title${keys.map((k) => `, ${k}`).join("")})
+       values ($1, '입장권'${keys.map((_, i) => `, $${i + 2}`).join("")}) returning id`,
+      [trip, ...keys.map((k) => cols[k])],
+    );
+    return rows[0].id;
+  }
+
+  it("원본 · 그림 · 번호 · 주인과 함께 넣는다. 파일 없이 번호만 있어도 된다", async () => {
+    const { trip, flight } = await setup();
+    const id = await add(trip, {
+      file_key: `${trip}/a.pdf`,
+      file_name: "e-ticket.pdf",
+      file_mime: "application/pdf",
+      file_size: 20971520,
+      pages: "1, 3",
+      page_keys: [`${trip}/a-1.png`, `${trip}/a-3.png`],
+      thumb_key: `${trip}/a-t.jpg`,
+      owners: [A],
+      numbers: JSON.stringify([{ label: "예약번호", owner: "", value: "K7QX2M" }]),
+      flight_id: flight,
+    });
+    const { rows } = await db.query<{ pages: string; page_keys: string[] }>(
+      `select pages, page_keys from public.vouchers where id = '${id}'`,
+    );
+    expect(rows[0]).toEqual({ pages: "1, 3", page_keys: [`${trip}/a-1.png`, `${trip}/a-3.png`] });
+    await add(trip, { numbers: JSON.stringify([{ label: "바우처 번호", owner: A, value: "1" }]) });
+  });
+
+  it("대상(일정 카드 · 항공편 · 숙소)을 지우면 연결 칸만 비우고 바우처는 남는다", async () => {
+    const { trip, card, flight, stay } = await setup();
+    const ids = [
+      await add(trip, { schedule_item_id: card }),
+      await add(trip, { flight_id: flight }),
+      await add(trip, { stay_id: stay }),
+    ];
+    await db.query(`delete from public.stays where id = '${stay}'`);
+    await db.query(`delete from public.flights where id = '${flight}'`);
+    await db.query(`delete from public.schedule_items where id = '${card}'`);
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.vouchers
+       where id = any($1) and trip_id = '${trip}' and num_nonnulls(schedule_item_id, flight_id, stay_id) = 0`,
+      [ids],
+    );
+    expect(rows[0].n).toBe(3);
+  });
+
+  it("거부: 대상 둘 · 연결과 사용일 함께 · 다른 여행 대상 · 여행 폴더 밖 키 · 원본 칸 일부만 · 20MB 넘음", async () => {
+    const { trip, card, flight } = await setup();
+    const other = await setup();
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, schedule_item_id, flight_id)
+      values ('${trip}', 'x', '${card}', '${flight}')`),
+    ).toMatch(/vouchers_target_chk/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, flight_id, use_date)
+      values ('${trip}', 'x', '${flight}', '2027-10-31')`),
+    ).toMatch(/vouchers_use_date_chk/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, schedule_item_id)
+      values ('${trip}', 'x', '${other.card}')`),
+    ).toMatch(/vouchers_schedule_fkey/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, page_keys)
+      values ('${trip}', 'x', array['${other.trip}/p.png'])`),
+    ).toMatch(/vouchers_keys_chk/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, thumb_key)
+      values ('${trip}', 'x', '${trip}/../p.png')`),
+    ).toMatch(/vouchers_keys_chk/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, file_key)
+      values ('${trip}', 'x', '${trip}/a.pdf')`),
+    ).toMatch(/vouchers_file_chk/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, file_key, file_name, file_mime, file_size)
+      values ('${trip}', 'x', '${trip}/a.pdf', 'a.pdf', 'application/pdf', 20971521)`),
+    ).toMatch(/file_size/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title) values ('${trip}', '  ')`),
+    ).toMatch(/title/);
+  });
+
+  it("RLS · 버킷: 멤버만 읽고 고치고, 경로 첫 칸 여행의 멤버만 파일을 올린다", async () => {
+    const { trip } = await setup();
+    await add(trip);
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('vouchers', '${trip}/ok.pdf')`,
+    );
+    await as(B);
+    expect((await db.query(`select 1 from public.vouchers`)).rows).toHaveLength(0);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title) values ('${trip}', 'x')`),
+    ).toMatch(/row-level security/);
+    expect(
+      await rejects(
+        `insert into storage.objects (bucket_id, name) values ('vouchers', '${trip}/no.pdf')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+
+  it("거부: 다른 여행의 항공편 · 숙소, 키가 있는 줄을 다른 여행으로 옮기기, 남의 바우처 · 파일 고치기 · 지우기", async () => {
+    const { trip } = await setup();
+    const other = await setup();
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, flight_id)
+      values ('${trip}', 'x', '${other.flight}')`),
+    ).toMatch(/vouchers_flight_fkey/);
+    expect(
+      await rejects(`insert into public.vouchers (trip_id, title, stay_id)
+      values ('${trip}', 'x', '${other.stay}')`),
+    ).toMatch(/vouchers_stay_fkey/);
+    // 두 여행 모두 멤버여도 파일 키는 원래 여행 폴더라 옮길 수 없다
+    const keyed = await add(trip, { thumb_key: `${trip}/t.jpg` });
+    expect(
+      await rejects(`update public.vouchers set trip_id = '${other.trip}' where id = '${keyed}'`),
+    ).toMatch(/vouchers_keys_chk/);
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('vouchers', '${trip}/t.jpg')`,
+    );
+    await as(B);
+    // RLS 는 오류 없이 0줄 — 줄 · 파일이 그대로인지로 확인한다
+    await db.query(`update public.vouchers set title = 'B' where id = '${keyed}'`);
+    await db.query(`delete from public.vouchers where id = '${keyed}'`);
+    expect(
+      (await db.query(`select 1 from storage.objects where bucket_id = 'vouchers'`)).rows,
+    ).toHaveLength(0);
+    await db.query(`delete from storage.objects where bucket_id = 'vouchers'`);
+    await as(A);
+    expect(
+      (await db.query<{ title: string }>(`select title from public.vouchers where id = '${keyed}'`))
+        .rows,
+    ).toEqual([{ title: "입장권" }]);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/t.jpg'`)).rows,
+    ).toHaveLength(1);
+  });
+});

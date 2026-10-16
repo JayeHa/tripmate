@@ -59,6 +59,13 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "checklist_targets", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.checklistTargets(tripId) }),
       )
+      // 바우처 — 대상(일정 · 항공편 · 숙소)을 지워 풀린 연결도 여기로 온다
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "vouchers", filter },
+        // 줄만 다시 읽는다 — 읽기 주소(urls)는 키가 그대로면 다시 받지 않는다
+        () => void qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
+      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },

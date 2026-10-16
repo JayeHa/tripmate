@@ -419,6 +419,84 @@ export type Database = {
         };
         Relationships: [];
       };
+      vouchers: {
+        Row: {
+          id: string;
+          trip_id: string;
+          title: string;
+          file_key: string | null;
+          file_name: string | null;
+          file_mime: string | null;
+          file_size: number | null;
+          pages: string;
+          page_keys: string[];
+          thumb_key: string | null;
+          owners: string[];
+          numbers: Json;
+          schedule_item_id: string | null;
+          flight_id: string | null;
+          stay_id: string | null;
+          use_date: string | null;
+          site_title: string;
+          site_url: string;
+          memo: string;
+          pinned_by: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          title: string;
+          file_key?: string | null;
+          file_name?: string | null;
+          file_mime?: string | null;
+          file_size?: number | null;
+          pages?: string;
+          page_keys?: string[];
+          thumb_key?: string | null;
+          owners?: string[];
+          numbers?: Json;
+          schedule_item_id?: string | null;
+          flight_id?: string | null;
+          stay_id?: string | null;
+          use_date?: string | null;
+          site_title?: string;
+          site_url?: string;
+          memo?: string;
+          pinned_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          title?: string;
+          file_key?: string | null;
+          file_name?: string | null;
+          file_mime?: string | null;
+          file_size?: number | null;
+          pages?: string;
+          page_keys?: string[];
+          thumb_key?: string | null;
+          owners?: string[];
+          numbers?: Json;
+          schedule_item_id?: string | null;
+          flight_id?: string | null;
+          stay_id?: string | null;
+          use_date?: string | null;
+          site_title?: string;
+          site_url?: string;
+          memo?: string;
+          pinned_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       flights: {
         Row: {
           id: string;
@@ -966,6 +1044,10 @@ export type Database = {
       };
       is_trip_member: {
         Args: { p_trip_id: string };
+        Returns: boolean;
+      };
+      keys_in_trip: {
+        Args: { p_keys: string[]; p_trip: string };
         Returns: boolean;
       };
     };
