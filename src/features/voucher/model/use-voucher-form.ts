@@ -86,7 +86,7 @@ export function useVoucherForm({ tripId, voucher, onClose, onToast }: VoucherFor
       });
     } catch {
       dropPicked();
-      if (mounted.current) setError("파일을 올리지 못했어요. 잠시 후 다시 시도해 주세요.");
+      if (mounted.current) setError("파일을 준비하지 못했어요. 잠시 후 다시 시도해 주세요.");
       return;
     } finally {
       if (mounted.current) setPreparing(false);

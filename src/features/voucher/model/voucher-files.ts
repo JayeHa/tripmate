@@ -39,7 +39,7 @@ type PrepareInput = {
  * - 새 원본: 원본 칸 넷 + 그림. PDF 는 현장용 페이지를 PNG 로(첫 장으로 썸네일), 사진은 썸네일만. 옛 원본 · 그림은 지울 것
  * - 원본은 그대로인데 PDF 의 현장용 페이지가 바뀜: 원본을 다시 받아 그린다. 옛 페이지 그림은 지울 것
  * - 그 밖: 바꾸지 않는다
- * 그리기에 실패하면 페이지 그림 없이(뷰어는 원본 열기로) 저장한다. 올리기에 실패하면 이번에 올린 그림을 지우고 던진다
+ * 그리기에 실패하면 페이지 그림 없이(뷰어는 원본 열기로) 저장한다. 원본 받기 · 올리기에 실패하면 이번에 올린 그림을 지우고 던진다
  */
 export async function prepareVoucherFiles(input: PrepareInput): Promise<PreparedFiles> {
   const { voucher, picked, pages } = input;
@@ -75,15 +75,18 @@ async function fromPicked(
   };
 }
 
-/** 붙어 있던 PDF 를 받아 바뀐 현장용 페이지를 다시 그린다. 실패하면 페이지 그림만 비운다(썸네일은 그대로) */
+/**
+ * 붙어 있던 PDF 를 받아 바뀐 현장용 페이지를 다시 그린다. 그리기에 실패하면 페이지 그림만 비운다(썸네일은 그대로).
+ * 받기에 실패하면(약한 통신 · 그사이 일행이 원본을 바꿈) 던진다 — 있던 그림을 비우지 않고 다시 시도하게
+ */
 async function redrawPages(
   tripId: string,
   voucher: Voucher,
   fileKey: string,
   pages: string,
 ): Promise<PreparedFiles> {
-  const blob = await downloadOriginal(tripId, fileKey).catch(() => null);
-  const drawn = blob ? await drawPdf(blob, pages) : { pages: [], failed: true };
+  const blob = await downloadOriginal(tripId, fileKey);
+  const drawn = await drawPdf(blob, pages);
   const thumb = drawn.pages[0] ? await makeThumbnail(drawn.pages[0]) : null;
   const uploaded = await uploadAll(tripId, drawn.pages, thumb);
   return {
