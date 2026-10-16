@@ -67,7 +67,8 @@ export function VoucherFormPanel({
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3">
-        <div className="flex flex-col gap-3.5">
+        {/* 저장 중에는 칸을 막는다 — 다시 고르면 저장 중인 원본을 지우고, 고친 값은 저장되지 않고 버려진다 */}
+        <fieldset disabled={form.pending} className="flex min-w-0 flex-col gap-3.5">
           <FileDrop tripId={tripId} voucher={voucher} file={form.file} onPick={form.pick} />
           {form.file.mime === "application/pdf" && <PagesRow form={form} />}
           <Input
@@ -103,7 +104,7 @@ export function VoucherFormPanel({
               {form.error}
             </p>
           )}
-        </div>
+        </fieldset>
       </div>
       <div className="shrink-0 border-t border-surface-muted px-5 pt-3 pb-[calc(1.625rem+env(safe-area-inset-bottom))]">
         <Button

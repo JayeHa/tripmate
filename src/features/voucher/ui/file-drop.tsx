@@ -27,7 +27,7 @@ export function FileDrop({ tripId, voucher, file, onPick }: FileDropProps) {
   return (
     <label
       className={cn(
-        "relative flex cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-card border-[1.5px] border-dashed border-line-dashed bg-surface-sunken p-3",
+        "relative flex cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-card border-[1.5px] border-dashed border-line-dashed bg-surface-sunken p-3 has-disabled:cursor-default has-disabled:opacity-60",
         file.name ? "min-h-30" : "min-h-40",
       )}
     >

@@ -115,8 +115,9 @@ export function useVoucherForm({ tripId, voucher, onClose, onToast }: VoucherFor
     values,
     set,
     file,
-    /** 파일을 고른다 — 제목이 비어 있으면 파일 이름으로 채운다 */
+    /** 파일을 고른다 — 제목이 비어 있으면 파일 이름으로 채운다. 저장 중이면 무시한다(저장 중인 원본을 지우지 않게) */
     pick: (f: File) => {
+      if (pending) return;
       file.pick(f);
       if (!values.title.trim()) set("title", titleFromFileName(f.name));
     },
