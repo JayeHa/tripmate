@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { openCount, useChecklist } from "@/entities/checklist";
-import { useVouchers } from "@/entities/voucher";
+import { useVouchers, type Voucher } from "@/entities/voucher";
 import { useChecklistDetail } from "@/features/checklist";
 import type { ToastMessage } from "@/shared/ui/toast";
 
@@ -12,7 +12,7 @@ import { type NoteTab, parseNoteTab } from "../lib/tabs";
 
 /**
  * 노트 화면의 상태 — 지금 탭(주소의 tab, 다른 화면에서 「노트에서 보기」 로 바로 열 수 있게) · 탭 숫자 · 토스트 ·
- * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다).
+ * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다) · 바우처 추가 · 수정 창.
  * 탭을 바꾸면 주소를 바꾸되 방문 기록은 쌓지 않는다
  */
 export function useNotes(tripId: string) {
@@ -23,6 +23,8 @@ export function useNotes(tripId: string) {
   const { data: vouchers } = useVouchers(tripId);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const checklistDetail = useChecklistDetail();
+  // 열린 바우처 폼 — 고치는 바우처는 연 때의 것을 쥔다(그사이 지워져도 새 바우처로 바뀌지 않게)
+  const [voucherForm, setVoucherForm] = useState<{ voucher: Voucher | null } | null>(null);
   return {
     tab,
     setTab: (next: NoteTab) => router.replace(`${pathname}?tab=${next}`, { scroll: false }),
@@ -34,6 +36,14 @@ export function useNotes(tripId: string) {
       shop: null,
     } satisfies Record<NoteTab, string | null>,
     checklistDetail,
+    /** 바우처 추가 · 수정 창 */
+    voucherForm: {
+      open: voucherForm !== null,
+      voucher: voucherForm?.voucher ?? null,
+      openNew: () => setVoucherForm({ voucher: null }),
+      openEdit: (voucher: Voucher) => setVoucherForm({ voucher }),
+      close: () => setVoucherForm(null),
+    },
     toast,
     showToast: (text: string) => setToast({ text, id: Date.now() }),
     clearToast: () => setToast(null),

@@ -8,6 +8,7 @@ import {
   voucherGroup,
   voucherNumbers,
   voucherTarget,
+  type VoucherTargetRef,
 } from "@/entities/voucher";
 import type { TargetSources } from "@/features/checklist";
 import { dayParts } from "@/shared/lib/days";
@@ -30,13 +31,27 @@ function dayOfDate(startDate: string, totalDays: number, date: string): number |
  */
 export function voucherDay(v: Voucher, src: TargetSources, totalDays: number): number | null {
   const ref = voucherTarget(v);
+  if (!ref) return v.use_date ? dayOfDate(src.startDate, totalDays, v.use_date) : null;
+  return targetDay(ref, src, totalDays);
+}
+
+/** 연결 대상의 날짜(day 순번) — voucherDay 의 연결이 있을 때 규칙 */
+export function targetDay(
+  ref: VoucherTargetRef,
+  src: TargetSources,
+  totalDays: number,
+): number | null {
   const onDate = (date: string | null | undefined) =>
     date ? dayOfDate(src.startDate, totalDays, date) : null;
-  if (!ref) return onDate(v.use_date);
   if (ref.kind === "flight") return onDate(src.flights.find((f) => f.id === ref.id)?.dep_date);
   if (ref.kind === "stay") return onDate(src.stays.find((s) => s.id === ref.id)?.check_in_date);
   const item = [...src.items, ...src.alternatives].find((i) => i.id === ref.id);
   return item ? item.day_index : null;
+}
+
+/** 날짜 글 — 「day 2 · 10.21」, 없으면 「날짜 없음」(날짜 필터 옵션과 같은 모양) */
+export function dayText(startDate: string, day: number | null): string {
+  return day === null ? "날짜 없음" : `day ${day + 1} · ${dayParts(startDate, day).date}`;
 }
 
 /** 날짜 필터 값 — day 순번 글자, 없으면 NO_DAY */
@@ -49,7 +64,7 @@ export function dayOptions(startDate: string, totalDays: number) {
   return [
     ...Array.from({ length: totalDays }, (_, i) => ({
       value: String(i),
-      label: `day ${i + 1} · ${dayParts(startDate, i).date}`,
+      label: dayText(startDate, i),
     })),
     { value: NO_DAY, label: "날짜 없음" },
   ];

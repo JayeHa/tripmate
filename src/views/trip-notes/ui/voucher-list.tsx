@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight, FileText, Plane, QrCode, Ticket } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { isPdf, type Voucher, VOUCHER_GROUP_LABEL } from "@/entities/voucher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
@@ -10,13 +11,19 @@ import { Skeleton } from "@/shared/ui/skeleton";
 
 import type { VoucherListState } from "../model/use-voucher-list";
 
-type VoucherListProps = { list: VoucherListState };
+type VoucherListProps = {
+  list: VoucherListState;
+  /** 줄을 눌렀다 — 상세가 생기기 전까지는 수정 창을 연다 */
+  onOpen: (voucher: Voucher) => void;
+  /** 필터 줄 오른쪽 끝(PC 「+ 바우처」) */
+  action?: ReactNode;
+};
 
 /**
- * 노트 › 바우처 목록 — 필터 줄(사람 · 날짜 · 종류, 걸리면 「초기화」 와 「N개 중 M개」),
+ * 노트 › 바우처 목록 — 필터 줄(사람 · 날짜 · 종류, 걸리면 「초기화」 와 「N개 중 M개」, 오른쪽 끝 action),
  * 묶음(항공편 · 숙소 · 일정 · 기타, 위에 8px 회색 띠)마다 가로형 줄. 비면 「바우처가 없어요」
  */
-export function VoucherList({ list }: VoucherListProps) {
+export function VoucherList({ list, onOpen, action }: VoucherListProps) {
   if (list.isPending) {
     return (
       <div className="flex flex-col gap-2 bg-white px-5 pt-3">
@@ -26,8 +33,8 @@ export function VoucherList({ list }: VoucherListProps) {
     );
   }
   return (
-    <section aria-label="바우처" className="flex flex-1 flex-col bg-white pb-7">
-      <FilterRow list={list} />
+    <section aria-label="바우처" className="flex flex-1 flex-col bg-white pb-22.5">
+      <FilterRow list={list} action={action} />
       {list.groups.length === 0 ? (
         <EmptyState
           icon={Ticket}
@@ -43,7 +50,7 @@ export function VoucherList({ list }: VoucherListProps) {
             </h3>
             <ul>
               {g.items.map((v) => (
-                <VoucherRow key={v.id} voucher={v} list={list} />
+                <VoucherRow key={v.id} voucher={v} list={list} onOpen={() => onOpen(v)} />
               ))}
             </ul>
           </div>
@@ -53,8 +60,10 @@ export function VoucherList({ list }: VoucherListProps) {
   );
 }
 
-/** 필터 줄 — 칩 셋(사람은 멤버가 둘 이상일 때만) · 「초기화」, 걸렸으면 아래 「N개 중 M개」 */
-function FilterRow({ list }: VoucherListProps) {
+type FilterRowProps = { list: VoucherListState; action?: ReactNode };
+
+/** 필터 줄 — 칩 셋(사람은 멤버가 둘 이상일 때만) · 「초기화」 · 오른쪽 끝 action, 걸렸으면 아래 「N개 중 M개」 */
+function FilterRow({ list, action }: FilterRowProps) {
   const { filters, options, patch } = list;
   return (
     <div className="flex flex-col gap-1.5 px-5 pt-3 pb-1.5">
@@ -96,6 +105,7 @@ function FilterRow({ list }: VoucherListProps) {
             초기화
           </button>
         )}
+        {action && <span className="ml-auto">{action}</span>}
       </div>
       {list.filtered && (
         <span className="text-xs text-ink-400">
@@ -106,28 +116,34 @@ function FilterRow({ list }: VoucherListProps) {
   );
 }
 
-type VoucherRowProps = { voucher: Voucher; list: VoucherListState };
+type VoucherRowProps = { voucher: Voucher; list: VoucherListState; onOpen: () => void };
 
 /** 줄(P5 가로형) — 썸네일 48 · r8(없으면 아이콘) · 제목 15/700 · 보조 12 · 주인 12/700 블루 · › */
-function VoucherRow({ voucher: v, list }: VoucherRowProps) {
+function VoucherRow({ voucher: v, list, onOpen }: VoucherRowProps) {
   const thumb = list.thumbOf(v);
   return (
-    <li className="flex items-center gap-3 px-5 py-2.5">
-      <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-button bg-surface-muted">
-        {thumb ? (
-          // 서명 주소라 next/image 최적화를 거치지 않는다
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt="" className="size-full object-cover" />
-        ) : (
-          <FallbackIcon voucher={v} />
-        )}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[15px] font-bold text-ink-900">{v.title}</span>
-        <span className="truncate text-xs text-ink-400">{list.subOf(v)}</span>
-        <span className="truncate text-xs font-bold text-primary">{list.ownersOf(v)}</span>
-      </span>
-      <ChevronRight className="size-4 shrink-0 text-line-dashed" aria-hidden="true" />
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-surface-sunken"
+      >
+        <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-button bg-surface-muted">
+          {thumb ? (
+            // 서명 주소라 next/image 최적화를 거치지 않는다
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="size-full object-cover" />
+          ) : (
+            <FallbackIcon voucher={v} />
+          )}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-[15px] font-bold text-ink-900">{v.title}</span>
+          <span className="truncate text-xs text-ink-400">{list.subOf(v)}</span>
+          <span className="truncate text-xs font-bold text-primary">{list.ownersOf(v)}</span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-line-dashed" aria-hidden="true" />
+      </button>
     </li>
   );
 }

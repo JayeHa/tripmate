@@ -1,6 +1,6 @@
 "use client";
 
-import { Ticket } from "lucide-react";
+import { Plus, Ticket } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -42,7 +42,21 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
             notes.tab === "voucher" && "w-110 flex-none border-r border-divider",
           )}
         >
-          <NotesTabBody tripId={tripId} notes={notes} stickyTop="top-(--shell-top)" />
+          <NotesTabBody
+            tripId={tripId}
+            notes={notes}
+            stickyTop="top-(--shell-top)"
+            voucherAction={
+              <button
+                type="button"
+                onClick={notes.voucherForm.openNew}
+                className="flex h-8.5 items-center gap-1 rounded-full bg-brand pr-3.5 pl-2.5 text-[13px] font-bold text-white"
+              >
+                <Plus className="size-3.75" strokeWidth={2.4} aria-hidden="true" />
+                바우처
+              </button>
+            }
+          />
         </div>
         {notes.tab === "checklist" && <PcChecklistPane tripId={tripId} notes={notes} />}
         {notes.tab === "voucher" && (
