@@ -36,3 +36,10 @@ export function ieyo(word: string): string {
   if (jong === null) return "이에요";
   return jong === 0 ? "예요" : "이에요";
 }
+
+/** 「이/가」 — 받침이 있으면 「이」, 없으면 「가」. 한글로 끝나지 않으면 「이(가)」 */
+export function iGa(word: string): string {
+  const jong = jongOf(word);
+  if (jong === null) return "이(가)";
+  return jong === 0 ? "가" : "이";
+}

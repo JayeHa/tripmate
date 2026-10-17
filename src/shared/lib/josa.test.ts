@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { eulReul, euro, ieyo } from "./josa";
+import { eulReul, euro, ieyo, iGa } from "./josa";
 
 describe("euro", () => {
   it("받침 없음 · ㄹ 받침은 「로」, 그 밖 받침은 「으로」", () => {
@@ -42,5 +42,13 @@ describe("ieyo", () => {
   it("한글은 받침으로", () => {
     expect(ieyo("여행준비")).toBe("예요");
     expect(ieyo("숙소 정원")).toBe("이에요");
+  });
+});
+
+describe("iGa", () => {
+  it("받침이 있으면 「이」, 없으면 「가」, 한글로 끝나지 않으면 「이(가)」", () => {
+    expect(iGa("입장권")).toBe("이");
+    expect(iGa("티켓 2")).toBe("이(가)");
+    expect(iGa("바우처")).toBe("가");
   });
 });
