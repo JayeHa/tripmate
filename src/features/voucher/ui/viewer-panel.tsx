@@ -42,7 +42,7 @@ export function ViewerPanel({ numbers, memo, awake }: ViewerPanelProps) {
         </button>
       )}
       {memo && (
-        <p className="line-clamp-3 rounded-card bg-surface-sunken px-3 py-2.5 text-[13px] leading-normal whitespace-pre-line text-ink-700">
+        <p className="line-clamp-3 rounded-card bg-surface-sunken px-3 py-2.5 text-[13px]/normal whitespace-pre-line text-ink-700">
           {memo}
         </p>
       )}
