@@ -93,3 +93,41 @@ export function voucherFileKeys(
 ): string[] {
   return [v.file_key, v.thumb_key, ...v.page_keys].filter((k): k is string => !!k);
 }
+
+/** 일정 카드 — 바우처를 찾을 때 쓰는 칸만 */
+type VoucherCard = { id: string; stay_id: string | null; flight_id?: string | null };
+
+/**
+ * 일정 카드의 바우처 — 그 카드에 붙은 것, 숙소 카드면 그 숙소 · 항공편 카드면 그 항공편에 붙은 것까지.
+ * 받은 순서(넣은 순서) 그대로
+ */
+export function cardVouchers<V extends Pick<Voucher, "schedule_item_id" | "stay_id" | "flight_id">>(
+  list: V[],
+  card: VoucherCard,
+): V[] {
+  return list.filter(
+    (v) =>
+      v.schedule_item_id === card.id ||
+      (!!card.stay_id && v.stay_id === card.stay_id) ||
+      (!!card.flight_id && v.flight_id === card.flight_id),
+  );
+}
+
+/** 카드에서 바로 올린 바우처의 연결 — 숙소 카드는 그 숙소(숙소 화면에서도 보이게), 그 밖은 그 일정 */
+export function cardVoucherTarget(card: VoucherCard): VoucherTargetRef {
+  return card.stay_id ? { kind: "stay", id: card.stay_id } : { kind: "schedule_item", id: card.id };
+}
+
+/** 이 일정들(카드 · 그 대체 장소)에 직접 붙은 바우처 수 — 일정을 지우면 연결만 풀린다(set null) */
+export function linkedVoucherCount(
+  list: Pick<Voucher, "schedule_item_id">[],
+  itemIds: string[],
+): number {
+  return list.filter((v) => v.schedule_item_id !== null && itemIds.includes(v.schedule_item_id))
+    .length;
+}
+
+/** 지우기 확인에 덧붙일 글 — 연결된 바우처가 있으면 연결만 풀리고 노트에 남는다고 알린다 */
+export function voucherUnlinkNote(count: number): string | null {
+  return count > 0 ? `연결된 바우처 ${count}개는 연결만 풀리고 노트에 남아요.` : null;
+}
