@@ -4,8 +4,8 @@ import { Download, Maximize2, Ticket } from "lucide-react";
 
 import type { Voucher } from "@/entities/voucher";
 import { useVoucherDownload } from "@/features/voucher";
+import { useVoucherDetail } from "@/widgets/trip-voucher";
 
-import { useVoucherDetail } from "../model/use-voucher-detail";
 import { VoucherDetailBody } from "./voucher-detail-body";
 
 type PcVoucherPaneProps = {

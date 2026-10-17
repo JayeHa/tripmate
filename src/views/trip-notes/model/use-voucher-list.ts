@@ -16,13 +16,12 @@ import {
 import { targetLabel, useTargetSources } from "@/features/checklist";
 import { dayCount } from "@/shared/lib/days";
 import { FILTER_ALL } from "@/shared/ui/filter-select";
+import { ownersText, voucherDay } from "@/widgets/trip-voucher";
 
 import {
   dayOptions,
   groupVouchers,
   matchesFilters,
-  ownersText,
-  voucherDay,
   type VoucherFilters,
   voucherSubText,
 } from "../lib/vouchers";

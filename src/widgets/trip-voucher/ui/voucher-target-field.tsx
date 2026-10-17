@@ -7,7 +7,7 @@ import type { VoucherTargetRef } from "@/entities/voucher";
 import { TargetPicker, useTargetSources } from "@/features/checklist";
 import { dayCount } from "@/shared/lib/days";
 
-import { dayText, targetDay } from "../lib/vouchers";
+import { dayText, targetDay } from "../lib/voucher-day";
 
 type VoucherTargetFieldProps = {
   tripId: string;

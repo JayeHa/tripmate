@@ -1,6 +1,6 @@
 import { isPdf, type Voucher } from "@/entities/voucher";
 
-import { dayText } from "./vouchers";
+import { dayText } from "./voucher-day";
 
 /** 파일 정보 줄 — 「PDF · 현장용 1, 3페이지」 · 「이미지」, 원본이 없으면 null */
 export function fileInfo(v: Pick<Voucher, "file_key" | "file_mime" | "pages">): string | null {

@@ -4,8 +4,7 @@ import { FileText, Maximize2, QrCode } from "lucide-react";
 
 import { isPdf } from "@/entities/voucher";
 import { NumberCopyRow } from "@/features/voucher";
-
-import type { VoucherDetail } from "../model/use-voucher-detail";
+import type { VoucherDetail } from "@/widgets/trip-voucher";
 
 type VoucherDetailBodyProps = {
   detail: VoucherDetail;
