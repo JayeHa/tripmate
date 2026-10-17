@@ -19,10 +19,18 @@ type NotesTabBodyProps = {
   stickyTop: string;
   /** 바우처 필터 줄 오른쪽 끝(PC 「+ 바우처」) */
   voucherAction?: ReactNode;
+  /** 고른 바우처 줄을 칠한다(PC — 오른쪽 칸에 보이는 것) */
+  selectVoucher?: boolean;
 };
 
 /** 지금 탭의 내용 — 체크리스트 · 바우처, 아직 만들지 않은 탭은 「준비 중」 */
-export function NotesTabBody({ tripId, notes, stickyTop, voucherAction }: NotesTabBodyProps) {
+export function NotesTabBody({
+  tripId,
+  notes,
+  stickyTop,
+  voucherAction,
+  selectVoucher = false,
+}: NotesTabBodyProps) {
   if (notes.tab === "checklist") {
     return (
       <ChecklistBoard
@@ -36,7 +44,12 @@ export function NotesTabBody({ tripId, notes, stickyTop, voucherAction }: NotesT
   }
   if (notes.tab === "voucher") {
     return (
-      <VoucherTab tripId={tripId} onOpen={notes.voucherForm.openEdit} action={voucherAction} />
+      <VoucherTab
+        tripId={tripId}
+        selectedId={selectVoucher ? notes.voucherDetail.id : null}
+        onOpen={notes.voucherDetail.open}
+        action={voucherAction}
+      />
     );
   }
   return (
@@ -51,12 +64,13 @@ export function NotesTabBody({ tripId, notes, stickyTop, voucherAction }: NotesT
 
 type VoucherTabProps = {
   tripId: string;
+  selectedId: string | null;
   onOpen: (voucher: Voucher) => void;
   action?: ReactNode;
 };
 
 /** 바우처 탭 — 목록 상태는 이 탭이 열려 있을 때만 쥔다 */
-function VoucherTab({ tripId, onOpen, action }: VoucherTabProps) {
+function VoucherTab({ tripId, selectedId, onOpen, action }: VoucherTabProps) {
   const list = useVoucherList(tripId);
-  return <VoucherList list={list} onOpen={onOpen} action={action} />;
+  return <VoucherList list={list} selectedId={selectedId} onOpen={onOpen} action={action} />;
 }

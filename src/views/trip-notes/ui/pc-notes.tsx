@@ -1,14 +1,14 @@
 "use client";
 
-import { Plus, Ticket } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
-import { EmptyState } from "@/shared/ui/empty-state";
 
 import { NOTE_TAB_INFO, NOTE_TABS } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
 import { NotesTabBody } from "./notes-tab-body";
 import { PcChecklistPane } from "./pc-checklist-pane";
+import { PcVoucherPane } from "./pc-voucher-pane";
 
 type PcNotesProps = { tripId: string; notes: NotesState };
 
@@ -46,6 +46,7 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
             tripId={tripId}
             notes={notes}
             stickyTop="top-(--shell-top)"
+            selectVoucher
             voucherAction={
               <button
                 type="button"
@@ -60,13 +61,12 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
         </div>
         {notes.tab === "checklist" && <PcChecklistPane tripId={tripId} notes={notes} />}
         {notes.tab === "voucher" && (
-          <div className="min-w-0 flex-1 bg-white">
-            <EmptyState
-              icon={Ticket}
-              title="바우처를 고르면 여기에 자세히 보여요"
-              className="sticky top-(--shell-top) py-40"
-            />
-          </div>
+          <PcVoucherPane
+            tripId={tripId}
+            id={notes.voucherDetail.id}
+            onEdit={notes.voucherForm.openEdit}
+            onToast={notes.showToast}
+          />
         )}
       </div>
     </main>

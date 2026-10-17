@@ -4,6 +4,7 @@ import { ChevronRight, FileText, Plane, QrCode, Ticket } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { isPdf, type Voucher, VOUCHER_GROUP_LABEL } from "@/entities/voucher";
+import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { FilterSelect } from "@/shared/ui/filter-select";
@@ -13,7 +14,9 @@ import type { VoucherListState } from "../model/use-voucher-list";
 
 type VoucherListProps = {
   list: VoucherListState;
-  /** 줄을 눌렀다 — 상세가 생기기 전까지는 수정 창을 연다 */
+  /** 고른 줄(PC 오른쪽 칸에 보이는 것) — 연한 파랑 */
+  selectedId: string | null;
+  /** 줄을 눌렀다 — 상세를 연다 */
   onOpen: (voucher: Voucher) => void;
   /** 필터 줄 오른쪽 끝(PC 「+ 바우처」) */
   action?: ReactNode;
@@ -23,7 +26,7 @@ type VoucherListProps = {
  * 노트 › 바우처 목록 — 필터 줄(사람 · 날짜 · 종류, 걸리면 「초기화」 와 「N개 중 M개」, 오른쪽 끝 action),
  * 묶음(항공편 · 숙소 · 일정 · 기타, 위에 8px 회색 띠)마다 가로형 줄. 비면 「바우처가 없어요」
  */
-export function VoucherList({ list, onOpen, action }: VoucherListProps) {
+export function VoucherList({ list, selectedId, onOpen, action }: VoucherListProps) {
   if (list.isPending) {
     return (
       <div className="flex flex-col gap-2 bg-white px-5 pt-3">
@@ -50,7 +53,13 @@ export function VoucherList({ list, onOpen, action }: VoucherListProps) {
             </h3>
             <ul>
               {g.items.map((v) => (
-                <VoucherRow key={v.id} voucher={v} list={list} onOpen={() => onOpen(v)} />
+                <VoucherRow
+                  key={v.id}
+                  voucher={v}
+                  list={list}
+                  selected={v.id === selectedId}
+                  onOpen={() => onOpen(v)}
+                />
               ))}
             </ul>
           </div>
@@ -116,17 +125,26 @@ function FilterRow({ list, action }: FilterRowProps) {
   );
 }
 
-type VoucherRowProps = { voucher: Voucher; list: VoucherListState; onOpen: () => void };
+type VoucherRowProps = {
+  voucher: Voucher;
+  list: VoucherListState;
+  selected: boolean;
+  onOpen: () => void;
+};
 
 /** 줄(P5 가로형) — 썸네일 48 · r8(없으면 아이콘) · 제목 15/700 · 보조 12 · 주인 12/700 블루 · › */
-function VoucherRow({ voucher: v, list, onOpen }: VoucherRowProps) {
+function VoucherRow({ voucher: v, list, selected, onOpen }: VoucherRowProps) {
   const thumb = list.thumbOf(v);
   return (
     <li>
       <button
         type="button"
         onClick={onOpen}
-        className="flex w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-surface-sunken"
+        aria-current={selected || undefined}
+        className={cn(
+          "flex w-full items-center gap-3 px-5 py-2.5 text-left",
+          selected ? "bg-row-focus" : "hover:bg-surface-sunken",
+        )}
       >
         <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-button bg-surface-muted">
           {thumb ? (
