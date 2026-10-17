@@ -65,6 +65,7 @@ export function PcNotes({ tripId, notes }: PcNotesProps) {
             tripId={tripId}
             id={notes.voucherDetail.id}
             onEdit={notes.voucherForm.openEdit}
+            onShow={notes.voucherViewer.show}
             onToast={notes.showToast}
           />
         )}

@@ -57,6 +57,7 @@ export function MobileNotes({ tripId, notes }: MobileNotesProps) {
         id={notes.voucherDetail.id}
         onClose={notes.voucherDetail.close}
         onEdit={notes.voucherForm.openEdit}
+        onShow={notes.voucherViewer.show}
         onToast={notes.showToast}
       />
       {notes.tab === "voucher" && (
