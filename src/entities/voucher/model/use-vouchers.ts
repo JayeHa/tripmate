@@ -4,8 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { fetchVouchers, fetchVoucherUrls, saveVoucher } from "../api/vouchers";
-import type { VoucherSave } from "./types";
+import {
+  deleteVoucher,
+  fetchVouchers,
+  fetchVoucherUrls,
+  saveVoucher,
+  setVoucherPin,
+} from "../api/vouchers";
+import type { Voucher, VoucherSave } from "./types";
 
 /** 여행의 바우처 */
 export function useVouchers(tripId: string) {
@@ -37,5 +43,36 @@ export function useSaveVoucher(tripId: string) {
   return useMutation({
     mutationFn: (save: VoucherSave) => saveVoucher(tripId, save),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
+  });
+}
+
+/** 지우기 — 끝나면 목록만 다시 읽는다 */
+export function useDeleteVoucher(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteVoucher(tripId, id),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
+  });
+}
+
+/** 「홈에 고정」 — 누르면 바로 바뀌고(화면 먼저) 서버에 보낸다. 실패하면 그 바우처만 되돌린다 */
+export function useSetVoucherPin(tripId: string) {
+  const qc = useQueryClient();
+  const key = queryKeys.vouchers(tripId);
+  /** 캐시의 그 바우처 고정만 바꾼다 */
+  const setPinIn = (id: string, pinnedBy: string | null) =>
+    qc.setQueryData<Voucher[]>(key, (items) =>
+      items?.map((v) => (v.id === id ? { ...v, pinned_by: pinnedBy } : v)),
+    );
+  return useMutation({
+    mutationFn: (v: { id: string; pinnedBy: string | null }) => setVoucherPin(v.id, v.pinnedBy),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: key, exact: true });
+      const before = qc.getQueryData<Voucher[]>(key)?.find((x) => x.id === v.id);
+      setPinIn(v.id, v.pinnedBy);
+      return { before: before?.pinned_by ?? null };
+    },
+    onError: (_e, v, ctx) => setPinIn(v.id, ctx?.before ?? null),
+    onSettled: () => qc.invalidateQueries({ queryKey: key, exact: true }),
   });
 }
