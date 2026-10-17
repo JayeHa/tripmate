@@ -1,6 +1,7 @@
 import { postJson } from "@/shared/api/post-json";
 import { createClient } from "@/shared/api/supabase/client";
 
+import { voucherFileKeys } from "../lib/voucher";
 import type { Voucher, VoucherSave } from "../model/types";
 
 /** 고치려는 바우처가 없다 — 그사이 일행이 지웠다 */
@@ -98,4 +99,36 @@ export async function saveVoucher(tripId: string, save: VoucherSave): Promise<st
   if (error) throw error;
   if (data.length === 0) throw new Error(VOUCHER_GONE);
   return save.id;
+}
+
+/** 홈에 고정 · 풀기 — 고정한 사람을 남긴다(null 이면 푼다). 0행이면 던진다 */
+export async function setVoucherPin(id: string, pinnedBy: string | null): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("vouchers")
+    .update({ pinned_by: pinnedBy })
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  if (data.length === 0) throw new Error(VOUCHER_GONE);
+}
+
+/**
+ * 지우기 — 줄을 지운 뒤 그 줄의 원본 · 그림 · 썸네일 가운데 다른 바우처가 쓰지 않는 키만 저장소에서 지운다(files.md 「키 겹침」).
+ * 이미 지워졌으면(0행) 그대로 끝낸다 — 지우려던 결과와 같고, 파일은 지운 쪽이 정리했다
+ */
+export async function deleteVoucher(tripId: string, id: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("vouchers")
+    .delete()
+    .eq("id", id)
+    .select("file_key, thumb_key, page_keys");
+  if (error) throw error;
+  const keys = data.flatMap((v) => voucherFileKeys(v));
+  const inUse = await fetchVoucherKeysInUse(tripId, keys, id);
+  await removeVoucherFiles(
+    tripId,
+    keys.filter((k) => !inUse.has(k)),
+  );
 }

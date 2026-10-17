@@ -12,7 +12,7 @@ import { type NoteTab, parseNoteTab } from "../lib/tabs";
 
 /**
  * 노트 화면의 상태 — 지금 탭(주소의 tab, 다른 화면에서 「노트에서 보기」 로 바로 열 수 있게) · 탭 숫자 · 토스트 ·
- * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다) · 고른 바우처(모바일 상세 페이지 · PC 오른쪽 칸) · 바우처 추가 · 수정 창.
+ * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다) · 고른 바우처(모바일 상세 페이지 · PC 오른쪽 칸)와 그 뷰어 · 바우처 추가 · 수정 창.
  * 탭을 바꾸면 주소를 바꾸되 방문 기록은 쌓지 않는다
  */
 export function useNotes(tripId: string) {
@@ -25,6 +25,7 @@ export function useNotes(tripId: string) {
   const checklistDetail = useChecklistDetail();
   // 열린 바우처 폼 — 고치는 바우처는 연 때의 것을 쥔다(그사이 지워져도 새 바우처로 바뀌지 않게)
   const [voucherId, setVoucherId] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [voucherForm, setVoucherForm] = useState<{ voucher: Voucher | null } | null>(null);
   return {
     tab,
@@ -41,7 +42,16 @@ export function useNotes(tripId: string) {
     voucherDetail: {
       id: voucherId,
       open: (voucher: Voucher) => setVoucherId(voucher.id),
-      close: () => setVoucherId(null),
+      close: () => {
+        setVoucherId(null);
+        setViewerOpen(false);
+      },
+    },
+    /** 고른 바우처의 전체 화면 뷰어 */
+    voucherViewer: {
+      open: viewerOpen && voucherId !== null,
+      show: () => setViewerOpen(true),
+      close: () => setViewerOpen(false),
     },
     /** 바우처 추가 · 수정 창 */
     voucherForm: {

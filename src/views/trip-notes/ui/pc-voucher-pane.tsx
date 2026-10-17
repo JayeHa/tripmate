@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Ticket } from "lucide-react";
+import { Download, Maximize2, Ticket } from "lucide-react";
 
 import type { Voucher } from "@/entities/voucher";
 import { useVoucherDownload } from "@/features/voucher";
@@ -13,6 +13,8 @@ type PcVoucherPaneProps = {
   /** 고른 바우처 id, 없으면 null */
   id: string | null;
   onEdit: (voucher: Voucher) => void;
+  /** 뷰어를 연다(「크게 보기」 · 썸네일) */
+  onShow: () => void;
   onToast: (text: string) => void;
 };
 
@@ -21,9 +23,9 @@ const HEAD_BUTTON =
   "flex h-8 items-center gap-1 rounded-button border border-line-strong px-3 text-[13px] font-bold text-ink-900 hover:bg-surface-sunken disabled:opacity-40";
 
 /**
- * PC 바우처 오른쪽 칸 — 머리 60(「바우처 상세」 · 다운로드 · 수정) + 내용. 고른 것이 없거나 일행이 지웠으면 안내만
+ * PC 바우처 오른쪽 칸 — 머리 60(「바우처 상세」 · 다운로드 · 수정 · 크게 보기) + 내용. 고른 것이 없거나 일행이 지웠으면 안내만
  */
-export function PcVoucherPane({ tripId, id, onEdit, onToast }: PcVoucherPaneProps) {
+export function PcVoucherPane({ tripId, id, onEdit, onShow, onToast }: PcVoucherPaneProps) {
   const detail = useVoucherDetail(tripId, id);
   const download = useVoucherDownload(tripId, onToast);
   return (
@@ -46,9 +48,13 @@ export function PcVoucherPane({ tripId, id, onEdit, onToast }: PcVoucherPaneProp
             <button type="button" onClick={() => onEdit(detail.voucher)} className={HEAD_BUTTON}>
               수정
             </button>
+            <button type="button" onClick={onShow} className={HEAD_BUTTON}>
+              <Maximize2 className="size-3.5" aria-hidden="true" />
+              크게 보기
+            </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-            <VoucherDetailBody detail={detail} />
+            <VoucherDetailBody detail={detail} onShow={onShow} />
           </div>
         </>
       ) : (
