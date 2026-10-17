@@ -228,12 +228,17 @@ provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에�
   - B. `@embedpdf/pdfium` 2.15.1 — MIT(저장소는 Apache-2.0, 서버 제품만 Fair Source), PDFium WASM 4.6MB, 메인테이너 1명(기여 2,493회, 2위 55회). WASM 안에 글꼴이 없어 한글은 `@embedpdf/fonts-kr`(OFL, 32MB)를 따로 받아야 한다
   - C. `react-pdf` 11.0.0 — MIT, A 를 감싼 것(6.3.289 고정) + 의존성 8개, 메인테이너 1명. 문서 · 페이지 컴포넌트가 상태를 쥐는데 우리는 「페이지 하나를 그림으로」 만 필요하다
   - D. `mupdf` 1.28.1 — AGPL 이라 탈락. `@hyzyla/pdfium` 3.0.0 — Node 22 전용(engines) 이라 탈락
-- **선택**: A 를 직접 쓴다. **올릴 때** 올리는 사람의 브라우저에서 현장용 페이지와 첫 쪽 썸네일을 그림(PNG)으로 만들어 원본과 함께 저장하고,
+- **선택**: A 를 직접 쓴다. **올릴 때**(①-b 에서 정확히는 저장 버튼을 누를 때) 올리는 사람의 브라우저에서 현장용 페이지(PNG)와 썸네일(첫 현장용 페이지, JPEG)을 그림으로 만들어 원본과 함께 저장하고,
   뷰어 · 목록 · 홈은 그림만 보인다(2026-10-15 사용자 결정, 「볼 때 그리기」 대신). pdf.js 는 `features/voucher` 의 어댑터 한 파일에서만 동적 import 하고, **`pdfjs-dist/legacy/build/pdf.mjs` 와 legacy 워커를 쓴다**(위 바닥선 때문).
-  설치: `pdfjs-dist ^6.4.299`(2026-10-15). 번들 실측은 바우처 첫 PR 에서 `next build` 로 적는다 — 동적 import 라 첫 화면 번들에는 들어가지 않는다. 선택 의존성 `@napi-rs/canvas`(Node 전용 네이티브)는 lockfile 에만 들어오고 브라우저 번들과 무관하다
+  설치: `pdfjs-dist ^6.4.299`(2026-10-15). 선택 의존성 `@napi-rs/canvas`(Node 전용 네이티브)는 lockfile 에만 들어오고 브라우저 번들과 무관하다.
+  **실측**(①-b, `next build` 2026-10-17): 메인은 동적 import 청크 하나 490kB(gzip 148kB)로 바우처를 저장할 때만 받는다 — 첫 화면 번들에는 없다.
+  워커 1.32MB(gzip 392kB) · 글꼴 표(cmaps 1.6MB, 한글 PDF 는 그중 25kB 안팎 한두 개) · 기본 글꼴 · wasm 은 번들러를 거치지 않고 `scripts/copy-pdfjs.mjs` 가 dev · build 때 `public/pdfjs/{버전}/` 에 복사한다(저장소에는 올리지 않는다).
+  버전 폴더라 패키지를 올려도 기기에 남은 옛 워커와 섞이지 않는다(메인 · 워커 버전이 다르면 pdf.js 가 거부한다). 외부 CDN 은 쓰지 않는다 — 여행지 통신 · 사생활
+- **그리기 동작에서 확인한 것**(①-b): 화면용 그리기(`intent: "display"`)는 다음 조각을 `requestAnimationFrame` 으로 넘겨서 **보이지 않는 탭에서는 멈춘다**(`InternalRenderTask`, legacy/build/pdf.mjs). 저장 중 앱을 벗어나면 돌아와서 이어 그린다.
+  자동화 탭(백그라운드)에서는 `requestAnimationFrame` 을 `setTimeout` 으로 바꿔야 확인된다. 6.x 의 문서(`PDFDocumentProxy`)에는 `destroy` 가 없고 불러오기 작업(`getDocument()` 의 반환)에 있다
 - **근거**: 사용자의 PDF 는 한국어 e-티켓 · 예약 확인서가 많은데 글꼴이 없는 PDF 를 기기 글꼴로 그리는 건 A 뿐이고(B 는 32MB 글꼴 팩), 현장에서는 그림만 받으면 돼 느린 통신 · Safari 16.4 에서도 사진 바우처와 같다.
   스파이크(2026-10-15, 최신 Chrome · modern 빌드): 글꼴을 넣지 않은 한글 Type0 PDF(`HYSMyeongJo-Medium` · `UniKS-UCS2-H`) 2쪽을 `cMapUrl` · `standardFontDataUrl` 과 함께 캔버스에 그려 한글 · 영문이 기기 글꼴로 보였다.
-  최신 브라우저에서만 돌린 것이라 바닥선 판단의 근거는 아니다. 어댑터 PR 에서 legacy 빌드로 다시 확인한다.
+  최신 브라우저에서만 돌린 것이라 바닥선 판단의 근거는 아니다. ①-b 에서 legacy 빌드 · 자체 호스팅 파일로 같은 PDF 를 다시 그려 「2, 1」 순서 · 한글이 맞는 것을 확인했다(최신 Chrome).
   **사용자 확인 필요**: 같은 PDF 를 iPhone Safari 에서 올려 그림이 만들어지는지(실기기, 어댑터 PR).
 - **포기한 것 / 재평가 트리거**: legacy 빌드로도 공식 지원 밖인 Chrome 111–124 · Safari 16.4~17 — polyfill 로 채운 API 외에 걸리는 것이 있으면 동적 import · 그리기가 실패하고,
   그때는 원본만 저장하고 뷰어는 「PDF 열기」 로 떨어진다(AGENTS.md 「범위 밖 API 는 기능 감지 후 대체 경로」). legacy 의 추가 크기(약 120kB)는 바우처를 올릴 때만 받는다.

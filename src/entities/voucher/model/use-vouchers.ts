@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { fetchVouchers, fetchVoucherUrls } from "../api/vouchers";
+import { fetchVouchers, fetchVoucherUrls, saveVoucher } from "../api/vouchers";
+import type { VoucherSave } from "./types";
 
 /** 여행의 바우처 */
 export function useVouchers(tripId: string) {
@@ -27,5 +28,14 @@ export function useVoucherUrls(tripId: string, keys: string[]) {
     gcTime: URL_STALE_MS,
     // 화면을 오래 띄워 둬도(포커스 · 다시 마운트 없이) 만료 전에 새 주소로 바꾼다
     refetchInterval: URL_STALE_MS,
+  });
+}
+
+/** 추가 · 수정 저장 — 끝나면 목록만 다시 읽는다(읽기 주소는 키가 그대로면 다시 받지 않는다) */
+export function useSaveVoucher(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (save: VoucherSave) => saveVoucher(tripId, save),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
   });
 }

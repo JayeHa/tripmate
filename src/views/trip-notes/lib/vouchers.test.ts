@@ -5,14 +5,17 @@ import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Stay } from "@/entities/stay";
 import type { Voucher } from "@/entities/voucher";
 import type { TargetSources } from "@/features/checklist";
+import { dayParts } from "@/shared/lib/days";
 import { FILTER_ALL } from "@/shared/ui/filter-select";
 
 import {
   dayOptions,
+  dayText,
   groupVouchers,
   matchesFilters,
   NO_DAY,
   ownersText,
+  targetDay,
   voucherDay,
   voucherSubText,
 } from "./vouchers";
@@ -55,6 +58,17 @@ describe("voucherDay", () => {
     expect(voucherDay(v("x", { flight_id: "f2" }), SRC, 3)).toBeNull();
     expect(voucherDay(v("x", { schedule_item_id: "gone" }), SRC, 3)).toBeNull();
     expect(voucherDay(v("x"), SRC, 3)).toBeNull();
+  });
+});
+
+describe("dayText", () => {
+  it("연결한 대상의 날짜 글 — 「day N · M.D」, 없으면 「날짜 없음」", () => {
+    expect(dayText(SRC.startDate, targetDay({ kind: "stay", id: "s1" }, SRC, 3))).toBe(
+      `day 1 · ${dayParts(SRC.startDate, 0).date}`,
+    );
+    expect(dayText(SRC.startDate, targetDay({ kind: "flight", id: "f2" }, SRC, 3))).toBe(
+      "날짜 없음",
+    );
   });
 });
 

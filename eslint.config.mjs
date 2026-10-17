@@ -224,6 +224,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "design_handoff_tripmate/**",
+    // pdf.js 워커 사본(scripts/copy-pdfjs.mjs)
+    "public/pdfjs/**",
   ]),
 ]);
 

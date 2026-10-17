@@ -4,3 +4,4 @@ export { useTargetSources } from "./model/use-target-sources";
 export { ChecklistBoard } from "./ui/checklist-board";
 export { ChecklistPanel, checklistTargetKey, useChecklistTargetItem } from "./ui/checklist-panel";
 export { ChecklistSheet } from "./ui/checklist-sheet";
+export { TargetPicker } from "./ui/target-picker";
