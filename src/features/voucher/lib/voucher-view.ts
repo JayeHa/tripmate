@@ -50,3 +50,48 @@ export function numberLabel(
   const name = nameOf(n.owner) ?? "알 수 없음";
   return `${n.label} · ${name}${n.owner === me ? " (나)" : ""}`;
 }
+
+/**
+ * 뷰어에 넘겨 볼 그림 키 — PDF 는 현장용 페이지 그림(적은 순서), 사진은 원본 하나.
+ * 그림이 없는 PDF(그리지 못함) · 파일 없는 바우처는 빈 목록
+ */
+export function viewerKeys(v: Pick<Voucher, "file_key" | "file_mime" | "page_keys">): string[] {
+  if (v.page_keys.length > 0) return v.page_keys;
+  if (v.file_key && v.file_mime?.startsWith("image/")) return [v.file_key];
+  return [];
+}
+
+/** 뷰어 머리의 보조 줄 — 「정원, 동규 · 10.20 · 치이카와 파크 · 1 / 3」. 연결이 없으면 「기타」, 한 장이면 쪽 표시 없음 */
+export function viewerSubText(
+  owners: string,
+  target: string | null,
+  page: number,
+  total: number,
+): string {
+  return [owners, target ?? "기타", total > 1 ? `${page + 1} / ${total}` : null]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** 뷰어의 번호 한 줄 — 보이는 순서로 정렬해 라벨을 붙인 것 */
+export type ViewerNumber = {
+  key: string;
+  /** 「예약번호 · 정원 (나)」 */
+  text: string;
+  value: string;
+  /** 주인 멤버 id, 비면 모두 */
+  owner: string;
+  mine: boolean;
+};
+
+/** 뷰어가 그릴 바우처 — 주인 · 연결 · 날짜 글은 화면(view)이 만들어 넘긴다 */
+export type ViewerContent = {
+  voucher: Voucher;
+  /** 「정원, 동규」 · 「모두」 */
+  owners: string;
+  /** 연결 이름, 없으면 null(「기타」) */
+  target: string | null;
+  /** 사용일 글, 없으면 null */
+  date: string | null;
+  numbers: ViewerNumber[];
+};

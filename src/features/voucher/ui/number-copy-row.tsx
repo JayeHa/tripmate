@@ -1,12 +1,10 @@
 "use client";
 
 import { Copy } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-/** 「복사했어요」 를 보이는 시간 */
-const COPIED_MS = 1400;
+import { useCopied } from "../model/use-copied";
 
 type NumberCopyRowProps = {
   /** 「예약번호 · 정원 (나)」 */
@@ -21,22 +19,12 @@ type NumberCopyRowProps = {
  * 누르면 오른쪽 글이 1.4초 「복사했어요」 로 바뀐다(토스트 없이). 복사하지 못하면(권한 · 오래된 브라우저) 바뀌지 않는다
  */
 export function NumberCopyRow({ label, value, mine }: NumberCopyRowProps) {
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), COPIED_MS);
-    return () => clearTimeout(t);
-  }, [copied]);
+  const { copied, copy } = useCopied();
   const tone = mine ? "text-brand-text" : "text-ink-400";
   return (
     <button
       type="button"
-      onClick={() => {
-        void navigator.clipboard?.writeText(value).then(
-          () => setCopied(true),
-          () => undefined,
-        );
-      }}
+      onClick={() => copy(value)}
       className={cn(
         "flex min-h-11.5 w-full items-center gap-2.5 rounded-card px-3.5 py-1.5 text-left",
         mine ? "bg-brand-soft" : "bg-surface-muted",
