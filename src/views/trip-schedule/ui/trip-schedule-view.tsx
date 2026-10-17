@@ -19,12 +19,14 @@ import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
 import { useScheduleSections } from "../model/use-schedule-sections";
+import { useScheduleVouchers } from "../model/use-schedule-vouchers";
 import { useStaysOverlay } from "../model/use-stays-overlay";
 import { DetailOverlays } from "./detail-overlays";
 import { FlightsOverlay } from "./flights-overlay";
 import { MobileSchedule } from "./mobile-schedule";
 import { PcSchedule } from "./pc/pc-schedule";
 import type { DayJump, ScheduleLayoutProps } from "./schedule-layout";
+import { ScheduleVoucherOverlays, voucherSlot } from "./schedule-vouchers";
 import { StaysOverlay } from "./stays-overlay";
 
 type TripScheduleViewProps = { tripId: string };
@@ -65,6 +67,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const overlays = useDetailOverlays();
   const authorOf = useMemberLookup(tripId);
   const checklistOf = useChecklistChips(tripId);
+  const vouchers = useScheduleVouchers(tripId, openCard);
   // 일정 편집. 마치면 마지막으로 편집하던 날로 간다
   const edit = useScheduleEdit({
     tripId,
@@ -112,6 +115,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     onAddPlace: add.open,
     authorOf,
     checklistOf,
+    voucherOf: vouchers.voucherOf,
     onAddDayMemo: overlays.openDayMemo,
     edit,
     startEditAt: edit.opener,
@@ -202,8 +206,11 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
           onMemo={overlays.openMemo}
           onExpense={overlays.openExpense}
           onToast={overlays.showToast}
+          vouchers={voucherSlot(tripId, vouchers, overlays.showToast)}
         />
       )}
+
+      <ScheduleVoucherOverlays tripId={tripId} vouchers={vouchers} onToast={overlays.showToast} />
 
       {trip && isDesktop !== null && (
         <DetailOverlays

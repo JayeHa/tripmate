@@ -85,6 +85,7 @@ export function AlternativeDetail({
         onMemo={(memo) => onMemo(altRow, memo)}
         onExpense={(expenseId) => onExpense(alt.id, expenseId)}
         onToast={onToast}
+        vouchers={null}
         alternatives={null}
         onEditPlace={onEditPlace}
       />

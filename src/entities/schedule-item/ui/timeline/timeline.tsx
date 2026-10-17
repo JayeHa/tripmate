@@ -23,6 +23,8 @@ type TimelineProps = {
   authorOf: (authorId: string | null) => MemoAuthor | null;
   /** 카드의 「체크리스트 N」 칩 — 끝나지 않은 항목 수와 노트 주소. 없으면 칩을 그리지 않는다 */
   checklistOf?: (row: TimelineRow) => { count: number; href: string };
+  /** 카드의 「바우처 N」 칩 — 수와 누르면 할 일 */
+  voucherOf?: (row: TimelineRow) => { count: number; onOpen: () => void };
 };
 
 /**
@@ -38,6 +40,7 @@ export function Timeline({
   focusId,
   authorOf,
   checklistOf,
+  voucherOf,
 }: TimelineProps) {
   return (
     // isolate: 강조 배경(-z-10)을 이 목록 안에 가둬 세로선 아래 · 페이지 배경 위에 깐다
@@ -84,6 +87,7 @@ export function Timeline({
                 onOpen={() => onOpen(row)}
                 authorOf={authorOf}
                 checklist={row.kind === "note" ? undefined : checklistOf?.(row)}
+                vouchers={row.kind === "note" ? undefined : voucherOf?.(row)}
               />
             </div>
           </li>

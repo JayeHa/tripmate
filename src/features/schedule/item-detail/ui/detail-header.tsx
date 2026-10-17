@@ -17,6 +17,8 @@ type DetailHeaderProps = {
   linkedExpenses: LinkedExpenses;
   /** 이 일정과 그 대체 장소에 연결된 체크리스트 항목 수 — 삭제 확인에서 알린다 */
   checklistCount: number;
+  /** 이 일정과 그 대체 장소에 직접 연결된 바우처 수 — 삭제 확인에서 알린다 */
+  voucherCount: number;
   /** 요청이 서버에 가 있는 동안 — 닫기를 막는다 */
   locked: boolean;
   onClose: () => void;
@@ -30,6 +32,7 @@ export function DetailHeader({
   actions,
   linkedExpenses,
   checklistCount,
+  voucherCount,
   locked,
   onClose,
 }: DetailHeaderProps) {
@@ -55,6 +58,7 @@ export function DetailHeader({
           alternativeCount={row.alternatives.length}
           linkedExpenses={linkedExpenses}
           checklistCount={checklistCount}
+          voucherCount={voucherCount}
           startDate={startDate}
           totalDays={totalDays}
         />
