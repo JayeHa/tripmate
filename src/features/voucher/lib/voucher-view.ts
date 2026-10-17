@@ -1,4 +1,4 @@
-import type { Voucher, VoucherNumber } from "@/entities/voucher";
+import { isPdf, type Voucher, type VoucherNumber, voucherNumbers } from "@/entities/voucher";
 
 /** 파일 이름에 쓸 수 없는 글자(Windows · macOS 공통) */
 const UNSAFE_NAME = /[\\/:*?"<>|\u0000-\u001f]/g;
@@ -71,6 +71,18 @@ export function viewerSubText(
   return [owners, target ?? "기타", total > 1 ? `${page + 1} / ${total}` : null]
     .filter(Boolean)
     .join(" · ");
+}
+
+/** 일정 상세 바우처 줄의 보조 글 — 「PDF · 예약번호 K7QX2M」 · 「이미지」, 원본 · 번호가 없으면 빈 글 */
+export function linkedSubText(v: Pick<Voucher, "file_key" | "file_mime" | "numbers">): string {
+  const first = voucherNumbers(v)[0];
+  return [fileKind(v), first ? `${first.label} ${first.value}` : null].filter(Boolean).join(" · ");
+}
+
+/** 원본 종류 글 — 「PDF」 · 「이미지」, 원본이 없으면 null */
+function fileKind(v: Pick<Voucher, "file_key" | "file_mime">): string | null {
+  if (!v.file_key) return null;
+  return isPdf(v) ? "PDF" : "이미지";
 }
 
 /** 뷰어의 번호 한 줄 — 보이는 순서로 정렬해 라벨을 붙인 것 */
