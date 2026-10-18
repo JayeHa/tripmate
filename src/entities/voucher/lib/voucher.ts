@@ -131,3 +131,14 @@ export function linkedVoucherCount(
 export function voucherUnlinkNote(count: number): string | null {
   return count > 0 ? `연결된 바우처 ${count}개는 연결만 풀리고 노트에 남아요.` : null;
 }
+
+/** 이 대상들 중 하나에 연결된 바우처 수 — 대상을 지울 때 「연결만 풀린다」 고 알린다(바우처 하나는 대상 하나라 겹치지 않는다) */
+export function voucherCountFor(
+  list: Pick<Voucher, "schedule_item_id" | "flight_id" | "stay_id">[],
+  refs: VoucherTargetRef[],
+): number {
+  return list.filter((v) => {
+    const ref = voucherTarget(v);
+    return !!ref && refs.some((r) => r.kind === ref.kind && r.id === ref.id);
+  }).length;
+}

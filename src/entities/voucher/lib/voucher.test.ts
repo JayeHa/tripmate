@@ -8,6 +8,7 @@ import {
   ownedBy,
   parsePages,
   targetColumns,
+  voucherCountFor,
   voucherFileKeys,
   voucherGroup,
   voucherNumbers,
@@ -122,5 +123,23 @@ describe("일정 지우기 안내", () => {
     expect(linkedVoucherCount(list, ["c1", "a1"])).toBe(2);
     expect(voucherUnlinkNote(2)).toBe("연결된 바우처 2개는 연결만 풀리고 노트에 남아요.");
     expect(voucherUnlinkNote(0)).toBeNull();
+  });
+});
+
+describe("voucherCountFor", () => {
+  it("대상 중 하나에 연결된 바우처만 센다", () => {
+    const list = [
+      linked({ flight_id: "f1" }),
+      linked({ schedule_item_id: "c1" }),
+      linked({ stay_id: "s1" }),
+      linked({}),
+    ];
+    expect(
+      voucherCountFor(list, [
+        { kind: "flight", id: "f1" },
+        { kind: "schedule_item", id: "c1" },
+      ]),
+    ).toBe(2);
+    expect(voucherCountFor(list, [{ kind: "stay", id: "s9" }])).toBe(0);
   });
 });
