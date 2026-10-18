@@ -116,6 +116,14 @@ const eslintConfig = defineConfig([
       "no-restricted-imports": [
         "error",
         {
+          paths: [
+            {
+              // 기본 cn 은 이 테마의 모서리 · 그림자 이름을 몰라 덮어쓰기가 듣지 않는다
+              name: "cn",
+              importNames: ["cn"],
+              message: "cn 은 `@/shared/lib/utils` 에서 가져옵니다(테마 이름을 아는 cn).",
+            },
+          ],
           patterns: [
             {
               // 다른 슬라이스는 공개 API(index.ts)로만. 같은 슬라이스 안은 상대경로를 쓴다.

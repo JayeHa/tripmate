@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "cn";
 import { Check } from "lucide-react";
 import { cloneElement, useState } from "react";
 
+import { cn } from "@/shared/lib/utils";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 /** 시트 한 줄 — FilterSelect 의 옵션과 같은 모양(서로 가져오지 않게 따로 둔다) */

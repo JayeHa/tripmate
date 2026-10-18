@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "cn";
 import { Check, CircleSlash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { cn } from "@/shared/lib/utils";
 import { FILTER_ALL, FilterSelect } from "@/shared/ui/filter-select";
 import { SearchField } from "@/shared/ui/search-field";
 

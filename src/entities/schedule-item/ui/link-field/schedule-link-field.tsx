@@ -1,10 +1,10 @@
 "use client";
 
-import { cn } from "cn";
 import { CalendarDays, ChevronDown, X } from "lucide-react";
 import { useState } from "react";
 
 import { useOpenCount } from "@/shared/lib/use-dialog-state";
+import { cn } from "@/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 import { findLinkPick, type LinkPickGroup } from "../../lib/link-pick";
