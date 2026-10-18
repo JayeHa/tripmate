@@ -27,6 +27,8 @@ export const queryKeys = {
   checklistTargets: (tripId: string) => ["trips", tripId, "checklist-targets"] as const,
   /** 노트 · 바우처. 파일 읽기 주소는 그 아래 "urls" */
   vouchers: (tripId: string) => ["trips", tripId, "vouchers"] as const,
+  /** 노트 · 준비물 · 쇼핑 — 그룹과 항목(두 종류 함께) */
+  packLists: (tripId: string) => ["trips", tripId, "pack-lists"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
