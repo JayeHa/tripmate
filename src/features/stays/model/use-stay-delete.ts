@@ -11,6 +11,7 @@ import {
 import { fetchPaymentReceiptKeys, removeReceiptFiles, useExpenses } from "@/entities/expense";
 import { useAlternatives } from "@/entities/schedule-item";
 import { deleteStay, linkedCardCount, useInvalidateStays } from "@/entities/stay";
+import { useVouchers, voucherCountFor } from "@/entities/voucher";
 
 import { stayCardRefs } from "../lib/stay-delete";
 
@@ -47,7 +48,7 @@ async function deleteStayWithReceipts(
  * 남기면 카드는 일반 장소 카드가 된다. 결제가 있으면 확인창에 가계부 기록도 함께 지워진다고 알린다.
  * 체크리스트는 숙소에 연결한 항목(`checklist.stay`)과, 숙소에는 없고 연결 카드에만 직접 붙은 항목(`checklist.cards` —
  * 「지우기」 일 때만 풀린다. 「숙소로 등록」 한 카드에 등록 전에 붙인 것)을 따로 센다. 완료 포함.
- * 카드를 지우면 그 대체 장소도 함께 지워지므로(cascade) 대체 장소에 붙은 항목도 카드 쪽에 넣는다
+ * 카드를 지우면 그 대체 장소도 함께 지워지므로(cascade) 대체 장소에 붙은 항목도 카드 쪽에 넣는다. 바우처도 같은 기준으로 센다
  */
 export function useStayDelete({ tripId, stayId, items, onDeleted }: StayDeleteOptions) {
   const [open, setOpen] = useState(false);
@@ -58,6 +59,8 @@ export function useStayDelete({ tripId, stayId, items, onDeleted }: StayDeleteOp
   const { data: alternatives = [] } = useAlternatives(tripId);
   const cardRefs = stayCardRefs(items, alternatives, stayId);
   const stayCount = checklistCountFor(index, [stayRef]);
+  const { data: vouchers = [] } = useVouchers(tripId);
+  const stayVouchers = voucherCountFor(vouchers, [stayRef]);
   const remove = useMutation({
     mutationFn: (deleteCards: boolean) => deleteStayWithReceipts(tripId, stayId, deleteCards),
     onSuccess: invalidate,
@@ -70,6 +73,8 @@ export function useStayDelete({ tripId, stayId, items, onDeleted }: StayDeleteOp
       stay: stayCount,
       cards: checklistCountFor(index, [stayRef, ...cardRefs]) - stayCount,
     },
+    // 바우처는 대상이 하나라 숙소 · 카드가 겹치지 않는다
+    vouchers: { stay: stayVouchers, cards: voucherCountFor(vouchers, cardRefs) },
     request: () => setOpen(true),
     cancel: () => setOpen(false),
     /** deleteCards — 「지우기」 true · 「남기기」 false */

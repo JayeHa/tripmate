@@ -6,6 +6,8 @@ import { ExpenseDialog } from "@/features/expense/form";
 import { FlightsDialog } from "@/features/flights";
 
 import type { FlightsOverlayState } from "../model/use-flights-overlay";
+import type { ScheduleVouchers } from "../model/use-schedule-vouchers";
+import { FlightVouchers } from "./schedule-vouchers";
 
 type FlightsOverlayProps = {
   tripId: string;
@@ -15,6 +17,8 @@ type FlightsOverlayProps = {
   onToast: (text: string) => void;
   /** 항공편 상세의 메모 — 항공편 창을 닫고 메모 작성 창을 연다 */
   onMemo: (cardId: string, memo: Memo | null) => void;
+  /** 상세의 바우처 칸 · 뷰어 */
+  vouchers: ScheduleVouchers;
 };
 
 /** 항공편 창과, 그 위에 겹쳐 여는 비용 입력 창(결제 칸 · 연결된 비용) */
@@ -25,6 +29,7 @@ export function FlightsOverlay({
   flights,
   onToast,
   onMemo,
+  vouchers,
 }: FlightsOverlayProps) {
   return (
     <>
@@ -38,6 +43,15 @@ export function FlightsOverlay({
         onToast={onToast}
         onMemo={onMemo}
         onExpense={flights.openExpense}
+        renderVouchers={(flightId, cardId) => (
+          <FlightVouchers
+            tripId={tripId}
+            sv={vouchers}
+            onToast={onToast}
+            flightId={flightId}
+            cardId={cardId}
+          />
+        )}
       />
       <ExpenseDialog
         tripId={tripId}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import type { Stay, StaySaveResult } from "@/entities/stay";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -38,6 +38,8 @@ type StaysDialogProps = {
   /** 결제 칸(상세 · 수정 · 새 숙소 초안) — 받는 쪽이 비용 입력 창을 이 창 위에 띄운다 */
   onPayment: (req: StayPaymentRequest) => void;
   onToast?: (text: string) => void;
+  /** 상세의 바우처 칸 — 뷰어 · 바로 올리기는 바우처 기능이라 화면이 그린다. 없으면 칸이 없다 */
+  renderVouchers?: (stayId: string) => ReactNode;
 };
 
 /**
@@ -75,6 +77,7 @@ function StaysBody({
   onPickLocation,
   onPayment,
   onToast,
+  renderVouchers,
   onClose,
   onLockChange,
 }: StaysBodyProps) {
@@ -115,6 +118,7 @@ function StaysBody({
           flow={flow}
           onPayment={onPayment}
           onToast={onToast}
+          vouchers={renderVouchers?.(current.id)}
         />
       )}
       {step.kind === "form" && (
@@ -145,10 +149,11 @@ type DetailScreenProps = {
   flow: StaysFlow;
   onPayment: (req: StayPaymentRequest) => void;
   onToast?: (text: string) => void;
+  vouchers: ReactNode;
 };
 
 /** 상세 — 머리(← · 「숙소 정보」 · 수정) + 내용 */
-function DetailScreen({ stay, tripId, flow, onPayment, onToast }: DetailScreenProps) {
+function DetailScreen({ stay, tripId, flow, onPayment, onToast, vouchers }: DetailScreenProps) {
   return (
     <>
       <ScreenHeader
@@ -161,6 +166,7 @@ function DetailScreen({ stay, tripId, flow, onPayment, onToast }: DetailScreenPr
         stay={stay}
         onPayment={onPayment}
         onToast={(text) => onToast?.(text)}
+        vouchers={vouchers}
       />
     </>
   );

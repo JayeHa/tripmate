@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { type ChecklistTargetRef, LinkedChecklist, useLinkedChecklist } from "@/entities/checklist";
 import { PAYMENT_OWNER, PaymentField, PayOverdueBanner } from "@/entities/expense";
 import type { Flight } from "@/entities/flight";
@@ -25,11 +27,13 @@ type FlightDetailScreenProps = {
   onMemo?: (cardId: string, memo: Memo | null) => void;
   /** 체크리스트를 완료했다 · 실패했다 — 토스트는 화면이 그린다 */
   onToast?: (text: string) => void;
+  /** 바우처 칸(화면이 그린 것) — 연결된 비용 아래, 체크리스트 위 */
+  vouchers?: ReactNode;
 };
 
 /**
  * 상세 — 머리(← · 「항공편 정보」 · 편집) + 내용. 결제 예정일이 지났으면 표 위에 안내, 표 아래 결제 칸.
- * 일정 카드가 있으면 그 카드에 연결된 비용 칸, 이 항공편(과 카드)에 연결된 끝나지 않은 체크리스트 칸, 카드가 있으면 메모 칸
+ * 일정 카드가 있으면 그 카드에 연결된 비용 칸, 바우처 칸(화면이 넣는다), 이 항공편(과 카드)에 연결된 끝나지 않은 체크리스트 칸, 카드가 있으면 메모 칸
  */
 export function FlightDetailScreen({
   tripId,
@@ -41,6 +45,7 @@ export function FlightDetailScreen({
   onExpense,
   onMemo,
   onToast,
+  vouchers,
 }: FlightDetailScreenProps) {
   const pay = useFlightPayment(tripId, flight.id);
   const checklist = useLinkedChecklist(tripId, checklistRefs(flight.id, cardId), (text) =>
@@ -74,6 +79,7 @@ export function FlightDetailScreen({
             onOpen={(expenseId) => onExpense({ kind: "linked", expenseId })}
           />
         )}
+        {vouchers}
         <LinkedChecklist tripId={tripId} items={checklist.items} onComplete={checklist.complete} />
         {cardId && onMemo && (
           <FlightMemos tripId={tripId} cardId={cardId} onMemo={(memo) => onMemo(cardId, memo)} />

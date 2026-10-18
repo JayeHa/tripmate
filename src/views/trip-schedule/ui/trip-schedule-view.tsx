@@ -175,6 +175,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             items={items}
             stays={stays}
             onToast={overlays.showToast}
+            vouchers={vouchers}
           />
           <FlightsOverlay
             tripId={tripId}
@@ -183,6 +184,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
             flights={flights}
             onToast={overlays.showToast}
             onMemo={openFlightMemo}
+            vouchers={vouchers}
           />
         </>
       )}

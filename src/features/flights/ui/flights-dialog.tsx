@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { directionLabel, type FlightSaveResult } from "@/entities/flight";
 import type { Memo } from "@/entities/schedule-item";
@@ -32,6 +32,8 @@ type FlightsDialogProps = {
   onMemo?: (cardId: string, memo: Memo | null) => void;
   /** 결제 칸 · 연결된 비용 — 비용 입력 창을 연다(화면이 그린다) */
   onExpense: (req: FlightExpenseRequest) => void;
+  /** 상세의 바우처 칸 — 뷰어 · 바로 올리기는 바우처 기능이라 화면이 그린다. 없으면 칸이 없다 */
+  renderVouchers?: (flightId: string, cardId: string | null) => ReactNode;
 };
 
 /**
@@ -72,6 +74,7 @@ function FlightsBody({
   onToast,
   onMemo,
   onExpense,
+  renderVouchers,
   onClose,
   onLockChange,
 }: FlightsBodyProps) {
@@ -119,6 +122,7 @@ function FlightsBody({
           onMemo={onMemo}
           onExpense={onExpense}
           onToast={onToast}
+          vouchers={renderVouchers?.(current.id, cardOf(current.id))}
         />
       )}
       {step.kind === "form" && (
