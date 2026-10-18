@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { openCount, useChecklist } from "@/entities/checklist";
+import { packBoard, packCountText, usePackLists } from "@/entities/pack";
 import { useVouchers, type Voucher } from "@/entities/voucher";
 import { useChecklistDetail } from "@/features/checklist";
 import type { ToastMessage } from "@/shared/ui/toast";
@@ -21,6 +22,7 @@ export function useNotes(tripId: string) {
   const tab = parseNoteTab(useSearchParams().get("tab"));
   const { data: checklist } = useChecklist(tripId);
   const { data: vouchers } = useVouchers(tripId);
+  const { data: packLists } = usePackLists(tripId);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const checklistDetail = useChecklistDetail();
   // 열린 바우처 폼 — 고치는 바우처는 연 때의 것을 쥔다(그사이 지워져도 새 바우처로 바뀌지 않게)
@@ -34,7 +36,7 @@ export function useNotes(tripId: string) {
     counts: {
       checklist: checklist ? String(openCount(checklist)) : null,
       voucher: vouchers ? String(vouchers.length) : null,
-      pack: null,
+      pack: packLists ? packCountText(packBoard(packLists, "pack")) : null,
       shop: null,
     } satisfies Record<NoteTab, string | null>,
     checklistDetail,
