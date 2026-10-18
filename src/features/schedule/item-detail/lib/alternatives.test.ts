@@ -95,6 +95,7 @@ describe("hasOwnRecord", () => {
     expect(hasOwnRecord(item("a", { links: [{ title: "", url: "https://a" }] }), 0)).toBe(true);
     expect(hasOwnRecord(item("a"), 0, 2)).toBe(true);
     expect(hasOwnRecord(item("a"), 0, 0, 1)).toBe(true);
+    expect(hasOwnRecord(item("a"), 0, 0, 0, 1)).toBe(true);
   });
 });
 

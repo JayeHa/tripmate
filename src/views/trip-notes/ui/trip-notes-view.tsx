@@ -1,14 +1,12 @@
 "use client";
 
-import { VoucherFormDialog } from "@/features/voucher";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 import { Toast } from "@/shared/ui/toast";
+import { TripVoucherForm, TripVoucherViewer } from "@/widgets/trip-voucher";
 
 import { useNotes } from "../model/use-notes";
 import { MobileNotes } from "./mobile-notes";
-import { NotesVoucherViewer } from "./notes-voucher-viewer";
 import { PcNotes } from "./pc-notes";
-import { VoucherTargetField } from "./voucher-target-field";
 
 type TripNotesViewProps = { tripId: string };
 
@@ -28,16 +26,20 @@ export function TripNotesView({ tripId }: TripNotesViewProps) {
       ) : (
         <MobileNotes tripId={tripId} notes={notes} />
       )}
-      <NotesVoucherViewer tripId={tripId} notes={notes} />
-      <VoucherFormDialog
+      <TripVoucherViewer
+        tripId={tripId}
+        voucherId={notes.voucherViewer.open ? notes.voucherDetail.id : null}
+        onClose={notes.voucherViewer.close}
+        onEdit={notes.voucherForm.openEdit}
+        onDeleted={notes.voucherDetail.close}
+        onToast={notes.showToast}
+      />
+      <TripVoucherForm
         tripId={tripId}
         open={notes.voucherForm.open}
         voucher={notes.voucherForm.voucher}
         onClose={notes.voucherForm.close}
         onToast={notes.showToast}
-        renderTarget={(value, onChange) => (
-          <VoucherTargetField tripId={tripId} value={value} onChange={onChange} />
-        )}
       />
       <Toast message={notes.toast} onDone={notes.clearToast} />
     </>

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { downloadName, numberLabel, sortNumbers, viewerKeys, viewerSubText } from "./voucher-view";
+import {
+  downloadName,
+  linkedSubText,
+  numberLabel,
+  sortNumbers,
+  viewerKeys,
+  viewerSubText,
+} from "./voucher-view";
 
 describe("downloadName", () => {
   it("제목 + 원본 확장자, 쓸 수 없는 글자는 「_」", () => {
@@ -55,5 +62,17 @@ describe("뷰어", () => {
       "모두 · 10.20 · 치이카와 파크 · 2 / 3",
     );
     expect(viewerSubText("정원", null, 0, 1)).toBe("정원 · 기타");
+  });
+});
+
+describe("linkedSubText", () => {
+  it("종류 · 첫 번호, 원본이 없으면 번호만, 둘 다 없으면 빈 글", () => {
+    const numbers = [{ label: "예약번호", owner: "", value: "K7" }];
+    expect(linkedSubText({ file_key: "k", file_mime: "application/pdf", numbers })).toBe(
+      "PDF · 예약번호 K7",
+    );
+    expect(linkedSubText({ file_key: "k", file_mime: "image/png", numbers: [] })).toBe("이미지");
+    expect(linkedSubText({ file_key: null, file_mime: null, numbers })).toBe("예약번호 K7");
+    expect(linkedSubText({ file_key: null, file_mime: null, numbers: [] })).toBe("");
   });
 });

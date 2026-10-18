@@ -5,20 +5,10 @@ import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Stay } from "@/entities/stay";
 import type { Voucher } from "@/entities/voucher";
 import type { TargetSources } from "@/features/checklist";
-import { dayParts } from "@/shared/lib/days";
 import { FILTER_ALL } from "@/shared/ui/filter-select";
+import { voucherDay } from "@/widgets/trip-voucher";
 
-import {
-  dayOptions,
-  dayText,
-  groupVouchers,
-  matchesFilters,
-  NO_DAY,
-  ownersText,
-  targetDay,
-  voucherDay,
-  voucherSubText,
-} from "./vouchers";
+import { dayOptions, groupVouchers, matchesFilters, NO_DAY, voucherSubText } from "./vouchers";
 
 const SRC: TargetSources = {
   startDate: "2027-10-31",
@@ -44,33 +34,6 @@ function v(id: string, patch: Partial<Voucher> = {}): Voucher {
     ...patch,
   } as Voucher;
 }
-
-describe("voucherDay", () => {
-  it("일정 카드 · 대체 장소는 그 날, 항공편은 탑승일, 숙소는 체크인 날, 연결이 없으면 사용일", () => {
-    expect(voucherDay(v("x", { schedule_item_id: "c1" }), SRC, 3)).toBe(2);
-    expect(voucherDay(v("x", { schedule_item_id: "a1" }), SRC, 3)).toBe(1);
-    expect(voucherDay(v("x", { flight_id: "f1" }), SRC, 3)).toBe(1);
-    expect(voucherDay(v("x", { stay_id: "s1" }), SRC, 3)).toBe(0);
-    expect(voucherDay(v("x", { use_date: "2027-11-02" }), SRC, 3)).toBe(2);
-  });
-
-  it("기간 밖 · 못 찾은 대상 · 날짜 없음은 null", () => {
-    expect(voucherDay(v("x", { flight_id: "f2" }), SRC, 3)).toBeNull();
-    expect(voucherDay(v("x", { schedule_item_id: "gone" }), SRC, 3)).toBeNull();
-    expect(voucherDay(v("x"), SRC, 3)).toBeNull();
-  });
-});
-
-describe("dayText", () => {
-  it("연결한 대상의 날짜 글 — 「day N · M.D」, 없으면 「날짜 없음」", () => {
-    expect(dayText(SRC.startDate, targetDay({ kind: "stay", id: "s1" }, SRC, 3))).toBe(
-      `day 1 · ${dayParts(SRC.startDate, 0).date}`,
-    );
-    expect(dayText(SRC.startDate, targetDay({ kind: "flight", id: "f2" }, SRC, 3))).toBe(
-      "날짜 없음",
-    );
-  });
-});
 
 describe("필터 · 묶음", () => {
   const list = [
@@ -113,13 +76,6 @@ describe("줄 글", () => {
     );
     expect(voucherSubText(v("x", { numbers }), null)).toBe("K7QX2M");
     expect(voucherSubText(v("x"), null)).toBe("연결된 일정 없음");
-  });
-
-  it("주인은 이름을 잇고, 비면 모두, 아무도 못 찾으면 알 수 없음", () => {
-    const nameOf = (id: string) => ({ u1: "정원", u2: "동규" })[id] ?? null;
-    expect(ownersText(["u1", "u2"], nameOf)).toBe("정원, 동규");
-    expect(ownersText([], nameOf)).toBe("모두");
-    expect(ownersText(["gone"], nameOf)).toBe("알 수 없음");
   });
 
   it("날짜 옵션은 day 마다, 맨 끝 날짜 없음", () => {

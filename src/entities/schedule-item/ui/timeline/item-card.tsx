@@ -1,4 +1,4 @@
-import { CircleAlert, ListTodo } from "lucide-react";
+import { CircleAlert, ListTodo, Ticket } from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/shared/lib/utils";
@@ -26,6 +26,8 @@ type ItemCardProps = {
   authorOf: (authorId: string | null) => MemoAuthor | null;
   /** 끝나지 않은 체크리스트 수와 노트 체크리스트 주소 — 수가 0 이거나 없으면 칩을 그리지 않는다 */
   checklist?: { count: number; href: string };
+  /** 이 카드의 바우처 수와 누르면 할 일(하나면 뷰어, 여럿이면 상세) — 수가 0 이거나 없으면 칩을 그리지 않는다 */
+  vouchers?: { count: number; onOpen: () => void };
 };
 
 /**
@@ -35,7 +37,15 @@ type ItemCardProps = {
  * 식사(food)는 배경 대신 오른쪽 위 64px 사진 칸(지금은 🍽️ 자리표시)을 두고 제목 · 설명이 그 자리를 비운다.
  * 숙소에 연결된 카드는 같은 자리에 🛏️ — 「자세히」(64 + 아래 체크인 | 체크아웃 줄) · 「간략히」(40 · 낮은 카드 · 설명 대신 「숙박 2/3박 …」)
  */
-export function ItemCard({ row, open, onToggle, onOpen, authorOf, checklist }: ItemCardProps) {
+export function ItemCard({
+  row,
+  open,
+  onToggle,
+  onOpen,
+  authorOf,
+  checklist,
+  vouchers,
+}: ItemCardProps) {
   const look = lookOf(row);
   return (
     <div
@@ -70,15 +80,7 @@ export function ItemCard({ row, open, onToggle, onOpen, authorOf, checklist }: I
       </button>
       {look.meta && <p className={cn("text-sm text-ink-400", look.pad)}>{look.meta}</p>}
       {row.stay?.mode === "in" && <StayTimes inText={row.stay.inText} outText={row.stay.outText} />}
-      {checklist && checklist.count > 0 && (
-        <Link
-          href={checklist.href}
-          className="relative inline-flex h-6 items-center gap-1 self-start rounded-full bg-checklist-due-bg px-2 text-xs font-bold text-checklist-due"
-        >
-          <ListTodo className="size-3.25" aria-hidden="true" />
-          체크리스트 {checklist.count}
-        </Link>
-      )}
+      <NoteChips checklist={checklist} vouchers={vouchers} />
       <AlternativesLine alternatives={row.alternatives} />
       <LinkChips links={row.links} />
       {/* 그날 휴무는 메모를 접어도 보이게 칩으로 — 펼친 메모 칸의 「운영 …」 은 영업하는 날만 */}
@@ -147,6 +149,38 @@ function StayTimes({ inText, outText }: StayTimesProps) {
         <span className="text-xs text-ink-350">체크아웃</span>
         <span className="text-[15px] font-extrabold text-ink-900">{outText}</span>
       </span>
+    </div>
+  );
+}
+
+type NoteChipsProps = Pick<ItemCardProps, "checklist" | "vouchers">;
+
+/** 노트 칩 줄(24 · r12 · 12/700) — 「체크리스트 N」(주황, 노트로) · 「바우처 N」(파랑). 둘 다 없으면 그리지 않는다 */
+function NoteChips({ checklist, vouchers }: NoteChipsProps) {
+  const showChecklist = !!checklist && checklist.count > 0;
+  const showVouchers = !!vouchers && vouchers.count > 0;
+  if (!showChecklist && !showVouchers) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {showChecklist && (
+        <Link
+          href={checklist.href}
+          className="relative inline-flex h-6 items-center gap-1 rounded-full bg-checklist-due-bg px-2 text-xs font-bold text-checklist-due"
+        >
+          <ListTodo className="size-3.25" aria-hidden="true" />
+          체크리스트 {checklist.count}
+        </Link>
+      )}
+      {showVouchers && (
+        <button
+          type="button"
+          onClick={vouchers.onOpen}
+          className="relative inline-flex h-6 items-center gap-1 rounded-full bg-surface-selected px-2 text-xs font-bold text-brand-text"
+        >
+          <Ticket className="size-3.25" strokeWidth={2.2} aria-hidden="true" />
+          바우처 {vouchers.count}
+        </button>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useUser } from "@/entities/session";
 import { dayOfWeek } from "@/shared/lib/days";
 
 import type { PlanEditState } from "../model/use-plan-edit";
+import type { DetailVoucherSlot } from "../model/voucher-slot";
 import { ChecklistBlock } from "./checklist-block";
 import { type AlternativesSlot, DetailExtras } from "./detail-extras";
 import { ExpenseBlock } from "./expense-block";
@@ -23,6 +24,8 @@ type DetailContentProps = {
   onExpense: (expenseId: string | null) => void;
   /** 체크리스트 칸에서 완료했을 때 · 실패했을 때 토스트 */
   onToast: (message: string) => void;
+  /** 바우처 칸. 대체 장소의 상세에서는 null(시안에 없다) */
+  vouchers: DetailVoucherSlot | null;
   /** 대체 장소 칸. 대체 장소의 상세에서는 null(대체 장소의 대체 장소는 없다) */
   alternatives: AlternativesSlot | null;
   /** 「장소 정보 수정」 — 장소와 그 도시(위치를 바꿀 때 검색 범위)를 넘긴다 */
@@ -34,9 +37,9 @@ type DetailContentProps = {
 };
 
 /**
- * 일정 상세 본문 — 장소 정보(place 만) → 숙소 예약(숙소 연결 카드만) → 이번 일정 → 비용 → 체크리스트 → 메모 → 대체 장소(place 만, 대체 장소의 상세에서는 없다).
- * 비용 · 메모 · 대체 장소 칸은 값이 있을 때만 보이고, 빈 칸은 맨 아래 「추가」 줄의 칩으로 모은다(다 차면 줄이 없다).
- * 체크리스트는 노트에서만 더해 「추가」 칩이 없다. 바우처는 그 단계에서 같은 규칙으로 들어온다. 모바일 · PC 가 같은 본문을 쓴다
+ * 일정 상세 본문 — 장소 정보(place 만) → 숙소 예약(숙소 연결 카드만) → 이번 일정 → 비용 → 바우처 → 체크리스트 → 메모 → 대체 장소(place 만, 대체 장소의 상세에서는 없다).
+ * 비용 · 바우처 · 메모 · 대체 장소 칸은 값이 있을 때만 보이고, 빈 칸은 맨 아래 「추가」 줄의 칩으로 모은다(다 차면 줄이 없다).
+ * 체크리스트는 노트에서만 더해 「추가」 칩이 없다. 모바일 · PC 가 같은 본문을 쓴다
  */
 export function DetailContent({
   tripId,
@@ -46,6 +49,7 @@ export function DetailContent({
   onMemo,
   onExpense,
   onToast,
+  vouchers,
   alternatives,
   onEditPlace,
   onEditStay,
@@ -75,6 +79,7 @@ export function DetailContent({
       <PlanSection item={item} edit={plan} />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />
       <ExpenseBlock tripId={tripId} item={item} onOpen={onExpense} />
+      <VoucherBlock slot={vouchers} item={item} />
       <ChecklistBlock tripId={tripId} item={item} onToast={onToast} />
       <MemoBlock tripId={tripId} item={item} onAdd={() => onMemo(null)} onEdit={onMemo} />
       <DetailExtras
@@ -84,9 +89,17 @@ export function DetailContent({
         city={city}
         onMemo={onMemo}
         onExpense={() => onExpense(null)}
+        vouchers={vouchers}
       />
     </>
   );
+}
+
+type VoucherBlockProps = { slot: DetailVoucherSlot | null; item: ScheduleItem };
+
+/** 바우처 칸 — 화면이 넣어 준 것을 그린다. 대체 장소의 상세에서는 없다 */
+function VoucherBlock({ slot, item }: VoucherBlockProps) {
+  return slot ? slot.renderBlock(item) : null;
 }
 
 /** 「숙소로 등록」 — 숙소 카테고리인데 숙소에 연결되지 않은 장소 일정만. 아니면 null(안내 숨김) */

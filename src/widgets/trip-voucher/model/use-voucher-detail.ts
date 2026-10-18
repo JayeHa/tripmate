@@ -14,8 +14,8 @@ import { targetLabel, type TargetSources, useTargetSources } from "@/features/ch
 import { numberLabel, sortNumbers } from "@/features/voucher";
 import { dayCount } from "@/shared/lib/days";
 
+import { ownersText, voucherDay } from "../lib/voucher-day";
 import { fileInfo, voucherDateText } from "../lib/voucher-detail";
-import { ownersText, voucherDay } from "../lib/vouchers";
 
 /**
  * 고른 바우처의 상세 — 목록 캐시에서 id 로 찾아 일행이 고친 것도 바로 보인다. 그사이 지워졌으면 voucher 가 null.

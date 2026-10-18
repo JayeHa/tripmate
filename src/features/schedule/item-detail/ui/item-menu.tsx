@@ -4,6 +4,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Ellipsis, Trash2 } from "lucid
 import { useState } from "react";
 
 import { checklistUnlinkNote } from "@/entities/checklist";
+import { voucherUnlinkNote } from "@/entities/voucher";
 import { dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -40,6 +41,8 @@ type ItemMenuProps = {
   linkedExpenses: LinkedExpenses;
   /** 이 일정과 그 대체 장소에 연결된 체크리스트 항목 수 — 연결만 풀리고 노트에 남는다고 알린다 */
   checklistCount: number;
+  /** 이 일정과 그 대체 장소에 직접 연결된 바우처 수 — 연결만 풀리고 노트에 남는다고 알린다 */
+  voucherCount: number;
   startDate: string;
   totalDays: number;
 };
@@ -54,10 +57,12 @@ export function ItemMenu({
   alternativeCount,
   linkedExpenses,
   checklistCount,
+  voucherCount,
   startDate,
   totalDays,
 }: ItemMenuProps) {
   const checklistNote = checklistUnlinkNote(checklistCount);
+  const voucherNote = voucherUnlinkNote(voucherCount);
   const expenseNote = linkedExpenseNote(linkedExpenses);
   const [open, setOpen] = useState(false);
   const [pickingDay, setPickingDay] = useState(false);
@@ -124,6 +129,7 @@ export function ItemMenu({
                 : "이 일정의 메모 · 링크가 함께 지워져요."}{" "}
               장소는 저장한 장소에 남아요.
               {checklistNote && ` ${checklistNote}`}
+              {voucherNote && ` ${voucherNote}`}
               {expenseNote && ` ${expenseNote}`}
             </AlertDialogDescription>
           </AlertDialogHeader>

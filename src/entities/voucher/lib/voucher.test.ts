@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { Voucher } from "../model/types";
 import {
+  cardVouchers,
+  cardVoucherTarget,
+  linkedVoucherCount,
   ownedBy,
   parsePages,
   targetColumns,
@@ -9,6 +12,7 @@ import {
   voucherGroup,
   voucherNumbers,
   voucherTarget,
+  voucherUnlinkNote,
 } from "./voucher";
 import { titleFromFileName, voucherKeysInTrip } from "./voucher-rules";
 
@@ -79,5 +83,44 @@ describe("파일 키 · 주인", () => {
   it("파일 이름에서 확장자를 뺀 것이 제목", () => {
     expect(titleFromFileName("제주항공 탑승권.pdf")).toBe("제주항공 탑승권");
     expect(titleFromFileName("ticket.v2.png")).toBe("ticket.v2");
+  });
+});
+
+describe("일정 카드의 바우처", () => {
+  const list = [
+    { id: "a", ...linked({ schedule_item_id: "c1" }) },
+    { id: "b", ...linked({ stay_id: "s1" }) },
+    { id: "c", ...linked({ schedule_item_id: "c2" }) },
+    { id: "d", ...linked({}) },
+    { id: "e", ...linked({ flight_id: "f1" }) },
+  ];
+
+  it("그 카드에 붙은 것, 숙소 · 항공편 카드면 그 숙소 · 항공편에 붙은 것까지", () => {
+    expect(cardVouchers(list, { id: "c1", stay_id: null }).map((v) => v.id)).toEqual(["a"]);
+    expect(cardVouchers(list, { id: "c1", stay_id: "s1" }).map((v) => v.id)).toEqual(["a", "b"]);
+    expect(
+      cardVouchers(list, { id: "c9", stay_id: null, flight_id: "f1" }).map((v) => v.id),
+    ).toEqual(["e"]);
+  });
+
+  it("바로 올린 바우처의 연결 — 숙소 카드는 숙소, 그 밖은 그 일정", () => {
+    expect(cardVoucherTarget({ id: "c1", stay_id: "s1" })).toEqual({ kind: "stay", id: "s1" });
+    expect(cardVoucherTarget({ id: "c1", stay_id: null })).toEqual({
+      kind: "schedule_item",
+      id: "c1",
+    });
+  });
+});
+
+describe("일정 지우기 안내", () => {
+  it("카드 · 대체 장소에 직접 붙은 바우처만 센다", () => {
+    const list = [
+      linked({ schedule_item_id: "c1" }),
+      linked({ schedule_item_id: "a1" }),
+      linked({ stay_id: "s1" }),
+    ];
+    expect(linkedVoucherCount(list, ["c1", "a1"])).toBe(2);
+    expect(voucherUnlinkNote(2)).toBe("연결된 바우처 2개는 연결만 풀리고 노트에 남아요.");
+    expect(voucherUnlinkNote(0)).toBeNull();
   });
 });

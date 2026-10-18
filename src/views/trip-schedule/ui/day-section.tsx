@@ -27,6 +27,7 @@ type DaySectionProps = {
   authorOf: (authorId: string | null) => MemoAuthor | null;
   /** 카드의 「체크리스트 N」 칩 */
   checklistOf?: (row: TimelineRow) => { count: number; href: string };
+  voucherOf?: (row: TimelineRow) => { count: number; onOpen: () => void };
   /** 그날로 편집을 여는 동작. 일정 · 여행을 읽는 동안은 없다 — 「편집」 을 그리지 않는다 */
   onStartEdit?: () => void;
 };
@@ -48,6 +49,7 @@ export function DaySection({
   onAddDayMemo,
   authorOf,
   checklistOf,
+  voucherOf,
   onStartEdit,
 }: DaySectionProps) {
   const memos = useOpenMemos(rows);
@@ -75,6 +77,7 @@ export function DaySection({
         focusId={focusId}
         authorOf={authorOf}
         checklistOf={checklistOf}
+        voucherOf={voucherOf}
       />
       <div className="flex gap-2.5 px-5 pt-1 pb-8">
         <Button variant="outline" size="form" className="flex-1" onClick={() => onAddPlace(day)}>

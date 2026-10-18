@@ -6,6 +6,7 @@ import { linkedChecklistCount, useChecklistIndex } from "@/entities/checklist";
 import type { City } from "@/entities/city";
 import { useExpenses } from "@/entities/expense";
 import type { Memo, Place, ScheduleItem, TimelineRow } from "@/entities/schedule-item";
+import { linkedVoucherCount, useVouchers } from "@/entities/voucher";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
@@ -13,6 +14,7 @@ import { linkedExpensesOf } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
 import { usePlanEdit } from "../model/use-plan-edit";
+import type { DetailVoucherSlot } from "../model/voucher-slot";
 import { AlternativeDetail } from "./alternative-detail";
 import { DetailContent } from "./detail-content";
 import { DetailHeader } from "./detail-header";
@@ -49,6 +51,8 @@ type ItemDetailDialogProps = {
   onEditStay: (stayId: string) => void;
   /** 숙소 탭에 없는 숙소 일정의 「숙소로 등록」 — 부른 쪽이 이 일정으로 채운 새 숙소 폼을 상세 위에 연다 */
   onRegisterStay: (item: ScheduleItem) => void;
+  /** 바우처 칸 · 「추가」 줄 칩 — 부른 쪽(바우처 기능을 아는 화면)이 그린다 */
+  vouchers: DetailVoucherSlot;
 };
 
 /**
@@ -116,6 +120,7 @@ function MainDetail({
   onExpense,
   onEditStay,
   onRegisterStay,
+  vouchers,
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
@@ -126,6 +131,8 @@ function MainDetail({
   const alternatives = useAlternativeActions(tripId, row.item, onSwapped);
   const { data: expenses = [] } = useExpenses(tripId);
   const checklist = useChecklistIndex(tripId);
+  const { data: allVouchers = [] } = useVouchers(tripId);
+  const itemIds = [row.item.id, ...row.alternatives.map((alt) => alt.id)];
   const locked = plan.locked || actions.locked || alternatives.locked;
   useReportLock(locked, onLockChange);
   const content = (
@@ -138,6 +145,7 @@ function MainDetail({
         onMemo={(memo) => onMemo(row, memo)}
         onExpense={(expenseId) => onExpense(row.item.id, expenseId)}
         onToast={onToast}
+        vouchers={vouchers}
         alternatives={{
           actions: alternatives,
           onAdd: (city) => onAddAlternative(row.item, city),
@@ -161,10 +169,8 @@ function MainDetail({
         row.item.id,
         ...row.alternatives.map((alt) => alt.id),
       )}
-      checklistCount={linkedChecklistCount(checklist, [
-        row.item.id,
-        ...row.alternatives.map((alt) => alt.id),
-      ])}
+      checklistCount={linkedChecklistCount(checklist, itemIds)}
+      voucherCount={linkedVoucherCount(allVouchers, itemIds)}
       locked={locked}
       onClose={onClose}
     />

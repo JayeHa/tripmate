@@ -6,6 +6,7 @@ import { useState } from "react";
 import { linkedChecklistCount, useChecklistIndex } from "@/entities/checklist";
 import { useExpenses } from "@/entities/expense";
 import { itemName, type ScheduleItem, useMemos } from "@/entities/schedule-item";
+import { linkedVoucherCount, useVouchers } from "@/entities/voucher";
 import { CircleAddButton } from "@/shared/ui/add-controls";
 
 import { hasOwnRecord, type LinkedExpenses, linkedExpensesOf } from "../lib/alternatives";
@@ -42,6 +43,7 @@ export function AlternativesBlock({
   const memoCount = (id: string) => memos.filter((m) => m.schedule_item_id === id).length;
   const { data: expenses = [] } = useExpenses(tripId);
   const checklist = useChecklistIndex(tripId);
+  const { data: vouchers = [] } = useVouchers(tripId);
   if (alternatives.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
@@ -57,6 +59,7 @@ export function AlternativesBlock({
           memoCount={memoCount(alt.id)}
           linkedExpenses={linkedExpensesOf(expenses, alt.id)}
           checklistCount={linkedChecklistCount(checklist, [alt.id])}
+          voucherCount={linkedVoucherCount(vouchers, [alt.id])}
           actions={actions}
           onOpen={() => onOpen(alt)}
         />
@@ -73,6 +76,8 @@ type AlternativeCardProps = {
   linkedExpenses: LinkedExpenses;
   /** 이 대체 장소에 직접 연결된 체크리스트 항목 수 — 빼면 연결이 풀리므로 묻는다 */
   checklistCount: number;
+  /** 이 대체 장소에 직접 연결된 바우처 수 — 빼면 연결이 풀리므로 묻는다 */
+  voucherCount: number;
   actions: AlternativeActions;
   onOpen: () => void;
 };
@@ -86,6 +91,7 @@ function AlternativeCard({
   memoCount,
   linkedExpenses,
   checklistCount,
+  voucherCount,
   actions,
   onOpen,
 }: AlternativeCardProps) {
@@ -120,7 +126,7 @@ function AlternativeCard({
         aria-label={`${itemName(alt)} 대체 장소에서 빼기`}
         disabled={actions.pending}
         onClick={() =>
-          hasOwnRecord(alt, memoCount, linkedExpenses.count, checklistCount)
+          hasOwnRecord(alt, memoCount, linkedExpenses.count, checklistCount, voucherCount)
             ? setConfirming(true)
             : actions.remove(alt)
         }
@@ -141,6 +147,7 @@ function AlternativeCard({
         onConfirm={() => actions.remove(alt)}
         expenses={linkedExpenses}
         checklistCount={checklistCount}
+        voucherCount={voucherCount}
       />
     </div>
   );
