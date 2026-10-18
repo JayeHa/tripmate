@@ -34,17 +34,25 @@ export function alternativeChoices(
 }
 
 /**
- * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크 · 연결된 비용 · 연결된 체크리스트)을 가졌는지 — 지울 때 한 번 더 묻는다
- * (바꾸기로 밀려난 원래 일정). 메모 · 비용 · 체크리스트는 따로 읽으므로 그 줄의 수를 받는다
+ * 대체 장소 줄이 자기 기록(예약 상태 · 메모 · 일정 링크 · 연결된 비용 · 연결된 체크리스트 · 연결된 바우처)을 가졌는지 — 지울 때 한 번 더 묻는다
+ * (바꾸기로 밀려난 원래 일정). 메모 · 비용 · 체크리스트 · 바우처는 따로 읽으므로 그 줄의 수를 받는다
  */
 export function hasOwnRecord(
   alt: ScheduleItem,
   memoCount: number,
   expenseCount = 0,
   checklistCount = 0,
+  voucherCount = 0,
 ): boolean {
   const links = Array.isArray(alt.links) ? alt.links.length : 0;
-  return !!alt.status || memoCount > 0 || links > 0 || expenseCount > 0 || checklistCount > 0;
+  return (
+    !!alt.status ||
+    memoCount > 0 ||
+    links > 0 ||
+    expenseCount > 0 ||
+    checklistCount > 0 ||
+    voucherCount > 0
+  );
 }
 
 /** 일정 줄에 연결된 비용 — 전체 수와 그중 합계에서 빠진 수 */

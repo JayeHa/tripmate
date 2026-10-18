@@ -1,4 +1,5 @@
 import { checklistUnlinkNote } from "@/entities/checklist";
+import { voucherUnlinkNote } from "@/entities/voucher";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,8 @@ type RemoveAlternativeDialogProps = {
   expenses: LinkedExpenses;
   /** 이 대체 장소에 직접 연결된 체크리스트 항목 수(완료 포함) — 있으면 연결만 풀린다고 알린다 */
   checklistCount: number;
+  /** 이 대체 장소에 직접 연결된 바우처 수 — 있으면 연결만 풀리고 노트에 남는다고 알린다 */
+  voucherCount: number;
 };
 
 /**
@@ -32,8 +35,10 @@ export function RemoveAlternativeDialog({
   onConfirm,
   expenses,
   checklistCount,
+  voucherCount,
 }: RemoveAlternativeDialogProps) {
   const checklistNote = checklistUnlinkNote(checklistCount);
+  const voucherNote = voucherUnlinkNote(voucherCount);
   const expenseNote = linkedExpenseNote(expenses);
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -43,6 +48,7 @@ export function RemoveAlternativeDialog({
           <AlertDialogDescription>
             이 장소에 적어 둔 예약 상태 · 메모 · 링크가 함께 지워져요.
             {checklistNote && ` ${checklistNote}`}
+            {voucherNote && ` ${voucherNote}`}
             {expenseNote && ` ${expenseNote}`}
           </AlertDialogDescription>
         </AlertDialogHeader>

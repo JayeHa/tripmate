@@ -13,6 +13,7 @@ import {
   type TimelineRow,
   useMemos,
 } from "@/entities/schedule-item";
+import { linkedVoucherCount, useVouchers } from "@/entities/voucher";
 import { dayOfWeek } from "@/shared/lib/days";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 
@@ -69,6 +70,7 @@ export function AlternativeDetail({
   const { data: memos = [] } = useMemos(tripId);
   const { data: expenses = [] } = useExpenses(tripId);
   const checklist = useChecklistIndex(tripId);
+  const { data: vouchers = [] } = useVouchers(tripId);
   useReportLock(locked, onLockChange);
   // 표시용 줄(아이콘 · 메모 줄 · 그날 운영시간). 대체 장소는 번호 · 이동이 없다
   const altRow = useMemo(
@@ -99,6 +101,7 @@ export function AlternativeDetail({
       memoCount={altRow.memos.length}
       linkedExpenses={linkedExpensesOf(expenses, alt.id)}
       checklistCount={linkedChecklistCount(checklist, [alt.id])}
+      voucherCount={linkedVoucherCount(vouchers, [alt.id])}
       actions={actions}
       locked={locked}
       onBack={onBack}
