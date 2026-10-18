@@ -1,5 +1,6 @@
-import { cn } from "cn";
 import { Plus, X } from "lucide-react";
+
+import { cn } from "@/shared/lib/utils";
 
 type FloatingAddFaceProps = { open: boolean };
 

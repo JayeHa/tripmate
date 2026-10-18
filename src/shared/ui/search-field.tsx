@@ -1,6 +1,7 @@
-import { cn } from "cn";
 import { Search, X } from "lucide-react";
 import type * as React from "react";
+
+import { cn } from "@/shared/lib/utils";
 
 /** 크기 — md 44 · r10 · 15px(P3 기본) · sm 36 · r8 · 13px(모달 안 작은 검색) */
 const SIZE = {

@@ -25,13 +25,15 @@ type StayDetailProps = {
   onPayment: (req: StayPaymentRequest) => void;
   /** 체크리스트를 완료했다 · 실패했다 — 토스트는 화면이 그린다 */
   onToast: (text: string) => void;
+  /** 바우처 칸(화면이 그린 것) — 결제 아래, 체크리스트 위 */
+  vouchers?: ReactNode;
 };
 
 /**
  * 숙소 상세 — (결제 예정일 지남 안내) · 제목(아이콘 이름) · 기간 · 예약 상태(「수정」 없이 바로 바꾼다) ·
- * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제 · 이 숙소에 연결된 끝나지 않은 체크리스트. 바우처 칸은 노트 단계에서 붙인다
+ * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제 · 바우처(화면이 넣는다) · 이 숙소에 연결된 끝나지 않은 체크리스트
  */
-export function StayDetail({ tripId, stay, onPayment, onToast }: StayDetailProps) {
+export function StayDetail({ tripId, stay, onPayment, onToast, vouchers }: StayDetailProps) {
   const status = useUpdateStayStatus(tripId);
   const checklist = useLinkedChecklist(tripId, [{ kind: "stay", id: stay.id }], onToast);
   const pay = useStayPayment(tripId, stay.id);
@@ -106,6 +108,7 @@ export function StayDetail({ tripId, stay, onPayment, onToast }: StayDetailProps
           onPayment({ kind: "saved", stayId: stay.id, name: p.name, expenseId: pay.expenseId })
         }
       />
+      {vouchers}
       <LinkedChecklist tripId={tripId} items={checklist.items} onComplete={checklist.complete} />
     </div>
   );

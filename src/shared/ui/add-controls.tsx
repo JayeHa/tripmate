@@ -1,6 +1,7 @@
-import { cn } from "cn";
 import { type LucideIcon, Plus } from "lucide-react";
 import type * as React from "react";
+
+import { cn } from "@/shared/lib/utils";
 
 type CircleAddButtonProps = {
   /** 읽기 프로그램용 이름(「메모 추가」) */

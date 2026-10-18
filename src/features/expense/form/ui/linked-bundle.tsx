@@ -1,4 +1,3 @@
-import { cn } from "cn";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 
@@ -6,6 +5,7 @@ import { EXPENSE_CATEGORY_LABEL, ExpenseCategoryTile } from "@/entities/expense"
 import { itemName, type ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import { ieyo } from "@/shared/lib/josa";
+import { cn } from "@/shared/lib/utils";
 
 import { bundleDateText } from "../lib/bundle-date";
 import type { ExpenseFormState } from "../model/use-expense-form";

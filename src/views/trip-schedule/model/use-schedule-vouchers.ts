@@ -24,8 +24,11 @@ export function useScheduleVouchers(tripId: string, openCard: (row: TimelineRow)
         onOpen: () => (list.length === 1 ? setViewerId(list[0].id) : openCard(row)),
       };
     },
-    /** 이 카드의 바우처(넣은 순서) */
-    ofCard: (card: { id: string; stay_id: string | null }) => cardVouchers(vouchers, card),
+    /** 이 카드의 바우처(넣은 순서) — 숙소 · 항공편 카드면 그 숙소 · 항공편 것까지 */
+    ofCard: (card: { id: string; stay_id: string | null; flight_id?: string | null }) =>
+      cardVouchers(vouchers, card),
+    /** 이 숙소의 바우처(숙소 상세) */
+    ofStay: (stayId: string) => vouchers.filter((v) => v.stay_id === stayId),
     viewerId,
     openViewer: (voucher: Voucher) => setViewerId(voucher.id),
     closeViewer: () => setViewerId(null),

@@ -107,6 +107,7 @@ export function FlightFormScreen({
         hasCard={hasCard}
         paid={del.paid}
         checklistCount={del.checklistCount}
+        voucherCount={del.voucherCount}
         onCancel={del.cancel}
         onConfirm={del.confirm}
       />

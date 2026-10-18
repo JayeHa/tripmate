@@ -1,5 +1,6 @@
-import { cn } from "cn";
 import type * as React from "react";
+
+import { cn } from "@/shared/lib/utils";
 
 /** 칩 크기 — md 34(P2 기본) · sm 30(보조 줄) · lg 36(P20 날짜 칩) */
 const SIZE = {

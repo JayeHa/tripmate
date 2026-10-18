@@ -6,7 +6,9 @@ import { ExpenseDialog } from "@/features/expense/form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { StaysDialog } from "@/features/stays";
 
+import type { ScheduleVouchers } from "../model/use-schedule-vouchers";
 import type { StaysOverlayState } from "../model/use-stays-overlay";
+import { StayVouchers } from "./schedule-vouchers";
 
 type StaysOverlayProps = {
   tripId: string;
@@ -14,10 +16,12 @@ type StaysOverlayProps = {
   items: readonly ScheduleItem[];
   stays: StaysOverlayState;
   onToast: (text: string) => void;
+  /** 상세의 바우처 칸 · 뷰어 */
+  vouchers: ScheduleVouchers;
 };
 
 /** 숙소 창과, 그 위에 겹쳐 여는 주소 칸의 「위치만 고르기」(장소 입력 폼의 ① 만) · 결제 칸의 비용 입력 창 */
-export function StaysOverlay({ tripId, trip, items, stays, onToast }: StaysOverlayProps) {
+export function StaysOverlay({ tripId, trip, items, stays, onToast, vouchers }: StaysOverlayProps) {
   return (
     <>
       <StaysDialog
@@ -31,6 +35,9 @@ export function StaysOverlay({ tripId, trip, items, stays, onToast }: StaysOverl
         onPickLocation={stays.requestPick}
         onPayment={stays.openPayment}
         onToast={onToast}
+        renderVouchers={(stayId) => (
+          <StayVouchers tripId={tripId} sv={vouchers} onToast={onToast} stayId={stayId} />
+        )}
       />
       <ExpenseDialog
         tripId={tripId}

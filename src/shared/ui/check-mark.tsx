@@ -1,5 +1,6 @@
-import { cn } from "cn";
 import { Check, Lock } from "lucide-react";
+
+import { cn } from "@/shared/lib/utils";
 
 /** 모양 — circle 26(「골랐다」 선택) · square 22 r6(「끝냈다」 완료) */
 const SHAPE = {

@@ -17,21 +17,32 @@ type LinkedVouchersProps = {
   /** 줄을 눌렀다 — 그 바우처의 뷰어 */
   onOpen: (voucher: Voucher) => void;
   onToast: (text: string) => void;
+  /** 비었을 때도 칸을 그리고 이 안내를 보인다(항공편 · 숙소 상세 — 「추가」 줄이 없다). 없으면 빈 칸은 그리지 않는다 */
+  emptyText?: string;
 };
 
 /**
  * 상세의 「바우처 N개」 칸 — 오른쪽 26 회색 원 「+」(누르면 파일을 골라 바로 만든다), 아래 줄(썸네일 44 · 제목 15/700 ·
- * 「PDF · 예약번호 …」 · ›). 바우처가 없으면 칸을 그리지 않는다(「추가」 줄의 칩으로)
+ * 「PDF · 예약번호 …」 · ›). 바우처가 없으면 칸을 그리지 않는다(일정 상세는 「추가」 줄의 칩으로) — emptyText 가 있으면 「바우처」 와 안내
  */
-export function LinkedVouchers({ tripId, vouchers, target, onOpen, onToast }: LinkedVouchersProps) {
+export function LinkedVouchers({
+  tripId,
+  vouchers,
+  target,
+  onOpen,
+  onToast,
+  emptyText,
+}: LinkedVouchersProps) {
   const quick = useQuickAddVoucher(tripId, onToast);
   const thumbKeys = vouchers.flatMap((v) => (v.thumb_key ? [v.thumb_key] : []));
   const { data: urls = {} } = useVoucherUrls(tripId, thumbKeys);
-  if (vouchers.length === 0) return null;
+  if (vouchers.length === 0 && !emptyText) return null;
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-bold text-ink-400">바우처 {vouchers.length}개</span>
+        <span className="text-[13px] font-bold text-ink-400">
+          {vouchers.length > 0 ? `바우처 ${vouchers.length}개` : "바우처"}
+        </span>
         <VoucherFileLabel
           label="바우처 추가"
           disabled={quick.busy}
@@ -45,6 +56,7 @@ export function LinkedVouchers({ tripId, vouchers, target, onOpen, onToast }: Li
           )}
         </VoucherFileLabel>
       </div>
+      {vouchers.length === 0 && <p className="text-[13px] text-ink-350">{emptyText}</p>}
       <ul className="flex flex-col gap-2">
         {vouchers.map((v) => (
           <li key={v.id}>

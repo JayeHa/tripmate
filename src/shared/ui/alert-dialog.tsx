@@ -3,9 +3,9 @@
 // Base UI 의 AlertDialog 는 바깥 누르기로 닫히지 않게 고정돼 있다(disablePointerDismissal). 시안은 바깥을 누르면 취소라
 // Dialog 위에 role="alertdialog" 만 붙여 쓴다. 닫으면 안 되는 동안은 locked 로 막는다
 import { Dialog as AlertDialogPrimitive } from "@base-ui/react/dialog";
-import { cn } from "cn";
 import * as React from "react";
 
+import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { TouchScrollGuard } from "@/shared/ui/touch-scroll-guard";
 

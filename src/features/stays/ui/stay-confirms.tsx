@@ -1,6 +1,7 @@
 "use client";
 
 import { checklistUnlinkNote } from "@/entities/checklist";
+import { voucherUnlinkNote } from "@/entities/voucher";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +53,8 @@ type DeleteStayConfirmProps = {
    * (카드를 「지우기」 할 때만 풀린다)
    */
   checklist: { stay: number; cards: number };
+  /** 풀리는 바우처 연결 — 체크리스트와 같은 기준 */
+  vouchers: { stay: number; cards: number };
   onCancel: () => void;
   /** deleteCards — 카드도 지우기 */
   onConfirm: (deleteCards: boolean) => void;
@@ -62,22 +65,21 @@ const PAID_NOTE = " 결제 기록(가계부)도 함께 지워져요.";
 
 /**
  * 숙소 삭제 확인 — 연결 카드가 있으면 「연결된 일정 카드 N개도 지울까요?」(남기기 / 지우기), 없으면 「숙소를 삭제할까요?」.
- * 결제가 있으면 어느 쪽이든 가계부 기록도 지워진다고, 체크리스트 연결이 있으면 연결만 풀리고 노트에 남는다고 덧붙인다
+ * 결제가 있으면 어느 쪽이든 가계부 기록도 지워진다고, 체크리스트 · 바우처 연결이 있으면 연결만 풀리고 노트에 남는다고 덧붙인다
  */
 export function DeleteStayConfirm({
   open,
   count,
   paid,
   checklist,
+  vouchers,
   onCancel,
   onConfirm,
 }: DeleteStayConfirmProps) {
   const paidNote = paid ? PAID_NOTE : "";
-  const stayNote = noteText(checklistUnlinkNote(checklist.stay));
-  const cardNote =
-    checklist.cards > 0
-      ? ` 카드를 지우면 카드에 연결된 체크리스트 ${checklist.cards}개도 연결만 풀려요.`
-      : "";
+  const stayNote =
+    noteText(checklistUnlinkNote(checklist.stay)) + noteText(voucherUnlinkNote(vouchers.stay));
+  const cardNote = cardUnlinkNote(checklist.cards, vouchers.cards);
   return (
     <AlertDialog open={open} onOpenChange={(next) => !next && onCancel()}>
       <AlertDialogContent>
@@ -122,4 +124,15 @@ export function DeleteStayConfirm({
 /** 문장 앞에 띄어쓰기를 붙인다. 없으면 빈 글자 */
 function noteText(note: string | null): string {
   return note ? ` ${note}` : "";
+}
+
+/** 카드를 「지우기」 할 때만 풀리는 연결 — 숙소에는 없고 카드에만 붙은 체크리스트 · 바우처 */
+function cardUnlinkNote(checklist: number, vouchers: number): string {
+  const parts = [
+    checklist > 0 ? `체크리스트 ${checklist}개` : null,
+    vouchers > 0 ? `바우처 ${vouchers}개` : null,
+  ].filter(Boolean);
+  return parts.length > 0
+    ? ` 카드를 지우면 카드에 연결된 ${parts.join(" · ")}도 연결만 풀려요.`
+    : "";
 }

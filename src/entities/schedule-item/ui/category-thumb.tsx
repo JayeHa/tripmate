@@ -1,4 +1,3 @@
-import { cn } from "cn";
 import {
   Bath,
   BedDouble,
@@ -10,6 +9,8 @@ import {
   ShoppingBag,
   UtensilsCrossed,
 } from "lucide-react";
+
+import { cn } from "@/shared/lib/utils";
 
 import type { PlaceCategory } from "../model/place";
 

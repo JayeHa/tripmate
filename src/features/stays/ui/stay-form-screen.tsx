@@ -147,6 +147,7 @@ function EditForm({ form, tripId, stay, items, onPayment, onDeleted }: EditFormP
         count={del.count}
         paid={del.paid}
         checklist={del.checklist}
+        vouchers={del.vouchers}
         onCancel={del.cancel}
         onConfirm={del.confirm}
       />

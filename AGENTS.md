@@ -122,6 +122,8 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - **`rounded`·`rounded-sm` 은 쓰지 않는다.** 이 테마의 `rounded-sm` 은 shadcn 값(`--radius × 0.6`)이라
   기본 Tailwind 와 다르다. 시안 값은 토큰으로: `rounded-tag`(4) · `rounded-pill-sm`(6) · `rounded-button`(8) ·
   `rounded-memo`(10) · `rounded-card`(12) · `rounded-sheet`(22)
+- **`cn` 은 `@/shared/lib/utils` 에서 가져온다**(린트). 패키지 기본 `cn` 은 위 모서리 · 그림자 토큰 이름을 몰라서 `rounded-sheet` 를
+  `rounded-none` 으로 덮어도 둘 다 남고 22px 가 이긴다(전체 화면 창 모서리). 새 모서리 · 그림자 토큰을 만들면 `utils.ts` 에도 더한다
 
 ## import
 

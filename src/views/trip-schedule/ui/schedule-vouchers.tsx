@@ -29,6 +29,47 @@ export function voucherSlot(
   };
 }
 
+/** 항공편 · 숙소 상세의 빈 바우처 칸 안내 */
+const EMPTY_TEXT = "티켓 · 예약 확인서를 올려 두면 현장에서 바로 꺼내 볼 수 있어요.";
+
+type DetailVouchersProps = {
+  tripId: string;
+  sv: ScheduleVouchers;
+  onToast: (text: string) => void;
+};
+
+type FlightVouchersProps = DetailVouchersProps & { flightId: string; cardId: string | null };
+
+/** 항공편 상세의 바우처 칸 — 이 항공편과 그 일정 카드의 바우처. 「+」 로 만들면 항공편에 연결 */
+export function FlightVouchers({ tripId, sv, onToast, flightId, cardId }: FlightVouchersProps) {
+  return (
+    <LinkedVouchers
+      tripId={tripId}
+      vouchers={sv.ofCard({ id: cardId ?? "", stay_id: null, flight_id: flightId })}
+      target={{ kind: "flight", id: flightId }}
+      onOpen={sv.openViewer}
+      onToast={onToast}
+      emptyText={EMPTY_TEXT}
+    />
+  );
+}
+
+type StayVouchersProps = DetailVouchersProps & { stayId: string };
+
+/** 숙소 상세의 바우처 칸 — 이 숙소의 바우처. 「+」 로 만들면 숙소에 연결 */
+export function StayVouchers({ tripId, sv, onToast, stayId }: StayVouchersProps) {
+  return (
+    <LinkedVouchers
+      tripId={tripId}
+      vouchers={sv.ofStay(stayId)}
+      target={{ kind: "stay", id: stayId }}
+      onOpen={sv.openViewer}
+      onToast={onToast}
+      emptyText={EMPTY_TEXT}
+    />
+  );
+}
+
 type ScheduleVoucherOverlaysProps = {
   tripId: string;
   vouchers: ScheduleVouchers;
