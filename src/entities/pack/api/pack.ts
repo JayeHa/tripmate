@@ -100,7 +100,7 @@ export async function setPackItemChecked(id: string, checkedBy: string | null): 
   ensureRow(data);
 }
 
-/** 그룹 여러 개와 그 항목을 한 번에(「기본 목록으로 시작」) — 기존 그룹 뒤에, 한 트랜잭션 */
+/** 그룹 여러 개와 그 항목을 한 번에(「기본 목록으로 시작」) — 빈 목록에만(그룹이 있으면 DB 가 아무것도 하지 않는다), 한 트랜잭션 */
 export async function addPackPresets(
   tripId: string,
   kind: PackKind,

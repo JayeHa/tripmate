@@ -3343,40 +3343,48 @@ describe("준비물 (0060)", () => {
     ).resolves.toBeTruthy();
   });
 
-  it("기본 목록 — 그룹 · 항목을 기존 그룹 뒤에 순서대로, 하나라도 틀리면 아무것도 남지 않는다", async () => {
+  it("기본 목록 — 빈 목록에만 그룹 · 항목을 순서대로, 하나라도 틀리면 아무것도 남지 않는다 (0061)", async () => {
     await as(A);
     const trip = await newTrip("2027-10-31", "2027-11-02");
-    await addGroup(trip, "🎁 선물");
-    await db.query(`select public.add_pack_groups($1, 'pack', $2::jsonb)`, [
-      trip,
-      JSON.stringify([
-        { name: "📄 서류 · 결제", items: ["여권", "현금"] },
-        { name: "👕 옷", items: [] },
-      ]),
-    ]);
-    const { rows } = await db.query<{ name: string; position: number; items: string[] }>(
-      `select g.name, g.position,
-              coalesce(array_agg(i.name order by i.position) filter (where i.id is not null), '{}') as items
-         from public.pack_groups g left join public.pack_items i on i.group_id = g.id
-        where g.trip_id = '${trip}' group by g.id order by g.position`,
-    );
-    expect(rows).toEqual([
-      { name: "🎁 선물", position: 0, items: [] },
-      { name: "📄 서류 · 결제", position: 1, items: ["여권", "현금"] },
-      { name: "👕 옷", position: 2, items: [] },
-    ]);
-    await expect(
-      db.query(`select public.add_pack_groups($1, 'pack', $2::jsonb)`, [
+    /** 기본 목록 넣기 */
+    const addPresets = (groups: unknown[], kind = "pack") =>
+      db.query(`select public.add_pack_groups($1, $2, $3::jsonb)`, [
         trip,
-        JSON.stringify([
-          { name: "🔌 전자기기", items: ["충전기"] },
-          { name: " ", items: [] },
-        ]),
+        kind,
+        JSON.stringify(groups),
+      ]);
+    /** 그 종류의 그룹 이름 · 자리 · 항목 */
+    const groupsOf = async (kind = "pack") =>
+      (
+        await db.query<{ name: string; position: number; items: string[] }>(
+          `select g.name, g.position,
+                  coalesce(array_agg(i.name order by i.position) filter (where i.id is not null), '{}') as items
+             from public.pack_groups g left join public.pack_items i on i.group_id = g.id
+            where g.trip_id = '${trip}' and g.kind = '${kind}' group by g.id order by g.position`,
+        )
+      ).rows;
+    await expect(
+      addPresets([
+        { name: "🔌 전자기기", items: ["충전기"] },
+        { name: " ", items: [] },
       ]),
     ).rejects.toThrow();
-    expect(
-      (await db.query(`select 1 from public.pack_groups where trip_id = '${trip}'`)).rows,
-    ).toHaveLength(3);
+    expect(await groupsOf()).toEqual([]);
+    const presets = [
+      { name: "📄 서류 · 결제", items: ["여권", "현금"] },
+      { name: "👕 옷", items: [] },
+    ];
+    await addPresets(presets);
+    const filled = [
+      { name: "📄 서류 · 결제", position: 0, items: ["여권", "현금"] },
+      { name: "👕 옷", position: 1, items: [] },
+    ];
+    expect(await groupsOf()).toEqual(filled);
+    // 두 번 눌러도(일행 · 다른 기기) 한 벌만 — 그룹이 있으면 아무것도 하지 않는다. 다른 종류는 따로 센다
+    await addPresets(presets);
+    expect(await groupsOf()).toEqual(filled);
+    await addPresets([{ name: "🍫 간식", items: [] }], "shop");
+    expect(await groupsOf("shop")).toEqual([{ name: "🍫 간식", position: 0, items: [] }]);
   });
 
   it("RLS: 멤버만 읽고 고친다 — 남의 여행에 기본 목록도 넣지 못한다", async () => {
