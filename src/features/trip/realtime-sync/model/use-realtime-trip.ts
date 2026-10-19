@@ -66,6 +66,17 @@ export function useRealtimeTrip(tripId: string) {
         // 줄만 다시 읽는다 — 읽기 주소(urls)는 키가 그대로면 다시 받지 않는다
         () => void qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
       )
+      // 준비물 · 쇼핑 — 그룹 · 항목 둘 다 같은 키(그룹을 지워 함께 지워진 항목도)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pack_groups", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.packLists(tripId) }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pack_items", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.packLists(tripId) }),
+      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },

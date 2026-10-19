@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import type { Voucher } from "@/entities/voucher";
 import { ChecklistBoard } from "@/features/checklist";
+import { PackBoard } from "@/features/pack";
 import { EmptyState } from "@/shared/ui/empty-state";
 
 import { NOTE_TAB_INFO } from "../lib/tabs";
@@ -23,7 +24,7 @@ type NotesTabBodyProps = {
   selectVoucher?: boolean;
 };
 
-/** 지금 탭의 내용 — 체크리스트 · 바우처, 아직 만들지 않은 탭은 「준비 중」 */
+/** 지금 탭의 내용 — 체크리스트 · 바우처 · 준비물, 아직 만들지 않은 탭(쇼핑)은 「준비 중」 */
 export function NotesTabBody({
   tripId,
   notes,
@@ -52,11 +53,14 @@ export function NotesTabBody({
       />
     );
   }
+  if (notes.tab === "pack") {
+    return <PackBoard tripId={tripId} kind="pack" onToast={notes.showToast} />;
+  }
   return (
     <EmptyState
       icon={Construction}
       title="준비 중이에요"
-      description={`${NOTE_TAB_INFO[notes.tab].label} 탭은 곧 열려요. 체크리스트 · 바우처부터 먼저 쓸 수 있어요.`}
+      description={`${NOTE_TAB_INFO[notes.tab].label} 탭은 곧 열려요. 체크리스트 · 바우처 · 준비물부터 먼저 쓸 수 있어요.`}
       className="py-20"
     />
   );

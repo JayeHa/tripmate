@@ -389,6 +389,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      pack_groups: {
+        Row: {
+          id: string;
+          trip_id: string;
+          kind: string;
+          name: string;
+          position: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          kind: string;
+          name: string;
+          position?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          kind?: string;
+          name?: string;
+          position?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      pack_items: {
+        Row: {
+          id: string;
+          trip_id: string;
+          group_id: string;
+          name: string;
+          memo: string;
+          position: number;
+          checked_at: string | null;
+          checked_by: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          group_id: string;
+          name: string;
+          memo?: string;
+          position?: number;
+          checked_at?: string | null;
+          checked_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          group_id?: string;
+          name?: string;
+          memo?: string;
+          position?: number;
+          checked_at?: string | null;
+          checked_by?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       checklist_targets: {
         Row: {
           id: string;
@@ -971,6 +1046,10 @@ export type Database = {
       save_flight: {
         Args: { p_trip: string; p_flight: string | null; p_fields: Json };
         Returns: Json;
+      };
+      add_pack_groups: {
+        Args: { p_trip: string; p_kind: string; p_groups: Json };
+        Returns: undefined;
       };
       save_checklist_item: {
         Args: {

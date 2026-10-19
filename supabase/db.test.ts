@@ -3288,3 +3288,119 @@ describe("바우처 (0059)", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("준비물 (0060)", () => {
+  /** 그룹을 넣고 id 를 돌려준다 */
+  async function addGroup(trip: string, name = "📄 서류 · 결제", kind = "pack") {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.pack_groups (trip_id, kind, name) values ($1, $2, $3) returning id`,
+      [trip, kind, name],
+    );
+    return rows[0].id;
+  }
+
+  /** 항목을 넣고 id 를 돌려준다 */
+  async function addPackItem(trip: string, group: string, fields: Record<string, unknown> = {}) {
+    const cols = { name: "여권", ...fields };
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.pack_items (trip_id, group_id, ${Object.keys(cols).join(", ")})
+       values ($1, $2, ${Object.keys(cols)
+         .map((_, i) => `$${i + 3}`)
+         .join(", ")}) returning id`,
+      [trip, group, ...Object.values(cols)],
+    );
+    return rows[0].id;
+  }
+
+  it("기본값 — 안 챙김 · 빈 메모, 그룹을 지우면 항목도 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const group = await addGroup(trip);
+    const id = await addPackItem(trip, group);
+    const { rows } = await db.query(
+      `select memo, checked_at, checked_by, created_by from public.pack_items where id = '${id}'`,
+    );
+    expect(rows[0]).toEqual({ memo: "", checked_at: null, checked_by: null, created_by: A });
+    await db.query(`delete from public.pack_groups where id = '${group}'`);
+    expect(
+      (await db.query(`select 1 from public.pack_items where id = '${id}'`)).rows,
+    ).toHaveLength(0);
+  });
+
+  it("거부: 빈 이름 · 모르는 종류 · 다른 여행의 그룹 · 챙기지 않았는데 체크한 사람", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const other = await newTrip("2027-12-01", "2027-12-02");
+    const group = await addGroup(trip);
+    const otherGroup = await addGroup(other);
+    await expect(addGroup(trip, "  ")).rejects.toThrow();
+    await expect(addGroup(trip, "옷", "gift")).rejects.toThrow();
+    await expect(addPackItem(trip, group, { name: " " })).rejects.toThrow();
+    await expect(addPackItem(trip, otherGroup)).rejects.toThrow();
+    await expect(addPackItem(trip, group, { checked_by: A })).rejects.toThrow();
+    await expect(
+      addPackItem(trip, group, { checked_by: A, checked_at: "2027-10-30T00:00:00Z" }),
+    ).resolves.toBeTruthy();
+  });
+
+  it("기본 목록 — 빈 목록에만 그룹 · 항목을 순서대로, 하나라도 틀리면 아무것도 남지 않는다 (0061)", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    /** 기본 목록 넣기 */
+    const addPresets = (groups: unknown[], kind = "pack") =>
+      db.query(`select public.add_pack_groups($1, $2, $3::jsonb)`, [
+        trip,
+        kind,
+        JSON.stringify(groups),
+      ]);
+    /** 그 종류의 그룹 이름 · 자리 · 항목 */
+    const groupsOf = async (kind = "pack") =>
+      (
+        await db.query<{ name: string; position: number; items: string[] }>(
+          `select g.name, g.position,
+                  coalesce(array_agg(i.name order by i.position) filter (where i.id is not null), '{}') as items
+             from public.pack_groups g left join public.pack_items i on i.group_id = g.id
+            where g.trip_id = '${trip}' and g.kind = '${kind}' group by g.id order by g.position`,
+        )
+      ).rows;
+    await expect(
+      addPresets([
+        { name: "🔌 전자기기", items: ["충전기"] },
+        { name: " ", items: [] },
+      ]),
+    ).rejects.toThrow();
+    expect(await groupsOf()).toEqual([]);
+    const presets = [
+      { name: "📄 서류 · 결제", items: ["여권", "현금"] },
+      { name: "👕 옷", items: [] },
+    ];
+    await addPresets(presets);
+    const filled = [
+      { name: "📄 서류 · 결제", position: 0, items: ["여권", "현금"] },
+      { name: "👕 옷", position: 1, items: [] },
+    ];
+    expect(await groupsOf()).toEqual(filled);
+    // 두 번 눌러도(일행 · 다른 기기) 한 벌만 — 그룹이 있으면 아무것도 하지 않는다. 다른 종류는 따로 센다
+    await addPresets(presets);
+    expect(await groupsOf()).toEqual(filled);
+    await addPresets([{ name: "🍫 간식", items: [] }], "shop");
+    expect(await groupsOf("shop")).toEqual([{ name: "🍫 간식", position: 0, items: [] }]);
+  });
+
+  it("RLS: 멤버만 읽고 고친다 — 남의 여행에 기본 목록도 넣지 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const group = await addGroup(trip);
+    await as(B);
+    expect(
+      (await db.query(`select 1 from public.pack_groups where id = '${group}'`)).rows,
+    ).toHaveLength(0);
+    await expect(addGroup(trip)).rejects.toThrow(/row-level security/);
+    await expect(
+      db.query(`select public.add_pack_groups($1, 'pack', $2::jsonb)`, [
+        trip,
+        JSON.stringify([{ name: "옷", items: [] }]),
+      ]),
+    ).rejects.toThrow(/row-level security/);
+  });
+});
