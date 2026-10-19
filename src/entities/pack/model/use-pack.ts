@@ -37,6 +37,14 @@ function usePackCache(tripId: string) {
   };
 }
 
+/**
+ * 저장된 행을 맨 뒤에 — 이미 있으면 그대로. 앞 요청의 다시 읽기 · 실시간 다시 읽기가 이 응답보다 먼저 끝나
+ * 캐시에 벌써 들어와 있을 수 있다(같은 줄이 둘 보이지 않게)
+ */
+function appendNew<T extends { id: string }>(rows: T[], row: T): T[] {
+  return rows.some((r) => r.id === row.id) ? rows : [...rows, row];
+}
+
 /** 그룹 추가 — 맨 뒤에. 저장되면 바로 목록에 넣는다 */
 export function useAddPackGroup(tripId: string, kind: PackKind) {
   const cache = usePackCache(tripId);
@@ -45,7 +53,7 @@ export function useAddPackGroup(tripId: string, kind: PackKind) {
       const groups = (cache.get()?.groups ?? []).filter((g) => g.kind === kind);
       return addPackGroup(tripId, kind, name, nextPosition(groups));
     },
-    onSuccess: (group) => cache.set((l) => ({ ...l, groups: [...l.groups, group] })),
+    onSuccess: (group) => cache.set((l) => ({ ...l, groups: appendNew(l.groups, group) })),
     onSettled: cache.invalidate,
   });
 }
@@ -88,7 +96,7 @@ export function useAddPackItem(tripId: string) {
       const items = (cache.get()?.items ?? []).filter((i) => i.group_id === v.groupId);
       return addPackItem(tripId, v.groupId, v.name, nextPosition(items));
     },
-    onSuccess: (item) => cache.set((l) => ({ ...l, items: [...l.items, item] })),
+    onSuccess: (item) => cache.set((l) => ({ ...l, items: appendNew(l.items, item) })),
     onSettled: cache.invalidate,
   });
 }
