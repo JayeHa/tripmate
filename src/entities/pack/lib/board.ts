@@ -46,3 +46,39 @@ export const PACK_PRESETS: PackPreset[] = [
   { name: "👕 옷", items: ["상의", "하의", "속옷", "양말", "잠옷"] },
   { name: "🧴 세면 · 생활", items: ["칫솔 · 치약", "상비약", "선크림", "세면도구"] },
 ];
+
+/** 항목 상세에서 고친 것 — 이름 · 메모 · 그룹 · 챙김 */
+export type PackItemDraft = { name: string; memo: string; groupId: string; checked: boolean };
+
+/** 항목에 저장할 칸 */
+export type PackItemPatch = Partial<
+  Pick<PackItem, "name" | "memo" | "group_id" | "position" | "checked_at" | "checked_by">
+>;
+
+/**
+ * 항목 상세의 저장 — 바뀐 칸만. 이름 · 메모는 앞뒤 공백을 뗀다. 다른 그룹으로 옮기면 그 그룹 맨 뒤(items 는 여행의 모든 항목).
+ * 챙김은 바뀌었을 때만 — 챙기면 나와 지금 시각, 풀면 둘 다 비운다. 그대로면 누가 언제 챙겼는지 남긴다.
+ * 바뀐 것이 없으면 빈 객체
+ */
+export function packItemPatch(
+  item: PackItem,
+  draft: PackItemDraft,
+  items: readonly PackItem[],
+  me: string,
+  now: string,
+): PackItemPatch {
+  const patch: PackItemPatch = {};
+  const name = draft.name.trim();
+  const memo = draft.memo.trim();
+  if (name !== item.name) patch.name = name;
+  if (memo !== item.memo) patch.memo = memo;
+  if (draft.groupId !== item.group_id) {
+    patch.group_id = draft.groupId;
+    patch.position = nextPosition(items.filter((i) => i.group_id === draft.groupId));
+  }
+  if (draft.checked !== isChecked(item)) {
+    patch.checked_by = draft.checked ? me : null;
+    patch.checked_at = draft.checked ? now : null;
+  }
+  return patch;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -14,7 +14,8 @@ import {
   setPackItemChecked,
 } from "../api/pack";
 import { nextPosition } from "../lib/board";
-import type { PackKind, PackLists, PackPreset } from "./types";
+import { usePackCache } from "./pack-cache";
+import type { PackKind, PackPreset } from "./types";
 
 /** 여행의 준비물 · 쇼핑(두 종류 함께) */
 export function usePackLists(tripId: string) {
@@ -22,19 +23,6 @@ export function usePackLists(tripId: string) {
     queryKey: queryKeys.packLists(tripId),
     queryFn: () => fetchPackLists(tripId),
   });
-}
-
-/** 캐시를 고치고 끝나면 다시 읽는 도구 — 화면 먼저 바꾸는 뮤테이션들이 함께 쓴다 */
-function usePackCache(tripId: string) {
-  const qc = useQueryClient();
-  const key = queryKeys.packLists(tripId);
-  return {
-    get: () => qc.getQueryData<PackLists>(key),
-    set: (fn: (lists: PackLists) => PackLists) =>
-      qc.setQueryData<PackLists>(key, (lists) => (lists ? fn(lists) : lists)),
-    cancel: () => qc.cancelQueries({ queryKey: key, exact: true }),
-    invalidate: () => qc.invalidateQueries({ queryKey: key, exact: true }),
-  };
 }
 
 /**
