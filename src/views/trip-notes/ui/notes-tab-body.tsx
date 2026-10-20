@@ -1,14 +1,11 @@
 "use client";
 
-import { Construction } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { Voucher } from "@/entities/voucher";
 import { ChecklistBoard } from "@/features/checklist";
 import { PackBoard } from "@/features/pack";
-import { EmptyState } from "@/shared/ui/empty-state";
 
-import { NOTE_TAB_INFO } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
 import { useVoucherList } from "../model/use-voucher-list";
 import { VoucherList } from "./voucher-list";
@@ -24,7 +21,7 @@ type NotesTabBodyProps = {
   selectVoucher?: boolean;
 };
 
-/** 지금 탭의 내용 — 체크리스트 · 바우처 · 준비물, 아직 만들지 않은 탭(쇼핑)은 「준비 중」 */
+/** 지금 탭의 내용 — 체크리스트 · 바우처 · 준비물 · 쇼핑 */
 export function NotesTabBody({
   tripId,
   notes,
@@ -53,17 +50,8 @@ export function NotesTabBody({
       />
     );
   }
-  if (notes.tab === "pack") {
-    return <PackBoard tripId={tripId} kind="pack" onToast={notes.showToast} />;
-  }
-  return (
-    <EmptyState
-      icon={Construction}
-      title="준비 중이에요"
-      description={`${NOTE_TAB_INFO[notes.tab].label} 탭은 곧 열려요. 체크리스트 · 바우처 · 준비물부터 먼저 쓸 수 있어요.`}
-      className="py-20"
-    />
-  );
+  // 준비물 · 쇼핑은 같은 부품이라 key 로 나눈다 — 탭을 바꾸면 열린 시트 · 「빈 목록으로 시작」 이 다른 종류로 넘어가지 않게
+  return <PackBoard key={notes.tab} tripId={tripId} kind={notes.tab} onToast={notes.showToast} />;
 }
 
 type VoucherTabProps = {

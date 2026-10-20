@@ -50,7 +50,7 @@ export function usePackBoard(tripId: string, kind: PackKind, onToast: (text: str
     /** 그룹이 없고 「빈 목록으로 시작」 도 누르지 않았다 — 빈 상태 안내 */
     showEmpty: !!board && board.groups.length === 0 && !startedEmpty,
     startEmpty: () => setStartedEmpty(true),
-    startPresets: () => run(presets.mutateAsync(PACK_PRESETS)),
+    startPresets: () => run(presets.mutateAsync(PACK_PRESETS[kind])),
     presetsPending: presets.isPending,
     addGroup: (name: string) => run(addGroup.mutateAsync(name.trim())),
     renameGroup: (id: string, name: string) => run(rename.mutateAsync({ id, name })),

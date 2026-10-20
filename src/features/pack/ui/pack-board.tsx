@@ -1,6 +1,6 @@
 "use client";
 
-import { Backpack, Plus } from "lucide-react";
+import { Backpack, Plus, ShoppingBag } from "lucide-react";
 
 import type { PackKind } from "@/entities/pack";
 import { Button } from "@/shared/ui/button";
@@ -21,13 +21,14 @@ type PackBoardProps = {
 };
 
 /**
- * 노트 › 준비물(쇼핑도 같은 모양) — 진행률 카드(「N / M 챙김」 + 막대), 그룹 카드(모바일 한 줄 · PC 300 이상 여러 열),
- * 맨 아래 점선 「그룹 추가」. 그룹이 없으면 빈 상태(「기본 목록으로 시작」 · 「빈 목록으로 시작」)
+ * 노트 › 준비물 · 쇼핑(같은 모양) — 진행률 카드(「N / M 챙김 · 구매」 + 막대), 그룹 카드(모바일 한 줄 · PC 300 이상 여러 열),
+ * 맨 아래 점선 「그룹 추가」. 그룹이 없으면 빈 상태(「기본 목록 · 그룹으로 시작」 · 「빈 목록으로 시작」)
  */
 export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
   const state = usePackBoard(tripId, kind, onToast);
   const actions = usePackItemActions(tripId, state.board, onToast);
   const copy = PACK_COPY[kind];
+  const EmptyIcon = kind === "shop" ? ShoppingBag : Backpack;
   if (state.isPending || !state.board) {
     return (
       <div className="flex flex-col gap-3.5 px-4 pt-4">
@@ -40,21 +41,19 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-20 text-center">
         <span className="mb-2 flex size-16 items-center justify-center rounded-full bg-surface-selected">
-          <Backpack className="size-7 text-primary" aria-hidden="true" />
+          <EmptyIcon className="size-7 text-primary" aria-hidden="true" />
         </span>
         <p className="text-[17px] font-extrabold text-ink-900">{copy.emptyTitle}</p>
         <p className="text-sm text-ink-450">{copy.emptyText}</p>
         <div className="mt-4 flex w-full max-w-80 flex-col gap-2">
-          {kind === "pack" && (
-            <Button
-              size="cta"
-              className="h-12 w-full"
-              disabled={state.presetsPending}
-              onClick={state.startPresets}
-            >
-              기본 목록으로 시작
-            </Button>
-          )}
+          <Button
+            size="cta"
+            className="h-12 w-full"
+            disabled={state.presetsPending}
+            onClick={state.startPresets}
+          >
+            {copy.presetLabel}
+          </Button>
           <Button size="cta" variant="chip" className="h-12 w-full" onClick={state.startEmpty}>
             빈 목록으로 시작
           </Button>

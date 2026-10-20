@@ -32,12 +32,12 @@ export function useNotes(tripId: string) {
   return {
     tab,
     setTab: (next: NoteTab) => router.replace(`${pathname}?tab=${next}`, { scroll: false }),
-    /** 탭 · 메뉴의 숫자 — 아직 없는 탭은 null */
+    /** 탭 · 메뉴의 숫자 — 불러오는 중이면 null */
     counts: {
       checklist: checklist ? String(openCount(checklist)) : null,
       voucher: vouchers ? String(vouchers.length) : null,
       pack: packLists ? packCountText(packBoard(packLists, "pack")) : null,
-      shop: null,
+      shop: packLists ? packCountText(packBoard(packLists, "shop")) : null,
     } satisfies Record<NoteTab, string | null>,
     checklistDetail,
     /** 고른 바우처 — 목록 캐시에서 id 로 찾아 그린다 */

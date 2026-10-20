@@ -7,6 +7,8 @@ export const PACK_COPY: Record<
     done: string;
     emptyTitle: string;
     emptyText: string;
+    /** 빈 상태의 기본 목록 버튼 */
+    presetLabel: string;
     listLabel: string;
     /** 상세 시트 제목 */
     sheetTitle: string;
@@ -29,6 +31,7 @@ export const PACK_COPY: Record<
     checkedItems: "챙긴 항목",
     emptyTitle: "준비물을 정리해 보세요",
     emptyText: "자주 챙기는 것으로 시작하거나 빈 목록에 직접 그룹을 만들어요",
+    presetLabel: "기본 목록으로 시작",
     listLabel: "준비물",
   },
   shop: {
@@ -40,7 +43,8 @@ export const PACK_COPY: Record<
     uncheckedLabel: "아직 안 샀어요",
     checkedItems: "산 항목",
     emptyTitle: "살 것을 정리해 보세요",
-    emptyText: "그룹을 만들고 살 것을 담아요",
+    emptyText: "기본 그룹으로 시작하거나 빈 목록에 직접 그룹을 만들어요",
+    presetLabel: "기본 그룹으로 시작",
     listLabel: "쇼핑",
   },
 };
