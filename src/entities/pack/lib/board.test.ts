@@ -62,6 +62,13 @@ describe("packItemPatch", () => {
     ).toEqual({ name: "여권 사본", memo: "기내", group_id: "g2", position: 5 });
   });
 
+  it("연 순간의 행이 기준 — 그사이 일행이 바꾼 칸은 손대지 않았으면 patch 에 없다", () => {
+    // 상세는 base 로 열었고, 그사이 일행이 이름 · 그룹을 바꿨다. 나는 메모만 고쳤다
+    expect(packItemPatch(base, { ...draft, memo: "기내" }, all, "me", NOW)).toEqual({
+      memo: "기내",
+    });
+  });
+
   it("챙김 — 풀면 둘 다 비우고, 챙기면 나와 지금 시각", () => {
     expect(packItemPatch(base, { ...draft, checked: false }, all, "me", NOW)).toEqual({
       checked_by: null,

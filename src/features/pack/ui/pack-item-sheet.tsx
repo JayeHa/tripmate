@@ -62,14 +62,19 @@ type ItemFormProps = Omit<PackItemSheetProps, "actions"> & {
   actions: PackItemActions;
 };
 
-/** 시트 안 — 고친 값은 저장할 때까지 이 안에만 */
+/**
+ * 시트 안 — 고친 값은 저장할 때까지 이 안에만.
+ * 저장은 연 순간의 행(base)과 비교한다. 받은 item 은 실시간으로 바뀌어서, 그걸 기준으로 하면
+ * 그사이 일행이 바꾼 칸(체크 · 이름 · 그룹)을 손대지 않았는데도 「바뀐 칸」 으로 보고 되돌린다
+ */
 function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) {
   const copy = PACK_COPY[kind];
-  const [name, setName] = useState(item.name);
-  const [memo, setMemo] = useState(item.memo);
-  const [groupId, setGroupId] = useState(item.group_id);
-  const [checked, setChecked] = useState(isChecked(item));
-  const checker = checkerOf(isChecked(item) ? item.checked_by : me);
+  const [base] = useState(item);
+  const [name, setName] = useState(base.name);
+  const [memo, setMemo] = useState(base.memo);
+  const [groupId, setGroupId] = useState(base.group_id);
+  const [checked, setChecked] = useState(isChecked(base));
+  const checker = checkerOf(isChecked(base) ? base.checked_by : me);
   const groups = board.groups.map((g) => ({ value: g.group.id, label: g.group.name }));
   return (
     <>
@@ -137,7 +142,7 @@ function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) 
         <button
           type="button"
           aria-label="항목 삭제"
-          onClick={() => actions.askDelete(item)}
+          onClick={() => actions.askDelete(base)}
           className="flex h-11 w-12 shrink-0 items-center justify-center rounded-button bg-destructive-soft"
         >
           <Trash2 className="size-4.5 text-destructive" aria-hidden="true" />
@@ -146,7 +151,7 @@ function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) 
           size="form"
           className="flex-1"
           disabled={!name.trim()}
-          onClick={() => actions.save(item, { name, memo, groupId, checked })}
+          onClick={() => actions.save(base, { name, memo, groupId, checked })}
         >
           저장
         </Button>
