@@ -48,6 +48,9 @@ export function useSwipeReveal(open: boolean, onOpenChange: (open: boolean) => v
       onPointerMove(e: PointerEvent) {
         const s = start.current;
         if (!s || s.pointerId !== e.pointerId) return;
+        // 줄 밖에서 놓아 pointerup 을 못 받았다(밀기 전이라 capture 가 없다) — 마우스는 pointerId 가 늘 같아 남겨 두면
+        // 버튼을 누르지 않고 지나가기만 해도 줄이 따라 밀린다
+        if (e.buttons === 0) return finish(e, true);
         const dx = e.clientX - s.x;
         if (!s.moved) {
           if (Math.abs(dx) < SLOP) return;
