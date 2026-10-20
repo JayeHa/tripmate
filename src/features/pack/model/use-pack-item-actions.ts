@@ -38,6 +38,8 @@ export function usePackItemActions(
   const uncheck = useUncheckPackItems(tripId);
   const items = board?.groups.flatMap((g) => g.items) ?? [];
   const checkedIds = items.filter(isChecked).map((i) => i.id);
+  // 민 줄 — 그사이 일행이 지웠으면 없는 것으로 본다(남겨 두면 다음 줄 누르기가 닫기로만 쓰인다)
+  const swiped = items.some((i) => i.id === swipedId) ? swipedId : null;
 
   /** 요청을 보내고 실패하면 알린다 */
   function run(p: Promise<unknown>, failed = FAILED) {
@@ -49,11 +51,11 @@ export function usePackItemActions(
     detail: items.find((i) => i.id === detailId) ?? null,
     /** 줄을 눌렀다 — 민 줄이 있으면 닫기만, 아니면 상세를 연다 */
     openDetail: (id: string) => {
-      if (swipedId) setSwipedId(null);
+      if (swiped) setSwipedId(null);
       else setDetailId(id);
     },
     closeDetail: () => setDetailId(null),
-    swipedId,
+    swipedId: swiped,
     /** 줄의 열림이 바뀌었다 — 열면 그 줄만, 닫으면 그 줄이 열려 있었을 때만 */
     setSwiped: (id: string, open: boolean) =>
       setSwipedId((cur) => {
