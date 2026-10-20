@@ -45,10 +45,11 @@ export function PackItemRow({
         onClick={onDelete}
         tabIndex={swiped ? 0 : -1}
         aria-hidden={!swiped}
-        // 닫혀 있으면 숨긴다 — 줄이 덮어도 가장자리 반 픽셀에 빨강이 비친다
+        // 닫혀 있으면 숨긴다 — 줄이 덮어도 가장자리 반 픽셀에 빨강이 비친다. 숨길 때는 줄이 미끄러져 돌아가는
+        // 200ms 뒤에(visibility 는 단계로 바뀌어 delay 동안 보인다), 드러낼 때는 바로
         className={cn(
-          "absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-0.5 bg-destructive text-xs font-bold text-white",
-          swipe.x === 0 && "invisible",
+          "absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-0.5 bg-destructive text-xs font-bold text-white transition-[visibility]",
+          swipe.x === 0 ? "invisible delay-200" : "visible delay-0",
         )}
         style={{ width: SWIPE_REVEAL }}
       >
