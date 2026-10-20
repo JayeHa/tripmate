@@ -5,6 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { deletePackItem, uncheckPackItems, updatePackItem } from "../api/pack";
 import type { PackItemPatch } from "../lib/board";
 import { usePackCache } from "./pack-cache";
+import type { PackItem, PackLists } from "./types";
+
+/** 되돌릴 때 쓸 그 항목들의 지금 모습 */
+function itemsOf(lists: PackLists | undefined, ids: readonly string[]): PackItem[] {
+  return lists?.items.filter((i) => ids.includes(i.id)) ?? [];
+}
 
 /** 항목 고치기(상세의 저장) — 화면 먼저, 실패하면 저장 전 목록으로 되돌린다 */
 export function useUpdatePackItem(tripId: string) {
@@ -13,14 +19,14 @@ export function useUpdatePackItem(tripId: string) {
     mutationFn: (v: { id: string; patch: PackItemPatch }) => updatePackItem(v.id, v.patch),
     onMutate: async (v) => {
       await cache.cancel();
-      const before = cache.get();
+      const before = itemsOf(cache.get(), [v.id]);
       cache.set((l) => ({
         ...l,
         items: l.items.map((i) => (i.id === v.id ? { ...i, ...v.patch } : i)),
       }));
       return { before };
     },
-    onError: (_e, _v, ctx) => cache.restore(ctx?.before),
+    onError: (_e, _v, ctx) => cache.restoreItems(ctx?.before ?? []),
     onSettled: cache.invalidate,
   });
 }
@@ -32,11 +38,11 @@ export function useDeletePackItem(tripId: string) {
     mutationFn: (id: string) => deletePackItem(id),
     onMutate: async (id) => {
       await cache.cancel();
-      const before = cache.get();
+      const before = itemsOf(cache.get(), [id]);
       cache.set((l) => ({ ...l, items: l.items.filter((i) => i.id !== id) }));
       return { before };
     },
-    onError: (_e, _id, ctx) => cache.restore(ctx?.before),
+    onError: (_e, _id, ctx) => cache.restoreItems(ctx?.before ?? []),
     onSettled: cache.invalidate,
   });
 }
@@ -48,7 +54,7 @@ export function useUncheckPackItems(tripId: string) {
     mutationFn: (ids: string[]) => uncheckPackItems(ids),
     onMutate: async (ids) => {
       await cache.cancel();
-      const before = cache.get();
+      const before = itemsOf(cache.get(), ids);
       const set = new Set(ids);
       cache.set((l) => ({
         ...l,
@@ -58,7 +64,7 @@ export function useUncheckPackItems(tripId: string) {
       }));
       return { before };
     },
-    onError: (_e, _ids, ctx) => cache.restore(ctx?.before),
+    onError: (_e, _ids, ctx) => cache.restoreItems(ctx?.before ?? []),
     onSettled: cache.invalidate,
   });
 }
