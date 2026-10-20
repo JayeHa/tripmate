@@ -8,7 +8,10 @@ import { Skeleton } from "@/shared/ui/skeleton";
 
 import { GROUP_NAME_MAX, PACK_COPY } from "../lib/copy";
 import { usePackBoard } from "../model/use-pack-board";
+import { usePackItemActions } from "../model/use-pack-item-actions";
+import { PackConfirms } from "./pack-confirms";
 import { PackGroupCard } from "./pack-group-card";
+import { PackItemSheet } from "./pack-item-sheet";
 import { PackTextInput } from "./pack-text-input";
 
 type PackBoardProps = {
@@ -23,6 +26,7 @@ type PackBoardProps = {
  */
 export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
   const state = usePackBoard(tripId, kind, onToast);
+  const actions = usePackItemActions(tripId, state.board, onToast);
   const copy = PACK_COPY[kind];
   if (state.isPending || !state.board) {
     return (
@@ -62,24 +66,34 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
   const percent = Math.round((board.done / Math.max(1, board.total)) * 100);
   return (
     <div className="mx-auto flex w-full max-w-270 flex-col gap-3.5 px-4 pt-4 pb-7 lg:px-6">
-      <div className="flex items-center gap-2.5 rounded-card border border-surface-muted bg-white px-4 py-3.5">
-        <span className="text-[15px] font-extrabold whitespace-nowrap text-ink-900">
-          {board.done} / {board.total} {copy.done}
-        </span>
+      <div className="flex flex-col gap-2.5 rounded-card border border-surface-muted bg-white px-4 py-3.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-[15px] font-extrabold whitespace-nowrap text-ink-900">
+            {board.done} / {board.total} {copy.done}
+          </span>
+          <button
+            type="button"
+            onClick={actions.askReset}
+            disabled={actions.checkedCount === 0}
+            className="shrink-0 text-[13px] whitespace-nowrap text-ink-400 disabled:opacity-40"
+          >
+            모두 해제
+          </button>
+        </div>
         <span
           role="progressbar"
           aria-label={`${copy.listLabel} 진행률`}
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-divider"
+          className="h-1.5 overflow-hidden rounded-full bg-divider"
         >
           <span className="block h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
         </span>
       </div>
       <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
         {board.groups.map((view) => (
-          <PackGroupCard key={view.group.id} view={view} state={state} />
+          <PackGroupCard key={view.group.id} view={view} state={state} actions={actions} />
         ))}
       </div>
       <label className="flex h-12 items-center gap-2 rounded-card border-[1.5px] border-dashed border-line-dashed bg-white px-3.5">
@@ -93,6 +107,14 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
           className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-bold text-ink-900 outline-none placeholder:font-normal placeholder:text-ink-350"
         />
       </label>
+      <PackItemSheet
+        kind={kind}
+        board={board}
+        actions={actions}
+        checkerOf={state.memberOf}
+        me={state.me}
+      />
+      <PackConfirms actions={actions} checkedItems={copy.checkedItems} />
     </div>
   );
 }

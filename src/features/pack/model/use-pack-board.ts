@@ -65,6 +65,9 @@ export function usePackBoard(tripId: string, kind: PackKind, onToast: (text: str
     },
     /** 체크한 사람 — 이름 · 사진. 나간 멤버면 null */
     checkerOf: (item: PackItem) => memberOf(item.checked_by),
+    /** 사용자 id → 이름 · 사진(상세의 챙김 줄) */
+    memberOf,
+    me: user?.id ?? null,
   };
 }
 

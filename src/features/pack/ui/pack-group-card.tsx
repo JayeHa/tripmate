@@ -17,16 +17,17 @@ import {
 
 import { GROUP_NAME_MAX, ITEM_NAME_MAX } from "../lib/copy";
 import type { PackBoardState } from "../model/use-pack-board";
+import type { PackItemActions } from "../model/use-pack-item-actions";
 import { PackItemRow } from "./pack-item-row";
 import { PackTextInput } from "./pack-text-input";
 
-type PackGroupCardProps = { view: PackGroupView; state: PackBoardState };
+type PackGroupCardProps = { view: PackGroupView; state: PackBoardState; actions: PackItemActions };
 
 /**
  * 그룹 카드(r12) — 머리(이름 입력 14/800 · 「챙긴 수/전체」 · 휴지통), 항목 줄, 맨 아래 「+ 항목 추가」(Enter 로 담는다).
  * 접기 · 순서 바꾸기는 없다(시안). 항목이 있는 그룹은 지우기 전에 묻는다
  */
-export function PackGroupCard({ view, state }: PackGroupCardProps) {
+export function PackGroupCard({ view, state, actions }: PackGroupCardProps) {
   const { group, items } = view;
   const [confirming, setConfirming] = useState(false);
   return (
@@ -55,7 +56,11 @@ export function PackGroupCard({ view, state }: PackGroupCardProps) {
             key={item.id}
             item={item}
             checker={state.checkerOf(item)}
+            swiped={actions.swipedId === item.id}
+            onSwipedChange={(open) => actions.setSwiped(item.id, open)}
             onToggle={() => state.toggle(item)}
+            onOpen={() => actions.openDetail(item.id)}
+            onDelete={() => actions.askDelete(item)}
           />
         ))}
       </ul>

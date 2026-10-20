@@ -1,5 +1,6 @@
 import { createClient } from "@/shared/api/supabase/client";
 
+import type { PackItemPatch } from "../lib/board";
 import type { PackGroup, PackItem, PackKind, PackLists, PackPreset } from "../model/types";
 
 /** 고치려는 그룹 · 항목이 없다 — 그사이 일행이 지웠다 */
@@ -98,6 +99,31 @@ export async function setPackItemChecked(id: string, checkedBy: string | null): 
     .select("id");
   if (error) throw error;
   ensureRow(data);
+}
+
+/** 항목 고치기(상세의 저장) — 받은 칸만 */
+export async function updatePackItem(id: string, patch: PackItemPatch): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("pack_items").update(patch).eq("id", id).select("id");
+  if (error) throw error;
+  ensureRow(data);
+}
+
+/** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다 */
+export async function deletePackItem(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("pack_items").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** 「모두 해제」 — 받은 항목의 챙김을 모두 푼다. 그사이 지워진 것은 건너뛴다 */
+export async function uncheckPackItems(ids: string[]): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("pack_items")
+    .update({ checked_at: null, checked_by: null })
+    .in("id", ids);
+  if (error) throw error;
 }
 
 /** 그룹 여러 개와 그 항목을 한 번에(「기본 목록으로 시작」) — 빈 목록에만(그룹이 있으면 DB 가 아무것도 하지 않는다), 한 트랜잭션 */
