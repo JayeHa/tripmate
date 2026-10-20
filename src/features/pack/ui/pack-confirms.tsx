@@ -28,6 +28,8 @@ type PackConfirmsProps = {
 export function PackConfirms({ actions, checkedItems }: PackConfirmsProps) {
   // 닫히는 동안에도 지운 항목 이름이 남게
   const name = useHeldWhileClosing(!!actions.deleting, actions.deleting?.name ?? "");
+  // 확인하면 화면이 먼저 바뀌어 0 이 된다 — 닫히는 동안 「0개」 가 보이지 않게
+  const count = useHeldWhileClosing(actions.resetting, actions.checkedCount);
   return (
     <>
       <AlertDialog open={!!actions.deleting} onOpenChange={(o) => !o && actions.cancelDelete()}>
@@ -51,8 +53,7 @@ export function PackConfirms({ actions, checkedItems }: PackConfirmsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>모두 해제할까요?</AlertDialogTitle>
             <AlertDialogDescription>
-              {checkedItems} {actions.checkedCount}개의 체크를 모두 풀어요. 일행의 목록에도
-              반영돼요.
+              {checkedItems} {count}개의 체크를 모두 풀어요. 일행의 목록에도 반영돼요.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
