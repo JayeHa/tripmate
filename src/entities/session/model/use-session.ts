@@ -16,7 +16,9 @@ export function useUser() {
     const supabase = createClient();
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
+        // 세션 만료 · 다른 탭에서 로그아웃도 여기로 온다 — 기기에 남긴 화면 · 사진도 함께 지운다(공용 기기)
         queryClient.clear();
+        void clearOfflineCache();
       } else if (event === "SIGNED_IN") {
         void queryClient.invalidateQueries({ queryKey: queryKeys.user });
       }
