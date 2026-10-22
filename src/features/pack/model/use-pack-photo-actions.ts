@@ -3,11 +3,12 @@
 import { useState } from "react";
 
 import {
+  PACK_PHOTO_CHANGED,
   type PackItem,
   photoOf,
   removePackPhotos,
   usePackPhotoUrls,
-  useUpdatePackItem,
+  useSetPackPhoto,
 } from "@/entities/pack";
 
 import { photoErrorText, uploadPackPhoto } from "./pack-photo-upload";
@@ -15,6 +16,7 @@ import { photoErrorText, uploadPackPhoto } from "./pack-photo-upload";
 /**
  * 쇼핑 줄의 사진 — 목록 썸네일 주소 · 줄에서 바로 넣기 · 전체 화면(열린 항목) · 교체 · 지우기(확인을 거친다).
  * 넣기 · 교체는 올린 뒤 항목에 붙이고, 붙이지 못하면 올린 파일을 지운다. 붙였으면 앞 사진 파일을 지운다.
+ * 붙이기 · 지우기는 누른 때의 사진일 때만 한다 — 그사이 일행이 바꿨으면 일행의 사진을 덮거나 비우지 않고 알린다.
  * 쇼핑이 아니면 null 을 넘겨 쓰지 않는다(훅은 늘 부른다)
  */
 export function usePackPhotoActions(
@@ -22,7 +24,7 @@ export function usePackPhotoActions(
   items: readonly PackItem[],
   onToast: (text: string) => void,
 ) {
-  const update = useUpdatePackItem(tripId);
+  const setPhoto = useSetPackPhoto(tripId);
   const [busyIds, setBusyIds] = useState<ReadonlySet<string>>(new Set());
   const [viewId, setViewId] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -47,7 +49,7 @@ export function usePackPhotoActions(
     try {
       const photo = await uploadPackPhoto(tripId, file);
       try {
-        await update.mutateAsync({ id: item.id, patch: photo });
+        await setPhoto.mutateAsync({ id: item.id, photo, expected: item.photo_key });
       } catch (e) {
         void removePackPhotos(tripId, [photo]);
         throw e;
@@ -78,11 +80,19 @@ export function usePackPhotoActions(
       if (!viewing) return;
       const item = viewing;
       setViewId(null);
-      void update
-        .mutateAsync({ id: item.id, patch: { photo_key: null, thumb_key: null } })
-        .then(() => removePackPhotos(tripId, [photoOf(item)]))
-        .catch(() => onToast("지우지 못했어요. 잠시 후 다시 시도해 주세요"));
-      onToast("사진을 삭제했어요");
+      void setPhoto
+        .mutateAsync({ id: item.id, photo: null, expected: item.photo_key })
+        .then(() => {
+          onToast("사진을 삭제했어요");
+          return removePackPhotos(tripId, [photoOf(item)]);
+        })
+        .catch((e: unknown) =>
+          onToast(
+            e instanceof Error && e.message === PACK_PHOTO_CHANGED
+              ? PACK_PHOTO_CHANGED
+              : "지우지 못했어요. 잠시 후 다시 시도해 주세요",
+          ),
+        );
     },
   };
 }

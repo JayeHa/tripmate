@@ -1,5 +1,6 @@
 import {
   isPackPhotoMime,
+  PACK_PHOTO_CHANGED,
   PACK_PHOTO_MAX_BYTES,
   PACK_PHOTO_SIDE,
   PACK_THUMB_SIDE,
@@ -40,8 +41,9 @@ export async function uploadPackPhoto(tripId: string, file: File): Promise<PackP
   throw [p, t].find((r) => r.status === "rejected")?.reason;
 }
 
-/** 올리기 실패 토스트 — 우리가 만든 문구(받지 않는 사진 · 서버 문구)는 그대로, 아니면 다시 해 보라고만 */
+/** 올리기 실패 토스트 — 우리가 만든 문구(받지 않는 사진 · 서버 문구 · 일행이 먼저 바꿈)는 그대로, 아니면 다시 해 보라고만 */
 export function photoErrorText(e: unknown): string {
   if (e instanceof PhotoError || e instanceof ApiError) return e.message;
+  if (e instanceof Error && e.message === PACK_PHOTO_CHANGED) return PACK_PHOTO_CHANGED;
   return "사진을 올리지 못했어요. 잠시 후 다시 시도해 주세요";
 }

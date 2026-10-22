@@ -2,8 +2,9 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { deletePackItem, uncheckPackItems, updatePackItem } from "../api/pack";
+import { deletePackItem, setPackItemPhoto, uncheckPackItems, updatePackItem } from "../api/pack";
 import type { PackItemPatch } from "../lib/board";
+import type { PackPhoto } from "../lib/photo-rules";
 import { usePackCache } from "./pack-cache";
 import type { PackItem, PackLists } from "./types";
 
@@ -65,6 +66,27 @@ export function useUncheckPackItems(tripId: string) {
       return { before };
     },
     onError: (_e, _ids, ctx) => cache.restoreItems(ctx?.before ?? []),
+    onSettled: cache.invalidate,
+  });
+}
+
+/** 사진 바꾸기 · 지우기 — 연 때의 사진(expected)일 때만. 화면 먼저, 실패하거나 일행이 먼저 바꿨으면 그 항목만 되돌린다 */
+export function useSetPackPhoto(tripId: string) {
+  const cache = usePackCache(tripId);
+  return useMutation({
+    mutationFn: (v: { id: string; photo: PackPhoto | null; expected: string | null }) =>
+      setPackItemPhoto(v.id, v.photo, v.expected),
+    onMutate: async (v) => {
+      await cache.cancel();
+      const before = itemsOf(cache.get(), [v.id]);
+      const keys = { photo_key: v.photo?.photo_key ?? null, thumb_key: v.photo?.thumb_key ?? null };
+      cache.set((l) => ({
+        ...l,
+        items: l.items.map((i) => (i.id === v.id ? { ...i, ...keys } : i)),
+      }));
+      return { before };
+    },
+    onError: (_e, _v, ctx) => cache.restoreItems(ctx?.before ?? []),
     onSettled: cache.invalidate,
   });
 }

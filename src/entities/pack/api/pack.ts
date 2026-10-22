@@ -1,7 +1,7 @@
 import { createClient } from "@/shared/api/supabase/client";
 
 import type { PackItemPatch } from "../lib/board";
-import { photoOf } from "../lib/photo-rules";
+import { type PackPhoto, photoOf } from "../lib/photo-rules";
 import type { PackGroup, PackItem, PackKind, PackLists, PackPreset } from "../model/types";
 import { removePackPhotos } from "./photos";
 
@@ -119,6 +119,31 @@ export async function updatePackItem(id: string, patch: PackItemPatch): Promise<
   const { data, error } = await supabase.from("pack_items").update(patch).eq("id", id).select("id");
   if (error) throw error;
   ensureRow(data);
+}
+
+/** 사진을 바꾸려는 사이 일행이 먼저 바꾸거나 지웠다 */
+export const PACK_PHOTO_CHANGED = "일행이 사진을 먼저 바꿨어요";
+
+/**
+ * 항목 사진 바꾸기 · 지우기(photo = null) — 지금 사진이 expected(연 때의 사진 키, 없었으면 null)일 때만.
+ * 그사이 일행이 바꿨으면 0행이라 PACK_PHOTO_CHANGED 를 던진다 — 일행의 사진을 덮거나 비우지 않고,
+ * 화면이 지우려던 앞 사진 파일과 어긋나 일행의 사진 파일이 남지 않게
+ */
+export async function setPackItemPhoto(
+  id: string,
+  photo: PackPhoto | null,
+  expected: string | null,
+): Promise<void> {
+  const supabase = createClient();
+  const query = supabase
+    .from("pack_items")
+    .update({ photo_key: photo?.photo_key ?? null, thumb_key: photo?.thumb_key ?? null })
+    .eq("id", id);
+  const { data, error } = await (
+    expected ? query.eq("photo_key", expected) : query.is("photo_key", null)
+  ).select("id");
+  if (error) throw error;
+  if (data.length === 0) throw new Error(PACK_PHOTO_CHANGED);
 }
 
 /** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다. 지운 줄의 사진 파일도 지운다 */
