@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/api/supabase/client";
+import { type SyncResult, updateLatestWins } from "@/shared/api/sync";
 
 import type { PackItemPatch } from "../lib/board";
 import { type PackPhoto, photoOf } from "../lib/photo-rules";
@@ -98,19 +99,28 @@ export async function addPackItem(
   return data;
 }
 
-/** 챙김 바꾸기 — checkedBy 가 있으면 지금 시각으로 챙기고, null 이면 푼다 */
-export async function setPackItemChecked(id: string, checkedBy: string | null): Promise<void> {
+/**
+ * 챙김 바꾸기 — checkedBy 가 있으면 지금 시각으로 챙기고, null 이면 푼다. 오프라인 대기열로 올라온다.
+ * 본 버전(version)이면 그대로, 그사이 일행이 고쳤으면 내 것으로 덮는다(나중 수정 우선). 지워졌으면 PACK_GONE
+ */
+export function setPackItemChecked(
+  id: string,
+  checkedBy: string | null,
+  checkedAt: string | null,
+  version: string,
+): Promise<SyncResult> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("pack_items")
-    .update({
-      checked_by: checkedBy,
-      checked_at: checkedBy ? new Date().toISOString() : null,
-    })
-    .eq("id", id)
-    .select("id");
-  if (error) throw error;
-  ensureRow(data);
+  return updateLatestWins(
+    (onlyIf) => {
+      const q = supabase
+        .from("pack_items")
+        .update({ checked_by: checkedBy, checked_at: checkedAt })
+        .eq("id", id);
+      return (onlyIf ? q.eq("updated_at", onlyIf) : q).select("updated_at");
+    },
+    version,
+    PACK_GONE,
+  );
 }
 
 /** 항목 고치기(상세의 저장) — 받은 칸만 */

@@ -4,6 +4,7 @@ export * from "./lib/due";
 export * from "./lib/groups";
 export * from "./lib/links";
 export * from "./lib/targets";
+export * from "./model/checklist-sync";
 export * from "./model/types";
 export * from "./model/use-checklist";
 export * from "./model/use-linked-checklist";
