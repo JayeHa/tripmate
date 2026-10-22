@@ -16,7 +16,8 @@ class PhotoError extends Error {}
 
 /**
  * 고른 사진 → 줄인 사진(긴 변 1600) + 목록 썸네일(긴 변 192)을 올리고 두 키를 돌려준다. 항목에는 아직 붙지 않는다.
- * 브라우저가 못 읽는 사진(예: Chrome 의 HEIC)은 줄이지 못해 받지 않는다. 하나만 올라갔으면 그것을 지우고 던진다
+ * 줄인 결과가 받는 종류가 아니면 받지 않는다 — 브라우저가 못 읽는 사진(예: Chrome 의 HEIC)이거나,
+ * 읽었어도 줄인 것이 더 커서 원본(GIF · AVIF 등)이 돌아온 경우다. 하나만 올라갔으면 그것을 지우고 던진다
  */
 export async function uploadPackPhoto(tripId: string, file: File): Promise<PackPhoto> {
   const [photo, thumb] = await Promise.all([
@@ -24,7 +25,7 @@ export async function uploadPackPhoto(tripId: string, file: File): Promise<PackP
     compressImage(file, PACK_THUMB_SIDE),
   ]);
   if (!isPackPhotoMime(photo.type) || !isPackPhotoMime(thumb.type)) {
-    throw new PhotoError("이 사진은 열 수 없어요. JPG · PNG 로 올려 주세요");
+    throw new PhotoError("이 형식은 올릴 수 없어요 (JPG · PNG · WebP)");
   }
   if (photo.size > PACK_PHOTO_MAX_BYTES) throw new PhotoError("사진이 너무 커요 (5MB 까지)");
   const [p, t] = await Promise.allSettled([
