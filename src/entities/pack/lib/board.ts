@@ -37,15 +37,21 @@ export function packCountText(board: Pick<PackBoard, "done" | "total">): string 
 }
 
 /**
- * 「기본 목록으로 시작」 — 어느 나라든 맞는 것만(2026-10-19 사용자 결정, 시안은 그룹 이름만 정했다).
- * 이모지는 이름 앞에 그대로 넣는다(시안)
+ * 「기본 목록으로 시작」 — 어느 나라든 맞는 것만(2026-10-19 · 10-20 사용자 결정). 이모지는 이름 앞에 그대로 넣는다(시안).
+ * 준비물은 일반 항목까지 채운다(시안은 그룹 이름만 정했다). 쇼핑은 그룹만 — 살 것은 여행마다 다르다
  */
-export const PACK_PRESETS: PackPreset[] = [
-  { name: "📄 서류 · 결제", items: ["여권", "해외 결제 카드", "현금", "항공권 · 예약 확인서"] },
-  { name: "🔌 전자기기", items: ["휴대폰 충전기", "보조배터리", "멀티 어댑터", "e심 · 유심"] },
-  { name: "👕 옷", items: ["상의", "하의", "속옷", "양말", "잠옷"] },
-  { name: "🧴 세면 · 생활", items: ["칫솔 · 치약", "상비약", "선크림", "세면도구"] },
-];
+export const PACK_PRESETS: Record<PackKind, PackPreset[]> = {
+  pack: [
+    { name: "📄 서류 · 결제", items: ["여권", "해외 결제 카드", "현금", "항공권 · 예약 확인서"] },
+    { name: "🔌 전자기기", items: ["휴대폰 충전기", "보조배터리", "멀티 어댑터", "e심 · 유심"] },
+    { name: "👕 옷", items: ["상의", "하의", "속옷", "양말", "잠옷"] },
+    { name: "🧴 세면 · 생활", items: ["칫솔 · 치약", "상비약", "선크림", "세면도구"] },
+  ],
+  shop: [
+    { name: "🏢 회사에 돌릴 것", items: [] },
+    { name: "🛍️ 우리용", items: [] },
+  ],
+};
 
 /** 항목 상세에서 고친 것 — 이름 · 메모 · 그룹 · 챙김 */
 export type PackItemDraft = { name: string; memo: string; groupId: string; checked: boolean };
