@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { offlineFileUrls } from "@/shared/api/offline-files";
+import { withOfflineFileUrls } from "@/shared/api/offline-files";
 import { queryKeys } from "@/shared/api/query-keys";
 
 import { fetchPackPhotoUrls } from "../api/photos";
@@ -26,8 +26,6 @@ export function usePackPhotoUrls(tripId: string, keys: string[]) {
     // 화면을 오래 띄워 둬도(포커스 · 다시 마운트 없이) 만료 전에 새 주소로 바꾼다
     refetchInterval: URL_STALE_MS,
   });
-  // 주소를 받지 못했으면(오프라인) token 없는 주소 — 서비스 워커가 저장해 둔 사진이면 보인다.
-  // 실패 상태(isError)는 기다리지 않는다 — 오프라인 · 백그라운드에서는 재시도가 멈춰 실패로 끝나지 않는다
-  if (query.data || query.failureCount === 0) return query;
-  return { ...query, data: offlineFileUrls("pack-photos", sorted) };
+  // 서버에 닿지 못했으면(오프라인) token 없는 주소 — 서비스 워커가 저장해 둔 사진이면 보인다
+  return withOfflineFileUrls(query, "pack-photos", sorted);
 }
