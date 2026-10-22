@@ -21,5 +21,8 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     globPatterns: [".next/static/**/*.{js,css,ico,png,svg,webp,woff2}", "public/icons/**/*"],
     swSrc: "src/app/sw.ts",
     useNativeEsbuild: true,
+    // 한 파일로 묶은 classic 스크립트로 — Serwist 기본(esm · module 등록)은 module 서비스 워커를 모르는 브라우저에서
+    // 등록이 조용히 실패한다. 레이아웃의 등록도 classic 으로 맞춘다
+    esbuildOptions: { format: "iife" },
   },
 );
