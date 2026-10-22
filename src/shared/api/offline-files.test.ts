@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   isOfflineFileUrl,
@@ -10,6 +10,10 @@ import {
 import { ApiError } from "./post-json";
 
 describe("기기에 남기는 사진 주소", () => {
+  // 오프라인 주소는 Supabase 주소로 만든다 — 테스트마다 넣고 끝나면 되돌린다
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co"));
+  afterEach(() => vi.unstubAllEnvs());
+
   const base = "https://abc.supabase.co/storage/v1/object/sign";
 
   it("두 버킷의 서명 주소만 저장한다 — 다른 버킷 · 공개 주소 · 다른 도메인은 아니다", () => {
@@ -27,7 +31,6 @@ describe("기기에 남기는 사진 주소", () => {
   it("저장 키는 token 을 뺀 주소, 오프라인 주소는 그 키와 같다", () => {
     const signed = `${base}/vouchers/t/a.png?token=x`;
     expect(offlineFileCacheKey(signed)).toBe(`${base}/vouchers/t/a.png`);
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://abc.supabase.co";
     expect(offlineFileUrls("vouchers", ["t/a.png"])).toEqual({
       "t/a.png": `${base}/vouchers/t/a.png`,
     });
