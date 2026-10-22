@@ -3428,13 +3428,17 @@ describe("준비물 (0060)", () => {
     await expect(addPackItem(trip, group, photo)).resolves.toBeTruthy();
   });
 
-  it("쇼핑 사진 버킷 (0062) — 경로 첫 칸 여행의 멤버만 올리고 지운다", async () => {
+  it("쇼핑 사진 버킷 (0062) — 경로 첫 칸 여행의 멤버만 올리고 · 보고 · 지운다", async () => {
     await as(A);
     const trip = await newTrip("2027-10-31", "2027-11-02");
     await db.query(
       `insert into storage.objects (bucket_id, name) values ('pack-photos', '${trip}/ok.jpg')`,
     );
     await as(B);
+    // 읽기 정책 — 남은 이 여행 사진을 찾지 못해 서명 주소도 만들 수 없다
+    expect(
+      (await db.query(`select 1 from storage.objects where bucket_id = 'pack-photos'`)).rows,
+    ).toHaveLength(0);
     await expect(
       db.query(
         `insert into storage.objects (bucket_id, name) values ('pack-photos', '${trip}/no.jpg')`,
