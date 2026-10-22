@@ -9,9 +9,11 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { GROUP_NAME_MAX, PACK_COPY } from "../lib/copy";
 import { usePackBoard } from "../model/use-pack-board";
 import { usePackItemActions } from "../model/use-pack-item-actions";
+import { usePackPhotoActions } from "../model/use-pack-photo-actions";
 import { PackConfirms } from "./pack-confirms";
 import { PackGroupCard } from "./pack-group-card";
 import { PackItemSheet } from "./pack-item-sheet";
+import { PackPhotoViewer } from "./pack-photo-viewer";
 import { PackTextInput } from "./pack-text-input";
 
 type PackBoardProps = {
@@ -22,11 +24,18 @@ type PackBoardProps = {
 
 /**
  * 노트 › 준비물 · 쇼핑(같은 모양) — 진행률 카드(「N / M 챙김 · 구매」 + 막대), 그룹 카드(모바일 한 줄 · PC 300 이상 여러 열),
- * 맨 아래 점선 「그룹 추가」. 그룹이 없으면 빈 상태(「기본 목록 · 그룹으로 시작」 · 「빈 목록으로 시작」)
+ * 맨 아래 점선 「그룹 추가」. 쇼핑은 줄마다 참고 사진(48 · 전체 화면). 그룹이 없으면 빈 상태(「기본 목록 · 그룹으로 시작」 · 「빈 목록으로 시작」)
  */
 export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
   const state = usePackBoard(tripId, kind, onToast);
   const actions = usePackItemActions(tripId, state.board, onToast);
+  const shopPhotos = usePackPhotoActions(
+    tripId,
+    state.board?.groups.flatMap((g) => g.items) ?? [],
+    onToast,
+  );
+  // 사진은 쇼핑만
+  const photos = kind === "shop" ? shopPhotos : null;
   const copy = PACK_COPY[kind];
   const EmptyIcon = kind === "shop" ? ShoppingBag : Backpack;
   if (state.isPending || !state.board) {
@@ -92,7 +101,13 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
       </div>
       <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
         {board.groups.map((view) => (
-          <PackGroupCard key={view.group.id} view={view} state={state} actions={actions} />
+          <PackGroupCard
+            key={view.group.id}
+            view={view}
+            state={state}
+            actions={actions}
+            photos={photos}
+          />
         ))}
       </div>
       <label className="flex h-12 items-center gap-2 rounded-card border-[1.5px] border-dashed border-line-dashed bg-white px-3.5">
@@ -107,6 +122,7 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
         />
       </label>
       <PackItemSheet
+        tripId={tripId}
         kind={kind}
         board={board}
         actions={actions}
@@ -114,6 +130,7 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
         me={state.me}
       />
       <PackConfirms actions={actions} checkedItems={copy.checkedItems} />
+      {photos && <PackPhotoViewer tripId={tripId} photos={photos} />}
     </div>
   );
 }

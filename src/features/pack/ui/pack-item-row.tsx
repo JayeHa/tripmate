@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { isChecked, type PackItem } from "@/entities/pack";
 import type { MemberBadge } from "@/entities/trip-member";
@@ -20,11 +21,13 @@ type PackItemRowProps = {
   /** 줄을 눌렀다(체크박스 밖) — 상세 열기 */
   onOpen: () => void;
   onDelete: () => void;
+  /** 오른쪽 끝 사진 칸(쇼핑만) */
+  photo?: ReactNode;
 };
 
 /**
  * 항목 한 줄(최소 48) — 체크박스 22 · r6(챙기면 블루 + 체크) · 이름 15/600(챙기면 회색 · 취소선) · 메모 12 ·
- * 오른쪽 체크한 사람 아바타 22. 체크해도 자리는 그대로.
+ * 오른쪽 체크한 사람 아바타 22 · 쇼핑은 그 뒤에 사진 48. 체크해도 자리는 그대로.
  * 체크박스만 챙김을 바꾸고, 나머지를 누르면 상세. 왼쪽으로 밀면 뒤에 76 빨간 「삭제」(PC 는 마우스로 끌기)
  */
 export function PackItemRow({
@@ -35,6 +38,7 @@ export function PackItemRow({
   onToggle,
   onOpen,
   onDelete,
+  photo,
 }: PackItemRowProps) {
   const done = isChecked(item);
   const swipe = useSwipeReveal(swiped, onSwipedChange);
@@ -97,6 +101,7 @@ export function PackItemRow({
           {item.memo && <span className="text-xs/[1.4] text-ink-400">{item.memo}</span>}
         </button>
         {done && checker && <CheckerAvatar checker={checker} />}
+        {photo}
       </div>
     </li>
   );
