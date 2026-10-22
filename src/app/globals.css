@@ -189,6 +189,12 @@
   --color-tag-link: #4b5563;
   --color-tag-link-bg: #e9ebee;
 
+  /* 동기화 칩(오프라인 편집) — 「모두 저장됨」 · 「변경 N건 대기」. 「저장 실패」 는 destructive, 「저장 중」 은 surface-muted */
+  --color-sync-saved: #0f766e;
+  --color-sync-saved-soft: #e6f6f3;
+  --color-sync-waiting: #c2410c;
+  --color-sync-waiting-soft: #fff1e6;
+
   /* 체크리스트 — 마감이 7일 안(지난 것 포함)인 마감 칩 · 타임라인 「체크리스트 N」 칩, 「기타」 상태(점 · 칩), 「완료」 점 · 읽기 화면 상태 칩 */
   --color-checklist-due: #c2410c;
   --color-checklist-due-bg: #fff1e6;

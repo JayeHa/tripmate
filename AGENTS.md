@@ -163,6 +163,14 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - **요청 중 닫기 막기** — 창에 `locked`(`Dialog` · `AlertDialog` · `SheetDialog` · `FlowDialog`), 안쪽 내용은 `useReportLock(locked, onLockChange)` 로 알린다.
   사라질 때 false 로 되돌려서, 저장하고 닫힌 뒤 잠김이 남지 않는다. 창 안의 ✕ · 취소 버튼은 각자 `disabled` 로 막는다
 
+## 저장(뮤테이션)과 오프라인
+
+**저장은 기본으로 오프라인이면 막힌다**(`shared/api/sync.ts` 의 `blockOfflineMutation`). 오프라인에서도 되게 하려면 대기열에 넣는다 — 현장 동작만(체크 · 메모 · 비용 추가, [`docs/policies/offline.md`](docs/policies/offline.md)).
+
+- 키를 `["sync", …]` 로 하고, 함수 · 화면 먼저 바꾸기 · 되돌리기를 `queryClient.setMutationDefaults` 로 등록해 `app/providers.tsx` 에서 부른다(예: `registerChecklistSync`). 훅에 `mutationFn` 을 두면 기기에서 되살린 저장이 함수 없이 남는다(#195)
+- 값(variables)에는 다시 올릴 때 필요한 것을 모두 담는다(여행 id · 누른 시각 · 본 버전) — 앱을 다시 연 뒤에도 그 값만으로 올라간다
+- 같은 값이 두 번 올라가도 결과가 같게 만든다(상태 · 칸 바꾸기, 화면에서 만든 id 로 넣기). 일행의 수정과 부딪히면 `updateLatestWins`(나중 수정 우선 + 알림)
+
 ## 요청을 prop 으로 내릴 때
 
 「그 날로 스크롤해 줘」 처럼 **한 번 실행할 요청**을 상태로 만들어 prop 으로 내리면, 받는 컴포넌트가 다시 마운트될 때 지난 요청이 다시 실행된다.
@@ -247,6 +255,7 @@ DB 함수나 RLS 를 바꾸면 여기에 동작을 고정한다(정상 · 거부
 [`docs/policies/data-model.md`](docs/policies/data-model.md) 에 있다. 권한을 다루는 기능을 만들거나 리뷰할 때 먼저 읽는다.
 장소 검색 범위 · 구글 지도 · 장소 API 결정은 [`docs/policies/place-search.md`](docs/policies/place-search.md) 에 쌓는다.
 일정 화면의 동작 규칙(이어서 · 하루씩 보기 · 편집 · 상세 · 시간 입력)은 [`docs/policies/schedule.md`](docs/policies/schedule.md) 에 있다. 일정 화면의 동작을 바꾸면 같은 PR 에서 그 문서도 고친다.
+오프라인(보기 · 편집 대기열 · 충돌 · 동기화 칩)은 [`docs/policies/offline.md`](docs/policies/offline.md) 에 있다. 오프라인 동작을 바꾸면 같은 PR 에서 그 문서도 고친다.
 사진 · 파일 저장(저장소 · 키 · 받는 파일 · 압축 · 지우기)은 [`docs/policies/files.md`](docs/policies/files.md) 에 쌓는다. 파일 규칙을 바꾸면 같은 PR 에서 그 문서도 고친다.
 **마이그레이션(테이블 · 정책 · 함수 · 트리거)을 바꾸면 같은 PR 에서 이 문서도 고친다.** 테이블 · 함수 이름이 빠지면 `migrations.test.ts` 가 막는다.
 
