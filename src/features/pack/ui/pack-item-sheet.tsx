@@ -3,7 +3,7 @@
 import { Check, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
-import { isChecked, type PackBoard, type PackItem, type PackKind } from "@/entities/pack";
+import { isChecked, type PackBoard, type PackItem, type PackKind, photoOf } from "@/entities/pack";
 import type { MemberBadge } from "@/entities/trip-member";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
@@ -15,9 +15,12 @@ import { Textarea } from "@/shared/ui/textarea";
 
 import { ITEM_MEMO_MAX, ITEM_NAME_MAX, PACK_COPY } from "../lib/copy";
 import type { PackItemActions } from "../model/use-pack-item-actions";
+import { usePhotoDraft } from "../model/use-photo-draft";
 import { CheckerAvatar } from "./checker-avatar";
+import { PackSheetPhoto } from "./pack-sheet-photo";
 
 type PackItemSheetProps = {
+  tripId: string;
   kind: PackKind;
   board: PackBoard;
   actions: PackItemActions;
@@ -28,10 +31,10 @@ type PackItemSheetProps = {
 
 /**
  * 항목 상세 — 1024 아래는 아래에서 올라오는 시트(r22 위 모서리 · 최대 88%), 이상은 가운데 540 창.
- * 이름 · 메모 · 그룹 · 챙김을 고쳐 「저장」 으로 한 번에. 휴지통은 확인을 거쳐 지운다.
+ * (쇼핑은 큰 사진 칸) · 이름 · 메모 · 그룹 · 챙김을 고쳐 「저장」 으로 한 번에. 휴지통은 확인을 거쳐 지운다.
  * 열 때마다 새로 그리고, 닫히는 동안은 마지막 내용을 그린다
  */
-export function PackItemSheet({ kind, board, actions, checkerOf, me }: PackItemSheetProps) {
+export function PackItemSheet({ tripId, kind, board, actions, checkerOf, me }: PackItemSheetProps) {
   const open = actions.detail !== null;
   const item = useHeldWhileClosing(open, actions.detail);
   const opens = useOpenCount(open);
@@ -44,6 +47,8 @@ export function PackItemSheet({ kind, board, actions, checkerOf, me }: PackItemS
         {item && (
           <ItemForm
             key={opens}
+            open={open}
+            tripId={tripId}
             kind={kind}
             item={item}
             board={board}
@@ -58,6 +63,8 @@ export function PackItemSheet({ kind, board, actions, checkerOf, me }: PackItemS
 }
 
 type ItemFormProps = Omit<PackItemSheetProps, "actions"> & {
+  /** 창이 열려 있는가 — 닫히면 저장하지 않은 사진을 지운다 */
+  open: boolean;
   item: PackItem;
   actions: PackItemActions;
 };
@@ -67,13 +74,14 @@ type ItemFormProps = Omit<PackItemSheetProps, "actions"> & {
  * 저장은 연 순간의 행(base)과 비교한다. 받은 item 은 실시간으로 바뀌어서, 그걸 기준으로 하면
  * 그사이 일행이 바꾼 칸(체크 · 이름 · 그룹)을 손대지 않았는데도 「바뀐 칸」 으로 보고 되돌린다
  */
-function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) {
+function ItemForm({ open, tripId, kind, item, board, actions, checkerOf, me }: ItemFormProps) {
   const copy = PACK_COPY[kind];
   const [base] = useState(item);
   const [name, setName] = useState(base.name);
   const [memo, setMemo] = useState(base.memo);
   const [groupId, setGroupId] = useState(base.group_id);
   const [checked, setChecked] = useState(isChecked(base));
+  const photo = usePhotoDraft(tripId, photoOf(base), open, actions.onToast);
   const checker = checkerOf(isChecked(base) ? base.checked_by : me);
   const groups = board.groups.map((g) => ({ value: g.group.id, label: g.group.name }));
   return (
@@ -87,6 +95,7 @@ function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) 
         </button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-3">
+        {kind === "shop" && <PackSheetPhoto tripId={tripId} draft={photo} />}
         <Field label="이름">
           <Input
             value={name}
@@ -150,8 +159,10 @@ function ItemForm({ kind, item, board, actions, checkerOf, me }: ItemFormProps) 
         <Button
           size="form"
           className="flex-1"
-          disabled={!name.trim()}
-          onClick={() => actions.save(base, { name, memo, groupId, checked })}
+          disabled={!name.trim() || photo.uploading}
+          onClick={() =>
+            actions.save(base, { name, memo, groupId, checked, photo: photo.handOff() })
+          }
         >
           저장
         </Button>

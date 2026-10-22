@@ -432,6 +432,8 @@ export type Database = {
           position: number;
           checked_at: string | null;
           checked_by: string | null;
+          photo_key: string | null;
+          thumb_key: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -445,6 +447,8 @@ export type Database = {
           position?: number;
           checked_at?: string | null;
           checked_by?: string | null;
+          photo_key?: string | null;
+          thumb_key?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -458,6 +462,8 @@ export type Database = {
           position?: number;
           checked_at?: string | null;
           checked_by?: string | null;
+          photo_key?: string | null;
+          thumb_key?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

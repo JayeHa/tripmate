@@ -3403,4 +3403,52 @@ describe("준비물 (0060)", () => {
       ]),
     ).rejects.toThrow(/row-level security/);
   });
+
+  it("쇼핑 사진 (0062) — 사진 · 썸네일은 함께, 그 여행 폴더 안, 줄마다 겹치지 않는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const other = await newTrip("2027-12-01", "2027-12-02");
+    const group = await addGroup(trip, "🛍️ 우리용", "shop");
+    const photo = { photo_key: `${trip}/p.jpg`, thumb_key: `${trip}/t.jpg` };
+    const id = await addPackItem(trip, group, photo);
+    await expect(addPackItem(trip, group, { photo_key: `${trip}/p2.jpg` })).rejects.toThrow(
+      /pack_items_photo_chk/,
+    );
+    await expect(
+      addPackItem(trip, group, { photo_key: `${other}/p.jpg`, thumb_key: `${other}/t.jpg` }),
+    ).rejects.toThrow(/pack_items_photo_keys_chk/);
+    await expect(
+      addPackItem(trip, group, { photo_key: `${trip}/../p.jpg`, thumb_key: `${trip}/t2.jpg` }),
+    ).rejects.toThrow(/pack_items_photo_keys_chk/);
+    await expect(addPackItem(trip, group, photo)).rejects.toThrow(/unique/);
+    // 사진을 지우면 두 칸을 함께 비운다
+    await db.query(
+      `update public.pack_items set photo_key = null, thumb_key = null where id = '${id}'`,
+    );
+    await expect(addPackItem(trip, group, photo)).resolves.toBeTruthy();
+  });
+
+  it("쇼핑 사진 버킷 (0062) — 경로 첫 칸 여행의 멤버만 올리고 · 보고 · 지운다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('pack-photos', '${trip}/ok.jpg')`,
+    );
+    await as(B);
+    // 읽기 정책 — 남은 이 여행 사진을 찾지 못해 서명 주소도 만들 수 없다
+    expect(
+      (await db.query(`select 1 from storage.objects where bucket_id = 'pack-photos'`)).rows,
+    ).toHaveLength(0);
+    await expect(
+      db.query(
+        `insert into storage.objects (bucket_id, name) values ('pack-photos', '${trip}/no.jpg')`,
+      ),
+    ).rejects.toThrow(/row-level security/);
+    // RLS 는 오류 없이 0줄 — 파일이 그대로인지로 확인한다
+    await db.query(`delete from storage.objects where bucket_id = 'pack-photos'`);
+    await as(A);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/ok.jpg'`)).rows,
+    ).toHaveLength(1);
+  });
 });

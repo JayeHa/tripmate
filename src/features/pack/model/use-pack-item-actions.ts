@@ -8,6 +8,8 @@ import {
   type PackItem,
   type PackItemDraft,
   packItemPatch,
+  photoOf,
+  removePackPhotos,
   useDeletePackItem,
   usePackLists,
   useUncheckPackItems,
@@ -74,10 +76,18 @@ export function usePackItemActions(
       run(remove.mutateAsync(deleting.id), "지우지 못했어요. 잠시 후 다시 시도해 주세요");
       onToast("항목을 삭제했어요");
     },
-    /** 상세의 저장 — 바뀐 칸만, 없으면 닫기만 */
+    /**
+     * 상세의 저장 — 바뀐 칸만, 없으면 닫기만. 사진을 바꿨으면 저장한 뒤 앞 사진 파일을,
+     * 저장하지 못하면 새로 올린 사진 파일을 지운다(시트가 이미 넘겨줬다)
+     */
     save: (item: PackItem, draft: PackItemDraft) => {
       setDetailId(null);
-      if (!user) return;
+      const before = photoOf(item);
+      const photoChanged = draft.photo?.photo_key !== before?.photo_key;
+      if (!user) {
+        if (photoChanged) void removePackPhotos(tripId, [draft.photo]);
+        return;
+      }
       const patch = packItemPatch(
         item,
         draft,
@@ -86,9 +96,20 @@ export function usePackItemActions(
         new Date().toISOString(),
       );
       if (Object.keys(patch).length === 0) return;
-      run(update.mutateAsync({ id: item.id, patch }));
+      const saved = update.mutateAsync({ id: item.id, patch }).then(
+        () => {
+          if (photoChanged) void removePackPhotos(tripId, [before]);
+        },
+        (e: unknown) => {
+          if (photoChanged) void removePackPhotos(tripId, [draft.photo]);
+          throw e;
+        },
+      );
+      run(saved);
       onToast("저장했어요");
     },
+    /** 시트 안에서 알릴 것(사진 올리기 실패) */
+    onToast,
     /** 「모두 해제」 — 챙긴 것이 없으면 누를 수 없다 */
     checkedCount: checkedIds.length,
     resetting,

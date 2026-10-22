@@ -20,5 +20,6 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery([...queryKeys.receipts("t1"), "urls", "t1/a.jpg"])).toBe(false);
     expect(shouldPersistQuery(queryKeys.vouchers("t1"))).toBe(true);
     expect(shouldPersistQuery([...queryKeys.vouchers("t1"), "urls", "t1/a.pdf"])).toBe(false);
+    expect(shouldPersistQuery([...queryKeys.packPhotos("t1"), "urls", "t1/a.jpg"])).toBe(false);
   });
 });

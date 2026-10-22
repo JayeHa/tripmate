@@ -71,7 +71,7 @@ export function useRenamePackGroup(tripId: string) {
 export function useDeletePackGroup(tripId: string) {
   const cache = usePackCache(tripId);
   return useMutation({
-    mutationFn: (id: string) => deletePackGroup(id),
+    mutationFn: (id: string) => deletePackGroup(tripId, id),
     onSettled: cache.invalidate,
   });
 }

@@ -1,7 +1,9 @@
 import { createClient } from "@/shared/api/supabase/client";
 
 import type { PackItemPatch } from "../lib/board";
+import { type PackPhoto, photoOf } from "../lib/photo-rules";
 import type { PackGroup, PackItem, PackKind, PackLists, PackPreset } from "../model/types";
+import { removePackPhotos } from "./photos";
 
 /** 고치려는 그룹 · 항목이 없다 — 그사이 일행이 지웠다 */
 export const PACK_GONE = "이미 지워진 항목이에요";
@@ -62,11 +64,21 @@ export async function renamePackGroup(id: string, name: string): Promise<void> {
   ensureRow(data);
 }
 
-/** 그룹 지우기 — 항목도 함께(cascade). 이미 지워졌으면(0행) 그대로 끝낸다 */
-export async function deletePackGroup(id: string): Promise<void> {
+/**
+ * 그룹 지우기 — 항목도 함께(cascade). 이미 지워졌으면(0행) 그대로 끝낸다.
+ * 항목의 사진 키를 먼저 읽어 두고, 지운 뒤 그 파일을 지운다(cascade 로 지운 줄은 돌려받지 못한다)
+ */
+export async function deletePackGroup(tripId: string, id: string): Promise<void> {
   const supabase = createClient();
+  const photos = await supabase
+    .from("pack_items")
+    .select("photo_key, thumb_key")
+    .eq("group_id", id)
+    .not("photo_key", "is", null);
+  if (photos.error) throw photos.error;
   const { error } = await supabase.from("pack_groups").delete().eq("id", id);
   if (error) throw error;
+  await removePackPhotos(tripId, photos.data.map(photoOf));
 }
 
 /** 항목을 그룹 맨 뒤(position)에 넣는다 */
@@ -109,11 +121,41 @@ export async function updatePackItem(id: string, patch: PackItemPatch): Promise<
   ensureRow(data);
 }
 
-/** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다 */
-export async function deletePackItem(id: string): Promise<void> {
+/** 사진을 바꾸려는 사이 일행이 먼저 바꾸거나 지웠다 */
+export const PACK_PHOTO_CHANGED = "일행이 사진을 먼저 바꿨어요";
+
+/**
+ * 항목 사진 바꾸기 · 지우기(photo = null) — 지금 사진이 expected(연 때의 사진 키, 없었으면 null)일 때만.
+ * 그사이 일행이 바꿨으면 0행이라 PACK_PHOTO_CHANGED 를 던진다 — 일행의 사진을 덮거나 비우지 않고,
+ * 화면이 지우려던 앞 사진 파일과 어긋나 일행의 사진 파일이 남지 않게
+ */
+export async function setPackItemPhoto(
+  id: string,
+  photo: PackPhoto | null,
+  expected: string | null,
+): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("pack_items").delete().eq("id", id);
+  const query = supabase
+    .from("pack_items")
+    .update({ photo_key: photo?.photo_key ?? null, thumb_key: photo?.thumb_key ?? null })
+    .eq("id", id);
+  const { data, error } = await (
+    expected ? query.eq("photo_key", expected) : query.is("photo_key", null)
+  ).select("id");
   if (error) throw error;
+  if (data.length === 0) throw new Error(PACK_PHOTO_CHANGED);
+}
+
+/** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다. 지운 줄의 사진 파일도 지운다 */
+export async function deletePackItem(tripId: string, id: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("pack_items")
+    .delete()
+    .eq("id", id)
+    .select("photo_key, thumb_key");
+  if (error) throw error;
+  await removePackPhotos(tripId, data.map(photoOf));
 }
 
 /** 「모두 해제」 — 받은 항목의 챙김을 모두 푼다. 그사이 지워진 것은 건너뛴다 */
