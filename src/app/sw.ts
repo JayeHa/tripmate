@@ -60,7 +60,8 @@ const rules: RuntimeCaching[] = [
   {
     // 바우처 · 쇼핑 사진 — 파일은 키가 바뀌지 않는다(바꾸면 새 키). 한 번 받은 것을 쓴다(본 것만, 2026-10-22 사용자 결정).
     // 서명 주소의 token 은 1시간마다 바뀌어 경로로 찾는다. <img> 요청은 no-cors 라 그대로 저장하면
-    // 내용을 알 수 없는 응답(opaque)이 되어, cors 로 다시 받는다
+    // 내용을 알 수 없는 응답(opaque)이 되어, cors 로 다시 받는다. 사진만 남긴다 — 「원본 저장」 이 받는 PDF(20MB 까지)는 빼고,
+    // 저장 공간이 모자라면 이 캐시부터 비운다(출처 전체가 지워지면 IndexedDB 의 데이터 캐시도 사라진다)
     matcher: ({ url }) => isOfflineFileUrl(url),
     handler: new CacheFirst({
       cacheName: "trip-files",
@@ -69,8 +70,14 @@ const rules: RuntimeCaching[] = [
           cacheKeyWillBeUsed: ({ request }) => Promise.resolve(offlineFileCacheKey(request.url)),
           requestWillFetch: ({ request }) =>
             Promise.resolve(new Request(request.url, { mode: "cors", credentials: "omit" })),
+          cacheWillUpdate: ({ response }) =>
+            Promise.resolve(
+              response.ok && response.headers.get("content-type")?.startsWith("image/")
+                ? response
+                : null,
+            ),
         },
-        new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 30 * DAY }),
+        new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 30 * DAY, purgeOnQuotaError: true }),
       ],
     }),
   },
