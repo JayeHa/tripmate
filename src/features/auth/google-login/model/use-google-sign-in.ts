@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { QUERY_PERSIST_KEY } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
+import { clearOfflineCache } from "@/shared/lib/offline-cache";
 
 /**
  * Google OAuth 로그인. 성공하면 Supabase 가 /auth/callback 으로 돌려보내고,
@@ -31,6 +32,7 @@ export function useGoogleSignIn() {
     const { data } = await supabase.auth.getUser();
     if (data.user?.is_anonymous) {
       queryClient.clear();
+      await clearOfflineCache();
       try {
         await del(QUERY_PERSIST_KEY);
       } catch {
