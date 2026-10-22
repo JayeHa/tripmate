@@ -1,4 +1,5 @@
 import type { PackGroup, PackItem, PackKind, PackLists, PackPreset } from "../model/types";
+import { type PackPhoto, photoOf } from "./photo-rules";
 
 /** 그룹 하나와 그 항목 — 챙긴 수 · 전체 수 */
 export type PackGroupView = { group: PackGroup; items: PackItem[]; done: number; total: number };
@@ -53,17 +54,34 @@ export const PACK_PRESETS: Record<PackKind, PackPreset[]> = {
   ],
 };
 
-/** 항목 상세에서 고친 것 — 이름 · 메모 · 그룹 · 챙김 */
-export type PackItemDraft = { name: string; memo: string; groupId: string; checked: boolean };
+/** 항목 상세에서 고친 것 — 이름 · 메모 · 그룹 · 챙김 · 사진(쇼핑) */
+export type PackItemDraft = {
+  name: string;
+  memo: string;
+  groupId: string;
+  checked: boolean;
+  photo: PackPhoto | null;
+};
 
 /** 항목에 저장할 칸 */
 export type PackItemPatch = Partial<
-  Pick<PackItem, "name" | "memo" | "group_id" | "position" | "checked_at" | "checked_by">
+  Pick<
+    PackItem,
+    | "name"
+    | "memo"
+    | "group_id"
+    | "position"
+    | "checked_at"
+    | "checked_by"
+    | "photo_key"
+    | "thumb_key"
+  >
 >;
 
 /**
  * 항목 상세의 저장 — 바뀐 칸만. 이름 · 메모는 앞뒤 공백을 뗀다. 다른 그룹으로 옮기면 그 그룹 맨 뒤(items 는 여행의 모든 항목).
  * 챙김은 바뀌었을 때만 — 챙기면 나와 지금 시각, 풀면 둘 다 비운다. 그대로면 누가 언제 챙겼는지 남긴다.
+ * 사진은 바꾸거나 지웠을 때만 두 칸을 함께.
  * 바뀐 것이 없으면 빈 객체
  */
 export function packItemPatch(
@@ -85,6 +103,10 @@ export function packItemPatch(
   if (draft.checked !== isChecked(item)) {
     patch.checked_by = draft.checked ? me : null;
     patch.checked_at = draft.checked ? now : null;
+  }
+  if (draft.photo?.photo_key !== photoOf(item)?.photo_key) {
+    patch.photo_key = draft.photo?.photo_key ?? null;
+    patch.thumb_key = draft.photo?.thumb_key ?? null;
   }
   return patch;
 }

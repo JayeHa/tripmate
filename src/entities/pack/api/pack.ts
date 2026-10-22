@@ -1,7 +1,9 @@
 import { createClient } from "@/shared/api/supabase/client";
 
 import type { PackItemPatch } from "../lib/board";
+import { photoOf } from "../lib/photo-rules";
 import type { PackGroup, PackItem, PackKind, PackLists, PackPreset } from "../model/types";
+import { removePackPhotos } from "./photos";
 
 /** 고치려는 그룹 · 항목이 없다 — 그사이 일행이 지웠다 */
 export const PACK_GONE = "이미 지워진 항목이에요";
@@ -62,11 +64,21 @@ export async function renamePackGroup(id: string, name: string): Promise<void> {
   ensureRow(data);
 }
 
-/** 그룹 지우기 — 항목도 함께(cascade). 이미 지워졌으면(0행) 그대로 끝낸다 */
-export async function deletePackGroup(id: string): Promise<void> {
+/**
+ * 그룹 지우기 — 항목도 함께(cascade). 이미 지워졌으면(0행) 그대로 끝낸다.
+ * 항목의 사진 키를 먼저 읽어 두고, 지운 뒤 그 파일을 지운다(cascade 로 지운 줄은 돌려받지 못한다)
+ */
+export async function deletePackGroup(tripId: string, id: string): Promise<void> {
   const supabase = createClient();
+  const photos = await supabase
+    .from("pack_items")
+    .select("photo_key, thumb_key")
+    .eq("group_id", id)
+    .not("photo_key", "is", null);
+  if (photos.error) throw photos.error;
   const { error } = await supabase.from("pack_groups").delete().eq("id", id);
   if (error) throw error;
+  await removePackPhotos(tripId, photos.data.map(photoOf));
 }
 
 /** 항목을 그룹 맨 뒤(position)에 넣는다 */
@@ -109,11 +121,16 @@ export async function updatePackItem(id: string, patch: PackItemPatch): Promise<
   ensureRow(data);
 }
 
-/** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다 */
-export async function deletePackItem(id: string): Promise<void> {
+/** 항목 지우기 — 이미 지워졌으면(0행) 그대로 끝낸다. 지운 줄의 사진 파일도 지운다 */
+export async function deletePackItem(tripId: string, id: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("pack_items").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("pack_items")
+    .delete()
+    .eq("id", id)
+    .select("photo_key, thumb_key");
   if (error) throw error;
+  await removePackPhotos(tripId, data.map(photoOf));
 }
 
 /** 「모두 해제」 — 받은 항목의 챙김을 모두 푼다. 그사이 지워진 것은 건너뛴다 */

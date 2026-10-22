@@ -44,7 +44,7 @@ describe("packItemPatch", () => {
     checked_by: "friend",
   } as PackItem;
   const all = [base, { ...item("i2", "g2"), position: 4 }];
-  const draft = { name: "여권", memo: "", groupId: "g1", checked: true };
+  const draft = { name: "여권", memo: "", groupId: "g1", checked: true, photo: null };
 
   it("바뀐 것이 없으면 빈 객체 — 챙긴 사람 · 시각은 그대로", () => {
     expect(packItemPatch(base, { ...draft, name: " 여권 " }, all, "me", NOW)).toEqual({});
@@ -78,6 +78,17 @@ describe("packItemPatch", () => {
     expect(packItemPatch(unchecked, draft, all, "me", NOW)).toEqual({
       checked_by: "me",
       checked_at: NOW,
+    });
+  });
+
+  it("사진 — 넣거나 바꾸면 두 칸을, 지우면 둘 다 비운다. 그대로면 넣지 않는다", () => {
+    const photo = { photo_key: "t/p.jpg", thumb_key: "t/t.jpg" };
+    expect(packItemPatch(base, { ...draft, photo }, all, "me", NOW)).toEqual(photo);
+    const withPhoto = { ...base, ...photo };
+    expect(packItemPatch(withPhoto, { ...draft, photo }, all, "me", NOW)).toEqual({});
+    expect(packItemPatch(withPhoto, draft, all, "me", NOW)).toEqual({
+      photo_key: null,
+      thumb_key: null,
     });
   });
 });

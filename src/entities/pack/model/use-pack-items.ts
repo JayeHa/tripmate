@@ -35,7 +35,7 @@ export function useUpdatePackItem(tripId: string) {
 export function useDeletePackItem(tripId: string) {
   const cache = usePackCache(tripId);
   return useMutation({
-    mutationFn: (id: string) => deletePackItem(id),
+    mutationFn: (id: string) => deletePackItem(tripId, id),
     onMutate: async (id) => {
       await cache.cancel();
       const before = itemsOf(cache.get(), [id]);

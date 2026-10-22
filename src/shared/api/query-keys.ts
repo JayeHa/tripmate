@@ -29,6 +29,8 @@ export const queryKeys = {
   vouchers: (tripId: string) => ["trips", tripId, "vouchers"] as const,
   /** 노트 · 준비물 · 쇼핑 — 그룹과 항목(두 종류 함께) */
   packLists: (tripId: string) => ["trips", tripId, "pack-lists"] as const,
+  /** 쇼핑 참고 사진 — 읽기 주소는 그 아래 "urls" */
+  packPhotos: (tripId: string) => ["trips", tripId, "pack-photos"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
@@ -46,8 +48,9 @@ export const queryKeys = {
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (queryKey[0] === "cities") return true;
-  // 영수증 · 바우처 읽기 주소는 1시간이면 만료돼 저장하지 않는다
-  if ((queryKey[2] === "receipts" || queryKey[2] === "vouchers") && queryKey[3] === "urls") {
+  // 영수증 · 바우처 · 쇼핑 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
+  const files = ["receipts", "vouchers", "pack-photos"];
+  if (files.includes(String(queryKey[2])) && queryKey[3] === "urls") {
     return false;
   }
   return queryKey[0] === "trips" && queryKey[2] !== "route";
