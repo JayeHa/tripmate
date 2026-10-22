@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
+import { clearOfflineCache } from "@/shared/lib/offline-cache";
 
 export function useUser() {
   const queryClient = useQueryClient();
@@ -41,6 +42,7 @@ export function useSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     queryClient.clear();
+    await clearOfflineCache();
     router.replace("/login");
   };
 }
