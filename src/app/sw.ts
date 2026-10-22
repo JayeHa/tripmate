@@ -57,6 +57,11 @@ function isPagePath(pathname: string): boolean {
 }
 
 const rules: RuntimeCaching[] = [
+  // 인증(로그인 콜백 · 둘러보기)은 저장하지 않는다 — 주소에 일회용 code 가 들어 있다
+  {
+    matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith("/auth/"),
+    handler: new NetworkOnly(),
+  },
   {
     // 바우처 · 쇼핑 사진 — 파일은 키가 바뀌지 않는다(바꾸면 새 키). 한 번 받은 것을 쓴다(본 것만, 2026-10-22 사용자 결정).
     // 서명 주소의 token 은 1시간마다 바뀌어 경로로 찾는다. <img> 요청은 no-cors 라 그대로 저장하면
