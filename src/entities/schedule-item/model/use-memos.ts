@@ -1,41 +1,36 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
-import type { TablesInsert, TablesUpdate } from "@/shared/api/supabase/database.types";
+import type { SyncResult } from "@/shared/api/sync";
 
-import { createMemo, deleteMemo, fetchMemos, updateMemo } from "../api/memos";
+import { fetchMemos } from "../api/memos";
+import {
+  MEMO_CREATE_KEY,
+  MEMO_DELETE_KEY,
+  MEMO_UPDATE_KEY,
+  type MemoCreateVars,
+  type MemoDeleteVars,
+  type MemoUpdateVars,
+} from "./memo-sync";
 
 /** 여행의 메모 전부 — 타임라인 · 일정 상세가 일정마다 골라 쓴다 */
 export function useMemos(tripId: string) {
   return useQuery({ queryKey: queryKeys.memos(tripId), queryFn: () => fetchMemos(tripId) });
 }
 
-/** 메모를 다시 읽는다. 끝날 때까지 기다리는 Promise — mutateAsync 가 새 목록을 받은 뒤 끝나게 */
-function useRefetchMemos(tripId: string) {
-  const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.memos(tripId) });
+/** 메모 쓰기 — 오프라인 대기열(함수 · 동작은 registerMemoSync 가 키로 등록해 둔다). id 는 부르는 쪽이 만든다 */
+export function useCreateMemo() {
+  return useMutation<void, Error, MemoCreateVars>({ mutationKey: MEMO_CREATE_KEY });
 }
 
-export function useCreateMemo(tripId: string) {
-  const refetch = useRefetchMemos(tripId);
-  return useMutation({
-    mutationFn: (memo: TablesInsert<"memos">) => createMemo(memo),
-    onSuccess: refetch,
-  });
+/** 메모 고치기 — 오프라인 대기열. version 은 열 때 본 메모의 updated_at */
+export function useUpdateMemo() {
+  return useMutation<SyncResult, Error, MemoUpdateVars>({ mutationKey: MEMO_UPDATE_KEY });
 }
 
-export function useUpdateMemo(tripId: string) {
-  const refetch = useRefetchMemos(tripId);
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"memos"> }) =>
-      updateMemo(id, patch),
-    onSuccess: refetch,
-  });
-}
-
-export function useDeleteMemo(tripId: string) {
-  const refetch = useRefetchMemos(tripId);
-  return useMutation({ mutationFn: deleteMemo, onSuccess: refetch });
+/** 메모 지우기 — 오프라인 대기열 */
+export function useDeleteMemo() {
+  return useMutation<SyncResult, Error, MemoDeleteVars>({ mutationKey: MEMO_DELETE_KEY });
 }

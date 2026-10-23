@@ -9,6 +9,7 @@ export * from "./lib/link-pick";
 export * from "./lib/timeline";
 export * from "./model/hours";
 export * from "./model/memo";
+export * from "./model/memo-sync";
 export * from "./model/move";
 export * from "./model/place";
 export * from "./model/reservation-status";

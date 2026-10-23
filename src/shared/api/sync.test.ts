@@ -1,8 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  createSyncDeferral,
   dropDeadEndFailures,
+  dropFailedTwins,
+  isDuplicateKey,
   isNetworkError,
   rememberOwnWrite,
   retrySync,
@@ -19,6 +22,13 @@ describe("오프라인 편집 대기열", () => {
     expect(isNetworkError({ message: "Load failed" })).toBe(true);
     expect(isNetworkError({ message: "new row violates row-level security policy" })).toBe(false);
     expect(isNetworkError(null)).toBe(false);
+  });
+
+  it("같은 줄을 다시 넣은 unique 위반만 — 화면에서 만든 id 로 두 번 올라간 저장", () => {
+    expect(isDuplicateKey({ code: "23505", message: "duplicate key value" })).toBe(true);
+    expect(isDuplicateKey({ code: "23503", message: "foreign key" })).toBe(false);
+    expect(isDuplicateKey(new TypeError("Failed to fetch"))).toBe(false);
+    expect(isDuplicateKey(null)).toBe(false);
   });
 
   it("같은 항목을 두 번 바꿨으면 두 번째는 내가 만든 버전과 비교한다", () => {
@@ -84,5 +94,55 @@ describe("오프라인 편집 대기열", () => {
   it("지워짐 · 권한 없음 실패는 대기열에 남지 않는다 — 서버에 닿지 못한 실패만 「다시 시도」 로 남는다", async () => {
     expect(await remainingAfter(new Error("지워진 항목이에요"))).toBe(0);
     expect(await remainingAfter(new TypeError("Failed to fetch"))).toBe(1);
+  });
+
+  it("같은 id 로 다시 저장하면 앞서 실패한 저장은 빠진다 — 다른 줄의 실패는 남는다", async () => {
+    const client = new QueryClient();
+    client.setMutationDefaults(["sync", "test"], {
+      retry: false,
+      gcTime: Infinity,
+      mutationFn: () => Promise.reject(new TypeError("Failed to fetch")),
+    });
+    const cache = client.getMutationCache();
+    for (const id of ["a", "b"]) {
+      await cache
+        .build(client, { mutationKey: ["sync", "test"] })
+        .execute({ id })
+        .catch(() => undefined);
+    }
+    dropFailedTwins(client, ["sync", "test"], "a");
+    expect(cache.getAll().map((m) => (m.state.variables as { id: string }).id)).toEqual(["b"]);
+  });
+
+  it("대기열이 올라가는 동안 온 다시 읽기는 모아 두었다가 비면 한 번에 — 종류가 달라도 빠지지 않는다", async () => {
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, "invalidateQueries").mockResolvedValue();
+    let finish = () => {};
+    client.setMutationDefaults(["sync", "check"], {
+      mutationFn: () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    });
+    const deferral = createSyncDeferral(client);
+
+    deferral.refresh(["expenses"]);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    invalidate.mockClear();
+
+    const running = client
+      .getMutationCache()
+      .build(client, { mutationKey: ["sync", "check"] })
+      .execute(undefined);
+    await vi.waitFor(() => expect(client.isMutating()).toBe(1));
+    deferral.refresh(["expenses"]);
+    deferral.refresh(["memos"]);
+    deferral.refresh(["expenses"]);
+    expect(invalidate).not.toHaveBeenCalled();
+
+    finish();
+    await running;
+    expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([["expenses"], ["memos"]]);
+    deferral.stop();
   });
 });

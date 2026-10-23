@@ -8,7 +8,9 @@ import { del, get, set } from "idb-keyval";
 import { type ReactNode, useState } from "react";
 
 import { registerChecklistSync } from "@/entities/checklist";
+import { registerExpenseSync } from "@/entities/expense";
 import { registerPackSync } from "@/entities/pack";
+import { registerMemoSync } from "@/entities/schedule-item";
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
 import { startSyncOutbox } from "@/shared/api/sync-outbox";
@@ -40,6 +42,8 @@ function makeQueryClient() {
   });
   registerChecklistSync(client);
   registerPackSync(client);
+  registerMemoSync(client);
+  registerExpenseSync(client);
   dropDeadEndFailures(client);
   return client;
 }

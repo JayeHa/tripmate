@@ -1,5 +1,6 @@
 "use client";
 
+import { onlineManager } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
@@ -10,6 +11,7 @@ import {
   useDeleteMemo,
   useUpdateMemo,
 } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { type MemoDraft, memoDraftOf, samePayload, toMemoPayload } from "../lib/memo-draft";
@@ -26,15 +28,18 @@ type MemoComposerOptions = {
 
 /**
  * 메모 작성 · 수정 — 본문(500자) · ★ 중요 · 링크. 여행 멤버 누구나 고치고 지운다(0027).
- * 열릴 때마다 새로 마운트돼 처음 값에서 시작한다. 저장 · 삭제는 mutateAsync 로 받고, 끝났을 때 이 창이
- * 아직 떠 있으면 닫는다(오프라인으로 멈춘 동안 창을 닫고 다른 메모를 열었으면 그 창은 건드리지 않는다)
+ * 열릴 때마다 새로 마운트돼 처음 값에서 시작한다. 저장 · 삭제는 오프라인 대기열로 올라간다 — 화면에 먼저 보이고,
+ * 온라인이면 끝날 때까지 기다려(오류를 이 창에 보이게) 이 창이 아직 떠 있으면 닫고, 오프라인이면 대기열에 남았으니 바로 닫는다
  */
 export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOptions) {
   const [draft, setDraft] = useState<MemoDraft>(() => memoDraftOf(memo));
   const [error, setError] = useState<string | null>(null);
-  const create = useCreateMemo(tripId);
-  const update = useUpdateMemo(tripId);
-  const remove = useDeleteMemo(tripId);
+  // 새 메모의 id 는 창 하나에 하나 — 서버에 닿지 못해 실패한 뒤 「저장」 을 다시 눌러도 같은 메모가 두 개 생기지 않게
+  const [newId] = useState(() => crypto.randomUUID());
+  const { data: user } = useUser();
+  const create = useCreateMemo();
+  const update = useUpdateMemo();
+  const remove = useDeleteMemo();
   const mutations = [create, update, remove];
   const pending = mutations.some((m) => m.isPending);
   // 저장 · 삭제가 끝났을 때 이 창이 아직 떠 있을 때만 닫는다(늦게 끝난 요청이 다른 메모 창을 닫지 않게)
@@ -61,15 +66,29 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
       return;
     }
     const done = memo
-      ? update.mutateAsync({ id: memo.id, patch: result.value })
-      : create.mutateAsync({ trip_id: tripId, schedule_item_id: item.id, ...result.value });
-    void done.then(finish, () => undefined);
+      ? update.mutateAsync({ tripId, id: memo.id, version: memo.updated_at, ...result.value })
+      : create.mutateAsync({
+          tripId,
+          id: newId,
+          itemId: item.id,
+          authorId: user?.id ?? null,
+          createdAt: new Date().toISOString(),
+          ...result.value,
+        });
+    closeWhenDone(done);
   }
 
   /** 고치는 메모를 지운다 */
   function destroy() {
     if (!memo || pending) return;
-    void remove.mutateAsync(memo.id).then(finish, () => undefined);
+    closeWhenDone(remove.mutateAsync({ tripId, id: memo.id, version: memo.updated_at }));
+  }
+
+  /** 온라인이면 끝난 뒤(아직 떠 있으면) 닫고, 오프라인이면 바로 닫는다 — 대기열에 남아 연결되면 올라간다 */
+  function closeWhenDone(done: Promise<unknown>) {
+    const online = onlineManager.isOnline();
+    void done.then(online ? finish : undefined, () => undefined);
+    if (!online) onDone();
   }
 
   return {

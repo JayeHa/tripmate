@@ -8,7 +8,6 @@ import {
   formValuesOf,
   type PaymentOwner,
   paymentOwnerOf,
-  useCreateExpense,
   useDeleteExpense,
   useUpdateExpense,
 } from "@/entities/expense";
@@ -17,6 +16,7 @@ import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { spentOnFromParam } from "../lib/spent-on-param";
 import { startCurrency } from "../lib/start-currency";
 import { readLastCurrency } from "../model/last-currency";
+import { useCreateSubmit } from "../model/use-create-submit";
 import { useExpenseFormData } from "../model/use-expense-form-data";
 import { DeleteExpenseConfirm } from "./delete-expense-confirm";
 import { ExpenseForm, type ExpenseFormLayout } from "./expense-form";
@@ -67,8 +67,8 @@ export function CreateExpense({
   onToast,
 }: CreateExpenseProps) {
   const loaded = useExpenseFormData(tripId);
-  const create = useCreateExpense(tripId);
-  useReportLock(create.isPending, onLockChange);
+  const create = useCreateSubmit(tripId, onDone);
+  useReportLock(create.locked, onLockChange);
   if (loaded.failed)
     return <FormLoadError title="비용 추가" back={back} onClose={onClose} onRetry={loaded.retry} />;
   if (!loaded.data) return null;
@@ -89,17 +89,14 @@ export function CreateExpense({
       quick={quick}
       payFor={payFor}
       onToast={onToast}
-      pending={create.isPending}
-      submitError={create.error?.message}
+      pending={create.pending}
+      submitError={create.error}
       onSubmit={(values, _opened, receipts) =>
-        create.mutate(
-          {
-            values,
-            createdBy: currentUserId,
-            receipts: receipts.attach,
-            owner: payFor ? { kind: payFor.kind, id: payFor.id } : null,
-          },
-          { onSuccess: onDone },
+        create.submit(
+          values,
+          receipts,
+          currentUserId,
+          payFor ? { kind: payFor.kind, id: payFor.id } : null,
         )
       }
     />

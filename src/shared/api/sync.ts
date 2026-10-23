@@ -48,6 +48,55 @@ export function isNetworkError(error: unknown): boolean {
   return typeof message === "string" && /Failed to fetch|NetworkError|Load failed/i.test(message);
 }
 
+/** 같은 줄을 다시 넣었다(unique 위반, 23505) — 화면에서 만든 id 로 넣는 저장이 두 번 올라간 것. 이미 들어갔으니 성공으로 본다 */
+export function isDuplicateKey(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === "23505";
+}
+
+/** 대기열 저장이 올라가는 중인가(오프라인으로 멈춘 것 포함) */
+function isSyncing(client: QueryClient): boolean {
+  return client.isMutating({ mutationKey: [SYNC_KEY] }) > 0;
+}
+
+/**
+ * 실시간 알림의 다시 읽기를 대기열이 빌 때까지 미룬다 — 대기열이 올라가는 동안 다시 읽으면 아직 올리지 않은 변경이 화면에서 잠깐 사라진다.
+ * 미룬 키는 버리지 않고 모아 두었다가 대기열이 비면 한 번에 다시 읽는다. 대기열 저장은 자기 종류(체크리스트 · 메모 …)만 다시 읽어서,
+ * 버리면 다른 종류의 저장이 도는 동안 온 일행의 변경을 놓친다. 다 쓰면 stop 으로 구독을 끝낸다
+ */
+export function createSyncDeferral(client: QueryClient) {
+  const deferred = new Map<string, readonly unknown[]>();
+  const stop = client.getMutationCache().subscribe(() => {
+    if (deferred.size === 0 || isSyncing(client)) return;
+    const keys = [...deferred.values()];
+    deferred.clear();
+    keys.forEach((queryKey) => void client.invalidateQueries({ queryKey }));
+  });
+  return {
+    /** 지금 다시 읽거나, 대기열이 올라가는 중이면 빌 때까지 미룬다 */
+    refresh: (queryKey: readonly unknown[]) => {
+      if (isSyncing(client)) deferred.set(JSON.stringify(queryKey), queryKey);
+      else void client.invalidateQueries({ queryKey });
+    },
+    stop,
+  };
+}
+
+/**
+ * 같은 줄(id)을 넣으려다 실패한 대기열 저장을 뺀다 — 창에서 「저장」 을 다시 눌러 같은 id 로 새 저장이 들어올 때 부른다.
+ * 남기면 「저장 실패 · 다시 시도」 가 남고, 다시 올려도 이미 들어간 줄(23505)이라 할 일이 없다
+ */
+export function dropFailedTwins(
+  client: QueryClient,
+  mutationKey: readonly unknown[],
+  id: string,
+): void {
+  const cache = client.getMutationCache();
+  cache
+    .findAll({ mutationKey, exact: true, status: "error" })
+    .filter((m) => (m.state.variables as { id?: unknown } | undefined)?.id === id)
+    .forEach((m) => cache.remove(m));
+}
+
 /** 대기열 저장을 다시 해 볼까 — 서버에 닿지 못했을 때만 3번. 지워졌거나 권한이 없으면 다시 해도 같아서 바로 되돌린다 */
 export function retrySync(failureCount: number, error: unknown): boolean {
   return failureCount < 3 && isNetworkError(error);
@@ -88,6 +137,8 @@ export function rememberOwnWrite(rowId: string, seen: string, latest: string): v
 
 /** 대기열 저장이 일행의 수정을 덮었을 때 — 시안 「나중 수정이 우선이고 토스트로 알려요」 */
 export const OVERWROTE_TEXT = "일행이 먼저 고친 항목을 내 수정으로 바꿨어요";
+/** 대기열의 삭제가 일행이 그사이 고친 메모를 지웠을 때 */
+export const DELETED_EDITED_TEXT = "일행이 먼저 고친 메모를 지웠어요";
 
 type SyncNoticeListener = (text: string) => void;
 const listeners = new Set<SyncNoticeListener>();
