@@ -100,6 +100,21 @@ export function isOfflineSaveRequest(data: unknown): data is OfflineSaveRequest 
   );
 }
 
+/**
+ * 페이지가 서비스 워커에 「받은 여행의 옛 배포 화면을 새 배포로 옮겨 줘」 하고 보내는 메시지.
+ * 옮기기는 activate 밖에서 한다 — activate 가 끝날 때까지 브라우저가 앱의 모든 요청을 붙잡아 둔다
+ */
+export const OFFLINE_CARRY = { type: "offline-carry" } as const;
+
+/** 받은 메시지가 옮기기 요청인가 */
+export function isOfflineCarryRequest(data: unknown): boolean {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as { type?: unknown }).type === OFFLINE_CARRY.type
+  );
+}
+
 /** 받은 여행의 저장 칸(화면 · 사진)을 지운다 — 보관 기간이 지났을 때. 저장소를 못 쓰는 환경이면 넘어간다 */
 export async function dropOfflineTrip(tripId: string): Promise<void> {
   try {

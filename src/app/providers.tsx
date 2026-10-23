@@ -11,11 +11,10 @@ import { registerChecklistSync } from "@/entities/checklist";
 import { registerExpenseSync } from "@/entities/expense";
 import { registerPackSync } from "@/entities/pack";
 import { registerMemoSync } from "@/entities/schedule-item";
-import { checkSavedTripData, pruneOfflineTrips } from "@/features/trip/offline-download";
+import { startSavedTrips } from "@/features/trip/offline-download";
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
 import { startSyncOutbox } from "@/shared/api/sync-outbox";
-import { todayISO } from "@/shared/lib/days";
 
 const DAY = 24 * 60 * 60 * 1000;
 /**
@@ -76,14 +75,13 @@ export function Providers({ children }: ProvidersProps) {
     <PersistQueryClientProvider
       client={queryClient}
       // 오프라인 편집 대기열은 캐시와 따로 기기에 남긴다(다른 탭이 덮지 않게) — 캐시를 되살린 뒤 닫힌 탭의 대기열을 다시 올린다
-      // 보관 기한이 지난 「오프라인용으로 받기」 여행의 화면 · 사진도 이때 지운다.
-      // 데이터 모양이 바뀐 배포 · 읽기 실패로 캐시를 버렸으면 받은 여행의 데이터를 다시 읽는다(오프라인이면 「다시 받기」 로)
+      // 「오프라인용으로 받기」 여행도 이때 챙긴다 — 기한 지난 것 지우기 · 버려진 데이터 다시 읽기 · 새 배포로 화면 옮기기.
+      // 읽기 실패로 캐시를 버렸을 때도 받은 여행의 데이터를 다시 읽는다(오프라인이면 「다시 받기」 로)
       onSuccess={() => {
         startSyncOutbox(queryClient);
-        pruneOfflineTrips(todayISO());
-        checkSavedTripData(queryClient);
+        startSavedTrips(queryClient);
       }}
-      onError={() => checkSavedTripData(queryClient)}
+      onError={() => startSavedTrips(queryClient)}
       persistOptions={{
         persister,
         maxAge: CACHE_KEEP,

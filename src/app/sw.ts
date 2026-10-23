@@ -15,12 +15,7 @@ import {
 
 import { isOfflineFileUrl, offlineFileCacheKey } from "@/shared/api/offline-files";
 
-import {
-  carryTripPages,
-  fromSavedTripFiles,
-  fromSavedTripPages,
-  listenForTripSaves,
-} from "./sw-saved-trips";
+import { fromSavedTripFiles, fromSavedTripPages, listenForTripMessages } from "./sw-saved-trips";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -47,8 +42,8 @@ const BUILD_ID =
 const PAGE_CACHE_PREFIX = "pages";
 
 /**
- * 화면(HTML) · 화면 이동(RSC) — 연결이 느리면 5초 뒤 저장해 둔 것으로. 해외에서 며칠 오프라인일 수 있어
- * 데이터 캐시(IndexedDB, 7일)와 같은 기간을 둔다. 저장해 둔 RSC 가 없으면 Next 가 브라우저 이동으로 바꿔 HTML 을 찾는다
+ * 화면(HTML) · 화면 이동(RSC) — 연결이 느리면 5초 뒤 저장해 둔 것으로. 해외에서 며칠 오프라인일 수 있어 7일 둔다
+ * (더 길게 둘 여행은 「오프라인용으로 받기」 의 칸에 보관 기한까지). 저장해 둔 RSC 가 없으면 Next 가 브라우저 이동으로 바꿔 HTML 을 찾는다
  */
 function pageCache(cacheName: string, ...extra: SerwistPlugin[]) {
   return new NetworkFirst({
@@ -143,7 +138,8 @@ const serwist = new Serwist({
 self.addEventListener("install", () => void self.skipWaiting());
 
 // 새 버전이 켜지면 옛 배포의 화면 캐시를 지운다(위 BUILD_ID). 기본 규칙의 미리 받기 RSC(`pages-rsc-prefetch`)도 옛 파일을 가리켜 함께 지운다.
-// 받은 여행의 화면은 지우지 않고 새 배포로 다시 받는다
+// 받은 여행의 화면(`offline-pages:…`)은 여기서 건드리지 않는다 — activate 가 끝날 때까지 브라우저가 앱의 요청을 모두 붙잡아 두어,
+// 새 배포로 옮기기는 페이지가 새 컨트롤러를 얻은 뒤 메시지(`offline-carry`)로 맡긴다
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -154,11 +150,10 @@ self.addEventListener("activate", (event) => {
             .filter((n) => n.startsWith(PAGE_CACHE_PREFIX) && !n.endsWith(`-${BUILD_ID}`))
             .map((n) => caches.delete(n)),
         ),
-      )
-      .then(() => carryTripPages(BUILD_ID)),
+      ),
   );
 });
 
-listenForTripSaves(BUILD_ID);
+listenForTripMessages(BUILD_ID);
 
 serwist.addEventListeners();

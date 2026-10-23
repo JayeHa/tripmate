@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  isOfflineCarryRequest,
   isOfflineFileUrl,
   isOfflineSaveRequest,
   isTripFilesCacheName,
@@ -91,5 +92,11 @@ describe("받은 여행의 저장 칸", () => {
     expect(isOfflineSaveRequest({ ...ok, kind: "pdf" })).toBe(false);
     expect(isOfflineSaveRequest({ type: "CACHE_URLS" })).toBe(false);
     expect(isOfflineSaveRequest(null)).toBe(false);
+  });
+
+  it("옮기기 요청은 type 으로만 가른다", () => {
+    expect(isOfflineCarryRequest({ type: "offline-carry" })).toBe(true);
+    expect(isOfflineCarryRequest({ type: "offline-save" })).toBe(false);
+    expect(isOfflineCarryRequest(null)).toBe(false);
   });
 });
