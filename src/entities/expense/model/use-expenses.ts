@@ -20,6 +20,7 @@ import {
 } from "../api/receipts";
 import { LINK_GONE } from "../lib/link-gone";
 import type { PaymentOwner } from "../lib/payment-owner";
+import { EXPENSE_CREATE_KEY, type ExpenseCreateVars } from "./expense-sync";
 import type { ExpenseFormValues } from "./schema";
 
 export function useExpenses(tripId: string) {
@@ -51,6 +52,11 @@ export function useCreateExpense(tripId: string) {
     },
     onError: (error) => refetchItemsIfLinkGone(qc, tripId, error),
   });
+}
+
+/** 영수증 없는 보통 비용 추가 — 오프라인 대기열(함수 · 동작은 registerExpenseSync 가 키로 등록해 둔다). id 는 부르는 쪽이 만든다 */
+export function useQueueExpense() {
+  return useMutation<void, Error, ExpenseCreateVars>({ mutationKey: EXPENSE_CREATE_KEY });
 }
 
 /**

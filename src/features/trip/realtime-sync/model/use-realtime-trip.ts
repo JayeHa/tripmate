@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import { createClient } from "@/shared/api/supabase/client";
+import { isSyncing } from "@/shared/api/sync";
 
 /**
  * 여행 하나에 채널 1개. 테이블 변경 시 해당 쿼리를 invalidate.
@@ -16,6 +17,10 @@ export function useRealtimeTrip(tripId: string) {
   useEffect(() => {
     const supabase = createClient();
     const filter = `trip_id=eq.${tripId}`;
+    /** 오프라인 대기열이 있는 데이터 — 대기열이 올라가는 동안 다시 읽으면 아직 올리지 않은 변경이 잠깐 사라져, 그때는 미룬다(마지막 저장이 다시 읽는다) */
+    const refreshUnlessSyncing = (queryKey: readonly unknown[]) => {
+      if (!isSyncing(qc)) void qc.invalidateQueries({ queryKey });
+    };
     const channel = supabase
       .channel(`trip:${tripId}`)
       .on(
@@ -31,10 +36,8 @@ export function useRealtimeTrip(tripId: string) {
         void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
         void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
       })
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "memos", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.memos(tripId) }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "memos", filter }, () =>
+        refreshUnlessSyncing(queryKeys.memos(tripId)),
       )
       // 숙소 자체만 — 연결 카드의 변경은 schedule_items 이벤트로 온다
       .on(
@@ -51,7 +54,7 @@ export function useRealtimeTrip(tripId: string) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "checklist_items", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.checklist(tripId) }),
+        () => refreshUnlessSyncing(queryKeys.checklist(tripId)),
       )
       // 연결 — 대상(일정 · 항공편 · 숙소)을 지워 풀린 연결도 여기로 온다
       .on(
@@ -67,30 +70,22 @@ export function useRealtimeTrip(tripId: string) {
         () => void qc.invalidateQueries({ queryKey: queryKeys.vouchers(tripId), exact: true }),
       )
       // 준비물 · 쇼핑 — 그룹 · 항목 둘 다 같은 키(그룹을 지워 함께 지워진 항목도)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "pack_groups", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.packLists(tripId) }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "pack_groups", filter }, () =>
+        refreshUnlessSyncing(queryKeys.packLists(tripId)),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "pack_items", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.packLists(tripId) }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "pack_items", filter }, () =>
+        refreshUnlessSyncing(queryKeys.packLists(tripId)),
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moves", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "expenses", filter },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>
+        refreshUnlessSyncing(queryKeys.expenses(tripId)),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "expense_splits" },
-        () => void qc.invalidateQueries({ queryKey: queryKeys.expenses(tripId) }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "expense_splits" }, () =>
+        refreshUnlessSyncing(queryKeys.expenses(tripId)),
       )
       .on(
         "postgres_changes",

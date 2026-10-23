@@ -48,6 +48,19 @@ export function isNetworkError(error: unknown): boolean {
   return typeof message === "string" && /Failed to fetch|NetworkError|Load failed/i.test(message);
 }
 
+/** 같은 줄을 다시 넣었다(unique 위반, 23505) — 화면에서 만든 id 로 넣는 저장이 두 번 올라간 것. 이미 들어갔으니 성공으로 본다 */
+export function isDuplicateKey(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === "23505";
+}
+
+/**
+ * 대기열 저장이 올라가는 중인가 — 그동안 실시간 알림으로 다시 읽으면 아직 올리지 않은 변경이 화면에서 잠깐 사라진다.
+ * 마지막 저장이 끝나며 다시 읽으니 그때까지 미룬다
+ */
+export function isSyncing(client: QueryClient): boolean {
+  return client.isMutating({ mutationKey: [SYNC_KEY] }) > 0;
+}
+
 /** 대기열 저장을 다시 해 볼까 — 서버에 닿지 못했을 때만 3번. 지워졌거나 권한이 없으면 다시 해도 같아서 바로 되돌린다 */
 export function retrySync(failureCount: number, error: unknown): boolean {
   return failureCount < 3 && isNetworkError(error);
@@ -88,6 +101,8 @@ export function rememberOwnWrite(rowId: string, seen: string, latest: string): v
 
 /** 대기열 저장이 일행의 수정을 덮었을 때 — 시안 「나중 수정이 우선이고 토스트로 알려요」 */
 export const OVERWROTE_TEXT = "일행이 먼저 고친 항목을 내 수정으로 바꿨어요";
+/** 대기열의 삭제가 일행이 그사이 고친 메모를 지웠을 때 */
+export const DELETED_EDITED_TEXT = "일행이 먼저 고친 메모를 지웠어요";
 
 type SyncNoticeListener = (text: string) => void;
 const listeners = new Set<SyncNoticeListener>();

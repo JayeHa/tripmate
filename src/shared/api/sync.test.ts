@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   dropDeadEndFailures,
+  isDuplicateKey,
   isNetworkError,
   rememberOwnWrite,
   retrySync,
@@ -19,6 +20,13 @@ describe("오프라인 편집 대기열", () => {
     expect(isNetworkError({ message: "Load failed" })).toBe(true);
     expect(isNetworkError({ message: "new row violates row-level security policy" })).toBe(false);
     expect(isNetworkError(null)).toBe(false);
+  });
+
+  it("같은 줄을 다시 넣은 unique 위반만 — 화면에서 만든 id 로 두 번 올라간 저장", () => {
+    expect(isDuplicateKey({ code: "23505", message: "duplicate key value" })).toBe(true);
+    expect(isDuplicateKey({ code: "23503", message: "foreign key" })).toBe(false);
+    expect(isDuplicateKey(new TypeError("Failed to fetch"))).toBe(false);
+    expect(isDuplicateKey(null)).toBe(false);
   });
 
   it("같은 항목을 두 번 바꿨으면 두 번째는 내가 만든 버전과 비교한다", () => {
