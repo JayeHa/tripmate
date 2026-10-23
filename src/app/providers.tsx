@@ -15,6 +15,10 @@ import { startSavedTrips } from "@/features/trip/offline-download";
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
 import { startSyncOutbox } from "@/shared/api/sync-outbox";
+import { captureInstallPrompt } from "@/shared/lib/install-prompt";
+
+// 「홈 화면에 앱 추가」 의 설치 이벤트는 페이지마다 한 번 일찍 와서, 앱이 뜰 때부터 받아 둔다
+captureInstallPrompt();
 
 const DAY = 24 * 60 * 60 * 1000;
 /**
