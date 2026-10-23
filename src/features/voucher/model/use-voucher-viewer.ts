@@ -8,10 +8,9 @@ import {
   useDeleteVoucher,
   useSetVoucherPin,
   useVoucherUrls,
+  viewerKeys,
   type Voucher,
 } from "@/entities/voucher";
-
-import { viewerKeys } from "../lib/voucher-view";
 
 type VoucherViewerOptions = {
   tripId: string;

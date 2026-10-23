@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import type { SyncResult } from "@/shared/api/sync";
@@ -21,11 +21,12 @@ import type { PackKind, PackPreset } from "./types";
 
 /** 여행의 준비물 · 쇼핑(두 종류 함께) */
 export function usePackLists(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.packLists(tripId),
-    queryFn: () => fetchPackLists(tripId),
-  });
+  return useQuery(packListsQuery(tripId));
 }
+
+/** 준비물 · 쇼핑의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const packListsQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.packLists(tripId), queryFn: () => fetchPackLists(tripId) });
 
 /**
  * 저장된 행을 맨 뒤에 — 이미 있으면 그대로. 앞 요청의 다시 읽기 · 실시간 다시 읽기가 이 응답보다 먼저 끝나

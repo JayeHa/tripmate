@@ -1,17 +1,21 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
 import { addSettlement, fetchSettlements, removeSettlement } from "../api/settlements";
 import type { PersonRef } from "../lib/person";
 
-export function useSettlements(tripId: string) {
-  return useQuery({
+/** 송금 기록의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const settlementsQuery = (tripId: string) =>
+  queryOptions({
     queryKey: queryKeys.settlements(tripId),
     queryFn: () => fetchSettlements(tripId),
   });
+
+export function useSettlements(tripId: string) {
+  return useQuery(settlementsQuery(tripId));
 }
 
 /** 「받았어요 · 보냈어요」 와 되돌리기 — 끝나면 보낸 기록을 다시 읽는다 */

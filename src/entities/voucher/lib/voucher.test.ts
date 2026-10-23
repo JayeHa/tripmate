@@ -8,6 +8,7 @@ import {
   ownedBy,
   parsePages,
   targetColumns,
+  viewerKeys,
   voucherCountFor,
   voucherFileKeys,
   voucherGroup,
@@ -141,5 +142,17 @@ describe("voucherCountFor", () => {
       ]),
     ).toBe(2);
     expect(voucherCountFor(list, [{ kind: "stay", id: "s9" }])).toBe(0);
+  });
+});
+
+describe("viewerKeys", () => {
+  it("넘겨 볼 그림 — PDF 는 현장용 페이지 그림, 사진은 원본, 그림 없는 PDF · 파일 없음은 빈 목록", () => {
+    const pdf = { file_key: "t/a.pdf", file_mime: "application/pdf" };
+    expect(viewerKeys({ ...pdf, page_keys: ["p2", "p1"] })).toEqual(["p2", "p1"]);
+    expect(viewerKeys({ ...pdf, page_keys: [] })).toEqual([]);
+    expect(viewerKeys({ file_key: "t/a.jpg", file_mime: "image/jpeg", page_keys: [] })).toEqual([
+      "t/a.jpg",
+    ]);
+    expect(viewerKeys({ file_key: null, file_mime: null, page_keys: [] })).toEqual([]);
   });
 });

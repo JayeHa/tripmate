@@ -10,9 +10,17 @@ import {
   type RuntimeCaching,
   Serwist,
   type SerwistGlobalConfig,
+  type SerwistPlugin,
 } from "serwist";
 
 import { isOfflineFileUrl, offlineFileCacheKey } from "@/shared/api/offline-files";
+
+import {
+  carryTripPages,
+  fromSavedTripFiles,
+  fromSavedTripPages,
+  listenForTripSaves,
+} from "./sw-saved-trips";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -42,11 +50,11 @@ const PAGE_CACHE_PREFIX = "pages";
  * 화면(HTML) · 화면 이동(RSC) — 연결이 느리면 5초 뒤 저장해 둔 것으로. 해외에서 며칠 오프라인일 수 있어
  * 데이터 캐시(IndexedDB, 7일)와 같은 기간을 둔다. 저장해 둔 RSC 가 없으면 Next 가 브라우저 이동으로 바꿔 HTML 을 찾는다
  */
-function pageCache(cacheName: string) {
+function pageCache(cacheName: string, ...extra: SerwistPlugin[]) {
   return new NetworkFirst({
     cacheName,
     networkTimeoutSeconds: 5,
-    plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 7 * DAY })],
+    plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 7 * DAY }), ...extra],
   });
 }
 
@@ -83,6 +91,8 @@ const rules: RuntimeCaching[] = [
             ),
         },
         new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 30 * DAY, purgeOnQuotaError: true }),
+        // 「오프라인용으로 받기」 로 받은 사진 — 자동 저장 칸에서 밀려났어도 보이게
+        fromSavedTripFiles(),
       ],
     }),
   },
@@ -104,7 +114,8 @@ const rules: RuntimeCaching[] = [
       request.method === "GET" &&
       request.headers.get("RSC") !== "1" &&
       isPagePath(url.pathname),
-    handler: pageCache(`${PAGE_CACHE_PREFIX}-html-${BUILD_ID}`),
+    // 「오프라인용으로 받기」 로 받은 화면 — 열어 본 적 없어도 오프라인에서 열린다
+    handler: pageCache(`${PAGE_CACHE_PREFIX}-html-${BUILD_ID}`, fromSavedTripPages(BUILD_ID)),
   },
   ...defaultCache,
 ];
@@ -131,7 +142,8 @@ const serwist = new Serwist({
 // Chrome 에서 새 버전이 설치된 뒤에도 대기(waiting)에 머물렀다 — 설치될 때 다시 부른다
 self.addEventListener("install", () => void self.skipWaiting());
 
-// 새 버전이 켜지면 옛 배포의 화면 캐시를 지운다(위 BUILD_ID). 기본 규칙의 미리 받기 RSC(`pages-rsc-prefetch`)도 옛 파일을 가리켜 함께 지운다
+// 새 버전이 켜지면 옛 배포의 화면 캐시를 지운다(위 BUILD_ID). 기본 규칙의 미리 받기 RSC(`pages-rsc-prefetch`)도 옛 파일을 가리켜 함께 지운다.
+// 받은 여행의 화면은 지우지 않고 새 배포로 다시 받는다
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -142,8 +154,11 @@ self.addEventListener("activate", (event) => {
             .filter((n) => n.startsWith(PAGE_CACHE_PREFIX) && !n.endsWith(`-${BUILD_ID}`))
             .map((n) => caches.delete(n)),
         ),
-      ),
+      )
+      .then(() => carryTripPages(BUILD_ID)),
   );
 });
+
+listenForTripSaves(BUILD_ID);
 
 serwist.addEventListeners();

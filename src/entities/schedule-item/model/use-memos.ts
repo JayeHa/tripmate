@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import type { SyncResult } from "@/shared/api/sync";
@@ -17,8 +17,12 @@ import {
 
 /** 여행의 메모 전부 — 타임라인 · 일정 상세가 일정마다 골라 쓴다 */
 export function useMemos(tripId: string) {
-  return useQuery({ queryKey: queryKeys.memos(tripId), queryFn: () => fetchMemos(tripId) });
+  return useQuery(memosQuery(tripId));
 }
+
+/** 메모의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const memosQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.memos(tripId), queryFn: () => fetchMemos(tripId) });
 
 /** 메모 쓰기 — 오프라인 대기열(함수 · 동작은 registerMemoSync 가 키로 등록해 둔다). id 는 부르는 쪽이 만든다 */
 export function useCreateMemo() {

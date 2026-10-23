@@ -9,6 +9,8 @@ type Props = Omit<ComponentProps<"button">, "type"> & {
   iconClassName?: string;
   /** 삭제 · 로그아웃처럼 되돌리기 어려운 항목. 글자와 아이콘이 빨갛다. */
   danger?: boolean;
+  /** 오른쪽 상태 글(13/500 #AAA) — 「10.23 받음」 */
+  hint?: string | null;
 };
 
 /** 바텀시트 안의 메뉴 한 줄. 높이 52, 아이콘 + 16/600 글자. */
@@ -16,6 +18,7 @@ export function SheetMenuItem({
   icon: Icon,
   iconClassName,
   danger,
+  hint,
   className,
   children,
   ...props
@@ -32,6 +35,11 @@ export function SheetMenuItem({
     >
       <Icon className={cn("size-5 shrink-0", iconClassName)} />
       <span className="flex-1">{children}</span>
+      {hint && (
+        <span className="shrink-0 text-[13px] font-medium whitespace-nowrap text-ink-350">
+          {hint}
+        </span>
+      )}
     </button>
   );
 }

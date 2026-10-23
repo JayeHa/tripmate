@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { queryKeys } from "@/shared/api/query-keys";
@@ -21,11 +21,12 @@ import type { ChecklistItem, ChecklistSave, ChecklistStatus } from "./types";
 
 /** 여행의 체크리스트 */
 export function useChecklist(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.checklist(tripId),
-    queryFn: () => fetchChecklist(tripId),
-  });
+  return useQuery(checklistQuery(tripId));
 }
+
+/** 체크리스트의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const checklistQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.checklist(tripId), queryFn: () => fetchChecklist(tripId) });
 
 /** 빠른 추가 — 성공하면 목록을 다시 읽는다 */
 export function useAddChecklistItem(tripId: string) {
@@ -59,11 +60,15 @@ export function useSetChecklistStatus(tripId: string) {
 
 /** 여행의 체크리스트 연결(일정 카드 · 항공편 · 숙소) */
 export function useChecklistTargets(tripId: string) {
-  return useQuery({
+  return useQuery(checklistTargetsQuery(tripId));
+}
+
+/** 체크리스트 연결의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const checklistTargetsQuery = (tripId: string) =>
+  queryOptions({
     queryKey: queryKeys.checklistTargets(tripId),
     queryFn: () => fetchChecklistTargets(tripId),
   });
-}
 
 /**
  * 대상(일정 카드 · 항공편 · 숙소)마다 연결된 항목 — 목록 · 연결을 읽기 전에는 빈 색인.

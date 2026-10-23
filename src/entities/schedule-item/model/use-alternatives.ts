@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -9,11 +9,15 @@ import type { ScheduleItem } from "./types";
 
 /** 여행의 대체 장소 줄 — buildTimeline 이 붙은 일정마다 모은다 */
 export function useAlternatives(tripId: string) {
-  return useQuery({
+  return useQuery(alternativesQuery(tripId));
+}
+
+/** 대체 장소 줄의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const alternativesQuery = (tripId: string) =>
+  queryOptions({
     queryKey: queryKeys.alternatives(tripId),
     queryFn: () => fetchAlternatives(tripId),
   });
-}
 
 /**
  * 일정 · 대체 장소 · 경로 · 이동 기록을 다시 읽는다. 끝날 때까지 기다리는 Promise 를 돌려준다 —

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
@@ -21,11 +21,15 @@ import {
 } from "../api/schedule-items";
 import type { ScheduleItem } from "./types";
 
-export function useScheduleItems(tripId: string) {
-  return useQuery({
+/** 여행 일정의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const scheduleItemsQuery = (tripId: string) =>
+  queryOptions({
     queryKey: queryKeys.scheduleItems(tripId),
     queryFn: () => fetchScheduleItems(tripId),
   });
+
+export function useScheduleItems(tripId: string) {
+  return useQuery(scheduleItemsQuery(tripId));
 }
 
 function useInvalidateItems(tripId: string) {

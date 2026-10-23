@@ -1,16 +1,17 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
 import { addTripGuest, fetchTripGuests, removeTripGuest, renameTripGuest } from "../api/guests";
 
+/** 정산 인원의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const tripGuestsQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.tripGuests(tripId), queryFn: () => fetchTripGuests(tripId) });
+
 export function useTripGuests(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.tripGuests(tripId),
-    queryFn: () => fetchTripGuests(tripId),
-  });
+  return useQuery(tripGuestsQuery(tripId));
 }
 
 /**
