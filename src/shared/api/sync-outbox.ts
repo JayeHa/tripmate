@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createStore, del, entries, set, type UseStore } from "idb-keyval";
 
-import { isSyncKey } from "./sync";
+import { isKeptFailure, isSyncKey } from "./sync";
 
 /** 기기에 남긴 대기열 저장 한 줄 — 어느 탭의 것인지(owner) · 누른 때 · 저장 종류 · 값 */
 type OutboxEntry = {
@@ -45,7 +45,8 @@ export function startSyncOutbox(client: QueryClient): void {
       void dropStaleRows(tab, store, () => activeRowIds(tab, cache));
       return;
     }
-    if (status !== "pending" && status !== "error") return;
+    // 다시 올려도 안 되는 실패는 남기지 않는다(dropDeadEndFailures 가 대기열에서 뺀다 — 그 `removed` 가 이 `updated` 보다 먼저 와서 여기서 다시 쓰지 않게)
+    if (status !== "pending" && !isKeptFailure(m.state)) return;
     const row: OutboxEntry = {
       owner: tab,
       at: submittedAt || Date.now(),
@@ -65,8 +66,7 @@ function activeRowIds(
 ): Set<string> {
   const active = cache.findAll({
     predicate: (m) =>
-      isSyncKey(m.options.mutationKey) &&
-      (m.state.status === "pending" || m.state.status === "error"),
+      isSyncKey(m.options.mutationKey) && (m.state.status === "pending" || isKeptFailure(m.state)),
   });
   return new Set(active.map((m) => `${tab}:${m.mutationId}`));
 }

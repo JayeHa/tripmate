@@ -10,7 +10,7 @@ import { type ReactNode, useState } from "react";
 import { registerChecklistSync } from "@/entities/checklist";
 import { registerPackSync } from "@/entities/pack";
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
-import { blockOfflineMutation } from "@/shared/api/sync";
+import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
 import { startSyncOutbox } from "@/shared/api/sync-outbox";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -40,6 +40,7 @@ function makeQueryClient() {
   });
   registerChecklistSync(client);
   registerPackSync(client);
+  dropDeadEndFailures(client);
   return client;
 }
 

@@ -6,6 +6,7 @@ import {
   notifySync,
   OVERWROTE_TEXT,
   rememberOwnWrite,
+  retrySync,
   SYNC_KEY,
   SYNC_SCOPE,
   type SyncResult,
@@ -45,7 +46,7 @@ export function registerPackSync(qc: QueryClient): void {
     );
   qc.setMutationDefaults(PACK_CHECKED_KEY, {
     scope: SYNC_SCOPE,
-    retry: 3,
+    retry: retrySync,
     // 실패한 저장이 5분 뒤 사라지면 「저장 실패 · 다시 시도」 도 함께 사라져 변경을 잃는다 — 다시 시도할 때 지운다
     gcTime: Infinity,
     mutationFn: async (v: PackCheckedVars): Promise<SyncResult> => {

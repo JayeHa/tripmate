@@ -1,4 +1,4 @@
-import { type Mutation, onlineManager } from "@tanstack/react-query";
+import { type Mutation, onlineManager, type QueryClient } from "@tanstack/react-query";
 
 /**
  * 오프라인 편집 대기열 — 오프라인에서도 되는 저장(현장 동작: 체크 · 메모 · 비용 추가)만 이 키로 시작한다.
@@ -46,6 +46,29 @@ export function isNetworkError(error: unknown): boolean {
   const message =
     error instanceof Error ? error.message : (error as { message?: unknown })?.message;
   return typeof message === "string" && /Failed to fetch|NetworkError|Load failed/i.test(message);
+}
+
+/** 대기열 저장을 다시 해 볼까 — 서버에 닿지 못했을 때만 3번. 지워졌거나 권한이 없으면 다시 해도 같아서 바로 되돌린다 */
+export function retrySync(failureCount: number, error: unknown): boolean {
+  return failureCount < 3 && isNetworkError(error);
+}
+
+/** 대기열에 남겨 둘 실패인가 — 서버에 닿지 못한 것만(「다시 시도」 · 다음에 열 때 다시 올린다) */
+export function isKeptFailure(state: { status: string; error: unknown }): boolean {
+  return state.status === "error" && isNetworkError(state.error);
+}
+
+/**
+ * 다시 올려도 안 되는 대기열 실패(지워짐 · 권한 없음)는 대기열에서 뺀다 — 화면은 그 항목만 되돌렸고(onError 가 먼저 돈다) 토스트로 알렸다.
+ * 남기면 gcTime Infinity 라 「저장 실패 · 다시 시도」 가 영영 남고, 앱을 열 때마다 기기의 줄을 다시 올렸다 또 실패한다.
+ * `updated` 에서만 뺀다 — `remove` 는 이미 뺀 저장에도 `removed` 를 다시 보내 그때 빼면 끝없이 돈다
+ */
+export function dropDeadEndFailures(client: QueryClient): void {
+  const cache = client.getMutationCache();
+  cache.subscribe(({ type, mutation: m }) => {
+    if (type !== "updated" || !m || !isSyncKey(m.options.mutationKey)) return;
+    if (m.state.status === "error" && !isKeptFailure(m.state)) cache.remove(m);
+  });
 }
 
 // 내가 올린 수정으로 바뀐 버전 — 같은 항목을 오프라인에서 두 번 바꾸면 두 저장 모두 처음 본 버전을 들고 있어,
