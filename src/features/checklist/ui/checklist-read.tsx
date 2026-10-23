@@ -11,7 +11,6 @@ import {
   type ChecklistTargetRef,
   dueReadView,
   toggledStatus,
-  usePendingChecklistIds,
   useSetChecklistPin,
   useSetChecklistStatus,
 } from "@/entities/checklist";
@@ -57,7 +56,6 @@ export function ChecklistRead({
   const { data: user } = useUser();
   const pin = useSetChecklistPin(tripId);
   const setStatus = useSetChecklistStatus(tripId);
-  const statusPending = usePendingChecklistIds(tripId).includes(item.id);
   const status = item.status as ChecklistStatus;
   const done = status === "done";
   const due = item.due_date ? dueReadView(item.due_date, todayISO(), done) : null;
@@ -66,7 +64,6 @@ export function ChecklistRead({
 
   /** 완료로 표시 · 되돌리기 */
   function toggleDone() {
-    if (statusPending) return;
     onClose();
     onToast(done ? "되돌렸어요" : "완료했어요");
     void setStatus
@@ -160,7 +157,6 @@ export function ChecklistRead({
           variant={done ? "chip" : "default"}
           size="form"
           className="flex-1"
-          disabled={statusPending}
           onClick={toggleDone}
         >
           {done ? "되돌리기" : "완료로 표시"}

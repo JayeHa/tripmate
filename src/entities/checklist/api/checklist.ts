@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/api/supabase/client";
+import { type SyncResult, updateLatestWins } from "@/shared/api/sync";
 
 import { targetColumns } from "../lib/targets";
 import type {
@@ -36,17 +37,23 @@ export async function addChecklistItem(tripId: string, title: string): Promise<C
 }
 
 /**
- * 상태 바꾸기(체크박스). 0행이면(그사이 일행이 지웠거나 권한이 없다 — RLS 는 오류 없이 0행으로 끝난다) 던진다
+ * 체크(상태 바꾸기) — 오프라인 대기열로 올라온다. 본 버전(version)이면 그대로, 그사이 일행이 고쳤으면 내 것으로 덮는다(나중 수정 우선).
+ * 지워졌으면 CHECKLIST_GONE
  */
-export async function setChecklistStatus(id: string, status: ChecklistStatus): Promise<void> {
+export function setChecklistStatus(
+  id: string,
+  status: ChecklistStatus,
+  version: string,
+): Promise<SyncResult> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("checklist_items")
-    .update({ status })
-    .eq("id", id)
-    .select("id");
-  if (error) throw error;
-  if (data.length === 0) throw new Error(CHECKLIST_GONE);
+  return updateLatestWins(
+    (onlyIf) => {
+      const q = supabase.from("checklist_items").update({ status }).eq("id", id);
+      return (onlyIf ? q.eq("updated_at", onlyIf) : q).select("updated_at");
+    },
+    version,
+    CHECKLIST_GONE,
+  );
 }
 
 /** 여행의 체크리스트 연결 — 항목마다 묶는 것은 화면이 한다(targetsByItem) */

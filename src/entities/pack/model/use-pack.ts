@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
+import type { SyncResult } from "@/shared/api/sync";
 
 import {
   addPackGroup,
@@ -10,11 +11,12 @@ import {
   addPackPresets,
   deletePackGroup,
   fetchPackLists,
+  PACK_GONE,
   renamePackGroup,
-  setPackItemChecked,
 } from "../api/pack";
 import { nextPosition } from "../lib/board";
 import { usePackCache } from "./pack-cache";
+import { PACK_CHECKED_KEY, type PackCheckedVars } from "./pack-sync";
 import type { PackKind, PackPreset } from "./types";
 
 /** 여행의 준비물 · 쇼핑(두 종류 함께) */
@@ -89,29 +91,27 @@ export function useAddPackItem(tripId: string) {
   });
 }
 
-/** 챙김 바꾸기 — 화면 먼저(체크한 사람 · 시각), 실패하면 그 항목만 되돌린다 */
+/**
+ * 챙김 바꾸기 — 오프라인에서도 되는 저장(대기열). 함수 · 화면 먼저 바꾸기 · 되돌리기는 `registerPackSync` 에 있다.
+ * 누를 때 본 항목의 버전과 누른 시각을 함께 보낸다. 오프라인이면 연결되어 올라갈 때까지 끝나지 않는다
+ */
 export function useSetPackChecked(tripId: string) {
   const cache = usePackCache(tripId);
-  /** 그 항목의 챙김 칸만 바꾼다 */
-  const setChecked = (id: string, checked_by: string | null, checked_at: string | null) =>
-    cache.set((l) => ({
-      ...l,
-      items: l.items.map((i) => (i.id === id ? { ...i, checked_by, checked_at } : i)),
-    }));
-  return useMutation({
-    mutationFn: (v: { id: string; checkedBy: string | null }) =>
-      setPackItemChecked(v.id, v.checkedBy),
-    onMutate: async (v) => {
-      await cache.cancel();
-      const before = cache.get()?.items.find((i) => i.id === v.id);
-      setChecked(v.id, v.checkedBy, v.checkedBy ? new Date().toISOString() : null);
-      return { before };
-    },
-    onError: (_e, v, ctx) => {
-      if (ctx?.before) setChecked(v.id, ctx.before.checked_by, ctx.before.checked_at);
-    },
-    onSettled: cache.invalidate,
+  const mutation = useMutation<SyncResult, Error, PackCheckedVars>({
+    mutationKey: PACK_CHECKED_KEY,
   });
+  return {
+    mutateAsync: async (v: { id: string; checkedBy: string | null }) => {
+      const item = cache.get()?.items.find((i) => i.id === v.id);
+      if (!item) throw new Error(PACK_GONE);
+      return mutation.mutateAsync({
+        tripId,
+        ...v,
+        checkedAt: v.checkedBy ? new Date().toISOString() : null,
+        version: item.updated_at,
+      });
+    },
+  };
 }
 
 /** 「기본 목록으로 시작」 — 그룹 · 항목을 한 번에 */

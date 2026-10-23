@@ -3,7 +3,7 @@ import "./globals.css";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
 
-import { OfflineBanner } from "@/widgets/offline-banner";
+import { ConnectionStatus } from "@/widgets/connection-status";
 
 import { Providers } from "./providers";
 
@@ -33,8 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           reloadOnOnline={false}
           options={{ type: "classic" }}
         >
-          <OfflineBanner />
-          <Providers>{children}</Providers>
+          <Providers>
+            <ConnectionStatus />
+            {children}
+          </Providers>
         </SerwistProvider>
       </body>
     </html>
