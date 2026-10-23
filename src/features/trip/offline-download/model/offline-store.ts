@@ -12,6 +12,8 @@ export type SavedTrips = Readonly<Record<string, SavedTrip>>;
 
 const EMPTY: SavedTrips = {};
 let state: SavedTrips | null = null;
+/** state 를 읽어 온 기기 값 — 기기 값이 이와 다르면(로그아웃이 지움 · 다른 탭이 씀) 다시 읽는다 */
+let stateRaw: string | null = null;
 const listeners = new Set<() => void>();
 /** 이 탭에서 지금 받고 있는 여행 — 기록이 「받는 중」 인데 여기 없으면 앱을 닫아 끊긴 것 */
 const running = new Set<string>();
@@ -21,12 +23,12 @@ function interrupted(saved: SavedTrip): SavedTrip {
   return { ...saved, status: "partial", missing: saved.total - saved.done + saved.failed.length };
 }
 
-/** 기기에서 읽는다 — 저장소가 막혔거나 모양이 깨졌으면 빈 기록 */
-function load(): SavedTrips {
+/** 기기 값을 기록으로 바꾼다 — 비었거나 모양이 깨졌으면 빈 기록 */
+function parse(raw: string | null): SavedTrips {
   try {
-    const raw = JSON.parse(localStorage.getItem(OFFLINE_TRIPS_KEY) ?? "{}") as SavedTrips;
+    const saved = JSON.parse(raw ?? "{}") as SavedTrips;
     return Object.fromEntries(
-      Object.entries(raw).map(([id, s]) => [
+      Object.entries(saved).map(([id, s]) => [
         id,
         s.status === "busy" && !running.has(id) ? interrupted(s) : s,
       ]),
@@ -36,9 +38,22 @@ function load(): SavedTrips {
   }
 }
 
-/** 지금 기록 — 처음 부를 때 기기에서 읽는다 */
+/**
+ * 지금 기록 — 기기 값이 지난번에 읽은 것과 다를 때만 다시 읽는다(같으면 같은 객체라 화면이 다시 그려지지 않는다).
+ * 로그아웃(`clearOfflineCache`)은 기기 값만 지워서, 메모리만 보면 같은 탭에서 다음 사람에게 앞 사람의 기록이 되살아난다.
+ * 저장소가 막혔으면 이 화면에서 기억한 것
+ */
 function current(): SavedTrips {
-  state ??= load();
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(OFFLINE_TRIPS_KEY);
+  } catch {
+    return state ?? EMPTY;
+  }
+  if (state === null || raw !== stateRaw) {
+    state = parse(raw);
+    stateRaw = raw;
+  }
   return state;
 }
 
@@ -46,7 +61,9 @@ function current(): SavedTrips {
 function commit(next: SavedTrips): void {
   state = next;
   try {
-    localStorage.setItem(OFFLINE_TRIPS_KEY, JSON.stringify(next));
+    const raw = JSON.stringify(next);
+    localStorage.setItem(OFFLINE_TRIPS_KEY, raw);
+    stateRaw = raw;
   } catch {
     // 막힌 저장소 — 화면에서만 기억한다
   }
