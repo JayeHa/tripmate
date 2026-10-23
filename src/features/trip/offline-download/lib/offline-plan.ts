@@ -100,6 +100,20 @@ export function isExpired(saved: SavedTrip, today: string): boolean {
   return saved.status !== "busy" && saved.keepUntil !== null && today > saved.keepUntil;
 }
 
+/**
+ * 받은 데이터가 기기 캐시에서 사라졌다 — 데이터 모양이 바뀐 배포는 캐시를 통째로 버린다(`QUERY_CACHE_BUSTER`).
+ * 일부 실패로 바꿔 「다시 받기」 로 이끈다. 데이터를 이미 못 받은 기록이면 그대로
+ */
+export function withDataMissing(saved: SavedTrip): SavedTrip {
+  if (saved.failed.some((f) => f.kind === "data")) return { ...saved, status: "partial" };
+  return {
+    ...saved,
+    status: "partial",
+    failed: [{ kind: "data" }, ...saved.failed],
+    missing: saved.missing + 1,
+  };
+}
+
 /** 메뉴 줄 오른쪽 힌트 — muted 면 흐리게 그리고 누르면 토스트만 */
 export type MenuHint = { text: string | null; muted: boolean };
 

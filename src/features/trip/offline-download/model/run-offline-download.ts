@@ -43,7 +43,7 @@ type Task = { item: FailedItem; run: () => Promise<boolean> };
  * 여행 데이터를 모두 새로 읽어 캐시에 넣는다 — 캐시는 기기(IndexedDB)에 남아 오프라인에서 화면이 쓴다.
  * 하나라도 실패하면 false(읽은 것은 남는다)
  */
-async function loadTripData(qc: QueryClient, tripId: string): Promise<boolean> {
+export async function loadTripData(qc: QueryClient, tripId: string): Promise<boolean> {
   const fresh = { staleTime: 0 };
   const loads: Promise<unknown>[] = [
     qc.fetchQuery({ ...tripQuery(tripId), ...fresh }),

@@ -53,6 +53,11 @@ function commit(next: SavedTrips): void {
   listeners.forEach((fn) => fn());
 }
 
+/** 받은 기록 전부 — 지금 값 */
+export function allSavedTrips(): SavedTrips {
+  return current();
+}
+
 /** 여행 하나의 기록 — 지금 값 */
 export function savedTripOf(tripId: string): SavedTrip | undefined {
   return current()[tripId];

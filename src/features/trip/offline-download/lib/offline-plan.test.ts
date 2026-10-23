@@ -14,6 +14,7 @@ import {
   retryScope,
   type SavedTrip,
   tripPagePaths,
+  withDataMissing,
 } from "./offline-plan";
 
 /** 테스트용 바우처 — 사진 칸만 */
@@ -157,5 +158,23 @@ describe("일부 실패", () => {
     expect(failedPhotoLine([{ kind: "data" }])).toBeNull();
     expect(failedPhotoLine([photo("쇼핑 · 영수증")])).toBe("쇼핑 · 영수증");
     expect(failedPhotoLine([photo("쇼핑 · 영수증"), photo("x")])).toBe("쇼핑 · 영수증 외 1장");
+  });
+});
+
+describe("데이터가 캐시에서 사라짐", () => {
+  it("다 받은 기록은 데이터 하나를 못 받은 일부 실패로", () => {
+    const next = withDataMissing(saved({}));
+    expect(next).toMatchObject({ status: "partial", failed: [{ kind: "data" }], missing: 1 });
+    expect(retryScope(next)).toBe("failed");
+  });
+
+  it("이미 데이터를 못 받은 기록은 두 번 세지 않는다", () => {
+    const prev = saved({ status: "partial", failed: [{ kind: "data" }, photo("a")], missing: 2 });
+    expect(withDataMissing(prev)).toMatchObject({ failed: prev.failed, missing: 2 });
+  });
+
+  it("도중에 끊긴 기록은 다시 받기가 그대로 전부", () => {
+    const cut = saved({ status: "partial", failed: [photo("a")], missing: 5 });
+    expect(retryScope(withDataMissing(cut))).toBe("all");
   });
 });
