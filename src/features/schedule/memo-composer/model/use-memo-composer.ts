@@ -34,6 +34,8 @@ type MemoComposerOptions = {
 export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOptions) {
   const [draft, setDraft] = useState<MemoDraft>(() => memoDraftOf(memo));
   const [error, setError] = useState<string | null>(null);
+  // 새 메모의 id 는 창 하나에 하나 — 서버에 닿지 못해 실패한 뒤 「저장」 을 다시 눌러도 같은 메모가 두 개 생기지 않게
+  const [newId] = useState(() => crypto.randomUUID());
   const { data: user } = useUser();
   const create = useCreateMemo();
   const update = useUpdateMemo();
@@ -67,7 +69,7 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
       ? update.mutateAsync({ tripId, id: memo.id, version: memo.updated_at, ...result.value })
       : create.mutateAsync({
           tripId,
-          id: crypto.randomUUID(),
+          id: newId,
           itemId: item.id,
           authorId: user?.id ?? null,
           createdAt: new Date().toISOString(),

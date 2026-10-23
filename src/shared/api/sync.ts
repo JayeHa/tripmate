@@ -61,6 +61,22 @@ export function isSyncing(client: QueryClient): boolean {
   return client.isMutating({ mutationKey: [SYNC_KEY] }) > 0;
 }
 
+/**
+ * 같은 줄(id)을 넣으려다 실패한 대기열 저장을 뺀다 — 창에서 「저장」 을 다시 눌러 같은 id 로 새 저장이 들어올 때 부른다.
+ * 남기면 「저장 실패 · 다시 시도」 가 남고, 다시 올려도 이미 들어간 줄(23505)이라 할 일이 없다
+ */
+export function dropFailedTwins(
+  client: QueryClient,
+  mutationKey: readonly unknown[],
+  id: string,
+): void {
+  const cache = client.getMutationCache();
+  cache
+    .findAll({ mutationKey, exact: true, status: "error" })
+    .filter((m) => (m.state.variables as { id?: unknown } | undefined)?.id === id)
+    .forEach((m) => cache.remove(m));
+}
+
 /** 대기열 저장을 다시 해 볼까 — 서버에 닿지 못했을 때만 3번. 지워졌거나 권한이 없으면 다시 해도 같아서 바로 되돌린다 */
 export function retrySync(failureCount: number, error: unknown): boolean {
   return failureCount < 3 && isNetworkError(error);

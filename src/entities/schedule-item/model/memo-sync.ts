@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/api/query-keys";
 import {
   DELETED_EDITED_TEXT,
+  dropFailedTwins,
   isNetworkError,
   notifySync,
   OVERWROTE_TEXT,
@@ -79,7 +80,9 @@ export function registerMemoSync(qc: QueryClient): void {
     },
     onMutate: async (v: MemoCreateVars) => {
       await qc.cancelQueries({ queryKey: queryKeys.memos(v.tripId) });
-      setMemos(v.tripId, (memos) => [...memos, optimisticMemo(v)]);
+      // 같은 창에서 다시 저장했으면(같은 id) 앞서 실패한 저장을 빼고 그 줄을 바꿔 끼운다 — 두 줄로 보이지 않게
+      dropFailedTwins(qc, MEMO_CREATE_KEY, v.id);
+      setMemos(v.tripId, (memos) => [...memos.filter((m) => m.id !== v.id), optimisticMemo(v)]);
     },
     onError: (error, v: MemoCreateVars) => {
       if (!isNetworkError(error)) setMemos(v.tripId, (memos) => memos.filter((m) => m.id !== v.id));

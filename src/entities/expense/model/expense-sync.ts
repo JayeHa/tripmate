@@ -1,7 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
-import { isNetworkError, retrySync, SYNC_KEY, SYNC_SCOPE } from "@/shared/api/sync";
+import {
+  dropFailedTwins,
+  isNetworkError,
+  retrySync,
+  SYNC_KEY,
+  SYNC_SCOPE,
+} from "@/shared/api/sync";
 
 import { createExpenseOnce } from "../api/expense-queue";
 import { LINK_GONE } from "../lib/link-gone";
@@ -44,7 +50,9 @@ export function registerExpenseSync(qc: QueryClient): void {
     onMutate: async (v: ExpenseCreateVars) => {
       await qc.cancelQueries({ queryKey: queryKeys.expenses(v.tripId) });
       const row = optimisticExpense(v, resolveShares(v.values));
-      setExpenses(v.tripId, (list) => [row, ...list]);
+      // 같은 창에서 다시 저장했으면(같은 id) 앞서 실패한 저장을 빼고 그 줄을 바꿔 끼운다 — 두 줄로 보이지 않게
+      dropFailedTwins(qc, EXPENSE_CREATE_KEY, v.id);
+      setExpenses(v.tripId, (list) => [row, ...list.filter((e) => e.id !== v.id)]);
     },
     onError: (error: Error, v: ExpenseCreateVars) => {
       if (isNetworkError(error)) return;

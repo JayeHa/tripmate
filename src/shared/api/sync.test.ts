@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   dropDeadEndFailures,
+  dropFailedTwins,
   isDuplicateKey,
   isNetworkError,
   rememberOwnWrite,
@@ -92,5 +93,23 @@ describe("오프라인 편집 대기열", () => {
   it("지워짐 · 권한 없음 실패는 대기열에 남지 않는다 — 서버에 닿지 못한 실패만 「다시 시도」 로 남는다", async () => {
     expect(await remainingAfter(new Error("지워진 항목이에요"))).toBe(0);
     expect(await remainingAfter(new TypeError("Failed to fetch"))).toBe(1);
+  });
+
+  it("같은 id 로 다시 저장하면 앞서 실패한 저장은 빠진다 — 다른 줄의 실패는 남는다", async () => {
+    const client = new QueryClient();
+    client.setMutationDefaults(["sync", "test"], {
+      retry: false,
+      gcTime: Infinity,
+      mutationFn: () => Promise.reject(new TypeError("Failed to fetch")),
+    });
+    const cache = client.getMutationCache();
+    for (const id of ["a", "b"]) {
+      await cache
+        .build(client, { mutationKey: ["sync", "test"] })
+        .execute({ id })
+        .catch(() => undefined);
+    }
+    dropFailedTwins(client, ["sync", "test"], "a");
+    expect(cache.getAll().map((m) => (m.state.variables as { id: string }).id)).toEqual(["b"]);
   });
 });
