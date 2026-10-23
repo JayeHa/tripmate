@@ -53,12 +53,32 @@ export function isDuplicateKey(error: unknown): boolean {
   return (error as { code?: unknown } | null)?.code === "23505";
 }
 
-/**
- * 대기열 저장이 올라가는 중인가 — 그동안 실시간 알림으로 다시 읽으면 아직 올리지 않은 변경이 화면에서 잠깐 사라진다.
- * 마지막 저장이 끝나며 다시 읽으니 그때까지 미룬다
- */
-export function isSyncing(client: QueryClient): boolean {
+/** 대기열 저장이 올라가는 중인가(오프라인으로 멈춘 것 포함) */
+function isSyncing(client: QueryClient): boolean {
   return client.isMutating({ mutationKey: [SYNC_KEY] }) > 0;
+}
+
+/**
+ * 실시간 알림의 다시 읽기를 대기열이 빌 때까지 미룬다 — 대기열이 올라가는 동안 다시 읽으면 아직 올리지 않은 변경이 화면에서 잠깐 사라진다.
+ * 미룬 키는 버리지 않고 모아 두었다가 대기열이 비면 한 번에 다시 읽는다. 대기열 저장은 자기 종류(체크리스트 · 메모 …)만 다시 읽어서,
+ * 버리면 다른 종류의 저장이 도는 동안 온 일행의 변경을 놓친다. 다 쓰면 stop 으로 구독을 끝낸다
+ */
+export function createSyncDeferral(client: QueryClient) {
+  const deferred = new Map<string, readonly unknown[]>();
+  const stop = client.getMutationCache().subscribe(() => {
+    if (deferred.size === 0 || isSyncing(client)) return;
+    const keys = [...deferred.values()];
+    deferred.clear();
+    keys.forEach((queryKey) => void client.invalidateQueries({ queryKey }));
+  });
+  return {
+    /** 지금 다시 읽거나, 대기열이 올라가는 중이면 빌 때까지 미룬다 */
+    refresh: (queryKey: readonly unknown[]) => {
+      if (isSyncing(client)) deferred.set(JSON.stringify(queryKey), queryKey);
+      else void client.invalidateQueries({ queryKey });
+    },
+    stop,
+  };
 }
 
 /**

@@ -1,7 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  createSyncDeferral,
   dropDeadEndFailures,
   dropFailedTwins,
   isDuplicateKey,
@@ -111,5 +112,37 @@ describe("오프라인 편집 대기열", () => {
     }
     dropFailedTwins(client, ["sync", "test"], "a");
     expect(cache.getAll().map((m) => (m.state.variables as { id: string }).id)).toEqual(["b"]);
+  });
+
+  it("대기열이 올라가는 동안 온 다시 읽기는 모아 두었다가 비면 한 번에 — 종류가 달라도 빠지지 않는다", async () => {
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, "invalidateQueries").mockResolvedValue();
+    let finish = () => {};
+    client.setMutationDefaults(["sync", "check"], {
+      mutationFn: () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    });
+    const deferral = createSyncDeferral(client);
+
+    deferral.refresh(["expenses"]);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    invalidate.mockClear();
+
+    const running = client
+      .getMutationCache()
+      .build(client, { mutationKey: ["sync", "check"] })
+      .execute(undefined);
+    await vi.waitFor(() => expect(client.isMutating()).toBe(1));
+    deferral.refresh(["expenses"]);
+    deferral.refresh(["memos"]);
+    deferral.refresh(["expenses"]);
+    expect(invalidate).not.toHaveBeenCalled();
+
+    finish();
+    await running;
+    expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([["expenses"], ["memos"]]);
+    deferral.stop();
   });
 });
