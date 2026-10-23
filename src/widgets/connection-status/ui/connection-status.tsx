@@ -25,7 +25,7 @@ export function ConnectionStatus() {
         <div className="flex h-10 shrink-0 items-center gap-2 bg-ink-800 px-4 text-[13px] font-semibold text-white">
           <WifiOff className="size-4 shrink-0" aria-hidden="true" />
           <span role="status" className="min-w-0 flex-1 truncate">
-            오프라인이에요 · 저장해 둔 일정과 바우처는 볼 수 있어요
+            오프라인이에요 · 받아 둔 여행은 그대로 열 수 있어요
           </span>
           {chip && <SyncChip chip={chip} onRetry={retry} />}
         </div>

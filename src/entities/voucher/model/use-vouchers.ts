@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { withOfflineFileUrls } from "@/shared/api/offline-files";
 import { queryKeys } from "@/shared/api/query-keys";
@@ -16,11 +16,12 @@ import type { Voucher, VoucherSave } from "./types";
 
 /** 여행의 바우처 */
 export function useVouchers(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.vouchers(tripId),
-    queryFn: () => fetchVouchers(tripId),
-  });
+  return useQuery(vouchersQuery(tripId));
 }
+
+/** 바우처 목록의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const vouchersQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.vouchers(tripId), queryFn: () => fetchVouchers(tripId) });
 
 /** 읽기 주소가 1시간 유효해서, 그보다 조금 짧게만 쓰고 그 전에 새로 받는다(영수증과 같다) */
 const URL_STALE_MS = 50 * 60 * 1000;

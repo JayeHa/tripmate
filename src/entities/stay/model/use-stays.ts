@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -9,8 +9,12 @@ import type { StayFieldsInput, StayPlaceInput } from "./types";
 
 /** 여행의 숙소 목록 */
 export function useStays(tripId: string) {
-  return useQuery({ queryKey: queryKeys.stays(tripId), queryFn: () => fetchStays(tripId) });
+  return useQuery(staysQuery(tripId));
 }
+
+/** 숙소 목록의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const staysQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.stays(tripId), queryFn: () => fetchStays(tripId) });
 
 /**
  * 숙소가 바뀌면 다시 읽을 것 — 숙소 · 연결 카드(일정 · 경로) · 저장한 장소(새 장소가 생길 수 있다) ·

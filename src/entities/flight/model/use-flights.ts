@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -9,8 +9,12 @@ import type { FlightFieldsInput } from "./types";
 
 /** 여행의 항공편 목록 */
 export function useFlights(tripId: string) {
-  return useQuery({ queryKey: queryKeys.flights(tripId), queryFn: () => fetchFlights(tripId) });
+  return useQuery(flightsQuery(tripId));
 }
+
+/** 항공편 목록의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const flightsQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.flights(tripId), queryFn: () => fetchFlights(tripId) });
 
 /**
  * 항공편이 바뀌면 다시 읽을 것 — 항공편 · 연결 카드(일정 · 메모 · 경로) · 결제(가계부 — 이름이 항공편을 따르고, 지우면 함께 지워진다)

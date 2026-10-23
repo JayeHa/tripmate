@@ -51,16 +51,6 @@ export function numberLabel(
   return `${n.label} · ${name}${n.owner === me ? " (나)" : ""}`;
 }
 
-/**
- * 뷰어에 넘겨 볼 그림 키 — PDF 는 현장용 페이지 그림(적은 순서), 사진은 원본 하나.
- * 그림이 없는 PDF(그리지 못함) · 파일 없는 바우처는 빈 목록
- */
-export function viewerKeys(v: Pick<Voucher, "file_key" | "file_mime" | "page_keys">): string[] {
-  if (v.page_keys.length > 0) return v.page_keys;
-  if (v.file_key && v.file_mime?.startsWith("image/")) return [v.file_key];
-  return [];
-}
-
 /** 뷰어 머리의 보조 줄 — 「정원, 동규 · 10.20 · 치이카와 파크 · 1 / 3」. 연결이 없으면 「기타」, 한 장이면 쪽 표시 없음 */
 export function viewerSubText(
   owners: string,

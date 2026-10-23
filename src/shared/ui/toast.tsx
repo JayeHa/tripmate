@@ -13,7 +13,13 @@ const FILL_MS = 50;
  * 보일 토스트 한 번. 같은 문구를 다시 띄울 때도 id 가 달라 시간을 다시 잰다.
  * detail 이 있으면 안내형 — 굵은 text 뒤에 「 · detail」, 조금 더 오래 보인다
  */
-export type ToastMessage = { text: string; detail?: string; id: number };
+export type ToastMessage = {
+  text: string;
+  detail?: string;
+  id: number;
+  /** 글 뒤의 버튼 하나(「다시 받기」) — 있으면 토스트를 누를 수 있다 */
+  action?: { label: string; onClick: () => void };
+};
 
 type ToastProps = {
   /** null 이면 아무것도 그리지 않는다 */
@@ -26,7 +32,7 @@ type ToastProps = {
 
 /**
  * 화면 아래 가운데에 잠깐 떴다 사라지는 한 줄 알림(모바일은 하단 탭 위 110, PC 는 28). 새 토스트가 이전 것을 대체한다. 열린 창(다이얼로그 z-50) 위에도 보이게 body 에 그리고,
- * 누르는 것을 막지 않는다(pointer-events-none).
+ * 누르는 것을 막지 않는다(pointer-events-none — 버튼(action)만 누를 수 있다).
  *
  * 스크린리더는 이미 있는 live region 의 변화만 읽는 경우가 많아, 빈 `role="status"` 를 먼저 붙이고 다음 틱에 글을 넣는다.
  * 늘 붙여 두지 않는 이유: 모달이 열릴 때 바깥 요소는 aria-hidden 이 되는데, 토스트는 주로 모달 위에 뜬다 —
@@ -60,6 +66,15 @@ export function Toast({ message, onDone, mobileOffset = 0 }: ToastProps) {
             </>
           ) : (
             message.text
+          )}
+          {message.action && (
+            <button
+              type="button"
+              onClick={message.action.onClick}
+              className="pointer-events-auto ml-2.5 font-extrabold text-primary"
+            >
+              {message.action.label}
+            </button>
           )}
         </span>
       )}

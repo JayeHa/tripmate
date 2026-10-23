@@ -142,3 +142,13 @@ export function voucherCountFor(
     return !!ref && refs.some((r) => r.kind === ref.kind && r.id === ref.id);
   }).length;
 }
+
+/**
+ * 뷰어에 넘겨 볼 그림 키 — PDF 는 현장용 페이지 그림(적은 순서), 사진은 원본 하나.
+ * 그림이 없는 PDF(그리지 못함) · 파일 없는 바우처는 빈 목록
+ */
+export function viewerKeys(v: Pick<Voucher, "file_key" | "file_mime" | "page_keys">): string[] {
+  if (v.page_keys.length > 0) return v.page_keys;
+  if (v.file_key && v.file_mime?.startsWith("image/")) return [v.file_key];
+  return [];
+}

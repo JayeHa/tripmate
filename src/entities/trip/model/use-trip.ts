@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 import type { ExchangeRates } from "@/shared/lib/money";
@@ -22,8 +22,12 @@ export function useTrips({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({ queryKey: queryKeys.trips.all, queryFn: fetchTrips, enabled });
 }
 
+/** 여행 하나의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const tripQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.trips.detail(tripId), queryFn: () => fetchTrip(tripId) });
+
 export function useTrip(tripId: string) {
-  return useQuery({ queryKey: queryKeys.trips.detail(tripId), queryFn: () => fetchTrip(tripId) });
+  return useQuery(tripQuery(tripId));
 }
 
 export function useCreateTrip() {

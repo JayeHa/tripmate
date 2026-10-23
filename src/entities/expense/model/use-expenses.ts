@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
@@ -23,11 +23,12 @@ import type { PaymentOwner } from "../lib/payment-owner";
 import { EXPENSE_CREATE_KEY, type ExpenseCreateVars } from "./expense-sync";
 import type { ExpenseFormValues } from "./schema";
 
+/** 지출 목록의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const expensesQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.expenses(tripId), queryFn: () => fetchExpenses(tripId) });
+
 export function useExpenses(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.expenses(tripId),
-    queryFn: () => fetchExpenses(tripId),
-  });
+  return useQuery(expensesQuery(tripId));
 }
 
 export function useCreateExpense(tripId: string) {
@@ -121,11 +122,12 @@ export function useDeleteExpense(tripId: string) {
 
 /** 여행의 영수증 줄(지출마다 몇 장 · 어떤 파일) */
 export function useTripReceipts(tripId: string) {
-  return useQuery({
-    queryKey: queryKeys.receipts(tripId),
-    queryFn: () => fetchReceipts(tripId),
-  });
+  return useQuery(tripReceiptsQuery(tripId));
 }
+
+/** 영수증 줄의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
+export const tripReceiptsQuery = (tripId: string) =>
+  queryOptions({ queryKey: queryKeys.receipts(tripId), queryFn: () => fetchReceipts(tripId) });
 
 /** 읽기 주소가 1시간 유효해서, 그보다 조금 짧게만 쓰고 그 전에 새로 받는다 */
 const URL_STALE_MS = 50 * 60 * 1000;

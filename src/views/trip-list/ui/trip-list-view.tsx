@@ -1,33 +1,27 @@
 "use client";
 
-import { Ellipsis, Luggage } from "lucide-react";
+import { Luggage } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useMyProfile, useUser } from "@/entities/session";
-import {
-  groupTrips,
-  type Trip,
-  TripCard,
-  TripRow,
-  TripRowCompact,
-  useDeleteTrip,
-  useTrips,
-} from "@/entities/trip";
+import { groupTrips, type Trip, useDeleteTrip, useTrips } from "@/entities/trip";
 import { AccountSheet } from "@/features/account-menu";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
+import { OfflineDownloadDialog, useOfflineDownload } from "@/features/trip/offline-download";
 import { todayISO } from "@/shared/lib/days";
 import { Button } from "@/shared/ui/button";
 import { DialogTitle } from "@/shared/ui/dialog";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { FlowDialog } from "@/shared/ui/flow-dialog";
-import { IconButton } from "@/shared/ui/icon-button";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
-import { CreateTripCard, CreateTripTile } from "./create-trip-card";
+import { CreateTripCard } from "./create-trip-card";
 import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
+import { TripGroups } from "./trip-groups";
 import { TripListHeader } from "./trip-list-header";
 
 /**
@@ -45,6 +39,8 @@ export function TripListView() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editFor, setEditFor] = useState<Trip | null>(null);
   const createFlow = useTripCreate(() => setCreateOpen(false));
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const download = useOfflineDownload((next) => setToast({ ...next, id: Date.now() }));
   const openCreate = () => {
     createFlow.reset();
     setCreateOpen(true);
@@ -66,6 +62,8 @@ export function TripListView() {
       trip={trip}
       canDelete={canDelete(trip)}
       onEdit={editTrip}
+      downloadHint={download.hint(trip)}
+      onDownload={download.open}
       onDelete={askDelete}
     />
   );
@@ -113,59 +111,13 @@ export function TripListView() {
           />
         )}
 
-        {groups.map((group) => (
-          <section key={group.kind} className="pt-6 lg:pt-0">
-            <h2 className="px-5 pb-1.5 text-[17px] font-extrabold text-ink-900 lg:px-0 lg:pb-3.5 lg:text-lg">
-              {group.title}
-            </h2>
-
-            <div className="lg:hidden">
-              {group.trips.map((trip) => (
-                <TripRow
-                  key={trip.id}
-                  trip={trip}
-                  today={today}
-                  companionCount={trip.companionCount}
-                  actions={
-                    <IconButton
-                      label={`${trip.title} 메뉴`}
-                      onClick={() => setSheetFor(trip)}
-                      className="-m-2 p-2 text-ink-700"
-                    >
-                      <Ellipsis className="size-5.5" />
-                    </IconButton>
-                  }
-                />
-              ))}
-            </div>
-
-            {group.kind === "upcoming" ? (
-              <div className="hidden grid-cols-3 gap-5 lg:grid">
-                {group.trips.map((trip) => (
-                  <TripCard
-                    key={trip.id}
-                    trip={trip}
-                    today={today}
-                    companionCount={trip.companionCount}
-                    actions={pcActions(trip)}
-                  />
-                ))}
-                <CreateTripTile onClick={openCreate} />
-              </div>
-            ) : (
-              <div className="hidden grid-cols-2 gap-x-8 lg:grid">
-                {group.trips.map((trip) => (
-                  <TripRowCompact
-                    key={trip.id}
-                    trip={trip}
-                    companionCount={trip.companionCount}
-                    actions={pcActions(trip)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+        <TripGroups
+          groups={groups}
+          today={today}
+          onOpenSheet={setSheetFor}
+          pcActions={pcActions}
+          onCreate={openCreate}
+        />
       </div>
 
       <TripActionsSheet
@@ -175,6 +127,11 @@ export function TripListView() {
         onEdit={(trip) => {
           setSheetFor(null);
           editTrip(trip);
+        }}
+        downloadHint={download.hint}
+        onDownload={(trip) => {
+          setSheetFor(null);
+          download.open(trip);
         }}
         onDelete={(trip) => {
           setSheetFor(null);
@@ -215,6 +172,8 @@ export function TripListView() {
         // 실패하면 닫지 않는다. 닫히면 지워졌는지 알 수 없다.
         onConfirm={(trip) => deleteTrip.mutate(trip.id, { onSuccess: () => setConfirmFor(null) })}
       />
+      <OfflineDownloadDialog state={download.dialog} />
+      <Toast message={toast} onDone={() => setToast(null)} />
     </main>
   );
 }

@@ -50,3 +50,79 @@ export function withOfflineFileUrls<
   if (query.data && !query.isPlaceholderData) return query;
   return { ...query, data: offlineFileUrls(bucket, keys) };
 }
+
+/**
+ * 「오프라인용으로 받기」 로 받은 여행의 저장 칸(Cache Storage) — 자동 저장 칸(최근 64개 · 7일)과 따로 두어 밀려나거나 먼저 지워지지 않는다.
+ * 화면은 배포마다 따로(그 배포의 JS · CSS 를 가리킨다 — `app/sw.ts` 의 BUILD_ID), 사진은 키가 바뀌지 않아 여행마다 하나.
+ * 이름의 구분자는 `:` — 여행 id(uuid) 와 빌드 id 에 `-` 가 들어간다
+ */
+const TRIP_PAGES = "offline-pages";
+const TRIP_FILES = "offline-files";
+
+/** 받은 여행의 화면 칸 이름 */
+export function tripPagesCacheName(tripId: string, buildId: string): string {
+  return `${TRIP_PAGES}:${tripId}:${buildId}`;
+}
+
+/** 받은 여행의 사진 칸 이름 */
+export function tripFilesCacheName(tripId: string): string {
+  return `${TRIP_FILES}:${tripId}`;
+}
+
+/** 화면 칸 이름을 나눈다 — 받은 여행의 화면 칸이 아니면 null */
+export function parseTripPagesCacheName(name: string): { tripId: string; buildId: string } | null {
+  const [kind, tripId, buildId] = name.split(":");
+  return kind === TRIP_PAGES && tripId && buildId ? { tripId, buildId } : null;
+}
+
+/** 받은 여행의 사진 칸인가 */
+export function isTripFilesCacheName(name: string): boolean {
+  return name.startsWith(`${TRIP_FILES}:`);
+}
+
+/** 페이지가 서비스 워커에 「이 여행용으로 받아 둬」 하고 보내는 메시지 — 화면(같은 출처 주소) 또는 사진(서명 주소) */
+export type OfflineSaveRequest = {
+  type: "offline-save";
+  tripId: string;
+  kind: "page" | "file";
+  url: string;
+};
+
+/** 받은 메시지가 받기 요청인가 */
+export function isOfflineSaveRequest(data: unknown): data is OfflineSaveRequest {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Partial<OfflineSaveRequest>;
+  return (
+    d.type === "offline-save" &&
+    typeof d.tripId === "string" &&
+    typeof d.url === "string" &&
+    (d.kind === "page" || d.kind === "file")
+  );
+}
+
+/**
+ * 페이지가 서비스 워커에 「받은 여행의 옛 배포 화면을 새 배포로 옮겨 줘」 하고 보내는 메시지.
+ * 옮기기는 activate 밖에서 한다 — activate 가 끝날 때까지 브라우저가 앱의 모든 요청을 붙잡아 둔다
+ */
+export const OFFLINE_CARRY = { type: "offline-carry" } as const;
+
+/** 받은 메시지가 옮기기 요청인가 */
+export function isOfflineCarryRequest(data: unknown): boolean {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as { type?: unknown }).type === OFFLINE_CARRY.type
+  );
+}
+
+/** 받은 여행의 저장 칸(화면 · 사진)을 지운다 — 보관 기간이 지났을 때. 저장소를 못 쓰는 환경이면 넘어간다 */
+export async function dropOfflineTrip(tripId: string): Promise<void> {
+  try {
+    const names = await caches.keys();
+    const mine = (n: string) =>
+      parseTripPagesCacheName(n)?.tripId === tripId || n === tripFilesCacheName(tripId);
+    await Promise.all(names.filter(mine).map((n) => caches.delete(n)));
+  } catch {
+    // 저장소가 없으면 지울 것도 없다
+  }
+}

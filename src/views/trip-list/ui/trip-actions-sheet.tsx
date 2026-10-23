@@ -1,9 +1,11 @@
 "use client";
 
-import { CalendarDays, Trash2 } from "lucide-react";
+import { CalendarDays, CloudDownload, Trash2 } from "lucide-react";
 
 import type { Trip } from "@/entities/trip";
+import type { MenuHint } from "@/features/trip/offline-download";
 import { dateRangeLabel } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { SheetMenuItem } from "@/shared/ui/sheet-menu-item";
 
@@ -13,11 +15,23 @@ type Props = {
   canDelete: boolean;
   onClose: () => void;
   onEdit: (trip: Trip) => void;
+  /** 「오프라인용으로 받기」 줄의 오른쪽 힌트 */
+  downloadHint: (trip: Trip) => MenuHint;
+  onDownload: (trip: Trip) => void;
   onDelete: (trip: Trip) => void;
 };
 
 /** 여행 행의 `···` 메뉴. */
-export function TripActionsSheet({ trip, canDelete, onClose, onEdit, onDelete }: Props) {
+export function TripActionsSheet({
+  trip,
+  canDelete,
+  onClose,
+  onEdit,
+  downloadHint,
+  onDownload,
+  onDelete,
+}: Props) {
+  const hint = trip ? downloadHint(trip) : null;
   return (
     <Sheet open={Boolean(trip)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
@@ -42,6 +56,19 @@ export function TripActionsSheet({ trip, canDelete, onClose, onEdit, onDelete }:
               className="border-t border-surface-muted px-1"
             >
               여행일정 수정
+            </SheetMenuItem>
+            {/* 오프라인이면 흐리게 — 누르면 창 없이 「연결되면 받을 수 있어요」 */}
+            <SheetMenuItem
+              icon={CloudDownload}
+              iconClassName={cn("size-5.5", hint?.muted ? "text-line-dashed" : "text-ink-700")}
+              hint={hint?.text}
+              onClick={() => onDownload(trip)}
+              className={cn(
+                "border-t border-surface-muted px-1",
+                hint?.muted && "text-line-dashed",
+              )}
+            >
+              오프라인용으로 받기
             </SheetMenuItem>
             {canDelete && (
               <SheetMenuItem

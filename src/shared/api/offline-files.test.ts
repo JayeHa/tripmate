@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  isOfflineCarryRequest,
   isOfflineFileUrl,
+  isOfflineSaveRequest,
+  isTripFilesCacheName,
   isUnreachable,
   offlineFileCacheKey,
   offlineFileUrls,
+  parseTripPagesCacheName,
+  tripFilesCacheName,
+  tripPagesCacheName,
   withOfflineFileUrls,
 } from "./offline-files";
 import { ApiError } from "./post-json";
@@ -64,5 +70,33 @@ describe("기기에 남기는 사진 주소", () => {
     expect(
       withOfflineFileUrls(q({ "t/old.png": "s" }, true, offline), "vouchers", keys).data,
     ).toEqual({ "t/a.png": `${base}/vouchers/t/a.png` });
+  });
+});
+
+describe("받은 여행의 저장 칸", () => {
+  it("화면 칸 이름은 여행 · 빌드로 나뉜다 — 둘 다 `-` 가 들어가도", () => {
+    const name = tripPagesCacheName("a1b2-c3", "build-x_1");
+    expect(parseTripPagesCacheName(name)).toEqual({ tripId: "a1b2-c3", buildId: "build-x_1" });
+    expect(parseTripPagesCacheName(tripFilesCacheName("a1b2-c3"))).toBeNull();
+    expect(parseTripPagesCacheName("pages-html-build")).toBeNull();
+  });
+
+  it("사진 칸은 자동 저장 칸(trip-files)과 헷갈리지 않는다", () => {
+    expect(isTripFilesCacheName(tripFilesCacheName("t"))).toBe(true);
+    expect(isTripFilesCacheName("trip-files")).toBe(false);
+  });
+
+  it("받기 요청 모양만 받는다", () => {
+    const ok = { type: "offline-save", tripId: "t", kind: "page", url: "/trips/t/home" };
+    expect(isOfflineSaveRequest(ok)).toBe(true);
+    expect(isOfflineSaveRequest({ ...ok, kind: "pdf" })).toBe(false);
+    expect(isOfflineSaveRequest({ type: "CACHE_URLS" })).toBe(false);
+    expect(isOfflineSaveRequest(null)).toBe(false);
+  });
+
+  it("옮기기 요청은 type 으로만 가른다", () => {
+    expect(isOfflineCarryRequest({ type: "offline-carry" })).toBe(true);
+    expect(isOfflineCarryRequest({ type: "offline-save" })).toBe(false);
+    expect(isOfflineCarryRequest(null)).toBe(false);
   });
 });
