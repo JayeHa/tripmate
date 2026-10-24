@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 /**
  * 「홈 화면에 앱 추가」 를 어떻게 안내할지 — 설치 창을 띄울 수 있으면 「설치하기」(Chrome · Edge),
- * iOS 는 공유 메뉴 3단계, 둘 다 아니면 null(이미 설치해 앱으로 열었거나 설치할 수 없는 브라우저 — 항목을 숨긴다)
+ * iOS Safari 는 공유 메뉴 3단계, 둘 다 아니면 null(이미 설치해 앱으로 열었거나 설치할 수 없는 브라우저 — 항목을 숨긴다)
  */
 export type InstallMode = "prompt" | "ios" | null;
 
@@ -41,12 +41,22 @@ export function captureInstallPrompt(): void {
   });
 }
 
-/** iPhone · iPad 인가 — iPadOS 는 데스크톱 Safari 처럼 「Macintosh」 로 알려 터치로 가른다 */
-export function isIosDevice(userAgent: string, maxTouchPoints: number): boolean {
-  return /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+/** iOS 의 다른 브라우저 · 인앱 브라우저 — UA 에 Safari 가 들어 있어도 Safari 가 아니다 */
+const NOT_SAFARI =
+  /CriOS|FxiOS|EdgiOS|OPiOS|KAKAOTALK|NAVER|Line\/|Instagram|FBAN|FBAV|DaumApps|Whale/;
+
+/**
+ * iPhone · iPad 의 Safari 인가 — 3단계 안내가 「Safari 아래쪽 공유 버튼」 이라 Safari 에서만 맞다.
+ * 인앱 브라우저(카카오톡 등)는 홈 화면에 추가할 수 없고, iOS Chrome · Edge 는 공유 버튼이 위에 있다.
+ * iPadOS 는 데스크톱 Safari 처럼 「Macintosh」 로 알려 터치로 가른다
+ */
+export function isIosSafari(userAgent: string, maxTouchPoints: number): boolean {
+  const ios =
+    /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+  return ios && /Version\/.*Safari\//.test(userAgent) && !NOT_SAFARI.test(userAgent);
 }
 
-/** 안내 방식 — 이미 앱으로 열었으면 없음, 설치 창을 띄울 수 있으면 그것, 아니면 iOS 만 3단계 */
+/** 안내 방식 — 이미 앱으로 열었으면 없음, 설치 창을 띄울 수 있으면 그것, 아니면 iOS Safari 만 3단계 */
 export function installModeOf(env: {
   standalone: boolean;
   canPrompt: boolean;
@@ -65,7 +75,7 @@ function snapshot(): InstallMode {
   return installModeOf({
     standalone,
     canPrompt: deferred !== null,
-    ios: isIosDevice(navigator.userAgent, navigator.maxTouchPoints),
+    ios: isIosSafari(navigator.userAgent, navigator.maxTouchPoints),
   });
 }
 
