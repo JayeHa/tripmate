@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
 import { Badge } from "@/shared/ui/badge";
+import { LinkPendingVeil } from "@/shared/ui/link-pending";
 
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
@@ -21,7 +22,10 @@ export function TripRow({ trip, today, companionCount, actions }: Props) {
   const dday = ddayLabel(trip.start_date, today);
   return (
     <div className="flex items-center gap-4 px-5 py-3">
-      <Link href={`/trips/${trip.id}/home`} className="flex min-w-0 flex-1 items-center gap-4">
+      <Link
+        href={`/trips/${trip.id}/home`}
+        className="relative flex min-w-0 flex-1 items-center gap-4"
+      >
         <TripThumb title={trip.title} imageUrl={coverImageUrl(trip.cities)} />
         <span className="flex min-w-0 flex-1 flex-col gap-0.75">
           <span className="flex min-w-0 items-center gap-1.5">
@@ -40,6 +44,7 @@ export function TripRow({ trip, today, companionCount, actions }: Props) {
           </span>
           <span className="text-[13px] text-ink-400">{cityCountLabel(trip.cities)}</span>
         </span>
+        <LinkPendingVeil />
       </Link>
       {actions}
     </div>

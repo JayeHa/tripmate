@@ -12,6 +12,7 @@ import { activeTripTab, TRIP_TABS, tripTabHref } from "@/shared/config/trip-tabs
 import { shortRangeLabel } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { LinkPending } from "@/shared/ui/link-pending";
 import { Wordmark } from "@/shared/ui/wordmark";
 
 import { InviteDialog } from "./invite-dialog";
@@ -42,14 +43,24 @@ export function PcHeader({ tripId }: PcHeaderProps) {
             key={tab.key}
             href={tripTabHref(tripId, tab, day)}
             aria-current={tab.key === active ? "page" : undefined}
-            className={cn(
-              "-mb-px flex items-center border-b-2 text-[15px] whitespace-nowrap",
-              tab.key === active
-                ? "border-ink-900 font-extrabold text-ink-900"
-                : "border-transparent font-semibold text-ink-400",
-            )}
+            className="-mb-px flex"
           >
-            {tab.label}
+            <LinkPending>
+              {(pending) => (
+                // 화면을 기다리는 동안 누른 탭이 먼저 진해지고 깜빡인다
+                <span
+                  className={cn(
+                    "flex items-center border-b-2 text-[15px] whitespace-nowrap",
+                    tab.key === active
+                      ? "border-ink-900 font-extrabold text-ink-900"
+                      : "border-transparent font-semibold text-ink-400",
+                    pending && "animate-pulse text-ink-900",
+                  )}
+                >
+                  {tab.label}
+                </span>
+              )}
+            </LinkPending>
           </Link>
         ))}
       </nav>

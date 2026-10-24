@@ -4,6 +4,7 @@ import Link from "next/link";
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
 import { initialOf, tintOf } from "@/shared/lib/tint";
 import { Badge } from "@/shared/ui/badge";
+import { LinkPendingVeil } from "@/shared/ui/link-pending";
 
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
@@ -44,6 +45,7 @@ export function TripCard({ trip, today, companionCount, actions }: Props) {
             className="truncate text-lg font-bold tracking-[-0.01em] text-ink-900 after:absolute after:inset-0 after:rounded-card"
           >
             {trip.title}
+            <LinkPendingVeil className="rounded-card" />
           </Link>
           {dday && (
             <Badge className="shrink-0 bg-status-ok-bg text-[11px] font-bold text-status-ok">
