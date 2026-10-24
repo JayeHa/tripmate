@@ -36,7 +36,7 @@ export function AccountMenu({ profile, showName = true }: AccountMenuProps) {
         sideOffset={10}
         className="w-80 gap-0 overflow-hidden rounded-[14px] bg-white p-0 shadow-sheet ring-0"
       >
-        <AccountPanel profile={profile} Title={PopoverTitle} />
+        <AccountPanel profile={profile} Title={PopoverTitle} pc />
       </PopoverContent>
     </Popover>
   );
