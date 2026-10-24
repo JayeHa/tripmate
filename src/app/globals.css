@@ -80,6 +80,8 @@
   --color-line-card: #f0f1f3;
   --color-divider: #eef0f2;
   --color-handle: #c9cdd2;
+  /* 로딩 뼈대 — 값은 divider 와 같지만 쓰임이 달라 이름을 따로 둔다 */
+  --color-skeleton: #eef0f2;
   /* 점선 추가 버튼 · 체크 원 테두리 — 값은 handle 과 같지만 쓰임이 달라 이름을 따로 둔다 */
   --color-line-dashed: #c9cdd2;
 
@@ -217,6 +219,17 @@
   --radius-sheet: 22px;
   --shadow-card: 0 1px 6px rgba(0, 0, 0, 0.07);
   --shadow-sheet: 0 -6px 24px rgba(0, 0, 0, 0.12);
+
+  /* 로딩 뼈대는 0.3초가 지나야 나타난다 — 빨리 끝나는 이동에서 깜빡이지 않게 */
+  --animate-skeleton-in: skeleton-in 150ms ease-out 300ms both;
+  @keyframes skeleton-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 :root {
