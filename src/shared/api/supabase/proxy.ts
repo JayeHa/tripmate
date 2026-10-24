@@ -7,6 +7,7 @@ import type { Database } from "./database.types";
 
 const PROTECTED_PREFIXES = ["/trips", "/join"];
 
+/** 요청마다 로그인을 확인하고 세션 쿠키를 갱신한다 — 로그인이 필요한 화면은 /login 으로, 로그인한 사람의 /login 은 /trips 로 보낸다 */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -29,10 +30,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // getUser()는 토큰을 검증하고 필요하면 세션을 갱신한다. 반드시 다른 로직보다 먼저 호출.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 토큰을 검증하고 필요하면 세션을 갱신한다. 반드시 다른 로직보다 먼저 호출.
+  // getUser() 는 화면 이동 · 프리페치마다 Supabase Auth 에 한 번 다녀와서, 서명 키(ES256)로 여기서 확인하는 getClaims() 를 쓴다.
+  // 다른 기기에서 로그아웃해도 이 토큰이 만료될 때까지(최대 1시간) 여기서는 로그인으로 본다 — 화면을 열어 줄지만 정하고,
+  // 데이터 권한은 DB(RLS)가 요청마다 확인한다. 대칭 키(HS256)로 서명된 옛 토큰이면 getClaims 가 알아서 getUser 로 확인한다
+  // @see https://supabase.com/docs/reference/javascript/auth-getclaims
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const { pathname, search } = request.nextUrl;
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
