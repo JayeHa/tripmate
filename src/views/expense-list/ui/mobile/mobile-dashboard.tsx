@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 import { type PersonKey, SettleBand } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
+import { NAV } from "@/shared/lib/nav-transition";
 import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/shared/ui/app-header";
@@ -34,7 +35,9 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
   const base = `/trips/${tripId}/expenses`;
   /** 정산 화면 — 사람을 주면 그 사람부터 */
   const openSettle = (person: PersonKey | null) =>
-    router.push(`${base}/settlement${person ? `?p=${encodeURIComponent(person)}` : ""}`);
+    router.push(`${base}/settlement${person ? `?p=${encodeURIComponent(person)}` : ""}`, {
+      transitionTypes: NAV.forward,
+    });
   const dash = useDashboard(tripId, list);
   const home = trip.home_currency;
   return (
@@ -80,7 +83,9 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
           <CategoryCard
             shares={dash.categories}
             home={home}
-            onOpen={(pick) => router.push(`${base}/categories?c=${pick}`)}
+            onOpen={(pick) =>
+              router.push(`${base}/categories?c=${pick}`, { transitionTypes: NAV.forward })
+            }
           />
         </section>
         {!list.solo && dash.settleFailed && (

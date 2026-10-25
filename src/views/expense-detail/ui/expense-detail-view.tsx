@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useDeleteExpense } from "@/entities/expense";
 import { DeleteExpenseConfirm } from "@/features/expense/form";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -32,7 +33,12 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
   return (
     <div className="fixed inset-x-0 top-(--offline-band) bottom-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1">
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
-        <Link href={list} aria-label="닫기" className="flex text-ink-900">
+        <Link
+          href={list}
+          transitionTypes={NAV.back}
+          aria-label="닫기"
+          className="flex text-ink-900"
+        >
           <X className="size-6.5" />
         </Link>
         <h1 className="flex-1 text-[17px] font-bold text-ink-900">비용 상세</h1>
@@ -71,7 +77,11 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
             )}
             <div className="flex gap-2">
               <DeleteExpenseConfirm
-                onDelete={() => remove.mutate(expenseId, { onSuccess: () => router.replace(list) })}
+                onDelete={() =>
+                  remove.mutate(expenseId, {
+                    onSuccess: () => router.replace(list, { transitionTypes: NAV.back }),
+                  })
+                }
                 disabled={remove.isPending}
                 className={cn(
                   buttonVariants({ variant: "chip", size: "cta" }),
@@ -82,6 +92,7 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
               </DeleteExpenseConfirm>
               <Link
                 href={`${list}/${expenseId}/edit`}
+                transitionTypes={NAV.forward}
                 replace
                 aria-disabled={remove.isPending}
                 className={cn(

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -28,7 +29,9 @@ export function AppHeader({ title, subtitle, back, right, dot }: Props) {
           type="button"
           aria-label="뒤로"
           className="flex cursor-pointer items-center text-ink-900"
-          onClick={() => (back === true ? router.back() : router.push(back))}
+          onClick={() =>
+            back === true ? router.back() : router.push(back, { transitionTypes: NAV.back })
+          }
         >
           <ArrowLeft className="size-6" strokeWidth={2} />
         </button>

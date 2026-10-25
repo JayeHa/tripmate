@@ -8,6 +8,7 @@ import {
   type PersonRef,
   whoOf,
 } from "@/entities/expense";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 type ExpenseRowProps = {
@@ -45,6 +46,7 @@ export function ExpenseRow({
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
           <Link
             href={href}
+            transitionTypes={NAV.forward}
             className="min-w-0 truncate text-sm font-medium text-ink-600 after:absolute after:inset-0"
           >
             {row.name}

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
+import { NAV } from "@/shared/lib/nav-transition";
 
 /**
  * 새 여행 만들기 (/trips/new). 모바일은 전체 화면(5b·5c).
@@ -10,10 +11,10 @@ import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
  */
 export function TripCreateView() {
   const router = useRouter();
-  const close = () => router.push("/trips");
+  const close = () => router.push("/trips", { transitionTypes: NAV.back });
   // 만들면 목록으로 돌아간다
   // 두 레이아웃이 상태를 함께 쓴다. 창 크기가 1024px 을 넘나들어도 고른 것이 이어진다
-  const state = useTripCreate(() => router.replace("/trips"));
+  const state = useTripCreate(() => router.replace("/trips", { transitionTypes: NAV.back }));
 
   return (
     <main className="flex flex-1 flex-col">

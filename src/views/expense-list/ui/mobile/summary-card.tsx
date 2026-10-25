@@ -6,6 +6,7 @@ import { type ReactNode, useState } from "react";
 
 import type { ExpenseTotals } from "@/entities/expense";
 import { type ExchangeRates, formatMoney, toHome } from "@/shared/lib/money";
+import { NAV } from "@/shared/lib/nav-transition";
 import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
 
@@ -95,6 +96,7 @@ export function SummaryCard({
           {statsHref && (
             <Link
               href={statsHref}
+              transitionTypes={NAV.tab}
               className="flex h-10 items-center justify-center gap-1 border-t border-surface-sunken text-[13px] font-bold text-primary"
             >
               지출내역 보기
