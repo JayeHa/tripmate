@@ -42,7 +42,7 @@ export type ExpenseFormLayout = "page" | "modal";
 
 const FRAME: Record<ExpenseFormLayout, { form: string; body: string; bar: string }> = {
   page: {
-    form: "fixed inset-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1",
+    form: "fixed inset-x-0 top-(--offline-band) bottom-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1",
     body: "min-h-0 flex-1 overflow-y-auto lg:overflow-visible",
     bar: "lg:sticky lg:bottom-0",
   },

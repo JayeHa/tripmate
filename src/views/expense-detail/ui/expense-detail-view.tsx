@@ -30,7 +30,7 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
   // 그 전에 다시 읽은 목록 · 실시간 갱신에서 지출이 먼저 빠질 수 있다 — 요청 중에 사라진 것도 지운 것으로 본다
   if (remove.isSuccess || (remove.isPending && detail.state === "missing")) return null;
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1">
+    <div className="fixed inset-x-0 top-(--offline-band) bottom-0 z-30 flex flex-col bg-background lg:static lg:z-auto lg:mx-auto lg:w-full lg:max-w-110 lg:flex-1">
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
         <Link href={list} aria-label="닫기" className="flex text-ink-900">
           <X className="size-6.5" />
