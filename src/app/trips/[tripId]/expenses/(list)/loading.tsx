@@ -1,3 +1,4 @@
+import { PageTransition } from "@/shared/ui/page-transition";
 import { ExpenseListSkeleton } from "@/views/expense-list";
 
 /**
@@ -5,5 +6,9 @@ import { ExpenseListSkeleton } from "@/views/expense-list";
  * `(list)` 묶음에 두어 하위 화면(비용 추가 · 상세 · 정산 · 카테고리)에는 목록 뼈대가 뜨지 않게 한다 — loading 은 아래 화면을 모두 감싼다
  */
 export default function Loading() {
-  return <ExpenseListSkeleton />;
+  return (
+    <PageTransition>
+      <ExpenseListSkeleton />
+    </PageTransition>
+  );
 }

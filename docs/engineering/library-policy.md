@@ -214,6 +214,14 @@ provider 는 성격상 슬라이스 안으로 옮길 수 없다. 이 경우에�
 새 결정은 위에 쌓는다. **소급** 표시는 이 문서가 생기기 전에 내린 결정을 나중에 적은 것이다. 당시 비교 기록이 없는 부분은 지어내지 않고 「기록 없음」 으로 둔다.
 사실 항목은 `npm view` 로 2026-10-04 에 조회했다.
 
+### 2026-10 · 화면 이동 전환 → React 내장 `<ViewTransition>` (라이브러리 없음)
+
+- **문제**: 화면이 바뀔 때 아무 움직임이 없어 어디로 갔는지(안으로 · 밖으로 · 옆 탭) 알기 어렵다. 모바일은 방향 있는 슬라이드, PC 는 짧은 크로스페이드가 필요하다(#212 ②).
+- **후보**: React `<ViewTransition>`(Next 16 App Router 가 싣는 React 에 들어 있음, 설치 없음) / framer-motion(`AnimatePresence`) / CSS 만으로 템플릿 재마운트.
+- **선택**: `<ViewTransition>`. 화면마다 `shared/ui/page-transition.tsx` 로 감싸고, 방향은 링크의 `transitionTypes`(`shared/lib/nav-transition.ts`)로, 모양은 `globals.css` 「화면 전환」.
+- **근거**: Next 이동은 그 자체로 Transition 이라 따로 연결할 것이 없다. framer-motion 은 App Router 가 옛 화면을 바로 언마운트해 나가는 애니메이션을 걸기 어렵고 번들이 커진다. 브라우저의 View Transitions API 를 쓰므로 모르는 브라우저에서는 애니메이션 없이 그대로 바뀐다(깨지지 않음).
+- **포기한 것 / 재평가 트리거**: 지원은 Chromium 125+ · Safari 18.2+(전환 종류 · `view-transition-class`) — 지원 범위 하한(iOS 16.4)보다 높아 **iOS 17 이하는 전환 없이 바뀐다.** 브라우저 뒤로 가기 · iOS 끌어서 뒤로 가기에는 종류가 실리지 않아 슬라이드가 없다(iOS 는 브라우저가 직접 움직인다). `ViewTransition` 은 React canary 기능이라 Next 를 올릴 때 API 가 바뀌면 이 두 파일을 고친다.
+
 ### 2026-10 · 오프라인으로 열기(서비스 워커) → `@serwist/turbopack` + `serwist`
 
 - **문제**: 여행지에서 통신이 끊겨도 일정 · 바우처를 열어야 한다(#20, 시안 `explore - States` 17e). 데이터는 이미 IndexedDB 에 남지만(TanStack persist, 7일)
