@@ -24,7 +24,7 @@ export function ConnectionStatus() {
       {!online && (
         <div
           data-offline-band
-          className="sticky top-0 z-40 flex h-10 shrink-0 items-center gap-2 bg-ink-800 px-4 text-[13px] font-semibold text-white"
+          className="sticky top-0 z-40 flex h-10 shrink-0 items-center gap-2 bg-ink-800 px-4 text-[13px] font-semibold text-white [view-transition-name:offline-band]"
         >
           <WifiOff className="size-4 shrink-0" aria-hidden="true" />
           <span role="status" className="min-w-0 flex-1 truncate">

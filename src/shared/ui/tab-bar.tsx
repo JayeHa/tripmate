@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 import { LinkPending } from "./link-pending";
@@ -21,7 +22,7 @@ type BottomTabBarProps = { items: TabItem[]; active: string };
  */
 export function BottomTabBar({ items, active }: BottomTabBarProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 h-[calc(83px+env(safe-area-inset-bottom))] border-t border-divider bg-background pt-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-20 h-[calc(83px+env(safe-area-inset-bottom))] border-t border-divider bg-background pt-2 pb-[env(safe-area-inset-bottom)] [view-transition-name:tab-bar]">
       <ul className="mx-auto flex h-18.75 max-w-lg">
         {items.map((tab) => {
           const on = tab.key === active;
@@ -29,6 +30,7 @@ export function BottomTabBar({ items, active }: BottomTabBarProps) {
             <li key={tab.key} className="flex-1">
               <Link
                 href={tab.href}
+                transitionTypes={NAV.tab}
                 aria-current={on ? "page" : undefined}
                 className="flex flex-col items-center"
               >

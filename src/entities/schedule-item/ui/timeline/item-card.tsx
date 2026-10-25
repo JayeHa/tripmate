@@ -1,6 +1,7 @@
 import { CircleAlert, ListTodo, Ticket } from "lucide-react";
 import Link from "next/link";
 
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 import type { TimelineRow } from "../../lib/timeline";
@@ -165,6 +166,7 @@ function NoteChips({ checklist, vouchers }: NoteChipsProps) {
       {showChecklist && (
         <Link
           href={checklist.href}
+          transitionTypes={NAV.tab}
           className="relative inline-flex h-6 items-center gap-1 rounded-full bg-checklist-due-bg px-2 text-xs font-bold text-checklist-due"
         >
           <ListTodo className="size-3.25" aria-hidden="true" />

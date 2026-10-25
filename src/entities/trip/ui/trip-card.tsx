@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { dateRangeLabel, ddayLabel } from "@/shared/lib/days";
+import { NAV } from "@/shared/lib/nav-transition";
 import { initialOf, tintOf } from "@/shared/lib/tint";
 import { Badge } from "@/shared/ui/badge";
 import { LinkPendingVeil } from "@/shared/ui/link-pending";
@@ -42,6 +43,7 @@ export function TripCard({ trip, today, companionCount, actions }: Props) {
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href={`/trips/${trip.id}/home`}
+            transitionTypes={NAV.forward}
             className="truncate text-lg font-bold tracking-[-0.01em] text-ink-900 after:absolute after:inset-0 after:rounded-card"
           >
             {trip.title}

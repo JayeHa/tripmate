@@ -1,12 +1,15 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
+import { NAV } from "@/shared/lib/nav-transition";
+
 /** 모바일 목록 맨 위 「여행 일정 만들기」 카드. /trips/new 전체 화면으로 간다 (PC 는 헤더 줄의 pill 버튼) */
 export function CreateTripCard() {
   return (
     <div className="px-5 pt-5 pb-1 lg:hidden">
       <Link
         href="/trips/new"
+        transitionTypes={NAV.forward}
         className="flex items-center gap-3.5 rounded-card bg-surface-sunken p-4.5"
       >
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary">

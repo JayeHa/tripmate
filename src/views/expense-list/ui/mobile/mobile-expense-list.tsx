@@ -6,6 +6,7 @@ import { useRef } from "react";
 
 import { todayISO } from "@/shared/lib/days";
 import { formatMoney } from "@/shared/lib/money";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/shared/ui/app-header";
 import { buttonVariants } from "@/shared/ui/button";
@@ -61,6 +62,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         <Link
           ref={cta}
           href={newHref}
+          transitionTypes={NAV.forward}
           // cn 으로 감싼다 — buttonVariants 는 클래스를 병합하지 않아 기본 text-sm · font-medium 이 CTA 크기(16/700)를 이긴다
           className={cn(buttonVariants({ variant: "brand", size: "cta" }), "mt-1")}
         >
@@ -90,6 +92,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
       {/* 위의 「+ 비용 추가」 가 보이는 동안은 숨긴다 — 같은 버튼이 둘 보이지 않게 */}
       <Link
         href={newHref}
+        transitionTypes={NAV.forward}
         aria-hidden={!past}
         tabIndex={past ? undefined : -1}
         className={cn(

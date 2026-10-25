@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { EditExpense } from "@/features/expense/form";
+import { NAV } from "@/shared/lib/nav-transition";
 import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
 type ExpenseEditViewProps = { tripId: string; expenseId: string };
@@ -20,9 +21,9 @@ export function ExpenseEditView({ tripId, expenseId }: ExpenseEditViewProps) {
         tripId={tripId}
         expenseId={expenseId}
         back={detail}
-        onClose={() => router.replace(detail)}
-        onDone={() => router.replace(detail)}
-        onDeleted={() => router.replace(list)}
+        onClose={() => router.replace(detail, { transitionTypes: NAV.back })}
+        onDone={() => router.replace(detail, { transitionTypes: NAV.back })}
+        onDeleted={() => router.replace(list, { transitionTypes: NAV.back })}
         onToast={(text) => setToast({ text, id: Date.now() })}
       />
       {/* 입력 칸 고정 · 풀기 알림 — 이 화면이 하나를 그린다 */}

@@ -10,6 +10,7 @@ import { useTrip } from "@/entities/trip";
 import { AccountMenu } from "@/features/account-menu";
 import { activeTripTab, TRIP_TABS, tripTabHref } from "@/shared/config/trip-tabs";
 import { shortRangeLabel } from "@/shared/lib/days";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { LinkPending } from "@/shared/ui/link-pending";
@@ -33,8 +34,8 @@ export function PcHeader({ tripId }: PcHeaderProps) {
   const active = activeTripTab(pathname, tripId);
 
   return (
-    <header className="sticky top-(--offline-band) z-30 hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 lg:flex">
-      <Link href="/trips" title="내 여행 목록">
+    <header className="sticky top-(--offline-band) z-30 hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 [view-transition-name:pc-header] lg:flex">
+      <Link href="/trips" title="내 여행 목록" transitionTypes={NAV.back}>
         <Wordmark className="text-[22px]" />
       </Link>
       <nav className="flex gap-7 self-stretch">
@@ -42,6 +43,7 @@ export function PcHeader({ tripId }: PcHeaderProps) {
           <Link
             key={tab.key}
             href={tripTabHref(tripId, tab, day)}
+            transitionTypes={NAV.tab}
             aria-current={tab.key === active ? "page" : undefined}
             className="-mb-px flex"
           >
@@ -69,6 +71,7 @@ export function PcHeader({ tripId }: PcHeaderProps) {
         <Link
           href="/trips"
           title="다른 여행 선택"
+          transitionTypes={NAV.back}
           className="flex h-9 items-center gap-1.5 rounded-full bg-surface-muted pr-3 pl-3.5 text-sm font-bold whitespace-nowrap text-ink-900"
         >
           {trip.title}

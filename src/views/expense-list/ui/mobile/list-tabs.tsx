@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 type ListTabsProps = {
@@ -38,7 +39,11 @@ function Tab({ href, on, children }: TabProps) {
     );
   }
   return (
-    <Link href={href} className={cn(TAB, "border-transparent font-semibold text-ink-350")}>
+    <Link
+      href={href}
+      transitionTypes={NAV.tab}
+      className={cn(TAB, "border-transparent font-semibold text-ink-350")}
+    >
       {children}
     </Link>
   );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { dateRangeLabel } from "@/shared/lib/days";
+import { NAV } from "@/shared/lib/nav-transition";
 import { LinkPendingVeil } from "@/shared/ui/link-pending";
 
 import type { TripListItem } from "../api/trips";
@@ -21,6 +22,7 @@ export function TripRowCompact({ trip, companionCount, actions }: Props) {
     <div className="flex items-center gap-3.5 border-b border-surface-muted py-3">
       <Link
         href={`/trips/${trip.id}/home`}
+        transitionTypes={NAV.forward}
         className="relative flex min-w-0 flex-1 items-center gap-3.5"
       >
         <TripThumb

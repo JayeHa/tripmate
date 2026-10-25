@@ -324,3 +324,95 @@
     overscroll-behavior-x: none;
   }
 }
+
+/* 화면 전환 — 종류는 링크가 정한다(shared/lib/nav-transition.ts), 감싸는 건 shared/ui/page-transition.tsx.
+   모바일: 안으로 · 밖으로는 60px 밀리며 겹쳐 바뀌고(250ms), 탭 사이는 겹쳐 바뀐다(150ms). PC 는 모두 겹쳐 바뀐다 */
+::view-transition {
+  /* 전환하는 동안에도 누른 것이 화면에 닿게 */
+  pointer-events: none;
+}
+::view-transition-old(.nav-forward) {
+  --slide-offset: -60px;
+  animation:
+    100ms ease-in both nav-fade reverse,
+    250ms ease-in-out both nav-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 60px;
+  animation:
+    150ms ease-out 100ms both nav-fade,
+    250ms ease-in-out both nav-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 60px;
+  animation:
+    100ms ease-in both nav-fade reverse,
+    250ms ease-in-out both nav-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -60px;
+  animation:
+    150ms ease-out 100ms both nav-fade,
+    250ms ease-in-out both nav-slide;
+}
+::view-transition-old(.nav-tab) {
+  animation: 150ms ease-out both nav-fade reverse;
+}
+::view-transition-new(.nav-tab) {
+  animation: 150ms ease-out both nav-fade;
+}
+@media (min-width: 64rem) {
+  ::view-transition-old(.nav-forward),
+  ::view-transition-old(.nav-back) {
+    animation: 150ms ease-out both nav-fade reverse;
+  }
+  ::view-transition-new(.nav-forward),
+  ::view-transition-new(.nav-back) {
+    animation: 150ms ease-out both nav-fade;
+  }
+}
+
+/* 화면이 바뀌어도 남는 틀(하단 탭 · PC 헤더 · 오프라인 띠)은 움직이지 않고 밀리는 화면 위에 그린다.
+   이름이 없으면 화면 조각이 그 아래로 지나가며 틀을 덮는다 */
+::view-transition-group(tab-bar),
+::view-transition-group(pc-header),
+::view-transition-group(offline-band) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(tab-bar),
+::view-transition-old(pc-header),
+::view-transition-old(offline-band) {
+  display: none;
+}
+::view-transition-new(tab-bar),
+::view-transition-new(pc-header),
+::view-transition-new(offline-band) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+@keyframes nav-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nav-slide {
+  from {
+    translate: var(--slide-offset);
+  }
+  to {
+    translate: 0;
+  }
+}

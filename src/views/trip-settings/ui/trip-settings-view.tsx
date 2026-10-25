@@ -14,6 +14,7 @@ import {
 import { MemberList, useRemoveMember, useTripMembers } from "@/entities/trip-member";
 import { TripForm } from "@/features/trip/form";
 import { InviteLinkCard } from "@/features/trip/invite-member";
+import { NAV } from "@/shared/lib/nav-transition";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,7 +73,7 @@ export function TripSettingsView({ tripId }: TripSettingsViewProps) {
             onRemove={(userId) =>
               removeMember.mutate(userId, {
                 onSuccess: () => {
-                  if (userId === user?.id) router.replace("/trips");
+                  if (userId === user?.id) router.replace("/trips", { transitionTypes: NAV.back });
                 },
               })
             }
@@ -125,7 +126,9 @@ export function TripSettingsView({ tripId }: TripSettingsViewProps) {
                 <AlertDialogAction
                   variant="danger"
                   onClick={() =>
-                    remove.mutate(tripId, { onSuccess: () => router.replace("/trips") })
+                    remove.mutate(tripId, {
+                      onSuccess: () => router.replace("/trips", { transitionTypes: NAV.back }),
+                    })
                   }
                 >
                   삭제
