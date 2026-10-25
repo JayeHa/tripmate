@@ -66,6 +66,10 @@
   --color-ink-450: #888888;
   --color-ink-400: #999999;
   --color-ink-350: #aaaaaa;
+  /* PC 상단 메뉴의 고르지 않은 탭 — ink 보다 푸른 회색 */
+  --color-nav-idle: #6b7280;
+  /* 검정 말풍선(첫 방문 안내) 위의 보조 글자 */
+  --color-on-dark-muted: #c9cdd2;
 
   /* Surface / line */
   --color-surface-sunken: #f7f8fa;
