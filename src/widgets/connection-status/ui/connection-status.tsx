@@ -3,14 +3,14 @@
 import { WifiOff } from "lucide-react";
 
 import { useOnline } from "@/shared/lib/use-online";
-import { cn } from "@/shared/lib/utils";
 
 import { useSyncStatus } from "../model/use-sync-status";
 import { SyncChip } from "./sync-chip";
 
 /**
  * 연결 상태 — 오프라인 띠와 동기화 칩(오프라인 편집 대기열).
- * - 오프라인: 화면 맨 위 띠(40 · #333, 모바일 · PC 같은 모양) 오른쪽에 칩. 화면마다 헤더 아래가 달라 떠 있는 칩은 내용(탭 · 버튼)을 가려서 띠 안에 둔다
+ * - 오프라인: 화면 맨 위 띠(40 · #333, 모바일 · PC 같은 모양) 오른쪽에 칩. 화면마다 헤더 아래가 달라 떠 있는 칩은 내용(탭 · 버튼)을 가려서 띠 안에 둔다.
+ *   띠는 스크롤해도 위에 붙어 있다. `data-offline-band` 가 있으면 `--offline-band` 가 40 이 되어(globals.css) 다른 sticky 요소가 띠 아래에 붙는다
  * - 온라인: 칩(올리는 중 · 모두 저장됨 · 실패)만 오른쪽 위에 잠깐 떠 있다 — 헤더 바로 아래(모바일 상단바 52 · PC 64)
  * 일행의 수정을 덮었다는 알림은 칩 아래에 — 화면의 토스트(아래 가운데)와 겹치지 않게 위에 둔다
  */
@@ -22,7 +22,10 @@ export function ConnectionStatus() {
   return (
     <>
       {!online && (
-        <div className="flex h-10 shrink-0 items-center gap-2 bg-ink-800 px-4 text-[13px] font-semibold text-white">
+        <div
+          data-offline-band
+          className="sticky top-0 z-40 flex h-10 shrink-0 items-center gap-2 bg-ink-800 px-4 text-[13px] font-semibold text-white"
+        >
           <WifiOff className="size-4 shrink-0" aria-hidden="true" />
           <span role="status" className="min-w-0 flex-1 truncate">
             오프라인이에요 · 받아 둔 여행은 그대로 열 수 있어요
@@ -31,12 +34,8 @@ export function ConnectionStatus() {
         </div>
       )}
       {(floatingChip !== null || notice !== null) && (
-        <div
-          className={cn(
-            "pointer-events-none fixed right-3 z-40 flex flex-col items-end gap-1.5",
-            online ? "top-15 lg:top-18" : "top-12",
-          )}
-        >
+        // 헤더(모바일 52 · PC 64) 아래 8px — 오프라인이면 띠 높이만큼 더 내려간다
+        <div className="pointer-events-none fixed top-[calc(var(--offline-band)+3.75rem)] right-3 z-40 flex flex-col items-end gap-1.5 lg:top-[calc(var(--offline-band)+4.5rem)]">
           {floatingChip && <SyncChip chip={floatingChip} onRetry={retry} />}
           {notice && (
             <span
