@@ -40,8 +40,8 @@ export function TripMapView({ tripId }: TripMapViewProps) {
   const ModeIcon = mode === "TRANSIT" ? TrainFront : Footprints;
 
   return (
-    // 모바일은 하단 탭(pb-16) 만큼, PC 는 상단 PC 헤더(64px) 만큼 뺀 높이를 지도가 채운다
-    <div className="flex h-dvh flex-col pb-16 lg:h-[calc(100dvh-4rem)] lg:pb-0">
+    // 위에 붙은 셸(오프라인 띠 · PC 헤더)을 뺀 높이를 지도가 채운다. 모바일은 하단 탭(pb-16) 만큼 비운다
+    <div className="flex h-[calc(100dvh-var(--shell-top))] flex-col pb-16 lg:pb-0">
       <AppHeader
         title={trip?.title ?? "지도"}
         back={`/trips/${tripId}/schedule?day=${day}`}

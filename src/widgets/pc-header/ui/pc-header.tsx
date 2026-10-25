@@ -33,7 +33,7 @@ export function PcHeader({ tripId }: PcHeaderProps) {
   const active = activeTripTab(pathname, tripId);
 
   return (
-    <header className="sticky top-0 z-30 hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 lg:flex">
+    <header className="sticky top-(--offline-band) z-30 hidden h-16 shrink-0 items-center gap-10 border-b border-divider bg-white px-7 lg:flex">
       <Link href="/trips" title="내 여행 목록">
         <Wordmark className="text-[22px]" />
       </Link>

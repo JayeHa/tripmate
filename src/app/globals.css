@@ -267,6 +267,12 @@
   --sidebar-accent-foreground: #222222;
   --sidebar-border: #e3e5e8;
   --sidebar-ring: #3a8bff;
+  /* 오프라인 띠 높이 — 띠가 있을 때만 40, 없으면 0. 위에 붙는(sticky) 요소들이 띠 아래에 붙도록 더해 쓴다 */
+  --offline-band: 0px;
+}
+
+:root:has([data-offline-band]) {
+  --offline-band: 2.5rem;
 }
 
 .dark {
