@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { dateRangeLabel } from "@/shared/lib/days";
+import { LinkPendingVeil } from "@/shared/ui/link-pending";
 
 import type { TripListItem } from "../api/trips";
 import { cityCountLabel, coverImageUrl } from "../lib/cities";
@@ -18,7 +19,10 @@ type Props = {
 export function TripRowCompact({ trip, companionCount, actions }: Props) {
   return (
     <div className="flex items-center gap-3.5 border-b border-surface-muted py-3">
-      <Link href={`/trips/${trip.id}/home`} className="flex min-w-0 flex-1 items-center gap-3.5">
+      <Link
+        href={`/trips/${trip.id}/home`}
+        className="relative flex min-w-0 flex-1 items-center gap-3.5"
+      >
         <TripThumb
           title={trip.title}
           imageUrl={coverImageUrl(trip.cities)}
@@ -32,6 +36,7 @@ export function TripRowCompact({ trip, companionCount, actions }: Props) {
             {companionCount ? `, ${companionCount}명과 함께` : ""} · {cityCountLabel(trip.cities)}
           </span>
         </span>
+        <LinkPendingVeil />
       </Link>
       {actions}
     </div>

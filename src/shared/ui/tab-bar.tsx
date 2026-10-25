@@ -5,6 +5,8 @@ import Link from "next/link";
 
 import { cn } from "@/shared/lib/utils";
 
+import { LinkPending } from "./link-pending";
+
 export type TabItem = {
   key: string;
   label: string;
@@ -28,13 +30,23 @@ export function BottomTabBar({ items, active }: BottomTabBarProps) {
               <Link
                 href={tab.href}
                 aria-current={on ? "page" : undefined}
-                className={cn(
-                  "flex flex-col items-center gap-1 text-[11px]",
-                  on ? "font-bold text-ink-900" : "text-ink-400",
-                )}
+                className="flex flex-col items-center"
               >
-                <tab.icon className="size-6" strokeWidth={on ? 1.9 : 1.6} />
-                {tab.label}
+                <LinkPending>
+                  {(pending) => (
+                    // 화면을 기다리는 동안 누른 탭이 먼저 진해지고 깜빡인다
+                    <span
+                      className={cn(
+                        "flex flex-col items-center gap-1 text-[11px]",
+                        on ? "font-bold text-ink-900" : "text-ink-400",
+                        pending && "animate-pulse text-ink-900",
+                      )}
+                    >
+                      <tab.icon className="size-6" strokeWidth={on ? 1.9 : 1.6} />
+                      {tab.label}
+                    </span>
+                  )}
+                </LinkPending>
               </Link>
             </li>
           );
