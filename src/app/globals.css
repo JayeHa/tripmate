@@ -103,8 +103,6 @@
   --color-brand-line: #c7d9f5;
   /* 고른 것 · 연결된 것의 아주 옅은 바탕(비용의 일정 연결 칸 · 일정 고르기의 고른 줄) */
   --color-brand-faint: #f4f8ff;
-  /* 여행 홈 위 파란 히어로 바탕 — 흰 글자 대비를 위해 brand 보다 진하다 */
-  --color-hero: #1f6feb;
   --color-on-brand: #ffffff;
 
   --color-primary-pressed: #1f6feb;

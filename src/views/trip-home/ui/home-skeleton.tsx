@@ -6,39 +6,37 @@ import { Skeleton, SkeletonScreen } from "@/shared/ui/skeleton";
 
 import { HomeTabBar } from "./home-tab-bar";
 
-/** 파란 바탕 위의 뼈대 칸 색 */
-const ON_HERO = "bg-white/20";
-
 /**
- * 여행 홈 로딩 뼈대 — 서버 응답(`loading.tsx`)과 여행 · 화면 폭을 아직 모를 때. 파란 히어로 · 탭 줄은 그대로 그리고
- * 여행 이름 · 큰 제목 · 날짜만 칸으로 둔다. 모바일 ✕ 는 누를 수 있다. 서버에서 그려 화면 폭을 모르므로 CSS 로 하나만 보인다
+ * 여행 홈 로딩 뼈대 — 서버 응답(`loading.tsx`)과 여행 · 화면 폭을 아직 모를 때. 흰 머리 · 탭 줄은 그대로 그리고
+ * 여행 이름 · D-day 칩 · 기간만 칸으로 둔다. 모바일 ✕ 는 누를 수 있다. 서버에서 그려 화면 폭을 모르므로 CSS 로 하나만 보인다
  */
 export function HomeSkeleton() {
   return (
-    <main className="flex flex-1 flex-col bg-surface-sunken">
-      <div className="bg-hero text-white lg:hidden">
+    <main className="flex flex-1 flex-col lg:bg-surface-sunken">
+      <div className="bg-white text-ink-900 lg:hidden">
         <div className="flex h-13 items-center px-4.5">
           <Link href="/trips" transitionTypes={NAV.back} aria-label="내 여행으로" className="flex">
             <X className="size-6.5" strokeWidth={2} />
           </Link>
         </div>
-        <SkeletonScreen className="flex flex-col gap-1.5 px-5 pt-2.5 pb-4.5">
-          <Skeleton className={`h-5 w-24 ${ON_HERO}`} />
-          <Skeleton className={`h-8.5 w-60 ${ON_HERO}`} />
-          <Skeleton className={`mt-2.5 h-9 w-44 rounded-full ${ON_HERO}`} />
-        </SkeletonScreen>
-        <div className="mx-5 h-px bg-white/28" />
-        <HomeTabBar tab="main" variant="mobile" />
-      </div>
-      <div className="hidden bg-hero text-white lg:block">
-        <SkeletonScreen className="mx-auto flex max-w-270 items-end gap-6 px-10 pt-7.5">
-          <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className={`h-5 w-28 ${ON_HERO}`} />
-            <Skeleton className={`h-10.5 w-80 ${ON_HERO}`} />
+        <SkeletonScreen className="flex flex-col gap-1.5 px-5 pt-0.5 pb-3">
+          <Skeleton className="h-7.5 w-36" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-12 rounded-full" />
+            <Skeleton className="h-4 w-40" />
           </div>
-          <Skeleton className={`mb-1 h-10 w-48 rounded-full ${ON_HERO}`} />
         </SkeletonScreen>
-        <HomeTabBar tab="main" variant="pc" />
+        <HomeTabBar tab="summary" variant="mobile" />
+      </div>
+      <div className="hidden border-b border-divider bg-white lg:block">
+        <SkeletonScreen className="mx-auto flex max-w-270 flex-col gap-2 px-10 pt-6.5">
+          <Skeleton className="h-9.5 w-52" />
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="h-6.5 w-14 rounded-full" />
+            <Skeleton className="h-4.5 w-44" />
+          </div>
+        </SkeletonScreen>
+        <HomeTabBar tab="summary" variant="pc" />
       </div>
     </main>
   );
