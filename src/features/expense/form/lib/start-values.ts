@@ -23,6 +23,8 @@ type StartOptions = {
   presetItem?: ScheduleItem | null;
   /** 새 지출의 처음 통화(startCurrency) */
   defaultCurrency?: string;
+  /** 새 지출의 처음 금액(입력 칸 문자열) — 여행 홈 환율 계산기에서 연 비용 */
+  defaultAmount?: string;
   /** 숙소 · 항공편 결제로 연 새 지출 — 그 이름 · 카테고리(숙소 · 항공)로 시작한다(DB 도 그쪽에 맞춘다) */
   payFor?: PayFor;
 };
@@ -42,15 +44,14 @@ export function startValues({
   defaultSpentOn,
   presetItem,
   defaultCurrency,
+  defaultAmount,
   payFor,
 }: StartOptions) {
   if (initial) return savedValues(initial);
-  const blank = newValues(
-    trip,
-    defaultCurrency ?? currencies[1] ?? currencies[0],
-    me,
-    defaultSpentOn,
-  );
+  const blank = {
+    ...newValues(trip, defaultCurrency ?? currencies[1] ?? currencies[0], me, defaultSpentOn),
+    amount: defaultAmount ?? "",
+  };
   if (payFor) return { ...blank, name: payFor.name, category: PAYMENT_OWNER[payFor.kind].category };
   if (!presetItem) return blank;
   // 일정에서 연 새 지출 — 그 일정의 날 · 카테고리(일정 종류로), 대체 장소면 합계에서 뺀다(연결할 때와 같은 규칙)

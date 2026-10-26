@@ -79,6 +79,8 @@ type ExpenseFormProps = {
   presetItemId?: string;
   /** 새 지출의 처음 통화 — 마지막에 고른 통화 등(startCurrency) */
   defaultCurrency?: string;
+  /** 새 지출의 처음 금액 — 여행 홈 환율 계산기의 「이 금액으로 비용 추가」 */
+  defaultAmount?: string;
   /** 빠른 입력(일정에서 연 비용) — 일정 연결 · 카테고리 · 날짜 칸을 숨기고 맨 위에 글로 요약한다. 가계부에서 열면 모든 칸 */
   quick?: boolean;
   /** 숙소 · 항공편 결제(그쪽에 붙은 비용) — 이름 · 카테고리 · 일정 연결 칸 대신 맨 위에 그 이름을 글로, 날짜 칸만 둔다 */
@@ -117,6 +119,7 @@ export function ExpenseForm({
   receipts = NO_RECEIPTS,
   presetItemId,
   defaultCurrency,
+  defaultAmount,
   quick = false,
   payFor,
   onToast,
@@ -135,6 +138,7 @@ export function ExpenseForm({
     defaultSpentOn,
     hasReceipts: receipts.length > 0,
     defaultCurrency,
+    defaultAmount,
     presetItem: findItem([...items, ...alternatives], presetItemId),
     payFor,
     onSubmit: (values, opened) => onSubmit(values, opened, drafts.change()),

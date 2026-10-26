@@ -32,6 +32,8 @@ type ExpenseFormOptions = {
   presetItem?: ScheduleItem | null;
   /** 새 지출의 처음 통화(startCurrency) */
   defaultCurrency?: string;
+  /** 새 지출의 처음 금액(startValues) */
+  defaultAmount?: string;
   /** 숙소 · 항공편 결제로 연 새 지출 — 처음 이름 · 카테고리(startValues) */
   payFor?: PayFor;
   /** 붙어 있던 영수증이 있다 — 「추가 정보 입력」 을 펼친 채 연다 */
@@ -55,6 +57,7 @@ export function useExpenseForm({
   hasReceipts = false,
   presetItem = null,
   defaultCurrency,
+  defaultAmount,
   payFor,
   onSubmit,
 }: ExpenseFormOptions) {
@@ -67,6 +70,7 @@ export function useExpenseForm({
       defaultSpentOn,
       presetItem,
       defaultCurrency,
+      defaultAmount,
       payFor,
     }),
   );

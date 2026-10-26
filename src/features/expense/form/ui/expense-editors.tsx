@@ -13,6 +13,7 @@ import {
 } from "@/entities/expense";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 
+import { amountFromParam } from "../lib/amount-param";
 import { spentOnFromParam } from "../lib/spent-on-param";
 import { startCurrency } from "../lib/start-currency";
 import { readLastCurrency } from "../model/last-currency";
@@ -45,6 +46,9 @@ type CreateExpenseProps = EditorCommon & {
   itemId?: string;
   /** 주소의 period(prep · 0-base 날) — 처음 날짜. 없거나 모르는 값이면 여행 첫날 */
   period?: string | null;
+  /** 주소의 amount · currency — 처음 금액 · 통화(여행 홈 환율 계산기). 맞지 않는 값이면 평소처럼 */
+  amount?: string | null;
+  currency?: string | null;
   /** 이 숙소 · 항공편의 결제로 만든다(그 화면의 「+ 결제 추가」) — 날짜는 여행준비부터 */
   payFor?: PaymentOwner & { name: string };
 };
@@ -60,6 +64,8 @@ export function CreateExpense({
   onDone,
   back,
   period = null,
+  amount = null,
+  currency = null,
   onLockChange,
   itemId,
   quick,
@@ -73,6 +79,10 @@ export function CreateExpense({
     return <FormLoadError title="비용 추가" back={back} onClose={onClose} onRetry={loaded.retry} />;
   if (!loaded.data) return null;
   const { trip, currentUserId } = loaded.data;
+  const preset = amountFromParam(amount, currency, [
+    trip.home_currency,
+    ...Object.keys(trip.exchange_rates),
+  ]);
   return (
     <ExpenseForm
       title="비용 추가"
@@ -81,11 +91,15 @@ export function CreateExpense({
       {...loaded.data}
       defaultSpentOn={payFor ? "" : spentOnFromParam(period, trip.start_date, trip.end_date)}
       presetItemId={itemId}
-      defaultCurrency={startCurrency(
-        [trip.home_currency, ...Object.keys(trip.exchange_rates)],
-        readLastCurrency(trip.id),
-        (loaded.data.expenses ?? []).map((e) => e.currency),
-      )}
+      defaultAmount={preset?.amount}
+      defaultCurrency={
+        preset?.currency ??
+        startCurrency(
+          [trip.home_currency, ...Object.keys(trip.exchange_rates)],
+          readLastCurrency(trip.id),
+          (loaded.data.expenses ?? []).map((e) => e.currency),
+        )
+      }
       quick={quick}
       payFor={payFor}
       onToast={onToast}
