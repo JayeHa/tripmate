@@ -3,6 +3,8 @@ export const queryKeys = {
   myProfile: ["user", "profile"] as const,
   /** 도시 기준 데이터(권역 + 도시). 마이그레이션으로만 바뀐다. */
   cities: ["cities"] as const,
+  /** 실시간 환율(참고용, 하루 한 번 갱신) — 기준 통화마다 */
+  liveRates: (base: string) => ["live-rates", base] as const,
   trips: {
     all: ["trips"] as const,
     detail: (tripId: string) => ["trips", tripId] as const,

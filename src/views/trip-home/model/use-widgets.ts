@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import { useTripCities } from "@/entities/city";
 import type { Trip } from "@/entities/trip";
+import { useLiveRates } from "@/shared/api/live-rates";
+import { liveUnitValue } from "@/shared/lib/money";
 
 import { widgetTiles } from "../lib/widgets";
 
@@ -21,13 +23,19 @@ function useClock(): Date {
 }
 
 /**
- * 위젯 줄 — 여행의 첫 도시(통화 · 시간대)와 여행 환율로 정한 타일들, 계산기에 쓸 여행지 통화.
+ * 위젯 줄 — 여행의 첫 도시(통화 · 시간대)와 여행 환율로 정한 타일들, 계산기에 쓸 여행지 통화,
+ * 실시간 환율(여행 환율과 같은 단위의 기준 화폐 금액 — 참고용, 여행지 통화의 여행 환율이 있을 때만 받는다).
  * 도시를 아직 모르면 타일 없음(줄이 늦게 나타난다 — 자리를 비워 두지 않는다)
  */
 export function useWidgets(tripId: string, trip: Trip) {
   const city = useTripCities(tripId).data?.[0];
   const at = useClock();
-  if (!city) return { tiles: [], currency: null };
+  const rate =
+    city && city.currency !== trip.home_currency ? trip.exchange_rates[city.currency] : null;
+  const liveRates = useLiveRates(trip.home_currency, !!rate).data;
+  const live =
+    city && rate && liveRates ? liveUnitValue(liveRates, city.currency, rate.unit) : null;
+  if (!city) return { tiles: [], currency: null, live: null };
   return {
     tiles: widgetTiles({
       currency: city.currency,
@@ -35,7 +43,9 @@ export function useWidgets(tripId: string, trip: Trip) {
       home: trip.home_currency,
       rates: trip.exchange_rates,
       at,
+      live,
     }),
     currency: city.currency,
+    live,
   };
 }

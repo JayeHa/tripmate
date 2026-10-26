@@ -12,6 +12,7 @@ import { buttonVariants } from "@/shared/ui/button";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { addAmount, convertAmount, pressKey, quickAmounts } from "../../lib/calculator";
+import { RateCredit } from "./rate-credit";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "⌫"];
 
@@ -23,13 +24,15 @@ type CalcBodyProps = {
   rates: ExchangeRates;
   /** 「이 금액으로 비용 추가」 의 처음 날짜(0-base 날). 여행 중이 아니면 null(가계부가 정한다) */
   period: number | null;
+  /** 실시간 환율 — 여행 환율과 같은 단위의 기준 화폐 금액(참고용). 모르면 null */
+  live: number | null;
 };
 
 /**
  * 계산기 내용 — 위 칸(친 금액) · 아래 칸(여행 환율로 바꾼 금액), ⇅ 로 방향 바꾸기, 빠른 칩 · 키패드.
  * 「이 금액으로 비용 추가」 는 친 금액 · 통화가 채워진 비용 추가로 간다
  */
-function CalcBody({ tripId, local, home, rates, period }: CalcBodyProps) {
+function CalcBody({ tripId, local, home, rates, period, live }: CalcBodyProps) {
   const [amount, setAmount] = useState("");
   const [from, setFrom] = useState(local);
   const to = from === local ? home : local;
@@ -50,6 +53,11 @@ function CalcBody({ tripId, local, home, rates, period }: CalcBodyProps) {
         <span className="flex h-5 items-center rounded-[5px] bg-surface-muted px-1.75 text-[11px] font-bold text-ink-500">
           여행 환율
         </span>
+        {live !== null && (
+          <span className="ml-auto text-xs whitespace-nowrap text-ink-400">
+            지금 {formatMoney(live, home)}
+          </span>
+        )}
       </div>
       <div className="overflow-hidden rounded-card border border-line">
         <div className="flex items-center gap-2.5 px-4 py-3">
@@ -120,6 +128,7 @@ function CalcBody({ tripId, local, home, rates, period }: CalcBodyProps) {
           이 금액으로 비용 추가
         </button>
       )}
+      {live !== null && <RateCredit className="self-center" />}
     </div>
   );
 }

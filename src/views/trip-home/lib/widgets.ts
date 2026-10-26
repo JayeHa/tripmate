@@ -1,4 +1,10 @@
-import { currencyName, type ExchangeRates, formatMoney } from "@/shared/lib/money";
+import {
+  currencyName,
+  decimalsOf,
+  type ExchangeRates,
+  formatMoney,
+  roundTo,
+} from "@/shared/lib/money";
 
 /** 위젯 타일 한 칸 — 라벨 · 큰 값 · 아래 보조 */
 export type WidgetTile = { key: "rate" | "time"; label: string; main: string; sub: string };
@@ -54,11 +60,13 @@ export type WidgetSource = {
   home: string;
   rates: ExchangeRates;
   at: Date;
+  /** 실시간 환율 — 여행 환율과 같은 단위의 기준 화폐 금액(「지금 905」). 모르면 null */
+  live: number | null;
 };
 
 /**
  * 위젯 줄의 타일 — 환율(여행지 통화가 기준 화폐와 다르고 여행 환율이 있을 때) · 현지 시간(한국과 시차가 있을 때).
- * 환율 큰 값은 그 단위의 기준 화폐 금액(「₩920」), 아래는 단위(「100엔」)
+ * 환율 큰 값은 그 단위의 기준 화폐 금액(「₩920」), 아래는 단위와 실시간 값(「100엔 · 지금 905」, 모르면 단위만)
  */
 export function widgetTiles(src: WidgetSource): WidgetTile[] {
   const tiles: WidgetTile[] = [];
@@ -68,7 +76,14 @@ export function widgetTiles(src: WidgetSource): WidgetTile[] {
       key: "rate",
       label: "환율",
       main: formatMoney(rate.value, src.home),
-      sub: `${rate.unit.toLocaleString("ko-KR")}${currencyName(src.currency)}`,
+      sub: [
+        `${rate.unit.toLocaleString("ko-KR")}${currencyName(src.currency)}`,
+        src.live === null
+          ? null
+          : `지금 ${roundTo(src.live, decimalsOf(src.home)).toLocaleString("ko-KR")}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
     });
   }
   const offset = offsetFromKorea(src.timeZone, src.at);

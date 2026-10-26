@@ -33,12 +33,18 @@ describe("localTimeText", () => {
 });
 
 describe("widgetTiles", () => {
-  const base = { home: "KRW", rates: { JPY: { unit: 100, value: 920 } }, at: AT };
+  const base = { home: "KRW", rates: { JPY: { unit: 100, value: 920 } }, at: AT, live: null };
 
   it("도쿄 — 환율만(시차 없음)", () => {
     expect(widgetTiles({ ...base, currency: "JPY", timeZone: "Asia/Tokyo" })).toEqual([
       { key: "rate", label: "환율", main: "₩920", sub: "100엔" },
     ]);
+  });
+
+  it("실시간 환율을 알면 단위 옆에 「지금」 값", () => {
+    expect(
+      widgetTiles({ ...base, currency: "JPY", timeZone: "Asia/Tokyo", live: 905.4 })[0].sub,
+    ).toBe("100엔 · 지금 905");
   });
 
   it("국내 · 환율 없는 통화는 환율을 숨기고, 시차가 있으면 현지 시간", () => {
