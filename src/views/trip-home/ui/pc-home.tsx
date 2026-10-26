@@ -28,7 +28,7 @@ export function PcHome({ tripId, trip, tab, onTab }: PcHomeProps) {
         />
         <HomeTabBar tab={tab} onSelect={onTab} variant="pc" />
       </div>
-      <HomeTabBody tab={tab} />
+      <HomeTabBody tripId={tripId} trip={trip} tab={tab} layout="pc" />
     </main>
   );
 }
