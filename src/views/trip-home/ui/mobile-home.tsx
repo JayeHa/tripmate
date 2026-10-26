@@ -43,7 +43,7 @@ export function MobileHome({ tripId, trip, tab, onTab }: MobileHomeProps) {
       <div className="sticky top-[calc(var(--shell-top)+3.25rem)] z-20 bg-white">
         <HomeTabBar tab={tab} onSelect={onTab} variant="mobile" />
       </div>
-      <HomeTabBody tab={tab} />
+      <HomeTabBody tripId={tripId} trip={trip} tab={tab} layout="mobile" />
     </main>
   );
 }
