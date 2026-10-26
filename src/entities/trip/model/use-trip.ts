@@ -13,6 +13,7 @@ import {
   fetchTrip,
   fetchTrips,
   rotateInviteToken,
+  setTripRate,
   updateTrip,
   updateTripDates,
 } from "../api/trips";
@@ -87,6 +88,26 @@ export function useAddTripCurrency(tripId: string) {
       code: string;
       rate: { unit: number; value: number };
     }) => addTripCurrency(tripId, home, code, rate),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
+  });
+}
+
+/**
+ * 여행 환율 하나 바꾸기(여행 홈 환율 계산기) — 끝나면 여행을 다시 읽는다. 지출 환산은 화면이 여행 환율로 계산해서 따로 다시 읽을 것이 없다
+ */
+export function useSetTripRate(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      home,
+      code,
+      rate,
+    }: {
+      home: string;
+      code: string;
+      rate: { unit: number; value: number };
+    }) => setTripRate(tripId, home, code, rate),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
   });

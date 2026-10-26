@@ -1113,6 +1113,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_trip_rate: {
+        Args: {
+          p_trip_id: string;
+          p_home: string;
+          p_code: string;
+          p_unit: number;
+          p_value: number;
+        };
+        Returns: undefined;
+      };
       change_home_currency: {
         Args: {
           p_trip_id: string;

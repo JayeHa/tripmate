@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -13,6 +13,7 @@ import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { addAmount, convertAmount, pressKey, quickAmounts } from "../../lib/calculator";
 import { RateCredit } from "./rate-credit";
+import { RateEditor } from "./rate-editor";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "⌫"];
 
@@ -26,13 +27,15 @@ type CalcBodyProps = {
   period: number | null;
   /** 실시간 환율 — 여행 환율과 같은 단위의 기준 화폐 금액(참고용). 모르면 null */
   live: number | null;
+  /** 「바꾸기」 — 같은 창에서 여행 환율 바꾸기로 */
+  onEditRate: () => void;
 };
 
 /**
  * 계산기 내용 — 위 칸(친 금액) · 아래 칸(여행 환율로 바꾼 금액), ⇅ 로 방향 바꾸기, 빠른 칩 · 키패드.
  * 「이 금액으로 비용 추가」 는 친 금액 · 통화가 채워진 비용 추가로 간다
  */
-function CalcBody({ tripId, local, home, rates, period, live }: CalcBodyProps) {
+function CalcBody({ tripId, local, home, rates, period, live, onEditRate }: CalcBodyProps) {
   const [amount, setAmount] = useState("");
   const [from, setFrom] = useState(local);
   const to = from === local ? home : local;
@@ -53,6 +56,16 @@ function CalcBody({ tripId, local, home, rates, period, live }: CalcBodyProps) {
         <span className="flex h-5 items-center rounded-[5px] bg-surface-muted px-1.75 text-[11px] font-bold text-ink-500">
           여행 환율
         </span>
+        {rate && (
+          <button
+            type="button"
+            onClick={onEditRate}
+            className="flex shrink-0 cursor-pointer items-center text-xs font-bold text-brand-text"
+          >
+            바꾸기
+            <ChevronRight className="size-3.5" aria-hidden="true" />
+          </button>
+        )}
         {live !== null && (
           <span className="ml-auto text-xs whitespace-nowrap text-ink-400">
             지금 {formatMoney(live, home)}
@@ -133,16 +146,51 @@ function CalcBody({ tripId, local, home, rates, period, live }: CalcBodyProps) {
   );
 }
 
-type RateCalculatorProps = CalcBodyProps & { open: boolean; onClose: () => void };
+type CalcSheetProps = Omit<CalcBodyProps, "onEditRate"> & {
+  onLockChange: (locked: boolean) => void;
+};
 
 /**
- * 환율 계산기 — 모바일은 바텀시트, PC 는 가운데 창. 열 때마다 빈 금액 · 여행지 통화 → 기준 화폐로 시작한다
+ * 창 안 — 계산기와 「여행 환율 바꾸기」 를 오간다. 바꾸는 동안 계산기는 숨겨 두기만 해서 친 금액이 남는다
+ */
+function CalcSheet({ onLockChange, ...body }: CalcSheetProps) {
+  const [editing, setEditing] = useState(false);
+  const rate = body.rates[body.local];
+  return (
+    <>
+      <div className={cn(editing && "hidden")}>
+        <CalcBody {...body} onEditRate={() => setEditing(true)} />
+      </div>
+      {editing && rate && (
+        <RateEditor
+          tripId={body.tripId}
+          local={body.local}
+          home={body.home}
+          rate={rate}
+          live={body.live}
+          onDone={() => setEditing(false)}
+          onLockChange={onLockChange}
+        />
+      )}
+    </>
+  );
+}
+
+type RateCalculatorProps = Omit<CalcBodyProps, "onEditRate"> & {
+  open: boolean;
+  onClose: () => void;
+};
+
+/**
+ * 환율 계산기 — 모바일은 바텀시트, PC 는 가운데 창. 열 때마다 빈 금액 · 여행지 통화 → 기준 화폐로, 계산기 화면부터 시작한다.
+ * 여행 환율을 저장하는 동안은 창이 닫히지 않는다
  */
 export function RateCalculator({ open, onClose, ...body }: RateCalculatorProps) {
   const openCount = useOpenCount(open);
+  const [locked, setLocked] = useState(false);
   return (
-    <SheetDialog open={open} onClose={onClose} title="환율 계산">
-      <CalcBody key={openCount} {...body} />
+    <SheetDialog open={open} onClose={onClose} title="환율 계산" locked={locked}>
+      <CalcSheet key={openCount} {...body} onLockChange={setLocked} />
     </SheetDialog>
   );
 }
