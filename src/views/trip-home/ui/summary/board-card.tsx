@@ -56,20 +56,37 @@ type BoardRowProps = {
   lead: React.ReactNode;
   title: string;
   sub: string;
-  /** 오른쪽 끝(배지 · 날짜) */
+  /** 오른쪽 끝(배지 · 날짜 · 버튼) */
   trail?: React.ReactNode;
+  /** 있으면 줄 전체가 그 화면으로 가는 링크 */
+  href?: string;
 };
 
 /** 상태판 카드 안의 한 줄 — 왼쪽 표식 · 제목 15/700 · 보조 12, 오른쪽 끝 */
-export function BoardRow({ lead, title, sub, trail }: BoardRowProps) {
-  return (
-    <li className="flex min-h-11 items-center gap-3">
+export function BoardRow({ lead, title, sub, trail, href }: BoardRowProps) {
+  const body = (
+    <>
       {lead}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-[15px] font-bold text-ink-900">{title}</span>
         {sub && <span className="truncate text-xs text-ink-400">{sub}</span>}
       </div>
       {trail}
+    </>
+  );
+  return (
+    <li className="flex min-h-11 items-center gap-3">
+      {href ? (
+        <Link
+          href={href}
+          transitionTypes={NAV.tab}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
     </li>
   );
 }

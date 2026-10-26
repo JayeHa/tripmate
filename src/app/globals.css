@@ -198,6 +198,11 @@
   /* 동기화 칩(오프라인 편집) — 「모두 저장됨」 · 「변경 N건 대기」. 「저장 실패」 는 destructive, 「저장 중」 은 surface-muted */
   --color-sync-saved: #0f766e;
   --color-sync-saved-soft: #e6f6f3;
+  /* 여행 홈 「오늘 일정을 다 마쳤어요」 의 체크 */
+  --color-day-done: #16a34a;
+  /* 여행 홈 「오늘 쓸 바우처」 의 그림 자리(QR 아이콘) */
+  --color-voucher-thumb: #eef1f5;
+  --color-voucher-thumb-icon: #8b95a1;
   --color-sync-waiting: #c2410c;
   --color-sync-waiting-soft: #fff1e6;
 

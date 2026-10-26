@@ -20,3 +20,8 @@ export type PickedLocation = {
 export function coordsMapsUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
+
+/** 지금 위치에서 그 좌표까지 구글맵 길찾기 — 출발지를 비우면 구글맵이 지금 위치로 잡는다. 앱이 깔려 있으면 앱으로 열린다 */
+export function directionsUrl(lat: number, lng: number): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
