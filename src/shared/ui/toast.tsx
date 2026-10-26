@@ -3,7 +3,7 @@
 import { type CSSProperties, useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
 
-/** 토스트가 떠 있는 시간 — 한 줄 알림 1.6s, 「제목 · 설명」 안내형 2.6s */
+/** 토스트가 떠 있는 시간 — 한 줄 알림 1.6s, 「제목 · 설명」 안내형 · 버튼이 있는 것 2.6s */
 const SHOW_MS = 1600;
 const GUIDE_MS = 2600;
 /** 빈 알림 영역을 붙인 뒤 글을 넣기까지 */
@@ -45,7 +45,8 @@ export function Toast({ message, onDone, mobileOffset = 0 }: ToastProps) {
   useEffect(() => {
     if (!message) return;
     const fill = setTimeout(() => setFilled(message.id), FILL_MS);
-    const hide = setTimeout(done, message.detail ? GUIDE_MS : SHOW_MS);
+    // 안내형 · 버튼이 있는 토스트(「되돌리기」 를 누를 시간)는 조금 더 오래
+    const hide = setTimeout(done, message.detail || message.action ? GUIDE_MS : SHOW_MS);
     return () => {
       clearTimeout(fill);
       clearTimeout(hide);

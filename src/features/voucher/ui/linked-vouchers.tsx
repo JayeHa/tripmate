@@ -65,7 +65,7 @@ export function LinkedVouchers({
               onClick={() => onOpen(v)}
               className="flex w-full items-center gap-3 rounded-card border border-surface-muted bg-white py-2 pr-3 pl-2 text-left hover:bg-surface-sunken"
             >
-              <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-button bg-[#eef1f5]">
+              <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-button bg-voucher-thumb">
                 {v.thumb_key && urls[v.thumb_key] ? (
                   // 서명 주소라 next/image 최적화를 거치지 않는다
                   // eslint-disable-next-line @next/next/no-img-element
