@@ -36,15 +36,20 @@ function write(saved: Saved) {
 
 /**
  * 그 여행 그날 들른 장소 수와 바꾸기. 다른 날의 기록은 0 으로 본다(날이 바뀌면 처음부터).
+ * persist 가 false 면(그날이 오늘이 아닌 미리보기) 저장하지 않고 이 화면에서만 기억한다 —
+ * 출발 전에 「여행 중」 을 미리 보는 날은 출발일이라, 저장하면 출발일 아침에 이미 들른 것으로 보인다.
  * localStorage 를 첫 렌더에서 읽는다 — 여행 홈은 화면 폭을 안 뒤(클라이언트)에만 그려서 하이드레이션과 어긋나지 않는다
  */
-export function useVisited(tripId: string, date: string) {
+export function useVisited(tripId: string, date: string, persist: boolean) {
   const [saved, setSaved] = useState(read);
-  const entry = saved[tripId];
+  const [preview, setPreview] = useState<Saved>({});
+  const source = persist ? saved : preview;
+  const entry = source[tripId];
   const count = entry?.date === date ? entry.count : 0;
-  /** 들른 수를 바꾸고 저장한다 */
+  /** 들른 수를 바꾼다. 오늘이면 저장하고, 미리보기면 화면에서만 */
   function setCount(next: number) {
-    const all = { ...saved, [tripId]: { date, count: next } };
+    const all = { ...source, [tripId]: { date, count: next } };
+    if (!persist) return setPreview(all);
     setSaved(all);
     write(all);
   }

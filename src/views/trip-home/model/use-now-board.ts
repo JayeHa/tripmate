@@ -29,7 +29,7 @@ export function useNowBoard(tripId: string, trip: Trip) {
   const today = todayISO();
   const dayIndex = boardDayIndex(trip.start_date, trip.end_date, today);
   const date = dayIndexToDate(trip.start_date, dayIndex);
-  const [visited, setVisited] = useVisited(tripId, date);
+  const [visited, setVisited] = useVisited(tripId, date, date === today);
   const items = useScheduleItems(tripId).data;
   const vouchers = useVouchers(tripId).data;
   const flights = useFlights(tripId).data;
