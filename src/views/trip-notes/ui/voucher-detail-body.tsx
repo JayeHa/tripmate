@@ -59,7 +59,7 @@ function Thumb({ detail, onShow }: ThumbProps) {
       type="button"
       aria-label="크게 보기"
       onClick={onShow}
-      className="relative flex size-33 shrink-0 items-center justify-center overflow-hidden rounded-card border border-line bg-[#eef1f5]"
+      className="relative flex size-33 shrink-0 items-center justify-center overflow-hidden rounded-card border border-line bg-voucher-thumb"
     >
       {detail.thumb ? (
         // 서명 주소라 next/image 최적화를 거치지 않는다
