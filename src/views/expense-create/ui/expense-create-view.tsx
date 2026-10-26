@@ -12,7 +12,8 @@ type ExpenseCreateViewProps = { tripId: string };
 /** 비용 추가 페이지 — 주소의 period 로 처음 날짜를 정하고, 저장하면 가계부로 돌아간다 */
 export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
   const router = useRouter();
-  const period = useSearchParams().get("period");
+  const params = useSearchParams();
+  const period = params.get("period");
   const back = `/trips/${tripId}/expenses`;
   const [toast, setToast] = useState<ToastMessage | null>(null);
   return (
@@ -21,6 +22,8 @@ export function ExpenseCreateView({ tripId }: ExpenseCreateViewProps) {
         tripId={tripId}
         back={back}
         period={period}
+        amount={params.get("amount")}
+        currency={params.get("currency")}
         onClose={() => router.push(back, { transitionTypes: NAV.back })}
         onDone={() => router.replace(back, { transitionTypes: NAV.back })}
         onToast={(text) => setToast({ text, id: Date.now() })}
