@@ -5,13 +5,14 @@ import { Skeleton, SkeletonScreen } from "@/shared/ui/skeleton";
 
 type Layout = "mobile" | "pc";
 
-/** 상태판 카드 한 장과 그 key */
-export type BoardCardItem = { key: string; node: React.ReactNode };
+/** 상태판 카드 한 장과 그 key. pinLeft 면 PC 에서 번갈아 놓지 않고 왼쪽 열 맨 위(정산 띠) */
+export type BoardCardItem = { key: string; node: React.ReactNode; pinLeft?: boolean };
 
 type BoardGridProps = { cards: BoardCardItem[]; layout: Layout };
 
 /**
- * 카드 배치 — 모바일은 한 줄로 이어 붙이고, PC 는 두 열(1.15 : 1)에 순서대로 왼쪽 · 오른쪽 번갈아 놓는다
+ * 카드 배치 — 모바일은 한 줄로 이어 붙이고, PC 는 두 열(1.15 : 1)에 순서대로 왼쪽 · 오른쪽 번갈아 놓는다.
+ * pinLeft 카드는 번갈아 세지 않고 왼쪽 열 맨 위
  */
 export function BoardGrid({ cards, layout }: BoardGridProps) {
   if (layout === "mobile")
@@ -22,7 +23,12 @@ export function BoardGrid({ cards, layout }: BoardGridProps) {
         ))}
       </div>
     );
-  const cols = [cards.filter((_, i) => i % 2 === 0), cards.filter((_, i) => i % 2 === 1)];
+  const pinned = cards.filter((c) => c.pinLeft);
+  const rest = cards.filter((c) => !c.pinLeft);
+  const cols = [
+    [...pinned, ...rest.filter((_, i) => i % 2 === 0)],
+    rest.filter((_, i) => i % 2 === 1),
+  ];
   return (
     <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start gap-5 px-10 pt-1">
       {cols.map((col) => (

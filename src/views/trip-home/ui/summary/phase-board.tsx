@@ -1,18 +1,17 @@
 "use client";
 
-import { Hammer } from "lucide-react";
-
 import type { Trip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
 import type { Voucher } from "@/entities/voucher";
-import { EmptyState } from "@/shared/ui/empty-state";
 import type { ToastMessage } from "@/shared/ui/toast";
 
-import { type Phase, PHASE_LABEL } from "../../lib/phase";
+import type { Phase } from "../../lib/phase";
 import { useNowBoard } from "../../model/use-now-board";
+import { usePostBoard } from "../../model/use-post-board";
 import { usePreBoard } from "../../model/use-pre-board";
 import { BoardGrid, BoardSkeleton } from "./board-grid";
 import { nowBoardCards } from "./now-board";
+import { postBoardCards } from "./post-board";
 import { preBoardCards } from "./pre-board";
 
 type Layout = "mobile" | "pc";
@@ -72,6 +71,15 @@ function NowBoardView({ tripId, trip, layout, onToast }: NowBoardViewProps) {
   );
 }
 
+type PostBoardViewProps = { tripId: string; trip: Trip; layout: Layout };
+
+/** 여행 후 상태판 */
+function PostBoardView({ tripId, trip, layout }: PostBoardViewProps) {
+  const board = usePostBoard(tripId, trip);
+  if (!board) return <BoardSkeleton layout={layout} />;
+  return <BoardGrid cards={postBoardCards({ tripId, trip, board, layout })} layout={layout} />;
+}
+
 type PhaseBoardProps = {
   tripId: string;
   trip: Trip;
@@ -80,16 +88,10 @@ type PhaseBoardProps = {
   onToast: (message: Omit<ToastMessage, "id">) => void;
 };
 
-/** 고른 시점의 상태판. 여행 후는 다음 단계에서 채운다 */
+/** 고른 시점의 상태판 */
 export function PhaseBoard({ tripId, trip, phase, layout, onToast }: PhaseBoardProps) {
   if (phase === "pre") return <PreBoardView tripId={tripId} layout={layout} />;
   if (phase === "now")
     return <NowBoardView tripId={tripId} trip={trip} layout={layout} onToast={onToast} />;
-  return (
-    <EmptyState
-      icon={Hammer}
-      title="아직 준비 중이에요"
-      description={`곧 ${PHASE_LABEL[phase]} 상태판을 볼 수 있어요`}
-    />
-  );
+  return <PostBoardView tripId={tripId} trip={trip} layout={layout} />;
 }
