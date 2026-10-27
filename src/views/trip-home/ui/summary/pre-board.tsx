@@ -140,36 +140,10 @@ function ReserveCard({ tripId, rows, layout, onPeek }: ReserveCardProps) {
   );
 }
 
-type MemoCardProps = { memos: PreBoard["memos"]; layout: Layout; onPeek: OnPeek };
-
-/** 고정한 메모 — ★ 중요 메모를 노란 칸으로. 칸을 누르면 미리 보기(어느 일정의 메모인지) */
-function MemoCard({ memos, layout, onPeek }: MemoCardProps) {
-  return (
-    <BoardCard title="고정한 메모" layout={layout}>
-      <ul className="flex flex-col gap-2">
-        {memos.map((m) => (
-          <li key={m.id}>
-            <button
-              type="button"
-              onClick={() => onPeek(m.peek)}
-              className="flex w-full cursor-pointer flex-col gap-1 rounded-memo bg-important-bg px-3.5 py-3 text-left"
-            >
-              <span className="text-xs font-extrabold text-important-text">★ 중요</span>
-              <span className="text-sm/normal wrap-break-word whitespace-pre-line text-ink-900">
-                {m.body}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </BoardCard>
-  );
-}
-
 type PreBoardCardsProps = { tripId: string; board: PreBoard; layout: Layout; onPeek: OnPeek };
 
 /**
- * 여행 전 상태판의 카드들(순서대로) — 여행 준비는 늘 보이고, 나머지는 내용이 있을 때만
+ * 여행 전 상태판의 카드들(순서대로) — 여행 준비는 늘 보이고, 나머지는 내용이 있을 때만. 고정한 메모는 시점마다 맨 아래(PhaseBoard)
  */
 export function preBoardCards({ tripId, board, layout, onPeek }: PreBoardCardsProps) {
   return [
@@ -181,10 +155,6 @@ export function preBoardCards({ tripId, board, layout, onPeek }: PreBoardCardsPr
     board.reserves.length > 0 && {
       key: "reserve",
       node: <ReserveCard tripId={tripId} rows={board.reserves} layout={layout} onPeek={onPeek} />,
-    },
-    board.memos.length > 0 && {
-      key: "memo",
-      node: <MemoCard memos={board.memos} layout={layout} onPeek={onPeek} />,
     },
   ].filter((c) => c !== false);
 }

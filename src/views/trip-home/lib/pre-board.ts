@@ -1,22 +1,9 @@
 import { type ChecklistItem, daysUntil } from "@/entities/checklist";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
-import {
-  itemName,
-  type Memo,
-  memosByItem,
-  placeNumbers,
-  type ScheduleItem,
-} from "@/entities/schedule-item";
+import { itemName, placeNumbers, type ScheduleItem } from "@/entities/schedule-item";
 import { formatMoney } from "@/shared/lib/money";
 
-import {
-  checklistPeek,
-  memoPeek,
-  paymentPeek,
-  type Peek,
-  type PeekContext,
-  schedulePeek,
-} from "./peek";
+import { checklistPeek, paymentPeek, type Peek, type PeekContext, schedulePeek } from "./peek";
 
 /** 여행 준비 카드 — 체크리스트 완료 / 전체와 남은 일 셋 */
 export type PrepStats = {
@@ -129,7 +116,7 @@ export type ReserveRow = {
 };
 
 /** 날짜 · 순서대로 */
-function bySchedule(items: ScheduleItem[]): ScheduleItem[] {
+export function bySchedule(items: ScheduleItem[]): ScheduleItem[] {
   return [...items].sort((a, b) => a.day_index - b.day_index || a.position - b.position);
 }
 
@@ -147,28 +134,4 @@ export function reserveRows(items: ScheduleItem[], ctx: PeekContext): ReserveRow
         .join(" · "),
       peek: schedulePeek(i, ctx),
     }));
-}
-
-/** 날짜 메모는 note 일정의 제목 한 칸이라 중요 표시를 글 앞의 「★ 」 로 둔다(일정 화면의 날짜 메모 창과 같은 규칙) */
-const DAY_MEMO_STAR = "★ ";
-
-/** 고정한 메모 한 장 */
-export type PinnedMemo = { id: string; body: string; peek: Peek };
-
-/**
- * 중요(★) 메모 — 장소에 단 메모와 날짜 메모. 일정 순서대로(같은 일정의 메모는 쓴 순)
- */
-export function pinnedMemos(memos: Memo[], items: ScheduleItem[], ctx: PeekContext): PinnedMemo[] {
-  const starred = memosByItem(memos.filter((m) => m.starred));
-  /** 메모 한 장 — 누르면 그 일정의 미리 보기 */
-  const card = (id: string, item: ScheduleItem, body: string): PinnedMemo => ({
-    id,
-    body,
-    peek: memoPeek(item, body, ctx),
-  });
-  return bySchedule(items).flatMap((item): PinnedMemo[] => {
-    if (item.kind === "note" && item.name?.startsWith(DAY_MEMO_STAR))
-      return [card(item.id, item, item.name.slice(DAY_MEMO_STAR.length))];
-    return (starred.get(item.id) ?? []).map((m) => card(m.id, item, m.body));
-  });
 }

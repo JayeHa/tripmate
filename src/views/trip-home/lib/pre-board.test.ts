@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { ChecklistItem } from "@/entities/checklist";
 import type { Expense } from "@/entities/expense";
-import type { Memo, ScheduleItem } from "@/entities/schedule-item";
+import type { ScheduleItem } from "@/entities/schedule-item";
 
-import { deadlineRows, pinnedMemos, prepStats, reserveRows } from "./pre-board";
+import { deadlineRows, prepStats, reserveRows } from "./pre-board";
 
 /** 테스트용 체크리스트 항목 — 필요한 칸만 */
 function todo(id: string, status: string, due: string | null = null): ChecklistItem {
@@ -51,11 +51,6 @@ const ctx = { tripId: "t1", startDate: "2026-10-31", today: "2026-10-19" };
 /** 미리 보기를 비운 줄 — 줄 모양만 비교할 때(toEqual 은 undefined 칸을 없는 칸으로 본다) */
 function withoutPeek<T>(rows: T[]): T[] {
   return rows.map((r) => ({ ...r, peek: undefined }));
-}
-
-/** 테스트용 메모 */
-function memo(id: string, itemId: string, starred: boolean, at: string): Memo {
-  return { id, schedule_item_id: itemId, starred, body: id, created_at: at } as Memo;
 }
 
 describe("prepStats", () => {
@@ -132,29 +127,6 @@ describe("reserveRows", () => {
     expect(withoutPeek(rows)).toEqual([
       { id: "first", num: 1, title: "first", sub: "day 1" },
       { id: "sky", num: 2, title: "sky", sub: "day 2 · 16:00 · 일몰 무렵" },
-    ]);
-  });
-});
-
-describe("pinnedMemos", () => {
-  it("중요 메모와 ★ 날짜 메모를 일정 순서대로", () => {
-    const items = [
-      item("b", 1, 0),
-      item("dayNote", 0, 1, { kind: "note", name: "★ 문화의 날", place: null }),
-      item("plain", 0, 2, { kind: "note", name: "그냥 메모", place: null }),
-      item("a", 0, 0),
-    ];
-    const memos = [
-      memo("a2", "a", true, "2026-10-02"),
-      memo("a1", "a", true, "2026-10-01"),
-      memo("skip", "a", false, "2026-10-01"),
-      memo("b1", "b", true, "2026-10-01"),
-    ];
-    expect(withoutPeek(pinnedMemos(memos, items, ctx))).toEqual([
-      { id: "a1", body: "a1" },
-      { id: "a2", body: "a2" },
-      { id: "dayNote", body: "문화의 날" },
-      { id: "b1", body: "b1" },
     ]);
   });
 });
