@@ -22,6 +22,17 @@ export function dayOfWeek(startDate: string, dayIndex: number): number {
   return addDays(parseISO(startDate), dayIndex).getDay();
 }
 
+/** 날짜 색의 종류 — 토요일 「sat」(파랑), 일요일 · 공휴일 「sun」(빨강), 평일 null */
+export function dateTone(
+  startDate: string,
+  dayIndex: number,
+  holiday: boolean,
+): "sat" | "sun" | null {
+  const dow = dayOfWeek(startDate, dayIndex);
+  if (holiday || dow === 0) return "sun";
+  return dow === 6 ? "sat" : null;
+}
+
 /** day 칩 · day 헤더용 날짜 조각: { date: "10.31", dow: "토" } */
 export function dayParts(startDate: string, dayIndex: number): { date: string; dow: string } {
   const d = addDays(parseISO(startDate), dayIndex);

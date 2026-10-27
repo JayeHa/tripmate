@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   dateRangeLabel,
   dateToDayIndex,
+  dateTone,
   dayCount,
   dayIndexToDate,
   dayLabel,
@@ -33,6 +34,15 @@ describe("days", () => {
     expect(dayLabel("2026-10-29", 0)).toBe("10.29 (목)");
     expect(dateRangeLabel("2026-10-29", "2026-11-02")).toBe("2026.10.29 - 11.2");
     expect(dateRangeLabel("2026-12-30", "2027-01-02")).toBe("2026.12.30 - 2027.1.2");
+  });
+
+  it("dateTone: 토 · 일 · 공휴일 · 평일", () => {
+    // 2026-10-31 은 토요일
+    expect(dateTone("2026-10-31", 0, false)).toBe("sat");
+    expect(dateTone("2026-10-31", 1, false)).toBe("sun");
+    expect(dateTone("2026-10-31", 2, false)).toBeNull();
+    expect(dateTone("2026-10-31", 3, true)).toBe("sun");
+    expect(dateTone("2026-10-31", 0, true)).toBe("sun");
   });
 
   it("dayParts: 날짜와 요일 조각", () => {

@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from "react";
 
-import { dayParts } from "@/shared/lib/days";
+import { dateTone, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
+
+/** 날짜 글자색 — 토 파랑 · 일 · 공휴일 빨강(가계부 날짜 줄과 같은 색) */
+const DATE_TONE = { sat: "text-brand", sun: "text-destructive" } as const;
 
 type Props = {
   startDate: string;
@@ -15,7 +18,7 @@ type Props = {
 };
 
 /**
- * 날짜 칩 줄 「day 1 10.31」. 32px 알약, 선택은 잉크색. 여행지 공휴일이면 날짜가 빨강. 고른 칩이 가운데로 오게 칩 줄만 가로로 스크롤한다 —
+ * 날짜 칩 줄 「day 1 10.31」. 32px 알약, 선택은 잉크색. 날짜는 토요일 파랑 · 일요일 · 여행지 공휴일 빨강. 고른 칩이 가운데로 오게 칩 줄만 가로로 스크롤한다 —
  * scrollIntoView 는 페이지까지 스크롤해서, 칩을 눌러 그 날짜로 가는 페이지의 smooth 스크롤을 끊는다.
  * 칩 줄이 `relative` 라 칩의 offsetLeft 는 칩 줄 기준이다
  */
@@ -39,6 +42,7 @@ export function DayChips({ startDate, totalDays, value, onChange, holidayOf }: P
     >
       {Array.from({ length: totalDays }, (_, i) => {
         const holiday = holidayOf?.(i) ?? null;
+        const tone = dateTone(startDate, i, !!holiday);
         return (
           <button
             key={i}
@@ -54,7 +58,7 @@ export function DayChips({ startDate, totalDays, value, onChange, holidayOf }: P
             day {i + 1}
             <span
               title={holiday ?? undefined}
-              className={cn("font-medium", holiday ? "text-destructive" : "opacity-75")}
+              className={cn("font-medium", tone ? DATE_TONE[tone] : "opacity-75")}
             >
               {dayParts(startDate, i).date}
             </span>

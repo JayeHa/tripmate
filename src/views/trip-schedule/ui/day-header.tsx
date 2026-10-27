@@ -1,6 +1,9 @@
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
-import { dayParts } from "@/shared/lib/days";
+import { dateTone, dayParts } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
+
+import { DATE_TONE } from "./date-tone";
 
 type DayHeaderProps = {
   startDate: string;
@@ -20,7 +23,7 @@ type DayHeaderProps = {
 };
 
 /**
- * 「day 1  10.31/토」(공휴일이면 옆에 빨간 이름) · 오른쪽 「편집」(일정 편집을 연다) · 아래 하루 요약.
+ * 「day 1  10.31/토」(토 파랑 · 일 · 공휴일 빨강, 공휴일이면 옆에 빨간 이름) · 오른쪽 「편집」(일정 편집을 연다) · 아래 하루 요약.
  * 아래 줄에 메모를 한꺼번에 펼치고 접는 버튼(PC 는 왼쪽에 메모 · 장소 개수).
  */
 export function DayHeader({
@@ -35,13 +38,14 @@ export function DayHeader({
   onEdit,
 }: DayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
+  const tone = dateTone(startDate, day, !!holiday);
   const Icon = allOpen ? ChevronsDownUp : ChevronsUpDown;
   return (
     <>
       <div className="flex items-center justify-between px-5 pt-4.5 pb-1.5">
         <div className="flex min-w-0 items-baseline gap-1.5">
           <h2 className="shrink-0 text-[17px] font-extrabold text-ink-900">day {day + 1}</h2>
-          <span className="shrink-0 text-base text-ink-400">
+          <span className={cn("shrink-0 text-base text-ink-400", tone && DATE_TONE[tone])}>
             {date}/{dow}
           </span>
           {holiday && (

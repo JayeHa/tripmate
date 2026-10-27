@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
-import { dateRangeLabel, dayCount, dayParts } from "@/shared/lib/days";
+import { dateRangeLabel, dateTone, dayCount, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
+
+import { DATE_TONE } from "../date-tone";
 
 type DayRailProps = {
   title: string;
@@ -21,7 +23,7 @@ type DayRailProps = {
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
- * 날마다 「day 2 11.1/일」 아래 공휴일 이름(있으면 빨갛게) · 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소)
+ * 날마다 「day 2 11.1/일」(토 파랑 · 일 · 공휴일 빨강) 아래 공휴일 이름(있으면 빨갛게) · 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소)
  */
 export function DayRail({
   title,
@@ -54,6 +56,7 @@ export function DayRail({
           const { date, dow } = dayParts(startDate, i);
           const summary = summaries[i];
           const holiday = holidayOf(i);
+          const tone = dateTone(startDate, i, !!holiday);
           return (
             <button
               key={date}
@@ -74,7 +77,7 @@ export function DayRail({
                 >
                   day {i + 1}
                 </span>
-                <span className="text-[13px] text-ink-400">
+                <span className={cn("text-[13px] text-ink-400", tone && DATE_TONE[tone])}>
                   {date}/{dow}
                 </span>
               </span>
