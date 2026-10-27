@@ -25,8 +25,11 @@ import { todayISO } from "@/shared/lib/days";
 import { type ExchangeRates, MissingRateError } from "@/shared/lib/money";
 import type { ToastMessage } from "@/shared/ui/toast";
 
-/** 내가 쓴 돈(내 몫의 합, 기준 화폐). 환율이 없는 비용이 있으면 null — 틀린 합을 보이지 않는다 */
-function spentBy(
+/**
+ * 내가 결제한 돈(기준 화폐) — 내가 결제한 비용의 합 + 「각자 냄」 의 내 몫. 정산 카드의 「결제 N원」 과 같은 값이라
+ * 결제 예정(아직 안 낸) 비용도 들어간다. 환율이 없는 비용이 있으면 null — 틀린 합을 보이지 않는다
+ */
+function paidBy(
   me: PersonRef,
   people: PersonRef[],
   expenses: ExpenseWithSplits[],
@@ -34,7 +37,7 @@ function spentBy(
   rates: ExchangeRates,
 ): number | null {
   try {
-    return computeNetBalances(expenses, people, home, rates).spent[personKey(me)] ?? 0;
+    return computeNetBalances(expenses, people, home, rates).paid[personKey(me)] ?? 0;
   } catch (e) {
     if (e instanceof MissingRateError) return null;
     throw e;
@@ -42,7 +45,7 @@ function spentBy(
 }
 
 /**
- * 가계부 목록 화면의 데이터 — 묶음(여행준비 · day N)과 줄 글, 총합계 · 내가 쓴 돈. PC 는 필터로 거른 묶음을 sectionsOf 로 만든다.
+ * 가계부 목록 화면의 데이터 — 묶음(여행준비 · day N)과 줄 글, 총합계 · 내가 결제한 돈. PC 는 필터로 거른 묶음을 sectionsOf 로 만든다.
  * 연결 일정 이름은 타임라인 일정과 대체 장소 줄에서 함께 찾는다(바꾸기로 대체 장소가 된 일정도 이름이 보이게)
  */
 export function useExpenseList(tripId: string) {
@@ -125,7 +128,7 @@ export function useExpenseList(tripId: string) {
     sectionsOf,
     count: expenses.length,
     total: sumExpenses(expenses, trip.home_currency, trip.exchange_rates),
-    /** 혼자 쓰는 가계부(사람이 나뿐) — 「내가 쓴 돈」 · 정산을 보이지 않는다 */
+    /** 혼자 쓰는 가계부(사람이 나뿐) — 「내가 결제한 돈」 · 정산을 보이지 않는다 */
     solo: people.length <= 1,
     /** 여행의 사람(멤버 + 정산 인원) — PC 「결제한 사람」 필터 */
     people,
@@ -133,8 +136,8 @@ export function useExpenseList(tripId: string) {
     everyone: people.length,
     /** 나 — PC 상세의 「정원 (나)」. 아직 모르면 null */
     meId: me?.id ?? null,
-    /** 내가 쓴 돈. 아직 나를 모르거나 환율이 없으면 null */
-    mySpent: me ? spentBy(me, people, expenses, trip.home_currency, trip.exchange_rates) : null,
+    /** 내가 결제한 돈. 아직 나를 모르거나 환율이 없으면 null */
+    myPaid: me ? paidBy(me, people, expenses, trip.home_currency, trip.exchange_rates) : null,
     /** 표시 이름 — 목록의 「나」 가 아니라 내 이름(「정원 결제」) */
     displayNameOf: (person: PersonRef) => avatarOf(person).name || nameOf(person),
     /** 「결제 완료로」 — 실패하면 토스트로 알린다 */

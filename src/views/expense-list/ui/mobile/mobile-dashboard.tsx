@@ -22,8 +22,8 @@ type MobileDashboardProps = { tripId: string; list: ExpenseList };
 const SECTION = "flex flex-col gap-3 border-t-8 border-surface-sunken px-5 py-4.5";
 
 /**
- * 모바일 가계부 「지출 · 정산」 — 총 지출(+ 내가 쓴 돈) · 정산 띠 → 카테고리 → 정산(사람 3줄까지 · 내 송금).
- * 혼자 쓰는 가계부는 내가 쓴 돈 · 정산 띠 · 정산 칸이 없다. 카테고리 줄 · 「전체 보기」 는 카테고리 상세로,
+ * 모바일 가계부 「지출 · 정산」 — 총 지출(+ 내가 결제한 돈) · 정산 띠 → 카테고리 → 정산(사람 3줄까지 · 내 송금).
+ * 혼자 쓰는 가계부는 내가 결제한 돈 · 정산 띠 · 정산 칸이 없다. 카테고리 줄 · 「전체 보기」 는 카테고리 상세로,
  * 정산 띠 · 「자세히 보기」 는 정산 화면으로 간다
  */
 /** 총 지출 글자 크기 — 「₩1,234,567,890」(14자)까지 28, 더 길면 20 */
@@ -46,7 +46,7 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
       <ListTabs active="stats" listHref={base} statsHref={`${base}/stats`} />
       <main className="flex flex-col pb-10">
         <div className="flex flex-col gap-3 px-5 pt-5.5 pb-4.5">
-          {/* 금액이 길면 글자를 줄이고, 그래도 넘치면 「내가 쓴 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
+          {/* 금액이 길면 글자를 줄이고, 그래도 넘치면 「내가 결제한 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
           <div className="flex flex-wrap items-end gap-x-2.5 gap-y-1.5">
             <div className="flex min-w-0 flex-col gap-0.5">
               <span className="text-[13px] font-bold text-ink-400">
@@ -61,11 +61,11 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
                 {formatMoney(list.total.home, home)}
               </span>
             </div>
-            {!list.solo && list.mySpent !== null && (
+            {!list.solo && list.myPaid !== null && (
               <div className="ml-auto flex flex-col items-end gap-0.5">
-                <span className="text-xs text-ink-450">내가 쓴 돈</span>
+                <span className="text-xs text-ink-450">내가 결제한 돈</span>
                 <span className="text-[15px] font-extrabold text-ink-900">
-                  {formatMoney(list.mySpent, home)}
+                  {formatMoney(list.myPaid, home)}
                 </span>
               </div>
             )}
