@@ -119,8 +119,8 @@ async function drawPdf(file: Blob, pages: string): Promise<{ pages: Blob[]; fail
   }
 }
 
-/** 붙어 있는 원본을 받는다 */
-async function downloadOriginal(tripId: string, key: string): Promise<Blob> {
+/** 붙어 있는 원본을 받는다 — 뷰어의 「PDF 전체 보기」 도 쓴다 */
+export async function downloadOriginal(tripId: string, key: string): Promise<Blob> {
   const url = (await fetchVoucherUrls(tripId, [key]))[key];
   if (!url) throw new Error("no url");
   const res = await fetch(url);
