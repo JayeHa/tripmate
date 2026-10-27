@@ -13,6 +13,8 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery(queryKeys.dayRoute("t1", 0, "WALK"))).toBe(false);
     expect(shouldPersistQuery(queryKeys.user)).toBe(false);
     expect(shouldPersistQuery(queryKeys.myProfile)).toBe(false);
+    // 실시간 환율은 참고용 — 오프라인에서는 「지금」 값을 빼고 그린다
+    expect(shouldPersistQuery(queryKeys.liveRates("KRW"))).toBe(false);
   });
 
   it("영수증 · 바우처 줄은 남기고, 만료되는 읽기 주소는 남기지 않는다", () => {

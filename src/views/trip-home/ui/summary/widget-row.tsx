@@ -4,6 +4,7 @@ import type * as React from "react";
 import { cn } from "@/shared/lib/utils";
 
 import type { WidgetTile } from "../../lib/widgets";
+import { RateCredit } from "./rate-credit";
 
 const ICON: Record<WidgetTile["key"], LucideIcon> = { rate: Coins, time: Clock };
 
@@ -34,17 +35,36 @@ type WidgetRowProps = {
   layout: "mobile" | "pc";
   /** 환율 타일을 누르면 — 계산기 */
   onOpenRate: () => void;
+  /** 실시간 환율을 보이고 있다 — 줄 아래 오른쪽에 출처 링크 */
+  liveCredit: boolean;
 };
 
 /**
  * 현지 정보 위젯 줄. 모바일은 회색 타일(76 · r12)을 나란히, PC 는 흰 카드 한 장을 세로선으로 나눈 칸(아이콘 칸 36 · 값 옆 보조).
  * 환율 타일만 누를 수 있다(계산기)
  */
-export function WidgetRow({ tiles, layout, onOpenRate }: WidgetRowProps) {
+export function WidgetRow({ tiles, layout, onOpenRate, liveCredit }: WidgetRowProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col",
+        layout === "pc" ? "mx-10 mt-3.5 mb-4 gap-1.5" : "gap-1.5 px-5 pt-3 pb-3.5",
+      )}
+    >
+      <Tiles tiles={tiles} layout={layout} onOpenRate={onOpenRate} />
+      {liveCredit && <RateCredit className="self-end" />}
+    </div>
+  );
+}
+
+type TilesProps = Omit<WidgetRowProps, "liveCredit">;
+
+/** 타일들 — 모바일 회색 타일 나란히, PC 흰 카드 한 장 */
+function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
   const openOf = (t: WidgetTile) => (t.key === "rate" ? onOpenRate : undefined);
   if (layout === "mobile") {
     return (
-      <div className="flex gap-2 px-5 pt-3 pb-3.5">
+      <div className="flex gap-2">
         {tiles.map((t) => {
           const Icon = ICON[t.key];
           return (
@@ -67,7 +87,7 @@ export function WidgetRow({ tiles, layout, onOpenRate }: WidgetRowProps) {
     );
   }
   return (
-    <div className="mx-10 mt-3.5 mb-4 flex overflow-hidden rounded-card border border-line-card bg-white shadow-[0_1px_6px_rgba(0,0,0,.05)]">
+    <div className="flex overflow-hidden rounded-card border border-line-card bg-white shadow-[0_1px_6px_rgba(0,0,0,.05)]">
       {tiles.map((t, i) => {
         const Icon = ICON[t.key];
         const open = openOf(t);

@@ -130,6 +130,27 @@ export async function addTripCurrency(
   if (error) throw error;
 }
 
+/**
+ * 여행 환율 하나의 값만 바꾼다 — 그 통화 키만 바꿔 그사이 일행이 바꾼 다른 통화를 덮지 않는다(0063).
+ * home = 화면이 알던 기준 화폐 — 그사이 다른 사람이 바꿨으면 DB 가 거부한다. 여행 환율에 없는 통화도 거부
+ */
+export async function setTripRate(
+  tripId: string,
+  home: string,
+  code: string,
+  rate: { unit: number; value: number },
+) {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("set_trip_rate", {
+    p_trip_id: tripId,
+    p_home: home,
+    p_code: code,
+    p_unit: rate.unit,
+    p_value: rate.value,
+  });
+  if (error) throw error;
+}
+
 export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {
   const supabase = createClient();
   const { data, error } = await supabase

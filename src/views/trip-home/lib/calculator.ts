@@ -1,4 +1,4 @@
-import { currencyInfo, type ExchangeRates, toHome } from "@/shared/lib/money";
+import { currencyInfo, decimalsOf, type ExchangeRates, roundTo, toHome } from "@/shared/lib/money";
 
 /** 키패드로 칠 수 있는 자릿수 */
 const MAX_DIGITS = 8;
@@ -49,4 +49,30 @@ function nice(n: number): number {
 export function quickAmounts(currency: string): number[] {
   const perKrw = currencyInfo(currency)?.perKrw ?? 1;
   return [10_000, 50_000, 100_000].map((krw) => nice(krw / perKrw));
+}
+
+/** 환율 칸에 칠 수 있는 모양 — 소수 넷째 자리까지 */
+const RATE_TEXT = /^\d{1,7}(\.\d{1,4})?$/;
+
+/** 환율 칸 글 → 값. 비었거나 모양이 다르거나 0 이하면 null */
+export function parseRate(text: string): number | null {
+  const t = text.trim();
+  if (!RATE_TEXT.test(t)) return null;
+  const n = Number(t);
+  return n > 0 ? n : null;
+}
+
+/** 「지금 환율로」 넣을 값 — 화면에 보인 「지금 ₩844」 와 같게 기준 화폐 자릿수로 둥글린다 */
+export function liveRateValue(live: number, home: string): number {
+  return roundTo(live, decimalsOf(home));
+}
+
+/** 여행 환율 저장 실패 문구 — 오프라인 · 일행이 기준 화폐를 바꿈 · 일행이 그 통화를 지움 · 그 밖 */
+export function rateSaveError(error: Error): string {
+  if (error.name === "OfflineError") return error.message;
+  if (error.message.includes("changed by someone else"))
+    return "다른 사람이 기준 화폐를 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요.";
+  if (error.message.includes("currency not in trip"))
+    return "다른 사람이 이 통화를 지웠어요. 화면을 새로 불러온 뒤 다시 해 주세요.";
+  return "환율을 바꾸지 못했어요. 다시 시도해 주세요.";
 }

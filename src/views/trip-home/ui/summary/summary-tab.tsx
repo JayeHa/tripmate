@@ -47,7 +47,12 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
         </span>
       </div>
       {showWidgets ? (
-        <WidgetRow tiles={widgets.tiles} layout={layout} onOpenRate={() => setCalcOpen(true)} />
+        <WidgetRow
+          tiles={widgets.tiles}
+          layout={layout}
+          onOpenRate={() => setCalcOpen(true)}
+          liveCredit={widgets.live !== null}
+        />
       ) : (
         <div className="h-3" />
       )}
@@ -67,6 +72,7 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
           home={trip.home_currency}
           rates={trip.exchange_rates}
           period={auto === "now" ? boardDayIndex(trip.start_date, trip.end_date, today) : null}
+          live={widgets.live}
         />
       )}
       <Toast message={toast} onDone={() => setToast(null)} />
