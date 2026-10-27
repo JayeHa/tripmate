@@ -25,8 +25,9 @@ export const holidaysQuery = (country: string, year: number) =>
     retry: 1,
   });
 
-/** from ~ to 에 걸친 해들(보통 하나, 연말 여행이면 둘) */
+/** from ~ to 에 걸친 해들(보통 하나, 연말 여행이면 둘). 날짜를 아직 모르면(빈 글) 없음 */
 function yearsBetween(from: string, to: string): number[] {
+  if (!from || !to) return [];
   const first = Number(from.slice(0, 4));
   const last = Number(to.slice(0, 4));
   return Array.from({ length: last - first + 1 }, (_, i) => first + i);
@@ -34,7 +35,7 @@ function yearsBetween(from: string, to: string): number[] {
 
 /**
  * 여행지 국가의 from ~ to(yyyy-MM-dd, 둘 다 포함) 공휴일, 날짜순. 나라를 아직 모르거나(null) 받는 중 · 실패하면 undefined.
- * 데이터가 없는 나라는 빈 목록이다
+ * 데이터가 없는 나라 · 날짜를 아직 모르면(빈 글) 빈 목록이다
  */
 export function useCountryHolidays(
   country: string | null,

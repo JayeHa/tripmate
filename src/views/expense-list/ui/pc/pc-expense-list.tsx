@@ -68,7 +68,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
   const sections = active
     ? list.sectionsOf((e) => matchesFilters(e, pc.filters))
     : list.allSections;
-  const cells = calendarCells(list.allSections, trip.start_date);
+  const cells = calendarCells(list.allSections, trip.start_date, list.holidays);
   const scroll = useCalendarScroll(
     cells.map((c) => c.key),
     { scroller: scrollerRef, topKey: "all" },

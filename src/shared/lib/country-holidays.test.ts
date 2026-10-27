@@ -1,12 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { type RawHoliday, toCountryHolidays } from "./country-holidays";
+import { holidayName, type RawHoliday, toCountryHolidays } from "./country-holidays";
 
 /** 그 나라 날짜 하루짜리 공휴일 한 줄(시작 ~ 끝 hours 시간) */
 function raw(date: string, name: string, type = "public", hours = 24): RawHoliday {
   const start = new Date(`${date}T00:00:00Z`);
   return { date: `${date} 00:00:00`, name, type, start, end: new Date(+start + hours * 3_600_000) };
 }
+
+describe("holidayName", () => {
+  it("그 날의 공휴일 이름, 아니면 null", () => {
+    const list = [{ date: "2026-11-03", name: "Culture Day" }];
+    expect(holidayName(list, "2026-11-03")).toBe("Culture Day");
+    expect(holidayName(list, "2026-11-04")).toBeNull();
+  });
+});
 
 describe("toCountryHolidays", () => {
   it("모두 쉬는 공휴일만 날짜순으로", () => {
