@@ -54,6 +54,10 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
+      # 타입을 쓰는 규칙이 라우트 전역 타입(.next/types — PageProps 등)을 읽는다. 없으면 「error typed value」 로 실패한다
+      - name: 라우트 타입 만들기
+        run: pnpm exec next typegen
+
       # 순환 검사(import/no-cycle)는 아래 cycles 작업이 따로 본다
       - name: 린트
         run: pnpm lint:rules
