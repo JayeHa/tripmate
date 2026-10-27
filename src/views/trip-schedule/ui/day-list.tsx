@@ -18,6 +18,7 @@ type DayListProps = Pick<
   | "checklistOf"
   | "voucherOf"
   | "startEditAt"
+  | "holidayOf"
 > & {
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 */
   showCounts?: boolean;
@@ -26,7 +27,14 @@ type DayListProps = Pick<
 };
 
 /** 이어서 보기 — 모든 날짜를 차례로(날짜마다 DaySection). 일정 · 여행을 읽는 동안은 자리 표시만 */
-export function DayList({ trip, sections, isPending, startEditAt, ...rest }: DayListProps) {
+export function DayList({
+  trip,
+  sections,
+  isPending,
+  startEditAt,
+  holidayOf,
+  ...rest
+}: DayListProps) {
   if (isPending || !trip) {
     return (
       <div className="flex flex-col gap-3 px-4 pt-5">
@@ -43,6 +51,7 @@ export function DayList({ trip, sections, isPending, startEditAt, ...rest }: Day
           startDate={trip.start_date}
           day={day}
           summary={trip.day_summaries[day]}
+          holiday={holidayOf(day)}
           rows={rows}
           onStartEdit={startEditAt(day)}
           {...rest}
