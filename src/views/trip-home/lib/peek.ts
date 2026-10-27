@@ -1,6 +1,7 @@
-import { type ChecklistItem, dueView } from "@/entities/checklist";
+import { type ChecklistItem, dueDateText, dueView } from "@/entities/checklist";
 import type { Expense } from "@/entities/expense";
 import { itemName, type ScheduleItem } from "@/entities/schedule-item";
+import { type Voucher, voucherNumbers } from "@/entities/voucher";
 import { dayLabel } from "@/shared/lib/days";
 import { formatMoney } from "@/shared/lib/money";
 import { OPEN_PARAM } from "@/shared/lib/use-open-param";
@@ -50,6 +51,25 @@ export function checklistPeek(item: ChecklistItem, ctx: PeekContext): Peek {
     link: {
       label: "노트에서 보기",
       href: `/trips/${ctx.tripId}/notes?tab=checklist&${OPEN_PARAM}=${item.id}`,
+    },
+  };
+}
+
+/** 고정한 바우처 — 번호(누구 것인지는 상세에서) · 사용일 · 메모, 「노트에서 보기」 는 그 바우처 상세 */
+export function voucherPeek(voucher: Voucher, ctx: PeekContext): Peek {
+  const facts: PeekFact[] = voucherNumbers(voucher).map((n) => ({
+    label: n.label,
+    value: n.value,
+  }));
+  if (voucher.use_date) facts.push({ label: "사용일", value: dueDateText(voucher.use_date) });
+  return {
+    heading: "바우처",
+    title: voucher.title,
+    facts,
+    body: voucher.memo.trim(),
+    link: {
+      label: "노트에서 보기",
+      href: `/trips/${ctx.tripId}/notes?tab=voucher&${OPEN_PARAM}=${voucher.id}`,
     },
   };
 }
