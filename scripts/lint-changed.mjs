@@ -36,7 +36,7 @@ if (changed.length === 0) {
 
 console.log(`lint:changed — ${base} 이후 바뀐 파일 ${changed.length}개를 경고 0 으로 검사합니다`);
 try {
-  // 순환 검사는 전체 그래프를 보는 `pnpm lint` 가 맡는다
+  // 순환 검사는 전체 그래프를 보는 `pnpm lint:cycles`(CI 의 순환 작업)가 맡는다
   execFileSync(
     "pnpm",
     [

@@ -197,13 +197,15 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 
 - **pre-commit**: `husky` → `lint-staged` 가 **스테이징된 파일에만** `eslint --fix` → `prettier --write`.
   린트 오류가 남으면 커밋이 막힌다. 느린 `import/no-cycle` 은 여기서 끈다(모듈 그래프 전체를 본다)
-- **pre-push**: `pnpm check` — CI 와 같은 순서로 `typecheck` · `lint` · `lint:changed` · `test` · `format:check` · `build` (약 1분).
+- **pre-push**: `pnpm check` — `typecheck` · `lint:rules` · `lint:changed` · `test` · `format:check` · `build`.
+  순환 검사(`lint:cycles`)는 혼자 1분이 넘어 여기서 빼고 CI 에 맡긴다. 직접 보려면 `pnpm lint:cycles`(또는 둘 다 `pnpm lint`).
   git 에는 PR 직전 훅이 없어서, PR 을 올리려면 반드시 거치는 푸시에 건다. 급할 때만 `--no-verify`, CI 가 다시 검사한다.
   검사는 디스크의 파일을 읽으므로 **커밋하지 않은 변경이 있거나 HEAD 가 아닌 브랜치를 푸시하면 멈춘다**(커밋 · stash 후 다시)
 - **`lint:changed`**: main 이후 **바뀐 파일만 경고 0** 으로 린트한다. 전체 린트는 경고를 허용하므로, 손댄 파일의 긴 파일 · 복잡도 경고는
   그 PR 에서 정리한다. 손대지 않은 파일의 오래된 경고로는 실패하지 않는다
-- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 `pnpm typecheck`(`next typegen` 으로 라우트 타입을 만든 뒤 `tsc`) · `pnpm lint`(순환 포함) ·
-  `lint:changed`(PR 만) · `pnpm test` · `format:check` · `build`. 비밀값 없이 돈다. 실패하면 머지하지 않는다
+- **CI** (`.github/workflows/ci.yml`): PR 과 main 에서 작업 4개를 동시에 돌린다 — 타입(`next typegen` 뒤 `tsc`) · 포맷 · 빌드 / `lint:rules` · `lint:changed`(PR 만) /
+  `lint:cycles`(순환, `eslint.cycles.config.mjs` — 규칙을 비운 기본 설정 + `import/no-cycle`) / `test`. 마지막 `check` 작업이 넷의 결과를 모은다
+  (main 규칙 세트의 필수 검사 이름이라 바꾸면 머지가 막힌다). 비밀값 없이 돈다. 실패하면 머지하지 않는다
 
 ## 브라우저로 확인할 때
 

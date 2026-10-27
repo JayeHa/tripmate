@@ -1,5 +1,7 @@
-# PR 과 main 에서 타입 · 린트 · 테스트 · 포맷 · 빌드를 검사한다.
+# PR 과 main 에서 타입 · 린트 · 순환 · 테스트 · 포맷 · 빌드를 검사한다.
 # pre-commit 은 스테이징된 파일만 빠르게 보고, 전체 검사(특히 import/no-cycle)는 여기서 한다.
+# 검사를 작업 4개로 나눠 동시에 돌리고, 마지막 `check` 가 결과를 모은다(main 규칙 세트의 필수 검사 이름이 `check`).
+# 공개 레포라 기본 기계 사용 시간은 무료다 — 나눠도 비용이 늘지 않는다
 name: CI
 
 on:
@@ -17,35 +19,44 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # husky 는 로컬 git 훅 설치용이다. CI 에서는 필요 없다
+  HUSKY: 0
+
 jobs:
-  check:
+  build:
+    name: 타입 · 포맷 · 빌드
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      # husky 는 로컬 git 훅 설치용이다. CI 에서는 필요 없다
-      HUSKY: 0
     steps:
       - uses: actions/checkout@v4
-        with:
-          # lint:changed 가 PR base 와의 merge-base 를 구하려면 이력이 필요하다
-          fetch-depth: 0
-
-      # packageManager(pnpm@11.1.0)를 그대로 쓴다. 서드파티 action 이라 태그 대신 커밋 SHA 로 고정한다
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # PageProps · LayoutProps 같은 라우트 전역 타입은 .next/types 에 생성된다. 새 체크아웃엔 없으니 먼저 만든다
       - name: 타입
         run: pnpm typecheck
 
+      - name: 포맷
+        run: pnpm format:check
+
+      # 비밀값 없이 빌드한다. Supabase 클라이언트는 모듈 최상위가 아니라 요청(서버)·이벤트(브라우저) 때 만들어져 env 없이도 빌드된다
+      - name: 빌드
+        run: pnpm build
+
+  lint:
+    name: 린트
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # lint:changed 가 PR base 와의 merge-base 를 구하려면 이력이 필요하다
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+
+      # 순환 검사(import/no-cycle)는 아래 cycles 작업이 따로 본다
       - name: 린트
-        run: pnpm lint
+        run: pnpm lint:rules
 
       # 바뀐 파일은 경고도 0 이어야 한다. pre-push 와 같은 검사 (scripts/lint-changed.mjs)
       - name: 바뀐 파일 경고 0
@@ -54,12 +65,39 @@ jobs:
         env:
           LINT_BASE: origin/${{ github.base_ref }}
 
+  cycles:
+    name: 순환 import
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # 배럴(index.ts)이 서로를 다시 내보내는 FSD 에서 생기기 쉽다. 모듈 그래프 전체를 봐서 가장 오래 걸린다
+      - run: pnpm lint:cycles
+
+  test:
+    name: 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
       - name: 테스트 (DB 함수 · RLS 는 PGlite 로)
         run: pnpm test
 
-      - name: 포맷
-        run: pnpm format:check
-
-      # 비밀값 없이 빌드한다. Supabase 클라이언트는 모듈 최상위가 아니라 요청(서버)·이벤트(브라우저) 때 만들어져 env 없이도 빌드된다
-      - name: 빌드
-        run: pnpm build
+  # 필수 검사 하나로 모은다. 앞 작업이 실패 · 취소돼도 돌아서(always) 그 결과를 알린다
+  check:
+    if: always()
+    needs: [build, lint, cycles, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 모든 검사 통과
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "결과: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then exit 1; fi
+          done
