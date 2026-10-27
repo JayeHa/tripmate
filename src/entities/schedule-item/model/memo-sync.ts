@@ -24,8 +24,13 @@ export const MEMO_CREATE_KEY = [...MEMO_KEY, "create"] as const;
 export const MEMO_UPDATE_KEY = [...MEMO_KEY, "update"] as const;
 export const MEMO_DELETE_KEY = [...MEMO_KEY, "delete"] as const;
 
-/** 메모의 글 칸 — 본문 · ★ 중요 · 링크 */
-type MemoFields = { body: string; starred: boolean; links: { title: string; url: string }[] };
+/** 메모의 글 칸 — 본문 · ★ 중요 · 링크 · 홈에 고정한 사람(null 이면 고정 안 함) */
+type MemoFields = {
+  body: string;
+  starred: boolean;
+  links: { title: string; url: string }[];
+  pinnedBy: string | null;
+};
 
 /** 메모 쓰기의 값 — id 는 화면에서 만든다(두 번 올라가도 하나). 작성자 · 쓴 때는 화면에 먼저 보일 값(서버는 트리거 · 기본값으로 채운다) */
 export type MemoCreateVars = MemoFields & {
@@ -74,6 +79,7 @@ export function registerMemoSync(qc: QueryClient): void {
         body: v.body,
         starred: v.starred,
         links: v.links,
+        pinned_by: v.pinnedBy,
       });
       // 이어서 고치거나 지우는 저장은 화면에 먼저 보인 버전(createdAt)을 들고 있다 — 서버 버전과 비교하게
       rememberOwnWrite(v.id, v.createdAt, updatedAt);
@@ -93,14 +99,14 @@ export function registerMemoSync(qc: QueryClient): void {
   qc.setMutationDefaults(MEMO_UPDATE_KEY, {
     ...common,
     mutationFn: async (v: MemoUpdateVars): Promise<SyncResult> => {
-      const patch = { body: v.body, starred: v.starred, links: v.links };
+      const patch = { body: v.body, starred: v.starred, links: v.links, pinned_by: v.pinnedBy };
       const result = await updateMemo(v.id, patch, versionToCompare(v.id, v.version));
       rememberOwnWrite(v.id, v.version, result.updatedAt);
       return result;
     },
     onMutate: async (v: MemoUpdateVars) => {
       const ctx = await snapshot(v.tripId, v.id);
-      const patch = { body: v.body, starred: v.starred, links: v.links };
+      const patch = { body: v.body, starred: v.starred, links: v.links, pinned_by: v.pinnedBy };
       setMemos(v.tripId, (memos) => memos.map((m) => (m.id === v.id ? { ...m, ...patch } : m)));
       return ctx;
     },
@@ -148,6 +154,7 @@ function optimisticMemo(v: MemoCreateVars): Memo {
     author_id: v.authorId,
     body: v.body,
     starred: v.starred,
+    pinned_by: v.pinnedBy,
     links: v.links,
     created_at: v.createdAt,
     updated_at: v.createdAt,

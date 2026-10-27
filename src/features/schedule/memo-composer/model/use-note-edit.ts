@@ -7,18 +7,21 @@ import {
   useDeleteScheduleItem,
   useUpdateScheduleItem,
 } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { type NoteDraft, noteDraftOf, toNotePatch } from "../lib/day-memo";
+import { pinnedByOf } from "../lib/memo-draft";
 
 /**
- * 날짜 메모 고치기 — 시간(선택) · 글. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.
+ * 날짜 메모 고치기 — 시간(선택) · 글 · 홈에 고정. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.
  * 열릴 때마다 새로 마운트돼 그때 값에서 시작한다
  */
 export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => void) {
   const [initial] = useState(() => noteDraftOf(item));
   const [draft, setDraft] = useState<NoteDraft>(initial);
   const [error, setError] = useState<string | null>(null);
+  const { data: user } = useUser();
   const update = useUpdateScheduleItem(tripId);
   const remove = useDeleteScheduleItem(tripId);
   const finish = useMountedDone(onDone);
@@ -27,7 +30,9 @@ export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => vo
   /** 검증해 바뀐 칸만 저장한다 */
   function save() {
     if (pending) return;
-    const result = toNotePatch(draft, initial);
+    // 고정 칩은 나를 알기 전에는 막혀 있다(pinReady) — 새로 고정하려면 user 가 있다
+    const pinnedBy = pinnedByOf(draft.pinned, item.pinned_by, user?.id ?? "");
+    const result = toNotePatch(draft, initial, pinnedBy);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -51,6 +56,8 @@ export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => vo
       void remove.mutateAsync(item.id).then(finish, () => undefined);
     },
     pending,
+    /** 「홈에 고정」 을 누를 수 있다 — 고정한 사람(나)을 알아야 적는다 */
+    pinReady: !!user,
     canSave: draft.text.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: [update, remove].some((m) => m.isPending && !m.isPaused),

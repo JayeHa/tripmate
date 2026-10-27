@@ -129,8 +129,16 @@ export function useMoveScheduleItemToDay(tripId: string) {
 export function useAddDayMemo(tripId: string) {
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: ({ dayIndex, text }: { dayIndex: number; text: string }) =>
-      addDayMemo(tripId, dayIndex, text),
+    mutationFn: ({
+      dayIndex,
+      text,
+      pinnedBy,
+    }: {
+      dayIndex: number;
+      text: string;
+      /** 홈에 고정한 사람(나), 고정하지 않으면 null */
+      pinnedBy: string | null;
+    }) => addDayMemo(tripId, dayIndex, text, pinnedBy),
     onSuccess: invalidate,
   });
 }

@@ -1,20 +1,30 @@
 import { isHttpUrl, linkListOf, type Memo, MEMO_MAX } from "@/entities/schedule-item";
 import type { LinkDraft } from "@/shared/ui/link-rows";
 
-/** 메모 작성 칸의 값 — 입력 칸이 다루는 그대로 */
-export type MemoDraft = { body: string; starred: boolean; links: LinkDraft[] };
+/** 메모 작성 칸의 값 — 입력 칸이 다루는 그대로. pinned 는 「홈에 고정」 */
+export type MemoDraft = { body: string; starred: boolean; pinned: boolean; links: LinkDraft[] };
 
 /** 새 메모면 빈 칸, 고치는 메모면 그 메모 값 */
 export function memoDraftOf(memo: Memo | null): MemoDraft {
-  if (!memo) return { body: "", starred: false, links: [] };
+  if (!memo) return { body: "", starred: false, pinned: false, links: [] };
   return {
     body: memo.body,
     starred: memo.starred,
+    pinned: memo.pinned_by !== null,
     links: linkListOf(memo.links).map((l) => ({ ...l })),
   };
 }
 
-export type MemoPayload = { body: string; starred: boolean; links: LinkDraft[] };
+export type MemoPayload = { body: string; starred: boolean; pinned: boolean; links: LinkDraft[] };
+
+/**
+ * 저장할 고정한 사람 — 고정을 끄면 null. 이미 고정돼 있었으면 처음 고정한 사람을 그대로 두고, 새로 고정하면 나.
+ * 체크리스트 · 바우처의 pinned_by 와 같다
+ */
+export function pinnedByOf(pinned: boolean, before: string | null, me: string): string | null {
+  if (!pinned) return null;
+  return before ?? me;
+}
 
 export type MemoDraftResult = { ok: true; value: MemoPayload } | { ok: false; error: string };
 
@@ -37,5 +47,5 @@ export function toMemoPayload(draft: MemoDraft): MemoDraftResult {
   if (links.some((l) => !isHttpUrl(l.url))) {
     return { ok: false, error: "링크 주소는 http:// 나 https:// 로 시작해야 해요" };
   }
-  return { ok: true, value: { body, starred: draft.starred, links } };
+  return { ok: true, value: { body, starred: draft.starred, pinned: draft.pinned, links } };
 }

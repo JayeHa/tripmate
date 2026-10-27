@@ -1,4 +1,4 @@
-import { CircleAlert, ListTodo, Ticket } from "lucide-react";
+import { CircleAlert, ListTodo, Pin, Ticket } from "lucide-react";
 import Link from "next/link";
 
 import { NAV } from "@/shared/lib/nav-transition";
@@ -78,6 +78,12 @@ export function ItemCard({
       >
         {row.emoji && <span className="mr-1.5 font-normal">{row.emoji}</span>}
         {itemName(row.item)}
+        {row.item.pinned_by && (
+          <Pin
+            className="ml-1.5 inline size-3.5 align-[-2px] text-primary"
+            aria-label="홈에 고정됨"
+          />
+        )}
       </button>
       {/* 설명은 2줄까지(넘치면 …) — 전체는 일정 상세에서 */}
       {look.meta && (

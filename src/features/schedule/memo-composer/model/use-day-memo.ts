@@ -3,18 +3,22 @@
 import { useState } from "react";
 
 import { useAddDayMemo } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { toDayMemoText } from "../lib/day-memo";
 
 /**
- * 날짜 메모 쓰기 — 고른 날(「변경 ⌄」 으로 바꾼다)의 맨 끝에 note 일정 한 줄. ☆/★ 중요는 글 앞 「★ 」 로 남긴다.
+ * 날짜 메모 쓰기 — 고른 날(「변경 ⌄」 으로 바꾼다)의 맨 끝에 note 일정 한 줄. ☆/★ 중요는 글 앞 「★ 」 로 남기고,
+ * 「홈에 고정」 이면 고정한 사람(나)을 적는다.
  * 링크는 받지 않는다(날짜 메모는 제목 한 칸)
  */
 export function useDayMemo(tripId: string, initialDay: number, onDone: () => void) {
   const [dayIndex, setDayIndex] = useState(initialDay);
   const [body, setBody] = useState("");
   const [starred, setStarred] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const { data: user } = useUser();
   const [error, setError] = useState<string | null>(null);
   const add = useAddDayMemo(tripId);
   const finish = useMountedDone(onDone);
@@ -28,7 +32,8 @@ export function useDayMemo(tripId: string, initialDay: number, onDone: () => voi
       return;
     }
     setError(null);
-    void add.mutateAsync({ dayIndex, text: result.text }).then(finish, () => undefined);
+    const pinnedBy = pinned ? (user?.id ?? null) : null;
+    void add.mutateAsync({ dayIndex, text: result.text, pinnedBy }).then(finish, () => undefined);
   }
 
   return {
@@ -38,6 +43,10 @@ export function useDayMemo(tripId: string, initialDay: number, onDone: () => voi
     setBody,
     starred,
     toggleStar: () => setStarred((s) => !s),
+    pinned,
+    togglePin: () => setPinned((p) => !p),
+    /** 「홈에 고정」 을 누를 수 있다 — 고정한 사람(나)을 알아야 적는다 */
+    pinReady: !!user,
     save,
     pending: add.isPending,
     canSave: body.trim().length > 0,
