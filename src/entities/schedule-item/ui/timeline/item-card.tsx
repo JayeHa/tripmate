@@ -79,7 +79,10 @@ export function ItemCard({
         {row.emoji && <span className="mr-1.5 font-normal">{row.emoji}</span>}
         {itemName(row.item)}
       </button>
-      {look.meta && <p className={cn("text-sm text-ink-400", look.pad)}>{look.meta}</p>}
+      {/* 설명은 2줄까지(넘치면 …) — 전체는 일정 상세에서 */}
+      {look.meta && (
+        <p className={cn("line-clamp-2 text-sm text-ink-400", look.pad)}>{look.meta}</p>
+      )}
       {row.stay?.mode === "in" && <StayTimes inText={row.stay.inText} outText={row.stay.outText} />}
       <NoteChips checklist={checklist} vouchers={vouchers} />
       <AlternativesLine alternatives={row.alternatives} />
