@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useTripHolidays } from "@/entities/city";
 import {
   computeNetBalances,
   expenseRowView,
@@ -47,6 +48,7 @@ function spentBy(
 export function useExpenseList(tripId: string) {
   const tripQuery = useTrip(tripId);
   const trip = tripQuery.data;
+  const holidays = useTripHolidays(tripId, trip);
   const { data: members = [] } = useTripMembers(tripId);
   const { data: user } = useUser();
   const expensesQuery = useExpenses(tripId);
@@ -114,6 +116,8 @@ export function useExpenseList(tripId: string) {
   const allSections = sectionsOf();
   return {
     trip,
+    /** 여행지 공휴일(받기 전이면 undefined) — 날짜 줄 · 레일을 칠한다 */
+    holidays,
     isPending,
     ready: true as const,
     expenses,

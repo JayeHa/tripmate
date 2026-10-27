@@ -13,8 +13,15 @@ type DateRailProps = {
   onSelect: (key: string) => void;
 };
 
-/** 요일 색 — 토 블루 · 일 빨강 */
+/** 요일 색 — 토 블루 · 일 · 여행지 공휴일 빨강 */
 const DOW_TONE = { sat: "text-primary", sun: "text-destructive" } as const;
+
+/** 날짜 칸의 요일 색 — 비용이 없는 날은 흐린 글 그대로 */
+function dowTone(item: RailItem, dim: boolean): string | undefined {
+  if (dim) return undefined;
+  if (item.holiday) return DOW_TONE.sun;
+  return item.weekend ? DOW_TONE[item.weekend] : undefined;
+}
 
 /**
  * PC 날짜 레일(200) — 「전체」 · 「준비 · 여행 전」 · 「day N · 10.31 토」 + 그 날 합계. 누르면 표가 그 날로 스크롤하고,
@@ -43,14 +50,11 @@ export function DateRail({ items, home, selected, onSelect }: DateRailProps) {
             <span className={cn("text-xs", dim ? "text-line-strong" : "text-ink-400")}>
               {sub}{" "}
               {item.key !== "prep" && (
-                <span
-                  className={
-                    dim ? undefined : (item.weekend && DOW_TONE[item.weekend]) || undefined
-                  }
-                >
+                <span title={item.holiday ?? undefined} className={dowTone(item, dim)}>
                   {item.sub}
                 </span>
               )}
+              {item.holiday && <span className="sr-only">{item.holiday}</span>}
             </span>
           </RailButton>
         );

@@ -20,6 +20,8 @@ export type ScheduleLayoutProps = {
   onDayChange: (day: number) => void;
   /** 날마다의 타임라인 줄 */
   sections: DaySectionData[];
+  /** 그 날(0-base)의 여행지 공휴일 이름 — day 머리 · PC 레일에 빨갛게. 공휴일이 아니거나 모르면 null */
+  holidayOf: (day: number) => string | null;
   isPending: boolean;
   /** 뷰가 보내는 「그 날로 스크롤」 요청 */
   jump: DayJump | null;

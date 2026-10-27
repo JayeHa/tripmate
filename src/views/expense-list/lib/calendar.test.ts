@@ -27,6 +27,7 @@ describe("calendarCells", () => {
         num: "준비",
         sub: "여행 전",
         weekend: null,
+        holiday: null,
         hasExpense: true,
         planned: false,
       },
@@ -36,6 +37,7 @@ describe("calendarCells", () => {
         num: "31",
         sub: "토",
         weekend: "sat",
+        holiday: null,
         hasExpense: false,
         planned: false,
       },
@@ -45,9 +47,17 @@ describe("calendarCells", () => {
         num: "1",
         sub: "일",
         weekend: "sun",
+        holiday: null,
         hasExpense: true,
         planned: true,
       },
     ]);
+  });
+
+  it("여행지 공휴일이면 그 칸에 이름", () => {
+    const cells = calendarCells([section(0, []), section(3, [])], "2026-10-31", [
+      { date: "2026-11-03", name: "Culture Day" },
+    ]);
+    expect(cells.map((c) => c.holiday)).toEqual([null, "Culture Day"]);
   });
 });

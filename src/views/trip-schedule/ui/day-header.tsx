@@ -1,6 +1,9 @@
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
-import { dayParts } from "@/shared/lib/days";
+import { dateTone, dayParts } from "@/shared/lib/days";
+import { cn } from "@/shared/lib/utils";
+
+import { DATE_TONE } from "./date-tone";
 
 type DayHeaderProps = {
   startDate: string;
@@ -13,12 +16,14 @@ type DayHeaderProps = {
   counts?: { memos: number; places: number };
   /** 제목 아래 한 줄(편집 모드에서 쓴다). 없으면 그리지 않는다 */
   summary?: string | null;
+  /** 여행지 공휴일 이름 — 날짜 옆에 빨갛게(길면 말줄임) */
+  holiday?: string | null;
   /** 제목 오른쪽 「편집」. 일정을 다 읽기 전에는 없다 */
   onEdit?: () => void;
 };
 
 /**
- * 「day 1  10.31/토」 · 오른쪽 「편집」(일정 편집을 연다) · 아래 하루 요약.
+ * 「day 1  10.31/토」(토 파랑 · 일 · 공휴일 빨강, 공휴일이면 옆에 빨간 이름) · 오른쪽 「편집」(일정 편집을 연다) · 아래 하루 요약.
  * 아래 줄에 메모를 한꺼번에 펼치고 접는 버튼(PC 는 왼쪽에 메모 · 장소 개수).
  */
 export function DayHeader({
@@ -29,18 +34,23 @@ export function DayHeader({
   onToggleAll,
   counts,
   summary,
+  holiday,
   onEdit,
 }: DayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
+  const tone = dateTone(startDate, day, !!holiday);
   const Icon = allOpen ? ChevronsDownUp : ChevronsUpDown;
   return (
     <>
       <div className="flex items-center justify-between px-5 pt-4.5 pb-1.5">
-        <div className="flex items-baseline gap-1.5">
-          <h2 className="text-[17px] font-extrabold text-ink-900">day {day + 1}</h2>
-          <span className="text-base text-ink-400">
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <h2 className="shrink-0 text-[17px] font-extrabold text-ink-900">day {day + 1}</h2>
+          <span className={cn("shrink-0 text-base text-ink-400", tone && DATE_TONE[tone])}>
             {date}/{dow}
           </span>
+          {holiday && (
+            <span className="truncate text-[13px] font-semibold text-holiday">{holiday}</span>
+          )}
         </div>
         {onEdit && (
           <button type="button" onClick={onEdit} className="text-[15px] text-ink-500">

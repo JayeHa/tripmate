@@ -122,6 +122,7 @@ export function PcSchedule({
           day={edit.editing ? edit.day : day}
           onChange={pickDay}
           summaries={trip.day_summaries}
+          holidayOf={body.holidayOf}
           footer={
             <RailTools
               stayCount={stayCount}

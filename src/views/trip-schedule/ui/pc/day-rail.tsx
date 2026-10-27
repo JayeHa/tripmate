@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
-import { dateRangeLabel, dayCount, dayParts } from "@/shared/lib/days";
+import { dateRangeLabel, dateTone, dayCount, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
+
+import { DATE_TONE } from "../date-tone";
 
 type DayRailProps = {
   title: string;
@@ -11,6 +13,8 @@ type DayRailProps = {
   onChange: (day: number) => void;
   /** 날마다 하루 요약(빈 날은 null) */
   summaries: readonly (string | null)[];
+  /** 그 날의 여행지 공휴일 이름 — 날짜 아래 빨간 한 줄 */
+  holidayOf: (day: number) => string | null;
   /** 제목 아래에 두는 것 — 「이어서 / 하루씩」 전환 */
   children?: ReactNode;
   /** 레일 아래 고정 도구(항공편 · 숙소) */
@@ -19,7 +23,7 @@ type DayRailProps = {
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
- * 날마다 「day 2 11.1/일」 아래 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소)
+ * 날마다 「day 2 11.1/일」(토 파랑 · 일 · 공휴일 빨강) 아래 공휴일 이름(있으면 빨갛게) · 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소)
  */
 export function DayRail({
   title,
@@ -28,6 +32,7 @@ export function DayRail({
   day,
   onChange,
   summaries,
+  holidayOf,
   children,
   footer,
 }: DayRailProps) {
@@ -50,6 +55,8 @@ export function DayRail({
         {Array.from({ length: total }, (_, i) => {
           const { date, dow } = dayParts(startDate, i);
           const summary = summaries[i];
+          const holiday = holidayOf(i);
+          const tone = dateTone(startDate, i, !!holiday);
           return (
             <button
               key={date}
@@ -70,10 +77,13 @@ export function DayRail({
                 >
                   day {i + 1}
                 </span>
-                <span className="text-[13px] text-ink-400">
+                <span className={cn("text-[13px] text-ink-400", tone && DATE_TONE[tone])}>
                   {date}/{dow}
                 </span>
               </span>
+              {holiday && (
+                <span className="truncate text-xs font-semibold text-holiday">{holiday}</span>
+              )}
               {summary && (
                 <span className="line-clamp-2 text-[13px]/[1.45] text-ink-500">{summary}</span>
               )}

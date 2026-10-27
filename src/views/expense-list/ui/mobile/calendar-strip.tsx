@@ -14,7 +14,7 @@ type CalendarStripProps = {
   shown: boolean;
 };
 
-/** 칸 색 — 토 블루 · 일 빨강(첫 줄도 같은 색), 평일은 첫 줄 잉크 · 둘째 줄 진회색, 여행준비 둘째 줄 회색 */
+/** 칸 색 — 토 블루 · 일 · 여행지 공휴일 빨강(첫 줄도 같은 색), 평일은 첫 줄 잉크 · 둘째 줄 진회색, 여행준비 둘째 줄 회색 */
 const TONE = {
   sat: { label: "text-brand", sub: "text-brand" },
   sun: { label: "text-destructive", sub: "text-destructive" },
@@ -25,6 +25,7 @@ const TONE = {
 /** 칸 색의 종류 */
 function toneOf(cell: CalendarCell): keyof typeof TONE {
   if (cell.key === "prep") return "prep";
+  if (cell.holiday) return "sun";
   return cell.weekend ?? "weekday";
 }
 
@@ -75,6 +76,7 @@ export function CalendarStrip({ cells, selected, onSelect, stripRef, shown }: Ca
                 {cell.key === "prep" ? "준비" : cell.label}
               </span>
               <span
+                title={cell.holiday ?? undefined}
                 className={cn(
                   "text-[11px] font-semibold whitespace-nowrap",
                   dim ? "text-line-strong" : tone.sub,
@@ -82,6 +84,7 @@ export function CalendarStrip({ cells, selected, onSelect, stripRef, shown }: Ca
               >
                 {cell.key === "prep" ? cell.sub : `${cell.num} ${cell.sub}`}
               </span>
+              {cell.holiday && <span className="sr-only">{cell.holiday}</span>}
               <span
                 aria-hidden="true"
                 className={cn(

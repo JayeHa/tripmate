@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { useTripHolidays } from "@/entities/city";
 import type { Memo, TimelineRow } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
@@ -11,7 +12,8 @@ import { useScheduleEdit } from "@/features/schedule/edit-mode";
 import { ItemDetailDialog } from "@/features/schedule/item-detail";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
-import { dayCount } from "@/shared/lib/days";
+import { holidayName } from "@/shared/lib/country-holidays";
+import { dayCount, dayIndexToDate } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { useChecklistChips } from "../model/use-checklist-chips";
@@ -40,6 +42,7 @@ type TripScheduleViewProps = { tripId: string };
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
+  const holidays = useTripHolidays(tripId, trip);
   const { items, isPending, itemsReady, movesReady, sections } = useScheduleSections(
     tripId,
     trip,
@@ -104,6 +107,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const layout: ScheduleLayoutProps = {
     trip,
+    holidayOf: (d) =>
+      trip && holidays ? holidayName(holidays, dayIndexToDate(trip.start_date, d)) : null,
     totalDays,
     day,
     onDayChange: setDay,

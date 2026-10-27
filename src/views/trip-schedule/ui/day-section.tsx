@@ -15,6 +15,8 @@ type DaySectionProps = {
   day: number;
   /** 그날 하루 요약 */
   summary?: string | null;
+  /** 그날의 여행지 공휴일 이름 */
+  holiday?: string | null;
   rows: TimelineRow[];
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 을 함께 보인다 */
   showCounts?: boolean;
@@ -40,6 +42,7 @@ export function DaySection({
   startDate,
   day,
   summary,
+  holiday,
   rows,
   showCounts,
   focusId,
@@ -63,6 +66,7 @@ export function DaySection({
         onToggleAll={memos.toggleAll}
         counts={showCounts ? countsOf(rows) : undefined}
         summary={summary}
+        holiday={holiday}
         onEdit={onStartEdit}
       />
       {rows.length === 0 && (

@@ -41,7 +41,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
   const statsHref = `${base}/stats`;
-  const cells = calendarCells(list.allSections, trip.start_date);
+  const cells = calendarCells(list.allSections, trip.start_date, list.holidays);
   const scroll = useCalendarScroll(cells.map((c) => c.key));
   const cta = useRef<HTMLAnchorElement>(null);
   const past = useScrolledPast(cta, scroll.stickyRef);

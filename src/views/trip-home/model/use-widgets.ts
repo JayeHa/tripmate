@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { useTripCities } from "@/entities/city";
+import { useTripCities, useTripHolidays } from "@/entities/city";
 import type { Trip } from "@/entities/trip";
-import { useCountryHolidays } from "@/shared/api/holidays";
 import { useLiveRates } from "@/shared/api/live-rates";
 import { todayISO } from "@/shared/lib/days";
 import { liveUnitValue } from "@/shared/lib/money";
@@ -38,7 +37,7 @@ export function useWidgets(tripId: string, trip: Trip) {
   const liveRates = useLiveRates(trip.home_currency, !!rate).data;
   const live =
     city && rate && liveRates ? liveUnitValue(liveRates, city.currency, rate.unit) : null;
-  const holidays = useCountryHolidays(city?.country_code ?? null, trip.start_date, trip.end_date);
+  const holidays = useTripHolidays(tripId, trip);
   if (!city) return { tiles: [], currency: null, live: null, holiday: false };
   const tiles = widgetTiles({
     currency: city.currency,
