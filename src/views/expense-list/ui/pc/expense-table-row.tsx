@@ -61,7 +61,8 @@ export function ExpenseTableRow({
     <div
       data-expense-id={row.id}
       className={cn(
-        "relative scroll-mt-10 py-2.75",
+        // isolate: 「결제 완료」 의 z-10 이 행 안에서만 통하게 — 없으면 위에 붙은 표 머리 위로 올라온다
+        "relative isolate scroll-mt-10 py-2.75",
         TABLE_COLUMNS,
         selected ? "bg-surface-selected" : "hover:bg-[#FAFBFC]",
         row.excluded && "opacity-55",
