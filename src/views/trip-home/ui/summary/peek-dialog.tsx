@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+import { withKeys } from "@/shared/lib/keys";
 import { NAV } from "@/shared/lib/nav-transition";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
@@ -23,9 +24,10 @@ function PeekBody({ peek }: PeekBodyProps) {
       </div>
       {peek.facts.length > 0 && (
         <dl className="flex flex-col">
-          {peek.facts.map((f) => (
+          {/* 바우처 번호처럼 같은 라벨이 여럿일 수 있다(주인마다 「여권번호」) — 겹치면 몇 번째인지 붙인 key */}
+          {withKeys(peek.facts, (f) => `${f.label}:${f.value}`).map(({ key, value: f }) => (
             <div
-              key={f.label}
+              key={key}
               className="flex min-h-11 items-center gap-3 border-b border-divider last:border-b-0"
             >
               <dt className="w-18 shrink-0 text-sm text-ink-400">{f.label}</dt>
