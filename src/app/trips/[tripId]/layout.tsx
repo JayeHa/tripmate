@@ -9,7 +9,8 @@ export default async function TripLayout({ children, params }: LayoutProps<"/tri
   return (
     // --shell-top: 화면 위에 sticky 로 붙은 셸 높이. 모바일은 오프라인 띠만(온라인이면 0), PC 는 띠 + PcHeader 64px.
     // sticky 요소들은 이 값 아래에 붙는다(AppHeader, 일정 지도 등)
-    <div className="flex min-h-full flex-1 flex-col pb-16 [--shell-top:var(--offline-band)] lg:pb-0 lg:[--shell-top:calc(4rem+var(--offline-band))]">
+    // --tab-bar: 모바일 하단 탭이 덮는 높이 — BottomTabBar 의 83px + 아이폰 홈 버튼 줄(safe area). 내용 끝이 탭에 가리지 않게 그만큼 비운다. PC 는 0
+    <div className="flex min-h-full flex-1 flex-col pb-(--tab-bar) [--shell-top:var(--offline-band)] [--tab-bar:calc(83px+env(safe-area-inset-bottom))] lg:[--shell-top:calc(4rem+var(--offline-band))] lg:[--tab-bar:0px]">
       {/* 탭: PC 는 상단 헤더, 모바일은 하단 탭. 둘 다 검색 파라미터(day)를 읽어 Suspense 로 감싼다 */}
       <Suspense>
         <PcHeader tripId={tripId} />
