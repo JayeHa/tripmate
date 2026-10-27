@@ -46,6 +46,11 @@
 `?day` 는 `history.replaceState` 로 바꾼다. 스크롤할 때마다 바뀌므로 `router.push` · `router.replace` 를 쓰면 뒤로 가기 기록이 쌓이거나 서버에 다시 묻는다.
 Next 의 `useSearchParams` 는 이 변경을 따라온다(<https://nextjs.org/docs/app/getting-started/linking-and-navigating#native-history-api>, 2026-10-05 확인).
 
+### `?open` — 다른 화면에서 일정 상세 열기
+
+홈 미리 보기의 「일정에서 보기」 는 `?day=N&open=일정id` 로 온다. 여행 · 일정을 다 읽으면 그 카드를 누른 것처럼 연다 — 장소는 일정 상세, 날짜 메모는 날짜 메모 창, 항공편 카드는 항공편 상세.
+없는 일정(그사이 지워짐)이면 열지 않는다. `open` 은 읽자마자 주소에서 뺀다(`history.replaceState`) — 남겨 두면 새로고침 · 앞으로 가기마다 상세가 다시 열린다. 노트의 체크리스트(`?tab=checklist&open=id`)도 같다.
+
 ### 알려진 한계
 
 - **하루씩에서는 마지막 장소들이 스크롤로 강조되지 않는다**(#120). 시안이 끝 여백을 없애서, 끝까지 내려도 그 줄들이 강조 기준선에 닿지 않는다. 핀을 누르면 강조된다. 이어서 · 모바일은 끝 여백이 있어 해당 없다

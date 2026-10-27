@@ -5,6 +5,7 @@ import { useMemberLookup } from "@/entities/trip-member";
 import type { Voucher } from "@/entities/voucher";
 import type { ToastMessage } from "@/shared/ui/toast";
 
+import type { Peek } from "../../lib/peek";
 import type { Phase } from "../../lib/phase";
 import { useNowBoard } from "../../model/use-now-board";
 import { usePostBoard } from "../../model/use-post-board";
@@ -16,13 +17,18 @@ import { preBoardCards } from "./pre-board";
 
 type Layout = "mobile" | "pc";
 
-type PreBoardViewProps = { tripId: string; layout: Layout };
+type PreBoardViewProps = {
+  tripId: string;
+  startDate: string;
+  layout: Layout;
+  onPeek: (peek: Peek) => void;
+};
 
 /** 여행 전 상태판 */
-function PreBoardView({ tripId, layout }: PreBoardViewProps) {
-  const board = usePreBoard(tripId);
+function PreBoardView({ tripId, startDate, layout, onPeek }: PreBoardViewProps) {
+  const board = usePreBoard(tripId, startDate);
   if (!board) return <BoardSkeleton layout={layout} />;
-  return <BoardGrid cards={preBoardCards({ tripId, board, layout })} layout={layout} />;
+  return <BoardGrid cards={preBoardCards({ tripId, board, layout, onPeek })} layout={layout} />;
 }
 
 type NowBoardViewProps = {
@@ -86,11 +92,16 @@ type PhaseBoardProps = {
   phase: Phase;
   layout: Layout;
   onToast: (message: Omit<ToastMessage, "id">) => void;
+  /** 줄을 눌렀을 때 홈 위에 미리 보기(여행 전 상태판) */
+  onPeek: (peek: Peek) => void;
 };
 
 /** 고른 시점의 상태판 */
-export function PhaseBoard({ tripId, trip, phase, layout, onToast }: PhaseBoardProps) {
-  if (phase === "pre") return <PreBoardView tripId={tripId} layout={layout} />;
+export function PhaseBoard({ tripId, trip, phase, layout, onToast, onPeek }: PhaseBoardProps) {
+  if (phase === "pre")
+    return (
+      <PreBoardView tripId={tripId} startDate={trip.start_date} layout={layout} onPeek={onPeek} />
+    );
   if (phase === "now")
     return <NowBoardView tripId={tripId} trip={trip} layout={layout} onToast={onToast} />;
   return <PostBoardView tripId={tripId} trip={trip} layout={layout} />;

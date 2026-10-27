@@ -8,9 +8,11 @@ import { cn } from "@/shared/lib/utils";
 import { Segmented } from "@/shared/ui/segmented";
 import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
+import type { Peek } from "../../lib/peek";
 import { type Phase, PHASE_LABEL, phaseNote, PHASES, tripPhase } from "../../lib/phase";
 import { boardDayIndex } from "../../lib/today-plan";
 import { useWidgets } from "../../model/use-widgets";
+import { PeekDialog } from "./peek-dialog";
 import { PhaseBoard } from "./phase-board";
 import { RateCalculator } from "./rate-calculator";
 import { WidgetRow } from "./widget-row";
@@ -21,7 +23,7 @@ type SummaryTabProps = { tripId: string; trip: Trip; layout: "mobile" | "pc" };
 
 /**
  * 「요약」 탭 — 위 세그먼트(여행 전 · 중 · 후, 날짜로 자동 선택 · 다른 시점은 미리보기) + 현지 정보 위젯 줄 + 그 시점의 상태판.
- * 위젯 줄은 여행 후에는 숨긴다(현지 환율 · 시간이 더 필요 없다). 환율 타일을 누르면 계산기.
+ * 위젯 줄은 여행 후에는 숨긴다(현지 환율 · 시간이 더 필요 없다). 환율 타일을 누르면 계산기, 상태판 줄을 누르면 미리 보기.
  * 고른 시점은 이 화면에서만 기억한다(다시 열면 날짜로 정한 시점). 여행 홈의 토스트는 이 탭이 하나를 그린다
  */
 export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
@@ -29,6 +31,7 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
   const [picked, setPicked] = useState<Phase | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [peek, setPeek] = useState<Peek | null>(null);
   const auto = tripPhase(trip.start_date, trip.end_date, today);
   const phase = picked ?? auto;
   const widgets = useWidgets(tripId, trip);
@@ -62,7 +65,9 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
         phase={phase}
         layout={layout}
         onToast={(m) => setToast({ ...m, id: Date.now() })}
+        onPeek={setPeek}
       />
+      <PeekDialog peek={peek} onClose={() => setPeek(null)} />
       {widgets.currency && (
         <RateCalculator
           open={calcOpen}

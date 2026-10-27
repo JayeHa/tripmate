@@ -60,10 +60,15 @@ type BoardRowProps = {
   trail?: React.ReactNode;
   /** 있으면 줄 전체가 그 화면으로 가는 링크 */
   href?: string;
+  /** 있으면 줄 전체가 버튼(미리 보기 열기). href 와 함께 쓰지 않는다 */
+  onClick?: () => void;
 };
 
+/** 줄 전체를 누르는 영역 */
+const HIT = "flex min-w-0 flex-1 items-center gap-3";
+
 /** 상태판 카드 안의 한 줄 — 왼쪽 표식 · 제목 15/700 · 보조 12, 오른쪽 끝 */
-export function BoardRow({ lead, title, sub, trail, href }: BoardRowProps) {
+export function BoardRow({ lead, title, sub, trail, href, onClick }: BoardRowProps) {
   const body = (
     <>
       {lead}
@@ -74,19 +79,22 @@ export function BoardRow({ lead, title, sub, trail, href }: BoardRowProps) {
       {trail}
     </>
   );
-  return (
-    <li className="flex min-h-11 items-center gap-3">
-      {href ? (
-        <Link
-          href={href}
-          transitionTypes={NAV.tab}
-          className="flex min-w-0 flex-1 items-center gap-3"
-        >
-          {body}
-        </Link>
-      ) : (
-        body
-      )}
-    </li>
-  );
+  return <li className="flex min-h-11 items-center gap-3">{hitArea(body, href, onClick)}</li>;
+}
+
+/** 줄의 내용을 링크 · 버튼으로 감싼다 — 둘 다 없으면 그대로 */
+function hitArea(body: React.ReactNode, href?: string, onClick?: () => void) {
+  if (href)
+    return (
+      <Link href={href} transitionTypes={NAV.tab} className={HIT}>
+        {body}
+      </Link>
+    );
+  if (onClick)
+    return (
+      <button type="button" onClick={onClick} className={cn(HIT, "cursor-pointer text-left")}>
+        {body}
+      </button>
+    );
+  return body;
 }

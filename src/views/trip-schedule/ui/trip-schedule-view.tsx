@@ -20,6 +20,7 @@ import { useChecklistChips } from "../model/use-checklist-chips";
 import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
+import { useOpenRequest } from "../model/use-open-request";
 import { useScheduleSections } from "../model/use-schedule-sections";
 import { useScheduleVouchers } from "../model/use-schedule-vouchers";
 import { useStaysOverlay } from "../model/use-stays-overlay";
@@ -38,12 +39,13 @@ type TripScheduleViewProps = { tripId: string };
  * 모든 날짜를 이어서 그리고, `?day` 는 스크롤로 보고 있는 날을 따라간다(레이아웃이 바꾼다).
  * 레이아웃은 미디어 쿼리로 하나만 마운트한다 — CSS 로 숨기면 Google 지도가 두 개 생긴다.
  * 첫 렌더(하이드레이션)에서는 화면 폭을 몰라 아무 레이아웃도 그리지 않는다.
+ * 주소에 `?open=일정id` 가 있으면(홈의 미리 보기 「일정에서 보기」) 일정을 다 읽은 뒤 그 카드를 누른 것처럼 연다.
  */
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
   const holidays = useTripHolidays(tripId, trip);
-  const { items, isPending, itemsReady, movesReady, sections } = useScheduleSections(
+  const { items, isPending, itemsReady, movesReady, sections, sectionsReady } = useScheduleSections(
     tripId,
     trip,
     totalDays,
@@ -89,6 +91,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const allRows = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
   const openRow = allRows.find((r) => r.item.id === openId) ?? null;
   if (openId && !openRow) setOpenId(null);
+  useOpenRequest(sectionsReady, allRows, openCard);
 
   /** 카드를 눌렀다 — 날짜 메모는 시간 · 메모 창, 항공편 카드는 항공편 상세, 나머지는 일정 상세 */
   function openCard(row: TimelineRow) {
