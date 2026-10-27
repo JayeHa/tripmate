@@ -7,6 +7,7 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery(queryKeys.trips.all)).toBe(true);
     expect(shouldPersistQuery(queryKeys.scheduleItems("t1"))).toBe(true);
     expect(shouldPersistQuery(queryKeys.cities)).toBe(true);
+    expect(shouldPersistQuery(queryKeys.holidays("JP", 2026))).toBe(true);
   });
 
   it("경로와 사용자 정보는 남기지 않는다", () => {

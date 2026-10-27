@@ -51,7 +51,7 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
           tiles={widgets.tiles}
           layout={layout}
           onOpenRate={() => setCalcOpen(true)}
-          liveCredit={widgets.live !== null}
+          credits={{ rate: widgets.live !== null, holiday: widgets.holiday }}
         />
       ) : (
         <div className="h-3" />

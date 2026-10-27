@@ -155,6 +155,8 @@
   --color-row-focus: #f2f7ff;
   /* 경고 칩 바탕(그날 휴무 등). 글자는 destructive */
   --color-destructive-soft: #fde8ea;
+  /* 공휴일 이름(여행 홈 위젯의 작은 보조 글) — 작은 글이라 destructive 보다 진한 빨강 */
+  --color-holiday: #d92d3a;
 
   /* 예약 상태 (ok · wait · opt 3종. buy/walk 는 폐기) */
   --color-status-ok: #1f6feb;
