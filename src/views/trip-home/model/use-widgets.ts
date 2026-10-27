@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 import { useTripCities } from "@/entities/city";
 import type { Trip } from "@/entities/trip";
+import { useCountryHolidays } from "@/shared/api/holidays";
 import { useLiveRates } from "@/shared/api/live-rates";
+import { todayISO } from "@/shared/lib/days";
 import { liveUnitValue } from "@/shared/lib/money";
 
 import { widgetTiles } from "../lib/widgets";
@@ -24,7 +26,8 @@ function useClock(): Date {
 
 /**
  * 위젯 줄 — 여행의 첫 도시(통화 · 시간대)와 여행 환율로 정한 타일들, 계산기에 쓸 여행지 통화,
- * 실시간 환율(여행 환율과 같은 단위의 기준 화폐 금액 — 참고용, 여행지 통화의 여행 환율이 있을 때만 받는다).
+ * 실시간 환율(여행 환율과 같은 단위의 기준 화폐 금액 — 참고용, 여행지 통화의 여행 환율이 있을 때만 받는다),
+ * 공휴일 타일을 보이는지(출처 표기용). 공휴일은 첫 도시의 나라 기준이다.
  * 도시를 아직 모르면 타일 없음(줄이 늦게 나타난다 — 자리를 비워 두지 않는다)
  */
 export function useWidgets(tripId: string, trip: Trip) {
@@ -35,17 +38,23 @@ export function useWidgets(tripId: string, trip: Trip) {
   const liveRates = useLiveRates(trip.home_currency, !!rate).data;
   const live =
     city && rate && liveRates ? liveUnitValue(liveRates, city.currency, rate.unit) : null;
-  if (!city) return { tiles: [], currency: null, live: null };
+  const holidays = useCountryHolidays(city?.country_code ?? null, trip.start_date, trip.end_date);
+  if (!city) return { tiles: [], currency: null, live: null, holiday: false };
+  const tiles = widgetTiles({
+    currency: city.currency,
+    timeZone: city.timezone,
+    home: trip.home_currency,
+    rates: trip.exchange_rates,
+    at,
+    live,
+    holidays,
+    start: trip.start_date,
+    today: todayISO(),
+  });
   return {
-    tiles: widgetTiles({
-      currency: city.currency,
-      timeZone: city.timezone,
-      home: trip.home_currency,
-      rates: trip.exchange_rates,
-      at,
-      live,
-    }),
+    tiles,
     currency: city.currency,
     live,
+    holiday: tiles.some((t) => t.key === "holiday"),
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { localTimeText, offsetFromKorea, offsetLabel, widgetTiles } from "./widgets";
+import { holidayTile, localTimeText, offsetFromKorea, offsetLabel, widgetTiles } from "./widgets";
 
 /** 2026-11-01 05:32 UTC — 한국 14:32 */
 const AT = new Date(Date.UTC(2026, 10, 1, 5, 32));
@@ -33,7 +33,15 @@ describe("localTimeText", () => {
 });
 
 describe("widgetTiles", () => {
-  const base = { home: "KRW", rates: { JPY: { unit: 100, value: 920 } }, at: AT, live: null };
+  const base = {
+    home: "KRW",
+    rates: { JPY: { unit: 100, value: 920 } },
+    at: AT,
+    live: null,
+    holidays: undefined,
+    start: "2026-10-31",
+    today: "2026-11-01",
+  };
 
   it("도쿄 — 환율만(시차 없음)", () => {
     expect(widgetTiles({ ...base, currency: "JPY", timeZone: "Asia/Tokyo" })).toEqual([
@@ -52,5 +60,50 @@ describe("widgetTiles", () => {
     expect(widgetTiles({ ...base, currency: "THB", timeZone: "Asia/Bangkok" })).toEqual([
       { key: "time", label: "현지 시간", main: "12:32", sub: "한국보다 2시간 느림" },
     ]);
+  });
+
+  it("공휴일은 환율과 현지 시간 사이", () => {
+    const tiles = widgetTiles({
+      ...base,
+      currency: "THB",
+      timeZone: "Asia/Bangkok",
+      rates: { THB: { unit: 1, value: 40 } },
+      holidays: [{ date: "2026-11-03", name: "Culture Day" }],
+    });
+    expect(tiles.map((t) => t.key)).toEqual(["rate", "holiday", "time"]);
+  });
+});
+
+describe("holidayTile", () => {
+  const list = [
+    { date: "2026-11-03", name: "Culture Day" },
+    { date: "2026-11-05", name: "Other Day" },
+  ];
+
+  it("여행 전 — 첫 공휴일의 날짜와 이름", () => {
+    expect(holidayTile(list, "2026-10-31", "2026-10-20")).toEqual({
+      key: "holiday",
+      label: "공휴일",
+      holiday: true,
+      main: "11.3 (화)",
+      sub: "Culture Day",
+    });
+  });
+
+  it("여행 중 — 다음 공휴일까지 남은 날(오늘이면 「오늘」)", () => {
+    expect(holidayTile(list, "2026-10-31", "2026-11-01")).toMatchObject({
+      main: "D-2",
+      sub: "11.3 Culture Day",
+    });
+    expect(holidayTile(list, "2026-10-31", "2026-11-03")?.main).toBe("오늘");
+    expect(holidayTile(list, "2026-10-31", "2026-11-04")).toMatchObject({
+      main: "D-1",
+      sub: "11.5 Other Day",
+    });
+  });
+
+  it("공휴일이 없거나 다 지났으면 없음", () => {
+    expect(holidayTile([], "2026-10-31", "2026-10-20")).toBeNull();
+    expect(holidayTile(list, "2026-10-31", "2026-11-06")).toBeNull();
   });
 });

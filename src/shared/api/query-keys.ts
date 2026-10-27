@@ -5,6 +5,8 @@ export const queryKeys = {
   cities: ["cities"] as const,
   /** 실시간 환율(참고용, 하루 한 번 갱신) — 기준 통화마다 */
   liveRates: (base: string) => ["live-rates", base] as const,
+  /** 여행지 국가의 공휴일 — 나라 · 해마다. 배포 사이에는 바뀌지 않는다 */
+  holidays: (country: string, year: number) => ["holidays", country, year] as const,
   trips: {
     all: ["trips"] as const,
     detail: (tripId: string) => ["trips", tripId] as const,
@@ -46,10 +48,10 @@ export const queryKeys = {
 /**
  * 영속화 대상 판별. 여행 데이터와 도시 기준 데이터만 남기고 경로는 제외한다.
  * 경로는 Google Routes API 응답 캐시라 서버의 day_routes 테이블이 이미 들고 있다.
- * 도시는 오프라인에서도 도시 이름·지도 중심을 그리려고 남긴다.
+ * 도시는 오프라인에서도 도시 이름·지도 중심을 그리려고 남긴다. 공휴일도 여행지에서 오프라인으로 보이게 남긴다.
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
-  if (queryKey[0] === "cities") return true;
+  if (queryKey[0] === "cities" || queryKey[0] === "holidays") return true;
   // 영수증 · 바우처 · 쇼핑 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
   const files = ["receipts", "vouchers", "pack-photos"];
   if (files.includes(String(queryKey[2])) && queryKey[3] === "urls") {

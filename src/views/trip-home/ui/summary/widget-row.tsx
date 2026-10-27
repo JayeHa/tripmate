@@ -1,12 +1,17 @@
-import { ChevronRight, Clock, Coins, type LucideIcon } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, Coins, type LucideIcon } from "lucide-react";
 import type * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
 import type { WidgetTile } from "../../lib/widgets";
+import { HolidayCredit } from "./holiday-credit";
 import { RateCredit } from "./rate-credit";
 
-const ICON: Record<WidgetTile["key"], LucideIcon> = { rate: Coins, time: Clock };
+const ICON: Record<WidgetTile["key"], LucideIcon> = {
+  rate: Coins,
+  holiday: CalendarDays,
+  time: Clock,
+};
 
 type TileProps = {
   tile: WidgetTile;
@@ -35,15 +40,15 @@ type WidgetRowProps = {
   layout: "mobile" | "pc";
   /** 환율 타일을 누르면 — 계산기 */
   onOpenRate: () => void;
-  /** 실시간 환율을 보이고 있다 — 줄 아래 오른쪽에 출처 링크 */
-  liveCredit: boolean;
+  /** 바깥 데이터를 보이고 있다(실시간 환율 · 공휴일) — 줄 아래 오른쪽에 출처 링크 */
+  credits: { rate: boolean; holiday: boolean };
 };
 
 /**
  * 현지 정보 위젯 줄. 모바일은 회색 타일(76 · r12)을 나란히, PC 는 흰 카드 한 장을 세로선으로 나눈 칸(아이콘 칸 36 · 값 옆 보조).
  * 환율 타일만 누를 수 있다(계산기)
  */
-export function WidgetRow({ tiles, layout, onOpenRate, liveCredit }: WidgetRowProps) {
+export function WidgetRow({ tiles, layout, onOpenRate, credits }: WidgetRowProps) {
   return (
     <div
       className={cn(
@@ -52,12 +57,17 @@ export function WidgetRow({ tiles, layout, onOpenRate, liveCredit }: WidgetRowPr
       )}
     >
       <Tiles tiles={tiles} layout={layout} onOpenRate={onOpenRate} />
-      {liveCredit && <RateCredit className="self-end" />}
+      {(credits.rate || credits.holiday) && (
+        <span className="flex gap-2 self-end">
+          {credits.rate && <RateCredit />}
+          {credits.holiday && <HolidayCredit />}
+        </span>
+      )}
     </div>
   );
 }
 
-type TilesProps = Omit<WidgetRowProps, "liveCredit">;
+type TilesProps = Omit<WidgetRowProps, "credits">;
 
 /** 타일들 — 모바일 회색 타일 나란히, PC 흰 카드 한 장 */
 function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
@@ -79,7 +89,11 @@ function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
                 {t.label}
               </span>
               <span className="truncate text-base font-extrabold text-ink-900">{t.main}</span>
-              <span className="truncate text-[11px] text-ink-400">{t.sub}</span>
+              <span
+                className={cn("truncate text-[11px] text-ink-400", t.holiday && "text-holiday")}
+              >
+                {t.sub}
+              </span>
             </Tile>
           );
         })}
@@ -111,7 +125,9 @@ function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
                 <span className="text-[17px] font-extrabold whitespace-nowrap text-ink-900">
                   {t.main}
                 </span>
-                <span className="truncate text-xs text-ink-400">{t.sub}</span>
+                <span className={cn("truncate text-xs text-ink-400", t.holiday && "text-holiday")}>
+                  {t.sub}
+                </span>
               </span>
             </span>
             {open && <ChevronRight className="size-4 shrink-0 text-handle" aria-hidden="true" />}
