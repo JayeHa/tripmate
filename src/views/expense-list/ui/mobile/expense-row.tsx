@@ -39,7 +39,8 @@ export function ExpenseRow({
   const who = whoOf(row, displayNameOf, everyone);
   const initial = who.person ? displayNameOf(who.person).slice(0, 1) : "";
   return (
-    <div className="relative flex items-center gap-3 px-5 py-3">
+    // isolate: 「결제 완료」 의 z-10(행 전체 누르기 위)이 행 안에서만 통하게 — 없으면 위에 붙은 날짜 줄 위로 올라온다
+    <div className="relative isolate flex items-center gap-3 px-5 py-3">
       <ExpenseCategoryTile category={row.category} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-1.25">

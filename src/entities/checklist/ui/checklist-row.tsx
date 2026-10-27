@@ -25,7 +25,8 @@ export function ChecklistRow({ item, today, onToggle, onOpen }: ChecklistRowProp
   const done = item.status === "done";
   const due = item.due_date && !done ? dueView(item.due_date, today) : null;
   return (
-    <div className="relative flex items-start gap-3 rounded-card border border-line-card bg-white px-4 py-3.5">
+    // isolate: 체크박스의 z-10(행 전체 누르기 위)이 행 안에서만 통하게 — 없으면 위에 붙은 빠른 추가 바(z-5) 위로 올라온다
+    <div className="relative isolate flex items-start gap-3 rounded-card border border-line-card bg-white px-4 py-3.5">
       <button
         type="button"
         onClick={onToggle}
