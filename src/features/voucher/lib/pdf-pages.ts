@@ -22,17 +22,7 @@ export function pageScale(width: number, height: number): number {
  * 읽지 못하는 PDF(암호 · 깨짐) · 그리기 실패는 던진다 — 부르는 쪽이 그림 없이 원본만 저장한다
  */
 export async function renderPdfPages(file: Blob, pages: string): Promise<Blob[]> {
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const base = `/pdfjs/${pdfjs.version}/`;
-  pdfjs.GlobalWorkerOptions.workerSrc = `${base}pdf.worker.min.mjs`;
-  const task = pdfjs.getDocument({
-    data: new Uint8Array(await file.arrayBuffer()),
-    cMapUrl: `${base}cmaps/`,
-    cMapPacked: true,
-    standardFontDataUrl: `${base}standard_fonts/`,
-    wasmUrl: `${base}wasm/`,
-    iccUrl: `${base}iccs/`,
-  });
+  const task = await loadPdf(file);
   try {
     const doc = await task.promise;
     const out: Blob[] = [];
@@ -43,6 +33,53 @@ export async function renderPdfPages(file: Blob, pages: string): Promise<Blob[]>
   } finally {
     // 문서와 워커를 함께 정리한다 — 6.x 의 문서(PDFDocumentProxy)에는 destroy 가 없고 불러오기 작업에 있다
     void task.destroy();
+  }
+}
+
+/** pdf.js 로 PDF 를 연다(불러오기 작업). 다 쓰면 부른 쪽이 task.destroy() — 문서와 워커를 함께 정리한다 */
+async function loadPdf(file: Blob) {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const base = `/pdfjs/${pdfjs.version}/`;
+  pdfjs.GlobalWorkerOptions.workerSrc = `${base}pdf.worker.min.mjs`;
+  return pdfjs.getDocument({
+    data: new Uint8Array(await file.arrayBuffer()),
+    cMapUrl: `${base}cmaps/`,
+    cMapPacked: true,
+    standardFontDataUrl: `${base}standard_fonts/`,
+    wasmUrl: `${base}wasm/`,
+    iccUrl: `${base}iccs/`,
+  });
+}
+
+/** 열어 둔 PDF — 쪽마다 크기(pt, 그리기 전 자리 잡기용), 한 쪽씩 그림으로, 다 보면 닫는다 */
+export type OpenedPdf = {
+  sizes: { width: number; height: number }[];
+  /** n 쪽(1부터)을 현장용 페이지와 같은 크기의 흰 바탕 PNG 로 */
+  render: (n: number) => Promise<Blob>;
+  close: () => void;
+};
+
+/**
+ * PDF 를 열어 쪽 수와 쪽마다 크기를 읽는다 — 뷰어의 「PDF 전체 보기」 가 그리기 전에 자리를 잡고 한 쪽씩 그린다.
+ * 읽지 못하는 PDF(암호 · 깨짐)는 던진다
+ */
+export async function openPdf(file: Blob): Promise<OpenedPdf> {
+  const task = await loadPdf(file);
+  try {
+    const doc = await task.promise;
+    const sizes = [];
+    for (let n = 1; n <= doc.numPages; n++) {
+      const { width, height } = (await doc.getPage(n)).getViewport({ scale: 1 });
+      sizes.push({ width, height });
+    }
+    return {
+      sizes,
+      render: async (n) => renderPage(await doc.getPage(n)),
+      close: () => void task.destroy(),
+    };
+  } catch (e) {
+    void task.destroy();
+    throw e;
   }
 }
 
