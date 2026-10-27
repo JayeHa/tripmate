@@ -111,6 +111,7 @@ export function MobileSchedule({
             totalDays={totalDays}
             value={day}
             onChange={(d) => scrollToDay(d)}
+            holidayOf={body.holidayOf}
           />
         )}
       </div>
