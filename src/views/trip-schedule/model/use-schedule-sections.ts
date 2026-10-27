@@ -49,5 +49,7 @@ export function useScheduleSections(tripId: string, trip: Trip | undefined, tota
       }),
     [items, moves, alternatives, memos, stays, startDate, totalDays],
   );
-  return { items, isPending, itemsReady, movesReady, sections };
+  // 여행 · 일정을 다 읽었다 — 여행을 읽기 전에는 날짜 수를 몰라 첫날 줄만 있다
+  const sectionsReady = itemsReady && startDate !== undefined;
+  return { items, isPending, itemsReady, movesReady, sections, sectionsReady };
 }

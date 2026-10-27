@@ -11,10 +11,13 @@ export type ChecklistTarget =
 
 /**
  * 노트 화면이 쥐는 체크리스트 창 상태 — 목록(행 누르기 · 「자세히」)이 열고, 모바일 시트 · PC 오른쪽 칸이 그린다.
- * 레이아웃이 바뀌어도(1024 넘나들기) 열린 항목이 이어지게 화면(view)에서 하나만 둔다
+ * 레이아웃이 바뀌어도(1024 넘나들기) 열린 항목이 이어지게 화면(view)에서 하나만 둔다.
+ * initialId 가 있으면 그 항목의 읽기 화면을 연 채로 시작한다(다른 화면에서 「이 할 일 열기」 로 왔을 때)
  */
-export function useChecklistDetail() {
-  const [target, setTarget] = useState<ChecklistTarget | null>(null);
+export function useChecklistDetail(initialId: string | null = null) {
+  const [target, setTarget] = useState<ChecklistTarget | null>(() =>
+    initialId ? { mode: "view", id: initialId } : null,
+  );
   return {
     target,
     /** 행을 눌렀다 — 읽기 화면부터 */
