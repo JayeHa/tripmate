@@ -4,6 +4,7 @@ import { ExpenseCategoryTile } from "@/entities/expense";
 import { NumberMarker, ReservationBadge } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
+import type { Peek } from "../../lib/peek";
 import type { DeadlineRow, DueTone } from "../../lib/pre-board";
 import type { PreBoard } from "../../model/use-pre-board";
 import { BoardCard, BoardRow } from "./board-card";
@@ -72,10 +73,13 @@ function DeadlineLead({ row }: DeadlineLeadProps) {
   );
 }
 
-type DeadlineCardProps = { rows: DeadlineRow[]; layout: Layout };
+/** 줄을 눌렀을 때 홈 위에 미리 보기를 띄운다 */
+type OnPeek = (peek: Peek) => void;
 
-/** 마감 임박 — 마감일 있는 안 끝난 할 일 · 결제 예정, 이른 순 */
-function DeadlineCard({ rows, layout }: DeadlineCardProps) {
+type DeadlineCardProps = { rows: DeadlineRow[]; layout: Layout; onPeek: OnPeek };
+
+/** 마감 임박 — 마감일 있는 안 끝난 할 일 · 결제 예정, 이른 순. 줄을 누르면 미리 보기 */
+function DeadlineCard({ rows, layout, onPeek }: DeadlineCardProps) {
   return (
     <BoardCard title="마감 임박" count={String(rows.length)} layout={layout}>
       <ul className="flex flex-col">
@@ -85,6 +89,7 @@ function DeadlineCard({ rows, layout }: DeadlineCardProps) {
             lead={<DeadlineLead row={r} />}
             title={r.title}
             sub={r.kind === "payment" ? "결제 예정" : "체크리스트"}
+            onClick={() => onPeek(r.peek)}
             trail={
               <span
                 className={cn("shrink-0 text-xs font-bold whitespace-nowrap", DUE_TONE[r.tone])}
@@ -99,10 +104,15 @@ function DeadlineCard({ rows, layout }: DeadlineCardProps) {
   );
 }
 
-type ReserveCardProps = { tripId: string; rows: PreBoard["reserves"]; layout: Layout };
+type ReserveCardProps = {
+  tripId: string;
+  rows: PreBoard["reserves"];
+  layout: Layout;
+  onPeek: OnPeek;
+};
 
-/** 예약 필요 일정 — 번호 원(주황) · 이름 · 「day 2 · 16:00 · 설명」 · 「예약 필요」 배지 */
-function ReserveCard({ tripId, rows, layout }: ReserveCardProps) {
+/** 예약 필요 일정 — 번호 원(주황) · 이름 · 「day 2 · 16:00 · 설명」 · 「예약 필요」 배지. 줄을 누르면 미리 보기 */
+function ReserveCard({ tripId, rows, layout, onPeek }: ReserveCardProps) {
   return (
     <BoardCard
       title="예약 필요 일정"
@@ -122,6 +132,7 @@ function ReserveCard({ tripId, rows, layout }: ReserveCardProps) {
             title={r.title}
             sub={r.sub}
             trail={<ReservationBadge status="wait" className="shrink-0" />}
+            onClick={() => onPeek(r.peek)}
           />
         ))}
       </ul>
@@ -129,19 +140,25 @@ function ReserveCard({ tripId, rows, layout }: ReserveCardProps) {
   );
 }
 
-type MemoCardProps = { memos: PreBoard["memos"]; layout: Layout };
+type MemoCardProps = { memos: PreBoard["memos"]; layout: Layout; onPeek: OnPeek };
 
-/** 고정한 메모 — ★ 중요 메모를 노란 칸으로 */
-function MemoCard({ memos, layout }: MemoCardProps) {
+/** 고정한 메모 — ★ 중요 메모를 노란 칸으로. 칸을 누르면 미리 보기(어느 일정의 메모인지) */
+function MemoCard({ memos, layout, onPeek }: MemoCardProps) {
   return (
     <BoardCard title="고정한 메모" layout={layout}>
       <ul className="flex flex-col gap-2">
         {memos.map((m) => (
-          <li key={m.id} className="flex flex-col gap-1 rounded-memo bg-important-bg px-3.5 py-3">
-            <span className="text-xs font-extrabold text-important-text">★ 중요</span>
-            <p className="text-sm/normal wrap-break-word whitespace-pre-line text-ink-900">
-              {m.body}
-            </p>
+          <li key={m.id}>
+            <button
+              type="button"
+              onClick={() => onPeek(m.peek)}
+              className="flex w-full cursor-pointer flex-col gap-1 rounded-memo bg-important-bg px-3.5 py-3 text-left"
+            >
+              <span className="text-xs font-extrabold text-important-text">★ 중요</span>
+              <span className="text-sm/normal wrap-break-word whitespace-pre-line text-ink-900">
+                {m.body}
+              </span>
+            </button>
           </li>
         ))}
       </ul>
@@ -149,25 +166,25 @@ function MemoCard({ memos, layout }: MemoCardProps) {
   );
 }
 
-type PreBoardCardsProps = { tripId: string; board: PreBoard; layout: Layout };
+type PreBoardCardsProps = { tripId: string; board: PreBoard; layout: Layout; onPeek: OnPeek };
 
 /**
  * 여행 전 상태판의 카드들(순서대로) — 여행 준비는 늘 보이고, 나머지는 내용이 있을 때만
  */
-export function preBoardCards({ tripId, board, layout }: PreBoardCardsProps) {
+export function preBoardCards({ tripId, board, layout, onPeek }: PreBoardCardsProps) {
   return [
     { key: "prep", node: <PrepCard tripId={tripId} prep={board.prep} layout={layout} /> },
     board.deadlines.length > 0 && {
       key: "deadline",
-      node: <DeadlineCard rows={board.deadlines} layout={layout} />,
+      node: <DeadlineCard rows={board.deadlines} layout={layout} onPeek={onPeek} />,
     },
     board.reserves.length > 0 && {
       key: "reserve",
-      node: <ReserveCard tripId={tripId} rows={board.reserves} layout={layout} />,
+      node: <ReserveCard tripId={tripId} rows={board.reserves} layout={layout} onPeek={onPeek} />,
     },
     board.memos.length > 0 && {
       key: "memo",
-      node: <MemoCard memos={board.memos} layout={layout} />,
+      node: <MemoCard memos={board.memos} layout={layout} onPeek={onPeek} />,
     },
   ].filter((c) => c !== false);
 }

@@ -9,6 +9,15 @@ import {
 } from "@/entities/schedule-item";
 import { formatMoney } from "@/shared/lib/money";
 
+import {
+  checklistPeek,
+  memoPeek,
+  paymentPeek,
+  type Peek,
+  type PeekContext,
+  schedulePeek,
+} from "./peek";
+
 /** 여행 준비 카드 — 체크리스트 완료 / 전체와 남은 일 셋 */
 export type PrepStats = {
   done: number;
@@ -40,9 +49,17 @@ export function prepStats(
 /** 마감 줄 오른쪽 글자의 색 — 지남 빨강 · 3일 안 주황 · 그 밖 회색 */
 export type DueTone = "over" | "soon" | "later";
 
-/** 마감 임박 한 줄 — 체크리스트 할 일이거나 결제 예정 비용 */
+/** 마감 임박 한 줄 — 체크리스트 할 일이거나 결제 예정 비용. peek 은 눌렀을 때 띄우는 미리 보기 */
 export type DeadlineRow =
-  | { kind: "checklist"; id: string; title: string; due: string; tone: DueTone; right: string }
+  | {
+      kind: "checklist";
+      id: string;
+      title: string;
+      due: string;
+      tone: DueTone;
+      right: string;
+      peek: Peek;
+    }
   | {
       kind: "payment";
       id: string;
@@ -51,6 +68,7 @@ export type DeadlineRow =
       due: string;
       tone: DueTone;
       right: string;
+      peek: Peek;
     };
 
 /** 3일 안이면 주황 */
@@ -73,7 +91,7 @@ function dueRight(due: string, today: string): { tone: DueTone; right: string } 
 export function deadlineRows(
   checklist: ChecklistItem[],
   expenses: Expense[],
-  today: string,
+  ctx: PeekContext,
 ): DeadlineRow[] {
   const todos: DeadlineRow[] = checklist
     .filter((c) => c.status !== "done" && c.due_date)
@@ -82,7 +100,8 @@ export function deadlineRows(
       id: c.id,
       title: c.title,
       due: c.due_date!,
-      ...dueRight(c.due_date!, today),
+      ...dueRight(c.due_date!, ctx.today),
+      peek: checklistPeek(c, ctx),
     }));
   const pays: DeadlineRow[] = expenses
     .filter((e) => !e.paid && e.due_date)
@@ -92,7 +111,8 @@ export function deadlineRows(
       title: `${e.name} ${formatMoney(Number(e.amount), e.currency)}`,
       category: e.category as ExpenseCategory,
       due: e.due_date!,
-      ...dueRight(e.due_date!, today),
+      ...dueRight(e.due_date!, ctx.today),
+      peek: paymentPeek(e, ctx),
     }));
   return [...todos, ...pays].sort((a, b) => a.due.localeCompare(b.due));
 }
@@ -105,6 +125,7 @@ export type ReserveRow = {
   title: string;
   /** 「day 2 · 16:00 · 일몰 무렵 전망대」 — 시간 · 설명은 있을 때만 */
   sub: string;
+  peek: Peek;
 };
 
 /** 날짜 · 순서대로 */
@@ -113,7 +134,7 @@ function bySchedule(items: ScheduleItem[]): ScheduleItem[] {
 }
 
 /** 예약 필요(wait) 일정 — 날짜 · 순서대로. 번호는 그날 일정으로 매긴다 */
-export function reserveRows(items: ScheduleItem[]): ReserveRow[] {
+export function reserveRows(items: ScheduleItem[], ctx: PeekContext): ReserveRow[] {
   const ordered = bySchedule(items);
   return ordered
     .filter((i) => i.status === "wait")
@@ -124,6 +145,7 @@ export function reserveRows(items: ScheduleItem[]): ReserveRow[] {
       sub: [`day ${i.day_index + 1}`, i.start_time?.slice(0, 5), i.description]
         .filter(Boolean)
         .join(" · "),
+      peek: schedulePeek(i, ctx),
     }));
 }
 
@@ -131,16 +153,22 @@ export function reserveRows(items: ScheduleItem[]): ReserveRow[] {
 const DAY_MEMO_STAR = "★ ";
 
 /** 고정한 메모 한 장 */
-export type PinnedMemo = { id: string; body: string };
+export type PinnedMemo = { id: string; body: string; peek: Peek };
 
 /**
  * 중요(★) 메모 — 장소에 단 메모와 날짜 메모. 일정 순서대로(같은 일정의 메모는 쓴 순)
  */
-export function pinnedMemos(memos: Memo[], items: ScheduleItem[]): PinnedMemo[] {
+export function pinnedMemos(memos: Memo[], items: ScheduleItem[], ctx: PeekContext): PinnedMemo[] {
   const starred = memosByItem(memos.filter((m) => m.starred));
+  /** 메모 한 장 — 누르면 그 일정의 미리 보기 */
+  const card = (id: string, item: ScheduleItem, body: string): PinnedMemo => ({
+    id,
+    body,
+    peek: memoPeek(item, body, ctx),
+  });
   return bySchedule(items).flatMap((item): PinnedMemo[] => {
     if (item.kind === "note" && item.name?.startsWith(DAY_MEMO_STAR))
-      return [{ id: item.id, body: item.name.slice(DAY_MEMO_STAR.length) }];
-    return (starred.get(item.id) ?? []).map((m) => ({ id: m.id, body: m.body }));
+      return [card(item.id, item, item.name.slice(DAY_MEMO_STAR.length))];
+    return (starred.get(item.id) ?? []).map((m) => card(m.id, item, m.body));
   });
 }

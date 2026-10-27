@@ -45,6 +45,14 @@ function item(
   } as ScheduleItem;
 }
 
+/** 미리 보기 주소 · 날짜에 쓰는 여행 정보 */
+const ctx = { tripId: "t1", startDate: "2026-10-31", today: "2026-10-19" };
+
+/** 미리 보기를 비운 줄 — 줄 모양만 비교할 때(toEqual 은 undefined 칸을 없는 칸으로 본다) */
+function withoutPeek<T>(rows: T[]): T[] {
+  return rows.map((r) => ({ ...r, peek: undefined }));
+}
+
 /** 테스트용 메모 */
 function memo(id: string, itemId: string, starred: boolean, at: string): Memo {
   return { id, schedule_item_id: itemId, starred, body: id, created_at: at } as Memo;
@@ -66,8 +74,6 @@ describe("prepStats", () => {
 });
 
 describe("deadlineRows", () => {
-  const today = "2026-10-19";
-
   it("마감 있는 안 끝난 일만, 이른 순 · 같은 날이면 체크리스트 먼저", () => {
     const rows = deadlineRows(
       [
@@ -78,7 +84,7 @@ describe("deadlineRows", () => {
         todo("same", "todo", "2026-10-21"),
       ],
       [pay("rent", false, "2026-10-21"), pay("paid", true, "2026-10-20"), pay("nodue", false)],
-      today,
+      ctx,
     );
     expect(rows.map((r) => r.id)).toEqual(["over", "same", "rent", "later"]);
   });
@@ -92,7 +98,7 @@ describe("deadlineRows", () => {
         todo("d4", "todo", "2026-10-23"),
       ],
       [],
-      today,
+      ctx,
     );
     expect(rows.map((r) => [r.tone, r.right])).toEqual([
       ["over", "지남"],
@@ -103,7 +109,7 @@ describe("deadlineRows", () => {
   });
 
   it("결제 예정은 이름 뒤에 금액, 카테고리를 가진다", () => {
-    const [row] = deadlineRows([], [pay("숙소 잔금", false, "2026-10-21")], today);
+    const [row] = deadlineRows([], [pay("숙소 잔금", false, "2026-10-21")], ctx);
     expect(row).toMatchObject({
       kind: "payment",
       title: "숙소 잔금 ₩466,240",
@@ -114,13 +120,16 @@ describe("deadlineRows", () => {
 
 describe("reserveRows", () => {
   it("예약 필요 일정만 날짜 · 순서대로, 번호는 그날 장소 순서", () => {
-    const rows = reserveRows([
-      item("sky", 1, 3, { status: "wait", start_time: "16:00:00", description: "일몰 무렵" }),
-      item("a", 1, 1),
-      item("note", 1, 2, { kind: "note", name: "메모", place: null }),
-      item("first", 0, 0, { status: "wait" }),
-    ]);
-    expect(rows).toEqual([
+    const rows = reserveRows(
+      [
+        item("sky", 1, 3, { status: "wait", start_time: "16:00:00", description: "일몰 무렵" }),
+        item("a", 1, 1),
+        item("note", 1, 2, { kind: "note", name: "메모", place: null }),
+        item("first", 0, 0, { status: "wait" }),
+      ],
+      ctx,
+    );
+    expect(withoutPeek(rows)).toEqual([
       { id: "first", num: 1, title: "first", sub: "day 1" },
       { id: "sky", num: 2, title: "sky", sub: "day 2 · 16:00 · 일몰 무렵" },
     ]);
@@ -141,7 +150,7 @@ describe("pinnedMemos", () => {
       memo("skip", "a", false, "2026-10-01"),
       memo("b1", "b", true, "2026-10-01"),
     ];
-    expect(pinnedMemos(memos, items)).toEqual([
+    expect(withoutPeek(pinnedMemos(memos, items, ctx))).toEqual([
       { id: "a1", body: "a1" },
       { id: "a2", body: "a2" },
       { id: "dayNote", body: "문화의 날" },
