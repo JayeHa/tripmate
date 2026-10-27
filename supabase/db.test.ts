@@ -3491,3 +3491,37 @@ describe("준비물 (0060)", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("메모 홈에 고정 (0064)", () => {
+  it("장소 메모 · 날짜 메모에 고정한 사람을 적고 일행 누구나 푼다. 날짜 메모가 아닌 일정은 고정하지 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-07", "2027-10-07");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    const memo = await db.query<{ id: string; pinned_by: string | null }>(
+      `insert into public.memos (trip_id, schedule_item_id, body, pinned_by)
+       values ('${trip}', '${place}', '카운터석', '${A}') returning id, pinned_by`,
+    );
+    expect(memo.rows[0].pinned_by).toBe(A);
+    const note = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name, pinned_by)
+       values ('${trip}', 0, 1, 'note', '공항 집합', '${A}') returning id`,
+    );
+    await as(B);
+    await db.query(`update public.memos set pinned_by = null where id = '${memo.rows[0].id}'`);
+    await db.query(
+      `update public.schedule_items set pinned_by = null where id = '${note.rows[0].id}'`,
+    );
+    const after = await db.query(
+      `select (select pinned_by from public.memos where id = '${memo.rows[0].id}') m,
+              (select pinned_by from public.schedule_items where id = '${note.rows[0].id}') n`,
+    );
+    expect(after.rows[0]).toEqual({ m: null, n: null });
+    expect(
+      await rejects(`update public.schedule_items set pinned_by = '${B}' where id = '${place}'`),
+    ).toMatch(/check constraint/);
+  });
+});
