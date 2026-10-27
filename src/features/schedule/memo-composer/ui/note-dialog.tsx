@@ -5,6 +5,7 @@ import { useState } from "react";
 import { MEMO_MAX, type ScheduleItem } from "@/entities/schedule-item";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
+import { PinToggle } from "@/shared/ui/pin-toggle";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 import { TimeField } from "@/shared/ui/time-field";
 
@@ -14,7 +15,7 @@ import { DeleteMemoButton } from "./delete-memo-button";
 type NoteDialogProps = { tripId: string; item: ScheduleItem; onClose: () => void };
 
 /**
- * 날짜 메모(타임라인의 메모 줄) 고치기 — 일정 상세 대신 연다. 머리 없이 ✕ 만, 「시간 (선택)」 · 「메모」(8줄 · 500자) ·
+ * 날짜 메모(타임라인의 메모 줄) 고치기 — 일정 상세 대신 연다. 머리 없이 ✕ 만, 「시간 (선택)」 + 「홈에 고정」 · 「메모」(8줄 · 500자) ·
  * 왼쪽 「삭제」 · 취소 | 저장. 저장하면 같은 자리의 메모가 바뀐다
  */
 export function NoteDialog(props: NoteDialogProps) {
@@ -38,11 +39,19 @@ function NoteBody({ tripId, item, onClose, onLockChange }: NoteBodyProps) {
         <span className="text-[13px] font-bold text-ink-700">
           시간 <span className="font-medium text-ink-350">(선택)</span>
         </span>
-        <div className="w-40">
-          <TimeField
-            value={form.draft.time}
-            onChange={(time) => form.set("time", time)}
-            aria-label="메모 시간"
+        <div className="flex items-center gap-2">
+          <div className="w-40">
+            <TimeField
+              value={form.draft.time}
+              onChange={(time) => form.set("time", time)}
+              aria-label="메모 시간"
+            />
+          </div>
+          <PinToggle
+            pinned={form.draft.pinned}
+            onToggle={() => form.set("pinned", !form.draft.pinned)}
+            disabled={!form.pinReady}
+            className="ml-auto"
           />
         </div>
       </div>

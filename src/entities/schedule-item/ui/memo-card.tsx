@@ -1,4 +1,4 @@
-import { Link as LinkIcon, Star } from "lucide-react";
+import { Link as LinkIcon, Pin, Star } from "lucide-react";
 
 import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
@@ -23,7 +23,7 @@ export function memoWhen(iso: string): string {
 }
 
 /**
- * 메모 하나 — 작성자 아바타 · (★ 중요) · 쓴 시각, 본문(줄바꿈 유지), 링크 칩.
+ * 메모 하나 — 작성자 아바타 · (★ 중요) · 쓴 시각 · (홈에 고정 핀), 본문(줄바꿈 유지), 링크 칩.
  * 중요 메모는 연주황 바탕 · 굵은 주황 글씨로 구분한다. 작성자를 모르면(나간 멤버 · 지운 계정 · 예전 데이터) 아바타를 그리지 않는다
  */
 export function MemoCard({ memo, author, onClick }: MemoCardProps) {
@@ -44,6 +44,9 @@ export function MemoCard({ memo, author, onClick }: MemoCardProps) {
           </span>
         )}
         <span className="text-xs text-ink-350">{memoWhen(memo.created_at)}</span>
+        {memo.pinned_by && (
+          <Pin className="ml-auto size-3.5 shrink-0 text-primary" aria-label="홈에 고정됨" />
+        )}
       </span>
       <span
         className={cn(

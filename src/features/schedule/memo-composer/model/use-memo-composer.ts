@@ -14,7 +14,13 @@ import {
 import { useUser } from "@/entities/session";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
-import { type MemoDraft, memoDraftOf, samePayload, toMemoPayload } from "../lib/memo-draft";
+import {
+  type MemoDraft,
+  memoDraftOf,
+  pinnedByOf,
+  samePayload,
+  toMemoPayload,
+} from "../lib/memo-draft";
 
 type MemoComposerOptions = {
   tripId: string;
@@ -27,7 +33,7 @@ type MemoComposerOptions = {
 };
 
 /**
- * 메모 작성 · 수정 — 본문(500자) · ★ 중요 · 링크. 여행 멤버 누구나 고치고 지운다(0027).
+ * 메모 작성 · 수정 — 본문(500자) · ★ 중요 · 홈에 고정 · 링크. 여행 멤버 누구나 고치고 지운다(0027 · 0064).
  * 열릴 때마다 새로 마운트돼 처음 값에서 시작한다. 저장 · 삭제는 오프라인 대기열로 올라간다 — 화면에 먼저 보이고,
  * 온라인이면 끝날 때까지 기다려(오류를 이 창에 보이게) 이 창이 아직 떠 있으면 닫고, 오프라인이면 대기열에 남았으니 바로 닫는다
  */
@@ -65,15 +71,21 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
       onDone();
       return;
     }
+    const { pinned, ...fields } = result.value;
+    // 고정 칩은 나를 알기 전에는 막혀 있다(pinReady) — 고정하려면 user 가 있다
+    const value = {
+      ...fields,
+      pinnedBy: pinnedByOf(pinned, memo?.pinned_by ?? null, user?.id ?? ""),
+    };
     const done = memo
-      ? update.mutateAsync({ tripId, id: memo.id, version: memo.updated_at, ...result.value })
+      ? update.mutateAsync({ tripId, id: memo.id, version: memo.updated_at, ...value })
       : create.mutateAsync({
           tripId,
           id: newId,
           itemId: item.id,
           authorId: user?.id ?? null,
           createdAt: new Date().toISOString(),
-          ...result.value,
+          ...value,
         });
     closeWhenDone(done);
   }
@@ -99,6 +111,8 @@ export function useMemoComposer({ tripId, item, memo, onDone }: MemoComposerOpti
     save,
     destroy,
     editing: !!memo,
+    /** 「홈에 고정」 을 누를 수 있다 — 고정한 사람(나)을 알아야 적는다 */
+    pinReady: !!user,
     pending,
     canSave: draft.body.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */

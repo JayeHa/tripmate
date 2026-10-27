@@ -71,7 +71,12 @@ export async function moveScheduleItemToDay(
 }
 
 /** 날짜 메모 — 그날 맨 끝에 note 일정 한 줄(글은 제목 칸)을 넣는다 */
-export async function addDayMemo(tripId: string, dayIndex: number, text: string): Promise<void> {
+export async function addDayMemo(
+  tripId: string,
+  dayIndex: number,
+  text: string,
+  pinnedBy: string | null,
+): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("schedule_items").insert({
     trip_id: tripId,
@@ -79,6 +84,7 @@ export async function addDayMemo(tripId: string, dayIndex: number, text: string)
     position: await endPosition(tripId, dayIndex),
     kind: "note",
     name: text,
+    pinned_by: pinnedBy,
   });
   if (error) throw error;
 }

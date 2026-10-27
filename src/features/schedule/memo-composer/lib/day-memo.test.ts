@@ -14,32 +14,38 @@ describe("toDayMemoText", () => {
 });
 
 describe("날짜 메모 고치기", () => {
-  const item = { name: "체크인 15시", start_time: "15:00:00" } as ScheduleItem;
+  const item = { name: "체크인 15시", start_time: "15:00:00", pinned_by: null } as ScheduleItem;
 
-  it("처음 값은 시간(HH:mm) · 글", () => {
-    expect(noteDraftOf(item)).toEqual({ time: "15:00", text: "체크인 15시" });
-    expect(noteDraftOf({ name: null, start_time: null } as ScheduleItem)).toEqual({
+  it("처음 값은 시간(HH:mm) · 글 · 고정", () => {
+    expect(noteDraftOf(item)).toEqual({ time: "15:00", text: "체크인 15시", pinned: false });
+    expect(noteDraftOf({ name: null, start_time: null, pinned_by: "u1" } as ScheduleItem)).toEqual({
       time: "",
       text: "",
+      pinned: true,
     });
   });
 
   it("바뀐 칸만 보내고, 시간을 비우면 null", () => {
     const opened = noteDraftOf(item);
-    expect(toNotePatch(opened, opened)).toEqual({ ok: true, patch: {} });
-    expect(toNotePatch({ ...opened, text: " 체크인 16시 " }, opened)).toEqual({
+    expect(toNotePatch(opened, opened, null)).toEqual({ ok: true, patch: {} });
+    expect(toNotePatch({ ...opened, text: " 체크인 16시 " }, opened, null)).toEqual({
       ok: true,
       patch: { name: "체크인 16시" },
     });
     // 시간 칸이 틀린 채(친 그대로) 넘어오면 저장하지 않는다
-    expect(toNotePatch({ ...opened, time: "25:00" }, opened)).toEqual({
+    expect(toNotePatch({ ...opened, time: "25:00" }, opened, null)).toEqual({
       ok: false,
       error: "시간을 확인해 주세요",
     });
-    expect(toNotePatch({ ...opened, time: "" }, opened)).toEqual({
+    expect(toNotePatch({ ...opened, time: "" }, opened, null)).toEqual({
       ok: true,
       patch: { start_time: null },
     });
-    expect(toNotePatch({ ...opened, text: "" }, opened)).toMatchObject({ ok: false });
+    expect(toNotePatch({ ...opened, text: "" }, opened, null)).toMatchObject({ ok: false });
+    // 고정을 바꿨을 때만 고정한 사람을 보낸다
+    expect(toNotePatch({ ...opened, pinned: true }, opened, "me")).toEqual({
+      ok: true,
+      patch: { pinned_by: "me" },
+    });
   });
 });

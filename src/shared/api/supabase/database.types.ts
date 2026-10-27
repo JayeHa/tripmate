@@ -653,6 +653,7 @@ export type Database = {
           flight_id: string | null;
           links: Json;
           created_by: string | null;
+          pinned_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -673,6 +674,7 @@ export type Database = {
           flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
+          pinned_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -693,6 +695,7 @@ export type Database = {
           flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
+          pinned_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -714,6 +717,7 @@ export type Database = {
           author_id: string | null;
           body: string;
           starred: boolean;
+          pinned_by: string | null;
           links: Json;
           created_at: string;
           updated_at: string;
@@ -725,6 +729,7 @@ export type Database = {
           author_id?: string | null;
           body: string;
           starred?: boolean;
+          pinned_by?: string | null;
           links?: Json;
           created_at?: string;
           updated_at?: string;
@@ -736,6 +741,7 @@ export type Database = {
           author_id?: string | null;
           body?: string;
           starred?: boolean;
+          pinned_by?: string | null;
           links?: Json;
           created_at?: string;
           updated_at?: string;

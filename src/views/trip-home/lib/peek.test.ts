@@ -77,15 +77,17 @@ describe("schedulePeek", () => {
 });
 
 describe("memoPeek", () => {
-  it("장소 메모는 장소 이름, 날짜 메모는 「day N 메모」 — 둘 다 그 일정을 연다", () => {
-    expect(memoPeek(place(), "박물관 붐빔", ctx)).toMatchObject({
-      heading: "중요 메모",
+  it("장소 메모는 장소 이름, 날짜 메모는 「day N 메모」 — 둘 다 그 일정을 연다. ★ 중요일 때만 노란 칸", () => {
+    expect(memoPeek(place(), { body: "박물관 붐빔", starred: true }, ctx)).toMatchObject({
+      heading: "고정한 메모",
       title: "도쿄 스카이트리",
       body: "박물관 붐빔",
       important: true,
       link: { href: "/trips/t1/schedule?day=1&open=sky" },
     });
     const note = place({ id: "n1", kind: "note", name: "★ 문화의 날", place: null });
-    expect(memoPeek(note, "문화의 날", ctx).title).toBe("day 2 메모");
+    const plain = memoPeek(note, { body: "문화의 날", starred: false }, ctx);
+    expect(plain.title).toBe("day 2 메모");
+    expect(plain.important).toBeUndefined();
   });
 });

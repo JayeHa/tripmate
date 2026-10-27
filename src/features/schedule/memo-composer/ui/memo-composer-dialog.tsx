@@ -15,6 +15,7 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { LinkRows } from "@/shared/ui/link-rows";
+import { PinToggle } from "@/shared/ui/pin-toggle";
 
 import { type MemoComposerState, useMemoComposer } from "../model/use-memo-composer";
 import { DeleteMemoButton } from "./delete-memo-button";
@@ -42,7 +43,7 @@ type MemoComposerDialogProps = {
 };
 
 /**
- * 메모 작성 · 수정 — 모바일 바텀시트 / PC 520 모달. 대상(번호 · 이름 · 날짜) · ★ 중요 · 본문(500자) · 링크(제목 + URL).
+ * 메모 작성 · 수정 — 모바일 바텀시트 / PC 520 모달. 대상(번호 · 이름 · 날짜) · ★ 중요 · 홈에 고정 · 본문(500자) · 링크(제목 + URL).
  * 고칠 때는 아래 왼쪽에 「삭제」. 저장 · 삭제 중에는 닫히지 않는다
  */
 export function MemoComposerDialog({ isDesktop, onClose, ...rest }: MemoComposerDialogProps) {
@@ -120,7 +121,7 @@ function ComposerBody({ tripId, row, when, memo, onClose, onLockChange }: Compos
 
 type MemoFieldsProps = { form: MemoComposerState };
 
-/** ★ 중요 · 링크 버튼, 본문(글자 수), 링크 줄 */
+/** ★ 중요 · 링크 · 홈에 고정 버튼, 본문(글자 수), 링크 줄 */
 function MemoFields({ form }: MemoFieldsProps) {
   const { draft } = form;
   return (
@@ -148,6 +149,12 @@ function MemoFields({ form }: MemoFieldsProps) {
           <LinkIcon className="size-3.5" />
           링크
         </button>
+        <PinToggle
+          pinned={draft.pinned}
+          onToggle={() => form.set("pinned", !draft.pinned)}
+          disabled={!form.pinReady}
+          className="ml-auto"
+        />
       </div>
       <div className="flex flex-col gap-1">
         <textarea

@@ -9,6 +9,7 @@ import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { FilterSelect } from "@/shared/ui/filter-select";
+import { PinToggle } from "@/shared/ui/pin-toggle";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { useDayMemo } from "../model/use-day-memo";
@@ -23,7 +24,7 @@ type DayMemoDialogProps = {
 };
 
 /**
- * 날짜 메모 쓰기 — 대상(「day N 메모 · 날짜 · 일정 맨 아래에 추가돼요」 + 「변경 ⌄」 드롭다운으로 날짜 바꾸기) · ☆ 중요 · 글(500자).
+ * 날짜 메모 쓰기 — 대상(「day N 메모 · 날짜 · 일정 맨 아래에 추가돼요」 + 「변경 ⌄」 드롭다운으로 날짜 바꾸기) · ☆ 중요 · 홈에 고정 · 글(500자).
  * 「변경」 은 펼치는 줄이 아니라 위에 뜨는 목록이라 시트 높이가 바뀌지 않는다.
  * 저장하면 그날 맨 끝에 메모 한 줄이 생긴다. 장소 메모는 일정 상세의 「+ 메모」 에서 쓴다
  */
@@ -83,20 +84,28 @@ function DayMemoBody({
           }
         />
       </div>
-      <button
-        type="button"
-        aria-pressed={form.starred}
-        onClick={form.toggleStar}
-        className={cn(
-          "flex h-8 items-center gap-1 self-start rounded-full border px-3 text-[13px] font-bold",
-          form.starred
-            ? "border-important-line bg-important-bg text-important-text"
-            : "border-line bg-white text-ink-500",
-        )}
-      >
-        <Star className={cn("size-3.5", form.starred && "fill-current")} />
-        중요
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-pressed={form.starred}
+          onClick={form.toggleStar}
+          className={cn(
+            "flex h-8 items-center gap-1 rounded-full border px-3 text-[13px] font-bold",
+            form.starred
+              ? "border-important-line bg-important-bg text-important-text"
+              : "border-line bg-white text-ink-500",
+          )}
+        >
+          <Star className={cn("size-3.5", form.starred && "fill-current")} />
+          중요
+        </button>
+        <PinToggle
+          pinned={form.pinned}
+          onToggle={form.togglePin}
+          disabled={!form.pinReady}
+          className="ml-auto"
+        />
+      </div>
       <div className="flex flex-col gap-1">
         <textarea
           value={form.body}

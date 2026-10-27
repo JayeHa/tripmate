@@ -1,7 +1,7 @@
-import { Pin, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { ElementType } from "react";
 
-import { cn } from "@/shared/lib/utils";
+import { PinToggle } from "@/shared/ui/pin-toggle";
 
 type PanelHeaderProps = {
   /** 「체크리스트」 · 「체크리스트 편집」 · 「체크리스트 추가」 */
@@ -30,19 +30,7 @@ export function PanelHeader({
   return (
     <div className="flex h-14 shrink-0 items-center gap-2.5 px-5">
       <Title className="flex-1 text-lg font-extrabold text-ink-900">{heading}</Title>
-      <button
-        type="button"
-        onClick={onPin}
-        disabled={pinDisabled}
-        aria-pressed={pinned}
-        className={cn(
-          "flex h-8 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold disabled:opacity-60",
-          pinned ? "bg-primary text-white" : "bg-surface-muted text-ink-700",
-        )}
-      >
-        <Pin className="size-3.5" aria-hidden="true" />
-        {pinned ? "고정됨" : "홈에 고정"}
-      </button>
+      <PinToggle pinned={pinned} onToggle={onPin} disabled={pinDisabled} />
       <button
         type="button"
         aria-label="닫기"

@@ -54,6 +54,7 @@ function item(patch: Partial<ScheduleItem> = {}): ScheduleItem {
     alternative_of: null,
     stay_id: null,
     flight_id: null,
+    pinned_by: null,
     links: [],
     created_by: null,
     created_at: "",

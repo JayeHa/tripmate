@@ -18,7 +18,7 @@ export type Peek = {
   facts: PeekFact[];
   /** 메모 · 설명. 빈 문자열이면 칸을 그리지 않는다 */
   body: string;
-  /** 중요 메모 — 글 칸을 노란 메모 색으로 */
+  /** ★ 중요 메모 — 글 칸을 노란 메모 색으로 */
   important?: true;
   /** 「일정에서 보기」 — forward 면 한 단계 안으로(비용 상세), 아니면 옆 탭으로 가는 전환 */
   link: { label: string; href: string; forward?: true };
@@ -88,16 +88,20 @@ export function schedulePeek(item: ScheduleItem, ctx: PeekContext): Peek {
 }
 
 /**
- * 중요 메모 — 어느 일정(날짜 메모면 그 날)의 메모인지와 글 전체. 「일정에서 보기」 는 장소 메모면 그 일정 상세,
- * 날짜 메모면 날짜 메모 창을 연다
+ * 고정한 메모 — 어느 일정(날짜 메모면 그 날)의 메모인지와 글 전체. ★ 중요면 글 칸이 노랗다.
+ * 「일정에서 보기」 는 장소 메모면 그 일정 상세, 날짜 메모면 날짜 메모 창을 연다
  */
-export function memoPeek(item: ScheduleItem, body: string, ctx: PeekContext): Peek {
+export function memoPeek(
+  item: ScheduleItem,
+  memo: { body: string; starred: boolean },
+  ctx: PeekContext,
+): Peek {
   return {
-    heading: "중요 메모",
+    heading: "고정한 메모",
     title: item.kind === "note" ? `day ${item.day_index + 1} 메모` : itemName(item),
     facts: [dayFact(ctx.startDate, item)],
-    body,
-    important: true,
+    body: memo.body,
+    ...(memo.starred && { important: true as const }),
     link: { label: "일정에서 보기", href: scheduleHref(ctx.tripId, item) },
   };
 }
