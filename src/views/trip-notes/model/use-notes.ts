@@ -14,7 +14,7 @@ import { type NoteTab, parseNoteTab } from "../lib/tabs";
 
 /**
  * 노트 화면의 상태 — 지금 탭(주소의 tab, 다른 화면에서 「노트에서 보기」 로 바로 열 수 있게) · 탭 숫자 · 토스트 ·
- * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다, 주소의 open 이면 그 할 일을 열고 시작) · 고른 바우처(모바일 상세 페이지 · PC 오른쪽 칸)와 그 뷰어 · 바우처 추가 · 수정 창.
+ * 열린 체크리스트 창(모바일 시트 · PC 오른쪽 칸이 같은 상태를 그린다) · 주소의 open 이면 그 할 일 · 바우처를 열고 시작 · 고른 바우처(모바일 상세 페이지 · PC 오른쪽 칸)와 그 뷰어 · 바우처 추가 · 수정 창.
  * 탭을 바꾸면 주소를 바꾸되 방문 기록은 쌓지 않는다
  */
 export function useNotes(tripId: string) {
@@ -25,9 +25,11 @@ export function useNotes(tripId: string) {
   const { data: vouchers } = useVouchers(tripId);
   const { data: packLists } = usePackLists(tripId);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const checklistDetail = useChecklistDetail(useOpenParam());
+  // 다른 화면이 「이 항목 열기」(?open=)로 보낸 것 — 지금 탭의 항목(체크리스트 할 일 · 바우처)으로 열고 시작한다
+  const opened = useOpenParam();
+  const checklistDetail = useChecklistDetail(tab === "checklist" ? opened : null);
   // 열린 바우처 폼 — 고치는 바우처는 연 때의 것을 쥔다(그사이 지워져도 새 바우처로 바뀌지 않게)
-  const [voucherId, setVoucherId] = useState<string | null>(null);
+  const [voucherId, setVoucherId] = useState<string | null>(tab === "voucher" ? opened : null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [voucherForm, setVoucherForm] = useState<{ voucher: Voucher | null } | null>(null);
   return {

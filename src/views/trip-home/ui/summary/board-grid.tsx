@@ -7,7 +7,7 @@ type Layout = "mobile" | "pc";
 
 /**
  * 상태판 카드 한 장과 그 key. pinLeft 면 PC 에서 번갈아 놓지 않고 왼쪽 열 맨 위(정산 띠),
- * wide 면 두 열 아래에 전체 폭(고정한 메모)
+ * wide 면 두 열 아래에 전체 폭(고정한 항목)
  */
 export type BoardCardItem = {
   key: string;

@@ -143,7 +143,7 @@ function ReserveCard({ tripId, rows, layout, onPeek }: ReserveCardProps) {
 type PreBoardCardsProps = { tripId: string; board: PreBoard; layout: Layout; onPeek: OnPeek };
 
 /**
- * 여행 전 상태판의 카드들(순서대로) — 여행 준비는 늘 보이고, 나머지는 내용이 있을 때만. 고정한 메모는 시점마다 맨 아래(PhaseBoard)
+ * 여행 전 상태판의 카드들(순서대로) — 여행 준비는 늘 보이고, 나머지는 내용이 있을 때만. 고정한 항목은 시점마다 맨 아래(PhaseBoard)
  */
 export function preBoardCards({ tripId, board, layout, onPeek }: PreBoardCardsProps) {
   return [

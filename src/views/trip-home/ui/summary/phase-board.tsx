@@ -8,12 +8,12 @@ import type { ToastMessage } from "@/shared/ui/toast";
 import type { Peek } from "../../lib/peek";
 import type { Phase } from "../../lib/phase";
 import { useNowBoard } from "../../model/use-now-board";
-import { usePinnedMemos } from "../../model/use-pinned-memos";
+import { usePinned } from "../../model/use-pinned";
 import { usePostBoard } from "../../model/use-post-board";
 import { usePreBoard } from "../../model/use-pre-board";
 import { type BoardCardItem, BoardGrid, BoardSkeleton } from "./board-grid";
 import { nowBoardCards } from "./now-board";
-import { pinnedMemoCards } from "./pinned-memo-card";
+import { pinnedCards } from "./pinned-card";
 import { postBoardCards } from "./post-board";
 import { preBoardCards } from "./pre-board";
 
@@ -24,7 +24,7 @@ type PreBoardViewProps = {
   startDate: string;
   layout: Layout;
   onPeek: (peek: Peek) => void;
-  /** 시점과 상관없이 맨 아래에 붙는 카드(고정한 메모) */
+  /** 시점과 상관없이 맨 아래에 붙는 카드(고정한 항목) */
   tail: BoardCardItem[];
 };
 
@@ -106,9 +106,9 @@ type PhaseBoardProps = {
   onPeek: (peek: Peek) => void;
 };
 
-/** 고른 시점의 상태판 — 맨 아래에는 시점과 상관없이 고정한 메모 */
+/** 고른 시점의 상태판 — 맨 아래에는 시점과 상관없이 고정한 항목 */
 export function PhaseBoard({ tripId, trip, phase, layout, onToast, onPeek }: PhaseBoardProps) {
-  const tail = pinnedMemoCards(usePinnedMemos(tripId, trip.start_date), layout, onPeek);
+  const tail = pinnedCards(usePinned(tripId, trip.start_date), layout, onPeek);
   if (phase === "pre")
     return (
       <PreBoardView
