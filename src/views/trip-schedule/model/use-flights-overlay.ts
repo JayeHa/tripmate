@@ -30,10 +30,11 @@ export function useFlightsOverlay(tripId: string) {
     },
     /**
      * 그 항공편의 상세부터 연다(일정의 항공편 카드). 목록에 아직 없으면(일행이 막 넣어 카드가 먼저 왔다) 목록을 다시 읽는다 —
-     * 상세는 다시 읽는 동안 기다린다(useCurrentFlight)
+     * 상세는 다시 읽는 동안 기다린다(useCurrentFlight). 목록을 아직 읽는 중이면 그 읽기를 기다린다 — 무효화하면 읽던 요청을 끊고 다시 보낸다.
+     * 다른 화면의 「일정에서 보기」(?open=)로 오면 일정 화면이 렌더 중에 부르는데, 그때 목록은 대개 아직 읽는 중이다
      */
     openFlight: (id: string) => {
-      if (!flights?.some((f) => f.id === id)) {
+      if (flights && !flights.some((f) => f.id === id)) {
         void qc.invalidateQueries({ queryKey: queryKeys.flights(tripId) });
       }
       setInitialId(id);
