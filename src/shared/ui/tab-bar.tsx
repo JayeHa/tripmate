@@ -18,7 +18,8 @@ export type TabItem = {
 type BottomTabBarProps = { items: TabItem[]; active: string };
 
 /**
- * 여행 안 화면의 하단 탭. 높이 83 고정, 활성은 파랑이 아니라 잉크(#222).
+ * 여행 안 화면의 하단 탭. 높이 83 + 홈 버튼 줄(safe area), 활성은 파랑이 아니라 잉크(#222).
+ * 높이를 바꾸면 여행 레이아웃의 `--tab-bar`(내용 아래 여백)도 함께 바꾼다
  */
 export function BottomTabBar({ items, active }: BottomTabBarProps) {
   return (
