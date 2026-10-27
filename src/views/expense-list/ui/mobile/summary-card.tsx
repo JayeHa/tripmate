@@ -19,10 +19,10 @@ type SummaryCardProps = {
   total: ExpenseTotals;
   home: string;
   rates: ExchangeRates;
-  /** 「총 지출 · 3명」 의 사람 수. 혼자면 null — 「내가 쓴 돈」 도 보이지 않는다 */
+  /** 「총 지출 · 3명」 의 사람 수. 혼자면 null — 「내가 결제한 돈」 도 보이지 않는다 */
   people: number | null;
-  /** 내가 쓴 돈. 환율이 없어 셀 수 없으면 null */
-  mySpent: number | null;
+  /** 내가 결제한 돈. 환율이 없어 셀 수 없으면 null */
+  myPaid: number | null;
   /** 「지출내역 보기 ›」 가 갈 곳(모바일 「지출 · 정산」 탭). PC 는 카테고리 · 정산 카드가 바로 아래라 비운다 — 링크 없음 */
   statsHref?: string;
   /** 카드 아래에 붙이는 것 — PC 의 정산 띠 */
@@ -30,16 +30,16 @@ type SummaryCardProps = {
 };
 
 /**
- * 맨 위 요약 — 「총 지출 · N명 ⌄」 26/800 금액 · 결제 예정 줄, 오른쪽 「내가 쓴 돈」.
+ * 맨 위 요약 — 「총 지출 · N명 ⌄」 26/800 금액 · 결제 예정 줄, 오른쪽 「내가 결제한 돈」.
  * 금액을 누르면 통화별 합계(외화는 ≈ 원화)와 「지출내역 보기 ›」 가 펼쳐진다.
- * 환율이 없는 통화가 있으면 합계 · 내가 쓴 돈이 그만큼 빠지거나 보이지 않아, 그 이유를 카드 안에 한 줄로 알린다
+ * 환율이 없는 통화가 있으면 합계 · 내가 결제한 돈이 그만큼 빠지거나 보이지 않아, 그 이유를 카드 안에 한 줄로 알린다
  */
 export function SummaryCard({
   total,
   home,
   rates,
   people,
-  mySpent,
+  myPaid,
   statsHref,
   children,
 }: SummaryCardProps) {
@@ -47,7 +47,7 @@ export function SummaryCard({
   const Chevron = open ? ChevronUp : ChevronDown;
   return (
     <div className="flex flex-col gap-3 bg-white px-5 py-4.5">
-      {/* 금액이 길면 「내가 쓴 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
+      {/* 금액이 길면 「내가 결제한 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
       <div className="flex flex-wrap items-end gap-x-2.5 gap-y-1.5">
         <button
           type="button"
@@ -73,16 +73,16 @@ export function SummaryCard({
             </span>
           )}
         </button>
-        {people !== null && mySpent !== null && (
+        {people !== null && myPaid !== null && (
           <div className="ml-auto flex shrink-0 flex-col items-end gap-0.5">
-            <span className="text-xs text-ink-450">내가 쓴 돈</span>
+            <span className="text-xs text-ink-450">내가 결제한 돈</span>
             <span className="text-[15px] font-extrabold text-ink-900">
-              {formatMoney(mySpent, home)}
+              {formatMoney(myPaid, home)}
             </span>
           </div>
         )}
       </div>
-      {/* 환율이 없는 통화는 합계 · 내가 쓴 돈에서 빠진다 — 접혀 있어도 이유를 알린다 */}
+      {/* 환율이 없는 통화는 합계 · 내가 결제한 돈에서 빠진다 — 접혀 있어도 이유를 알린다 */}
       {total.missing.length > 0 && (
         <p className="text-xs text-destructive">
           {total.missing.join(" · ")} 환율이 없어 합계에서 빠졌어요. 설정에서 환율을 넣어 주세요.

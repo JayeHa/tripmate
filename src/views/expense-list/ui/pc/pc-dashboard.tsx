@@ -23,7 +23,7 @@ type PcDashboardProps = {
 const CARD = "flex shrink-0 flex-col gap-3 rounded-[16px] border border-divider px-4.5 py-4";
 
 /**
- * PC 가계부 오른쪽(줄을 고르지 않았을 때) — 요약(총 지출 · 내가 쓴 돈 + 정산 띠) → 카테고리 → 정산.
+ * PC 가계부 오른쪽(줄을 고르지 않았을 때) — 요약(총 지출 · 내가 결제한 돈 + 정산 띠) → 카테고리 → 정산.
  * 모바일 「지출 · 정산」 탭과 같은 카드를 작은 크기로 그린다. 혼자 쓰는 가계부는 정산 띠 · 정산 카드가 없다.
  * 카테고리 줄 · 「전체 보기」 는 카테고리 상세 창을, 정산 띠 · 「자세히 보기」 · 사람 줄은 정산 창을 연다(창은 목록이 쥔다)
  */
@@ -38,7 +38,7 @@ export function PcDashboard({ list, dash, onCategory, onSettle }: PcDashboardPro
           home={home}
           rates={trip.exchange_rates}
           people={list.solo ? null : list.everyone}
-          mySpent={list.mySpent}
+          myPaid={list.myPaid}
         >
           {!list.solo && dash.settle?.band && (
             <SettleBand

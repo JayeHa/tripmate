@@ -56,7 +56,7 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
         home={trip.home_currency}
         rates={trip.exchange_rates}
         people={list.solo ? null : list.everyone}
-        mySpent={list.mySpent}
+        myPaid={list.myPaid}
         statsHref={statsHref}
       >
         <Link
