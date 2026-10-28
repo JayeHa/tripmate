@@ -26,10 +26,14 @@ export function useTripEdit(trip: Trip) {
 
   const isOwner = user ? user.id === trip.owner_id : null;
 
-  /** 내 여행 목록으로 — 목록에서 이 여행이 빠지게 다시 읽는다 */
+  /**
+   * 내 여행 목록으로. 이 여행의 캐시(기기 저장분 포함)를 지워 뒤로 가기로 더는 볼 수 없는 여행이 그려지지 않게 하고,
+   * 목록에서 이 여행이 빠지게 다시 읽는다. 이동을 먼저 걸어 지운 뒤 홈이 빈 값으로 다시 그려지지 않게 한다
+   */
   function toTrips() {
-    void qc.invalidateQueries({ queryKey: queryKeys.trips.all, exact: true });
     router.replace("/trips", { transitionTypes: NAV.back });
+    qc.removeQueries({ queryKey: queryKeys.trips.detail(trip.id) });
+    void qc.invalidateQueries({ queryKey: queryKeys.trips.all, exact: true });
   }
 
   /** 메뉴 줄을 골랐을 때 — 확인 창은 지난 오류 없이 연다 */
