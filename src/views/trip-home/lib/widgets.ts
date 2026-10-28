@@ -7,14 +7,16 @@ import {
   formatMoney,
   roundTo,
 } from "@/shared/lib/money";
+import type { Sky } from "@/shared/lib/weather";
 
-/** 위젯 타일 한 칸 — 라벨 · 큰 값 · 아래 보조. 공휴일은 보조 글(이름)을 빨갛게 */
+/** 위젯 타일 한 칸 — 라벨 · 큰 값 · 아래 보조. 공휴일은 보조 글(이름)을 빨갛게, 날씨는 하늘 모양으로 아이콘을 고른다 */
 export type WidgetTile = {
-  key: "rate" | "holiday" | "time";
+  key: "weather" | "rate" | "holiday" | "time";
   label: string;
   main: string;
   sub: string;
   holiday?: true;
+  sky?: Sky;
 };
 
 /** 시차를 재는 기준 — 한국 */
@@ -94,6 +96,8 @@ export type WidgetSource = {
   at: Date;
   /** 실시간 환율 — 여행 환율과 같은 단위의 기준 화폐 금액(「지금 905」). 모르면 null */
   live: number | null;
+  /** 날씨 타일 — 받기 전 · 여행이 끝났으면 null */
+  weather: WidgetTile | null;
   /** 여행 기간 안의 여행지 공휴일 — 받기 전이면 undefined */
   holidays: readonly CountryHoliday[] | undefined;
   /** 여행 시작일 · 오늘(yyyy-MM-dd) */
@@ -102,11 +106,11 @@ export type WidgetSource = {
 };
 
 /**
- * 위젯 줄의 타일 — 환율(여행지 통화가 기준 화폐와 다르고 여행 환율이 있을 때) · 공휴일(남은 기간에 있을 때) · 현지 시간(한국과 시차가 있을 때).
+ * 위젯 줄의 타일 — 날씨(맨 앞) · 환율(여행지 통화가 기준 화폐와 다르고 여행 환율이 있을 때) · 공휴일(남은 기간에 있을 때) · 현지 시간(한국과 시차가 있을 때).
  * 환율 큰 값은 그 단위의 기준 화폐 금액(「₩920」), 아래는 단위와 실시간 값(「100엔 · 지금 905」, 모르면 단위만)
  */
 export function widgetTiles(src: WidgetSource): WidgetTile[] {
-  const tiles: WidgetTile[] = [];
+  const tiles: WidgetTile[] = src.weather ? [src.weather] : [];
   const rate = src.rates[src.currency];
   if (src.currency !== src.home && rate) {
     tiles.push({

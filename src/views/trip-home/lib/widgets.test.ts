@@ -38,6 +38,7 @@ describe("widgetTiles", () => {
     rates: { JPY: { unit: 100, value: 920 } },
     at: AT,
     live: null,
+    weather: null,
     holidays: undefined,
     start: "2026-10-31",
     today: "2026-11-01",
@@ -71,6 +72,16 @@ describe("widgetTiles", () => {
       holidays: [{ date: "2026-11-03", name: "Culture Day" }],
     });
     expect(tiles.map((t) => t.key)).toEqual(["rate", "holiday", "time"]);
+  });
+
+  it("날씨는 맨 앞 — 국내 여행에도", () => {
+    const weather = { key: "weather", label: "날씨", main: "12–19°", sub: "11월 평년" } as const;
+    expect(widgetTiles({ ...base, currency: "KRW", timeZone: "Asia/Seoul", weather })).toEqual([
+      weather,
+    ]);
+    expect(
+      widgetTiles({ ...base, currency: "JPY", timeZone: "Asia/Tokyo", weather }).map((t) => t.key),
+    ).toEqual(["weather", "rate"]);
   });
 });
 
