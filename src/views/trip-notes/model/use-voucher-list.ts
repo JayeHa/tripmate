@@ -64,7 +64,7 @@ export function useVoucherList(tripId: string) {
     isPending,
     total: vouchers?.length ?? 0,
     shown: filtered.length,
-    groups: groupVouchers(filtered),
+    groups: groupVouchers(filtered, src),
     filters,
     filtered:
       filters.who !== FILTER_ALL || filters.day !== FILTER_ALL || filters.group !== FILTER_ALL,
