@@ -123,14 +123,3 @@ export function normalsRanges(month: number, thisYear: number): { start: string;
     return { start: `${year}-${mm}-01`, end: `${year}-${mm}-${last}` };
   });
 }
-
-/**
- * 주소의 `lat` · `lng` → 좌표(소수 둘째 자리로 맞춘다 — 같은 도시는 같은 주소가 되어 서버 저장분을 같이 쓴다). 범위 밖 · 숫자가 아니면 null
- */
-export function parseCoords(params: URLSearchParams): { lat: number; lng: number } | null {
-  const lat = Number(params.get("lat") || "x");
-  const lng = Number(params.get("lng") || "x");
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
-  return { lat: Math.round(lat * 100) / 100, lng: Math.round(lng * 100) / 100 };
-}

@@ -7,11 +7,10 @@ export const queryKeys = {
   liveRates: (base: string) => ["live-rates", base] as const,
   /** 여행지 국가의 공휴일 — 나라 · 해마다. 배포 사이에는 바뀌지 않는다 */
   holidays: (country: string, year: number) => ["holidays", country, year] as const,
-  /** 날씨(Open-Meteo) — 좌표마다 앞으로 16일 예보, 좌표 · 달마다 평년 기온 */
+  /** 날씨(Open-Meteo) — 도시마다 앞으로 16일 예보, 도시 · 달마다 평년 기온 */
   weather: {
-    forecast: (lat: number, lng: number) => ["weather", "forecast", lat, lng] as const,
-    normals: (lat: number, lng: number, month: number) =>
-      ["weather", "normals", lat, lng, month] as const,
+    forecast: (city: string) => ["weather", "forecast", city] as const,
+    normals: (city: string, month: number) => ["weather", "normals", city, month] as const,
   },
   trips: {
     all: ["trips"] as const,

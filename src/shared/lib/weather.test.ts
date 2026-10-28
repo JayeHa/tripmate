@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { averageNormals, normalsRanges, parseCoords, parseForecast, skyOf } from "./weather";
+import { averageNormals, normalsRanges, parseForecast, skyOf } from "./weather";
 
 describe("skyOf", () => {
   it("WMO 코드 → 하늘 모양, 모르는 코드는 null", () => {
@@ -67,20 +67,5 @@ describe("normalsRanges", () => {
     expect(ranges[0]).toEqual({ start: "2016-02-01", end: "2016-02-29" });
     expect(ranges[9]).toEqual({ start: "2025-02-01", end: "2025-02-28" });
     expect(normalsRanges(11, 2026)[9]).toEqual({ start: "2025-11-01", end: "2025-11-30" });
-  });
-});
-
-describe("parseCoords", () => {
-  const params = (q: string) => new URLSearchParams(q);
-
-  it("소수 둘째 자리로 맞춘다", () => {
-    expect(parseCoords(params("lat=35.6762&lng=139.6503"))).toEqual({ lat: 35.68, lng: 139.65 });
-  });
-
-  it("빠졌거나 범위 밖이면 null", () => {
-    expect(parseCoords(params("lat=35"))).toBeNull();
-    expect(parseCoords(params("lat=&lng="))).toBeNull();
-    expect(parseCoords(params("lat=91&lng=0"))).toBeNull();
-    expect(parseCoords(params("lat=abc&lng=0"))).toBeNull();
   });
 });
