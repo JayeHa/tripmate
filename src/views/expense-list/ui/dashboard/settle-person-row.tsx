@@ -1,8 +1,6 @@
-import type { PersonRef } from "@/entities/expense";
+import { PersonAvatar, type PersonRef } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
-
-import { PersonAvatar } from "./person-avatar";
 
 type SettlePersonRowProps = {
   person: PersonRef;
@@ -33,7 +31,7 @@ export function SettlePersonRow({
   return (
     <button type="button" onClick={onClick} className="flex items-center gap-2.5 text-left">
       <PersonAvatar
-        person={person}
+        guest={person.kind === "guest"}
         name={name}
         url={url}
         className={compact ? "size-7" : "size-7.5"}

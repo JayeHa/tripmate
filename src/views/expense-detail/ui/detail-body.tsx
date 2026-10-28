@@ -8,10 +8,10 @@ import {
   type ExpenseRowView,
   type ExpenseWithSplits,
   paymentStatusText,
+  PersonAvatar,
   type PersonRef,
   ReceiptThumbs,
 } from "@/entities/expense";
-import { cn } from "@/shared/lib/utils";
 
 type DetailBodyProps = {
   expense: ExpenseWithSplits;
@@ -19,13 +19,15 @@ type DetailBodyProps = {
   trip: { id: string; start_date: string; end_date: string };
   /** 이 지출에 붙은 영수증 */
   receipts: ExpenseReceipt[];
+  /** 사람의 프로필 사진 — 정산 인원 · 사진이 없으면 null(첫 글자) */
+  avatarUrlOf: (person: PersonRef) => string | null;
 };
 
 /**
  * 비용 상세의 내용 — 카테고리(타일 28 + 이름 · 「합계 제외」) · 항목명 17/700 · 금액 28/800(외화면 옆에 ≈ 원화),
  * 표(날짜 · 일정 · 결제수단 · 결제한 사람 · 함께한 사람 · 결제 상태) · 메모 · 영수증(있을 때만, 누르면 새 창에서 원본). 일정은 연결했을 때만 줄이 있다
  */
-export function DetailBody({ expense, row, trip, receipts }: DetailBodyProps) {
+export function DetailBody({ expense, row, trip, receipts, avatarUrlOf }: DetailBodyProps) {
   const memo = expense.memo?.trim();
   return (
     <div className="flex flex-col gap-5 px-5 pt-2 pb-8">
@@ -50,9 +52,11 @@ export function DetailBody({ expense, row, trip, receipts }: DetailBodyProps) {
         {row.linkName && <Field label="일정">{row.linkName}</Field>}
         {row.ownerLink && <Field label="연결">{row.ownerLink}</Field>}
         <Field label="결제수단">{row.methodLabel}</Field>
-        <Field label="결제한 사람">{row.payer ? <People people={[row.payer]} /> : "각자 냄"}</Field>
+        <Field label="결제한 사람">
+          {row.payer ? <People people={[row.payer]} avatarUrlOf={avatarUrlOf} /> : "각자 냄"}
+        </Field>
         <Field label="함께한 사람">
-          <People people={row.togetherPeople} />
+          <People people={row.togetherPeople} avatarUrlOf={avatarUrlOf} />
         </Field>
         <Field label="결제 상태">{paymentStatusText(expense.paid, expense.due_date)}</Field>
       </dl>
@@ -86,22 +90,24 @@ function Field({ label, children }: FieldProps) {
   );
 }
 
-type PeopleProps = { people: { person: PersonRef; name: string }[] };
+type PeopleProps = {
+  people: { person: PersonRef; name: string }[];
+  avatarUrlOf: (person: PersonRef) => string | null;
+};
 
-/** 사람들 — 첫 글자 아바타 22 + 이름. 정산 인원은 분홍 아바타 */
-function People({ people }: PeopleProps) {
+/** 사람들 — 아바타 22(사진, 없으면 첫 글자 · 정산 인원은 분홍) + 이름 */
+function People({ people, avatarUrlOf }: PeopleProps) {
   return (
     <span className="flex flex-wrap gap-x-3 gap-y-1.5">
       {people.map(({ person, name }) => (
         <span key={`${person.kind}-${person.id}`} className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "flex size-5.5 shrink-0 items-center justify-center rounded-full text-[10px] font-extrabold text-white",
-              person.kind === "guest" ? "bg-guest" : "bg-primary",
-            )}
-          >
-            {name.slice(0, 1)}
-          </span>
+          <PersonAvatar
+            name={name}
+            url={avatarUrlOf(person)}
+            guest={person.kind === "guest"}
+            className="size-5.5"
+            fallbackClassName="text-[10px]"
+          />
           {name}
         </span>
       ))}

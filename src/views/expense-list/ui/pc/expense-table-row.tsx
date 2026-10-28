@@ -5,6 +5,7 @@ import {
   ExpenseBadge,
   ExpenseCategoryTile,
   type ExpenseRowView,
+  PersonAvatar,
   type PersonRef,
   withLine,
 } from "@/entities/expense";
@@ -28,18 +29,14 @@ type ExpenseTableRowProps = {
   paying: boolean;
   mode: AmountMode;
   displayNameOf: (person: PersonRef) => string;
+  /** 사람의 프로필 사진 — 정산 인원 · 사진이 없으면 url null(첫 글자) */
+  avatarOf: (person: PersonRef) => { name: string; url: string | null };
   everyone: number;
 };
 
-/** 아바타 색 — 각자 냄(사람 없음)은 잉크, 정산 인원은 분홍, 멤버는 블루 */
-function avatarTone(person: PersonRef | null) {
-  if (!person) return "bg-ink-900";
-  return person.kind === "guest" ? "bg-guest" : "bg-primary";
-}
-
 /**
  * PC 가계부 표 한 줄 — 카테고리 타일 28 + 이름 | 항목(배지 · 금액순이면 날 태그 · 메모 아이콘, 아래 예정일 지남이나 연결 일정) |
- * 결제 · 함께 두 줄(아바타 18 + 「정원 결제」, 「함께 · 동규, 서연」) | 결제수단 | 금액(결제 통화 / 원화 환산). 합계에서 뺀 비용은 흐리다
+ * 결제 · 함께 두 줄(아바타 18 — 사진, 없으면 첫 글자 · 각자 냄은 잉크 「각」 + 「정원 결제」, 「함께 · 동규, 서연」) | 결제수단 | 금액(결제 통화 / 원화 환산). 합계에서 뺀 비용은 흐리다
  */
 export function ExpenseTableRow({
   row,
@@ -51,6 +48,7 @@ export function ExpenseTableRow({
   paying,
   mode,
   displayNameOf,
+  avatarOf,
   everyone,
 }: ExpenseTableRowProps) {
   const amount = amountLines(row, mode);
@@ -118,14 +116,19 @@ export function ExpenseTableRow({
       </div>
       <div className="flex min-w-0 flex-col gap-0.75">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span
-            className={cn(
-              "flex size-4.5 shrink-0 items-center justify-center rounded-full text-[8px] font-extrabold text-white",
-              avatarTone(avatarPerson),
-            )}
-          >
-            {avatarPerson ? displayNameOf(avatarPerson).slice(0, 1) : "각"}
-          </span>
+          {avatarPerson ? (
+            <PersonAvatar
+              name={displayNameOf(avatarPerson)}
+              url={avatarOf(avatarPerson).url}
+              guest={avatarPerson.kind === "guest"}
+              className="size-4.5"
+              fallbackClassName="text-[8px]"
+            />
+          ) : (
+            <span className="flex size-4.5 shrink-0 items-center justify-center rounded-full bg-ink-900 text-[8px] font-extrabold text-white">
+              각
+            </span>
+          )}
           <span className="truncate text-[13px] font-semibold text-ink-800">
             {payer ? `${displayNameOf(payer.person)} 결제` : "각자 냄"}
           </span>

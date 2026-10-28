@@ -141,6 +141,7 @@ function DayGroup({ section, list, base, sectionRef }: DayGroupProps) {
               onMarkPaid={() => list.markPaid(row.id)}
               paying={list.paying === row.id}
               displayNameOf={list.displayNameOf}
+              avatarOf={list.avatarOf}
               everyone={list.everyone}
             />
           ))}

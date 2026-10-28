@@ -31,5 +31,6 @@ export * from "./ui/category-icon";
 export * from "./ui/expense-badge";
 export * from "./ui/expense-line";
 export * from "./ui/payment-field";
+export * from "./ui/person-avatar";
 export * from "./ui/receipt-thumbs";
 export * from "./ui/settle-band";

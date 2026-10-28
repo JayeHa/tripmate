@@ -1,9 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
-import { personOfKey, type PersonRef } from "@/entities/expense";
+import { PersonAvatar, personOfKey, type PersonRef } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
-
-import { PersonAvatar } from "./person-avatar";
 
 /** 표시 이름 · 사진 */
 type AvatarOf = (person: PersonRef) => { name: string; url: string | null };
@@ -81,7 +79,7 @@ function Side({ personKeyValue, avatarOf, className, pc }: SideProps) {
   return (
     <>
       <PersonAvatar
-        person={person}
+        guest={person.kind === "guest"}
         name={a.name}
         url={a.url}
         className={pc ? "size-5" : "size-5.5"}

@@ -1,5 +1,7 @@
 import { ChevronDown, UserPlus } from "lucide-react";
 
+import { PersonAvatar } from "@/entities/expense";
+
 import { peopleSummary } from "../lib/people-summary";
 import type { ExpenseFormState } from "../model/use-expense-form";
 import type { FormPerson } from "../model/use-people-picker";
@@ -60,9 +62,13 @@ export function SoloCard({ me, onAdd }: SoloCardProps) {
   return (
     <div className="flex flex-col gap-3 rounded-card bg-surface-sunken px-4 py-3.5">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-extrabold text-white">
-          {me.name.slice(0, 1)}
-        </span>
+        <PersonAvatar
+          name={me.name}
+          url={me.avatarUrl}
+          guest={false}
+          className="size-9"
+          fallbackClassName="text-[13px]"
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-[15px] font-bold text-ink-900">
             {me.name}(나)이 결제했어요
