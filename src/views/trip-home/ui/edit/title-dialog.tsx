@@ -2,18 +2,15 @@
 
 import { useState } from "react";
 
-import { type Trip, useUpdateTripTitle } from "@/entities/trip";
+import { type Trip, TRIP_TITLE_MAX, useUpdateTripTitle } from "@/entities/trip";
 import { useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/dialog";
-
-/** 여행 제목 글자 수 상한 */
-const TITLE_MAX = 30;
 
 type TitleDialogProps = { trip: Trip; open: boolean; onClose: () => void };
 
 /**
- * 여행 제목 수정 — 가운데 340 창. 밑줄 입력 · 「n/30」 · 아래 「취소 | 확인」.
- * 비었거나 30자를 넘으면 확인이 흐리다. 바뀌지 않았으면 저장하지 않고 닫는다
+ * 여행 제목 수정 — 가운데 340 창. 밑줄 입력 · 「n/50」 · 아래 「취소 | 확인」.
+ * 비었거나 50자를 넘으면 확인이 흐리다. 바뀌지 않았으면 저장하지 않고 닫는다
  */
 export function TitleDialog({ trip, open, onClose }: TitleDialogProps) {
   const update = useUpdateTripTitle(trip.id);
@@ -40,7 +37,7 @@ type TitleFormProps = {
 function TitleForm({ trip, update, onClose }: TitleFormProps) {
   const [draft, setDraft] = useState(trip.title);
   const title = draft.trim();
-  const valid = title.length > 0 && title.length <= TITLE_MAX;
+  const valid = title.length > 0 && title.length <= TRIP_TITLE_MAX;
 
   /** 확인 — 같은 제목이면 그냥 닫는다 */
   function save() {
@@ -64,14 +61,14 @@ function TitleForm({ trip, update, onClose }: TitleFormProps) {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          maxLength={TITLE_MAX}
+          maxLength={TRIP_TITLE_MAX}
           autoFocus
           placeholder="도쿄 여행"
           aria-label="여행 제목"
           className="mt-5.5 border-b-[1.5px] border-primary bg-transparent pb-2.5 text-[17px] font-semibold text-ink-900 outline-none placeholder:text-ink-350"
         />
         <span className="self-end pt-1.5 text-xs text-ink-350">
-          {draft.length}/{TITLE_MAX}
+          {draft.length}/{TRIP_TITLE_MAX}
         </span>
         {update.error && (
           <p className="text-[13px] text-destructive">저장하지 못했어요: {update.error.message}</p>
