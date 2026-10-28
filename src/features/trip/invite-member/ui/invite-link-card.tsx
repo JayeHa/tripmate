@@ -1,34 +1,18 @@
 "use client";
 
 import { Check, Copy, RefreshCw, Share2 } from "lucide-react";
-import { useState } from "react";
 
 import { type Trip, useRotateInviteToken } from "@/entities/trip";
 import { Button } from "@/shared/ui/button";
 
+import { useInviteLink } from "../model/use-invite-link";
+
 type InviteLinkCardProps = { trip: Trip };
 
+/** 설정 화면의 일행 초대 카드 — 링크 · 복사 · 공유 · 링크 재발급 */
 export function InviteLinkCard({ trip }: InviteLinkCardProps) {
-  const [copied, setCopied] = useState(false);
   const rotate = useRotateInviteToken(trip.id);
-  const url =
-    typeof window !== "undefined" ? `${window.location.origin}/join/${trip.invite_token}` : "";
-
-  async function copy() {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
-  async function share() {
-    if (navigator.share) {
-      await navigator
-        .share({ title: `${trip.title} 여행에 초대합니다`, url })
-        .catch(() => undefined);
-    } else {
-      await copy();
-    }
-  }
+  const { url, copied, copy, share } = useInviteLink(trip);
 
   return (
     <section className="rounded-xl border bg-card p-4">

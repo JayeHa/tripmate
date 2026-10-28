@@ -16,6 +16,7 @@ import {
   setTripRate,
   updateTrip,
   updateTripDates,
+  updateTripTitle,
 } from "../api/trips";
 import type { TripFormValues } from "./schema";
 
@@ -46,6 +47,21 @@ export function useUpdateTrip(tripId: string) {
     onSuccess: (trip) => {
       qc.setQueryData(queryKeys.trips.detail(tripId), trip);
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+    },
+  });
+}
+
+/**
+ * 여행 제목 바꾸기(여행 홈 「편집」) — 받은 여행으로 바로 바꾸고 목록만 다시 읽는다.
+ * 여행 키 아래의 일정 · 지출은 제목과 상관없어서 exact 로 목록 하나만
+ */
+export function useUpdateTripTitle(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (title: string) => updateTripTitle(tripId, title),
+    onSuccess: (trip) => {
+      qc.setQueryData(queryKeys.trips.detail(tripId), trip);
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all, exact: true });
     },
   });
 }
