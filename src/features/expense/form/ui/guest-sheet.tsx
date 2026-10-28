@@ -1,7 +1,7 @@
 import { Link2, Pencil } from "lucide-react";
 import Link from "next/link";
 
-import { personOfKey } from "@/entities/expense";
+import { PersonAvatar, personOfKey } from "@/entities/expense";
 import { cn } from "@/shared/lib/utils";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
@@ -64,14 +64,13 @@ function PersonRow({ person, isMe, editor }: PersonRowProps) {
   const id = personOfKey(person.key)?.id ?? "";
   return (
     <li className="flex min-h-13 items-center gap-3 border-b border-surface-muted">
-      <span
-        className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold text-white",
-          person.guest ? "bg-guest" : "bg-primary",
-        )}
-      >
-        {person.name.slice(0, 1)}
-      </span>
+      <PersonAvatar
+        name={person.name}
+        url={person.avatarUrl}
+        guest={person.guest}
+        className="size-8"
+        fallbackClassName="text-[13px]"
+      />
       <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-900">
         {person.name}
         {isMe && " (나)"}

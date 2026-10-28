@@ -4,12 +4,12 @@ import {
   ExpenseCategoryIcon,
   PAYMENT_METHOD_LABEL,
   PAYMENT_METHODS,
+  PersonAvatar,
   personKey,
 } from "@/entities/expense";
 import type { FilterOption } from "@/shared/ui/filter-select";
 
 import type { ExpenseList } from "../../model/use-expense-list";
-import { PersonAvatar } from "../dashboard/person-avatar";
 import type { TogetherOption } from "./more-filters";
 
 const CATEGORY_OPTIONS: FilterOption[] = EXPENSE_CATEGORIES.map((c) => ({
@@ -38,7 +38,7 @@ export function filterOptions(list: ExpenseList): {
     const label = list.displayNameOf(p);
     /** 크기만 다른 아바타 */
     const avatar = (className: string) => (
-      <PersonAvatar person={p} name={label} url={a.url} className={className} />
+      <PersonAvatar guest={p.kind === "guest"} name={label} url={a.url} className={className} />
     );
     return { value: personKey(p), label, avatar };
   });

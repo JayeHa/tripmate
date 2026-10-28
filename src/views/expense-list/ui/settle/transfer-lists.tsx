@@ -1,4 +1,4 @@
-import { type PersonKey, personOfKey } from "@/entities/expense";
+import { PersonAvatar, type PersonKey, personOfKey } from "@/entities/expense";
 import { formatMoney } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import { CheckMark } from "@/shared/ui/check-mark";
@@ -6,7 +6,6 @@ import { CheckMark } from "@/shared/ui/check-mark";
 import type { TransferRow } from "../../lib/dashboard";
 import { personTransfers } from "../../lib/settle-person";
 import type { Dashboard } from "../../model/use-dashboard";
-import { PersonAvatar } from "../dashboard/person-avatar";
 import { TransferLine } from "../dashboard/transfer-line";
 
 type ListProps = {
@@ -39,7 +38,12 @@ export function MyTransfers({
         const verb = t.receive ? "받았어요" : "보냈어요";
         return (
           <div key={t.key} className={cn("flex items-center gap-2.5 py-2", done && "opacity-45")}>
-            <PersonAvatar person={other} name={a.name} url={a.url} className="size-7.5" />
+            <PersonAvatar
+              guest={other.kind === "guest"}
+              name={a.name}
+              url={a.url}
+              className="size-7.5"
+            />
             <span
               className={cn(
                 "min-w-0 flex-1 text-sm font-medium text-ink-800",

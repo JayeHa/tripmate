@@ -1,9 +1,8 @@
 import { ChevronRight, CircleCheck, Users } from "lucide-react";
 
-import type { PersonRef } from "@/entities/expense";
+import { PersonAvatar, type PersonRef } from "@/entities/expense";
 
 import type { SettleRest } from "../../lib/settle-card";
-import { PersonAvatar } from "./person-avatar";
 
 type MorePeopleProps = {
   people: { person: PersonRef; name: string; url: string | null }[];
@@ -18,7 +17,7 @@ export function MorePeople({ people, onClick }: MorePeopleProps) {
         {people.slice(0, 3).map((p) => (
           <PersonAvatar
             key={`${p.person.kind}:${p.person.id}`}
-            person={p.person}
+            guest={p.person.kind === "guest"}
             name={p.name}
             url={p.url}
             className="-ml-1.5 size-5.5 ring-2 ring-white"

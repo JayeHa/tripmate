@@ -3,7 +3,7 @@
 import { Check, ChevronDown, Info } from "lucide-react";
 import { useState } from "react";
 
-import { type PersonKey, personKey } from "@/entities/expense";
+import { PersonAvatar, type PersonKey, personKey } from "@/entities/expense";
 import { decimalsOf, formatMoney } from "@/shared/lib/money";
 import { sizeByLength } from "@/shared/lib/size-by-length";
 import { cn } from "@/shared/lib/utils";
@@ -13,7 +13,6 @@ import { transferRows } from "../../lib/dashboard";
 import { personTransfers, settleState, settleSub } from "../../lib/settle-person";
 import type { Dashboard } from "../../model/use-dashboard";
 import type { ExpenseList } from "../../model/use-expense-list";
-import { PersonAvatar } from "../dashboard/person-avatar";
 import { PersonExpenseList } from "./person-expense-list";
 import { SettleExplain } from "./settle-explain";
 import { SettleTransfers } from "./settle-transfers";
@@ -86,13 +85,23 @@ export function SettlePerson({ list, settle, avatarOf, initial }: SettlePersonPr
               label: keys[i] === settle.me ? `${pa.name} (나)` : pa.name,
               sub: settleSub(stateOf(keys[i], p.net), money),
               icon: (
-                <PersonAvatar person={p.person} name={pa.name} url={pa.url} className="size-7" />
+                <PersonAvatar
+                  guest={p.person.kind === "guest"}
+                  name={pa.name}
+                  url={pa.url}
+                  className="size-7"
+                />
               ),
             };
           })}
           trigger={
             <button type="button" className="flex items-center gap-3 self-start text-left">
-              <PersonAvatar person={current.person} name={a.name} url={a.url} className="size-11" />
+              <PersonAvatar
+                guest={current.person.kind === "guest"}
+                name={a.name}
+                url={a.url}
+                className="size-11"
+              />
               <span className="flex min-w-0 flex-col gap-0.5">
                 {/* ⌄ 를 이름 바로 옆에 둬 눌러서 고르는 칸임을 알린다 */}
                 <span className="flex min-w-0 items-center gap-1">

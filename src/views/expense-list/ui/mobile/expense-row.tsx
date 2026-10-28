@@ -5,6 +5,7 @@ import {
   ExpenseBadge,
   ExpenseCategoryTile,
   type ExpenseRowView,
+  PersonAvatar,
   type PersonRef,
   whoOf,
 } from "@/entities/expense";
@@ -19,13 +20,15 @@ type ExpenseRowProps = {
   paying: boolean;
   /** 표시 이름 — 「정원 결제」 */
   displayNameOf: (person: PersonRef) => string;
+  /** 사람의 프로필 사진 — 정산 인원 · 사진이 없으면 url null(첫 글자) */
+  avatarOf: (person: PersonRef) => { name: string; url: string | null };
   /** 여행의 사람 수 — 「N명 모두」 */
   everyone: number;
 };
 
 /**
  * 모바일 가계부 한 줄 — 카테고리 타일 38 · 이름 14/500(앞 「결제 예정」 · 뒤 「합계 제외」 배지) ·
- * 아래 아바타 16 + 「정원 결제 · 2명」(예정일이 지났으면 「예정일 지남 · 결제 완료로」), 오른쪽 금액 16/800 · 외화면 ≈ 원화.
+ * 아래 아바타 16(사진, 없으면 첫 글자) + 「정원 결제 · 2명」(예정일이 지났으면 「예정일 지남 · 결제 완료로」), 오른쪽 금액 16/800 · 외화면 ≈ 원화.
  * 합계에서 뺀 비용은 금액을 흐리게 긋는다. 줄 전체가 그 비용으로 가는 링크라 「결제 완료로」 는 그 위에 올린다
  */
 export function ExpenseRow({
@@ -34,10 +37,10 @@ export function ExpenseRow({
   onMarkPaid,
   paying,
   displayNameOf,
+  avatarOf,
   everyone,
 }: ExpenseRowProps) {
   const who = whoOf(row, displayNameOf, everyone);
-  const initial = who.person ? displayNameOf(who.person).slice(0, 1) : "";
   return (
     // isolate: 「결제 완료」 의 z-10(행 전체 누르기 위)이 행 안에서만 통하게 — 없으면 위에 붙은 날짜 줄 위로 올라온다
     <div className="relative isolate flex items-center gap-3 px-5 py-3">
@@ -75,14 +78,13 @@ export function ExpenseRow({
         ) : (
           <span className="flex min-w-0 items-center gap-1.25 text-xs text-ink-400">
             {who.person && (
-              <span
-                className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-full text-[8px] font-extrabold text-white",
-                  who.person.kind === "guest" ? "bg-guest" : "bg-primary",
-                )}
-              >
-                {initial}
-              </span>
+              <PersonAvatar
+                name={displayNameOf(who.person)}
+                url={avatarOf(who.person).url}
+                guest={who.person.kind === "guest"}
+                className="size-4"
+                fallbackClassName="text-[8px]"
+              />
             )}
             <span className="truncate">{who.text}</span>
           </span>

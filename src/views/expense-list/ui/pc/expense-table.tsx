@@ -97,6 +97,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
                     paying={list.paying === row.id}
                     mode={mode}
                     displayNameOf={list.displayNameOf}
+                    avatarOf={list.avatarOf}
                     everyone={list.everyone}
                   />
                 ))}
