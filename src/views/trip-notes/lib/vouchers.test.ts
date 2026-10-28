@@ -58,13 +58,82 @@ describe("필터 · 묶음", () => {
   });
 
   it("묶음은 항공편 · 숙소 · 일정 · 기타 순, 빈 묶음은 뺀다", () => {
-    expect(groupVouchers(list).map((g) => [g.group, g.items.map((x) => x.id)])).toEqual([
+    expect(groupVouchers(list, null).map((g) => [g.group, g.items.map((x) => x.id)])).toEqual([
       ["flight", ["flight"]],
       ["stay", ["stay"]],
       ["schedule", ["card"]],
       ["etc", ["etc"]],
     ]);
-    expect(groupVouchers([v("only")]).map((g) => g.group)).toEqual(["etc"]);
+    expect(groupVouchers([v("only")], null).map((g) => g.group)).toEqual(["etc"]);
+  });
+});
+
+describe("묶음 안의 순서", () => {
+  const item = (id: string, day: number, position: number, alternativeOf: string | null = null) =>
+    ({ id, day_index: day, position, alternative_of: alternativeOf }) as ScheduleItem;
+  const src: TargetSources = {
+    startDate: "2026-10-31",
+    // day 2: 라멘(0) → 파크(1) → 레스토랑(2), day 1: 공항(0)
+    items: [item("airport", 0, 0), item("ramen", 1, 0), item("park", 1, 1), item("rest", 1, 2)],
+    alternatives: [item("alt-ramen", 1, 0, "ramen")],
+    flights: [
+      { id: "f-back", dep_date: "2026-11-04", dep_time: "18:00" } as Flight,
+      { id: "f-go", dep_date: "2026-10-31", dep_time: "07:15" } as Flight,
+    ],
+    stays: [
+      { id: "s2", check_in_date: "2026-11-02" } as Stay,
+      { id: "s1", check_in_date: "2026-10-31" } as Stay,
+    ],
+  };
+  const ids = (list: Voucher[]) =>
+    groupVouchers(list, src).map((g) => [g.group, g.items.map((x) => x.id)]);
+
+  it("일정은 날짜 → 그날 일정 순서, 같은 일정이면 넣은 순서, 대체 장소는 원래 일정 바로 뒤", () => {
+    const list = [
+      v("park", { schedule_item_id: "park" }),
+      v("ramen-1", { schedule_item_id: "ramen" }),
+      v("rest", { schedule_item_id: "rest" }),
+      v("ramen-2", { schedule_item_id: "ramen" }),
+      v("alt", { schedule_item_id: "alt-ramen" }),
+      v("airport", { schedule_item_id: "airport" }),
+      v("gone", { schedule_item_id: "deleted" }),
+    ];
+    expect(ids(list)).toEqual([
+      ["schedule", ["airport", "ramen-1", "ramen-2", "alt", "park", "rest", "gone"]],
+    ]);
+  });
+
+  it("묶음이 섞여 들어와도 묶음마다 정렬한다(넣은 순서: 파크 · 라멘 · 항공권 · 레스토랑 · 숙소 · 라멘)", () => {
+    const list = [
+      v("park", { schedule_item_id: "park" }),
+      v("ramen-1", { schedule_item_id: "ramen" }),
+      v("go", { flight_id: "f-go" }),
+      v("rest", { schedule_item_id: "rest" }),
+      v("stay1", { stay_id: "s1" }),
+      v("ramen-2", { schedule_item_id: "ramen" }),
+    ];
+    expect(ids(list)).toEqual([
+      ["flight", ["go"]],
+      ["stay", ["stay1"]],
+      ["schedule", ["ramen-1", "ramen-2", "park", "rest"]],
+    ]);
+  });
+
+  it("항공편은 출발, 숙소는 체크인, 연결 없음은 사용일(없으면 뒤) 순", () => {
+    const list = [
+      v("back", { flight_id: "f-back" }),
+      v("go", { flight_id: "f-go" }),
+      v("stay2", { stay_id: "s2" }),
+      v("stay1", { stay_id: "s1" }),
+      v("no-date"),
+      v("nov2", { use_date: "2026-11-02" }),
+      v("nov1", { use_date: "2026-11-01" }),
+    ];
+    expect(ids(list)).toEqual([
+      ["flight", ["go", "back"]],
+      ["stay", ["stay1", "stay2"]],
+      ["etc", ["nov1", "nov2", "no-date"]],
+    ]);
   });
 });
 

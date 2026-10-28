@@ -24,7 +24,7 @@ function PrepCard({ tripId, prep, layout }: PrepCardProps) {
   return (
     <BoardCard
       title="여행 준비"
-      link={{ label: "노트", href: `/trips/${tripId}/notes` }}
+      link={{ label: "노트", href: `/trips/${tripId}/notes?tab=checklist` }}
       layout={layout}
     >
       <div className="flex flex-col gap-2">
