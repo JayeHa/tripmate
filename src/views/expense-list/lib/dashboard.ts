@@ -52,17 +52,6 @@ function homeOrNull(e: ExpenseWithSplits, home: string, rates: ExchangeRates): n
   }
 }
 
-/** 대시보드 카테고리 카드 — 위 3개와 「그 외 N개」(카테고리 목록 · 합계). 그 외가 없으면 null */
-export function topCategories(shares: CategoryShare[], count = 3) {
-  const rest = shares.slice(count);
-  return {
-    top: shares.slice(0, count),
-    rest: rest.length
-      ? { categories: rest.map((s) => s.category), total: rest.reduce((n, s) => n + s.total, 0) }
-      : null,
-  };
-}
-
 /** 보냈다고 적은 송금 — 송금 기록 id 와 함께 */
 export type SentTransfer = Transfer & { id: string };
 

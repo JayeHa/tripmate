@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits } from "@/entities/expense";
 
-import { categoryShares, hasSharedExpense, topCategories, transferRows } from "./dashboard";
+import { categoryShares, hasSharedExpense, transferRows } from "./dashboard";
 
 const rates = { JPY: { unit: 100, value: 900 } };
 
@@ -56,23 +56,6 @@ describe("categoryShares", () => {
 
   it("모르는 카테고리는 기타로", () => {
     expect(categoryShares([expense("misc", 100)], "KRW", rates)[0].category).toBe("other");
-  });
-});
-
-describe("topCategories", () => {
-  it("위 3개와 그 외 합계", () => {
-    const shares = ["food", "lodging", "flight", "shopping", "other"].map((c, i) => ({
-      category: c as never,
-      total: 50 - i * 10,
-      percent: 0,
-    }));
-    const { top, rest } = topCategories(shares);
-    expect(top.map((s) => s.category)).toEqual(["food", "lodging", "flight"]);
-    expect(rest).toEqual({ categories: ["shopping", "other"], total: 30 });
-  });
-
-  it("3개 이하면 그 외가 없다", () => {
-    expect(topCategories([]).rest).toBeNull();
   });
 });
 
