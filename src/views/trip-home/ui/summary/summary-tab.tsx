@@ -23,7 +23,7 @@ type SummaryTabProps = { tripId: string; trip: Trip; layout: "mobile" | "pc" };
 
 /**
  * 「요약」 탭 — 위 세그먼트(여행 전 · 중 · 후, 날짜로 자동 선택 · 다른 시점은 미리보기) + 현지 정보 위젯 줄 + 그 시점의 상태판.
- * 위젯 줄은 여행 후에는 숨긴다(현지 환율 · 시간이 더 필요 없다). 환율 타일을 누르면 계산기, 상태판 줄을 누르면 미리 보기.
+ * 위젯 줄은 여행 후에는 숨긴다(현지 날씨 · 환율 · 시간이 더 필요 없다). 환율 타일을 누르면 계산기, 상태판 줄을 누르면 미리 보기.
  * 고른 시점은 이 화면에서만 기억한다(다시 열면 날짜로 정한 시점). 여행 홈의 토스트는 이 탭이 하나를 그린다
  */
 export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
@@ -54,7 +54,11 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
           tiles={widgets.tiles}
           layout={layout}
           onOpenRate={() => setCalcOpen(true)}
-          credits={{ rate: widgets.live !== null, holiday: widgets.holiday }}
+          credits={{
+            weather: widgets.weather,
+            rate: widgets.live !== null,
+            holiday: widgets.holiday,
+          }}
         />
       ) : (
         <div className="h-3" />
