@@ -4,10 +4,9 @@ import { useSortable } from "@dnd-kit/react/sortable";
 import { Equal, GripVertical } from "lucide-react";
 
 import { itemName, ReservationBadge, type TimelineRow } from "@/entities/schedule-item";
+import { DRAG_ROLE } from "@/shared/lib/drag-announcements";
 import { cn } from "@/shared/lib/utils";
 import { CheckMark } from "@/shared/ui/check-mark";
-
-import { DRAG_ROLE } from "../lib/drag-announcements";
 
 type EditRowProps = {
   row: TimelineRow;

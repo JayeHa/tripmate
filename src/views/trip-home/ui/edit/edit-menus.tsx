@@ -1,6 +1,14 @@
 "use client";
 
-import { CalendarDays, LogOut, type LucideIcon, PenLine, Trash2, UserPlus } from "lucide-react";
+import {
+  CalendarDays,
+  LayoutGrid,
+  LogOut,
+  type LucideIcon,
+  PenLine,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
@@ -22,6 +30,7 @@ const ICON: Record<EditAction, LucideIcon> = {
   title: PenLine,
   dates: CalendarDays,
   invite: UserPlus,
+  widgets: LayoutGrid,
   leave: LogOut,
   delete: Trash2,
 };
