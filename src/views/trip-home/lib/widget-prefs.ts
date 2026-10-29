@@ -92,8 +92,9 @@ export type WidgetEditRow = {
 function describe(key: WidgetKey, slots: WidgetSlots, info: WidgetInfo): string {
   const auto = slots[key].auto;
   if (key === "weather") return `${info.city} · 여행 10일 전부터 예보`;
+  // 자동으로 숨긴 공휴일은 켰을 때 보일 「없음」 타일의 설명(여행 전 · 여행 중에 따라 다름)을 그대로 쓴다
   if (key === "holiday")
-    return auto ? "여행 기간에 현지 공휴일이 있을 때" : "남은 기간에 공휴일이 없어요";
+    return auto ? "여행 기간에 현지 공휴일이 있을 때" : (slots.holiday.tile?.sub ?? "");
   if (key === "time") return auto ? (slots.time.tile?.sub ?? "") : "한국과 시차가 없어요";
   if (info.rate) {
     const unit = `${info.rate.unit.toLocaleString("ko-KR")}${currencyName(info.currency)}`;

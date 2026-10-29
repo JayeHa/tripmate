@@ -22,7 +22,7 @@ const tile = (key: WidgetTile["key"], main = "값"): WidgetTile => ({
 const TOKYO: WidgetSlots = {
   weather: { tile: tile("weather"), auto: true },
   rate: { tile: tile("rate"), auto: true },
-  holiday: { tile: tile("holiday", "없음"), auto: false },
+  holiday: { tile: { ...tile("holiday", "없음"), sub: "여행 기간에 없어요" }, auto: false },
   time: { tile: { ...tile("time", "14:32"), sub: "한국과 같음" }, auto: false },
 };
 
@@ -91,7 +91,7 @@ describe("widgetEditRows", () => {
     expect(rows.map((r) => [r.key, r.on, r.sub])).toEqual([
       ["weather", true, "도쿄 · 여행 10일 전부터 예보"],
       ["rate", true, "100엔 = ₩920 · 설정의 여행 환율"],
-      ["holiday", false, "남은 기간에 공휴일이 없어요 · 자동으로 숨겼어요"],
+      ["holiday", false, "여행 기간에 없어요 · 자동으로 숨겼어요"],
       ["time", false, "한국과 시차가 없어요 · 자동으로 숨겼어요"],
     ]);
     const touched = { ...DEFAULT_WIDGET_PREFS, shown: { time: true } };
