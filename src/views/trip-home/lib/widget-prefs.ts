@@ -43,9 +43,16 @@ export function visibleTiles(slots: WidgetSlots, prefs: WidgetPrefs): WidgetTile
   });
 }
 
-/** 스위치를 누른 결과 — 지금 보이는 상태를 뒤집어 사용자 선택으로 남긴다 */
+/**
+ * 스위치를 누른 결과 — 지금 보이는 상태를 뒤집는다. 뒤집은 값이 이 여행의 자동과 같으면 사용자 선택을 지운다.
+ * 설정은 모든 여행에 하나라, 껐다 켜서 제자리로 돌린 것까지 남기면 다른 여행에서 자동 숨김이 풀린다
+ */
 export function toggleWidget(prefs: WidgetPrefs, slots: WidgetSlots, key: WidgetKey): WidgetPrefs {
-  return { ...prefs, shown: { ...prefs.shown, [key]: !isWidgetOn(prefs, slots, key) } };
+  const next = !isWidgetOn(prefs, slots, key);
+  const shown = { ...prefs.shown };
+  delete shown[key];
+  if (next !== slots[key].auto) shown[key] = next;
+  return { ...prefs, shown };
 }
 
 /** 끌어서 놓은 결과 — from 자리의 위젯을 to 자리로 */

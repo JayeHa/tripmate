@@ -68,6 +68,13 @@ describe("toggleWidget · moveWidget", () => {
     expect(toggleWidget(off, TOKYO, "time").shown).toEqual({ weather: false, time: true });
   });
 
+  it("껐다 다시 켜서 자동과 같아지면 사용자 선택을 지운다 — 다른 여행에서는 자동대로", () => {
+    const off = toggleWidget(DEFAULT_WIDGET_PREFS, TOKYO, "weather");
+    expect(toggleWidget(off, TOKYO, "weather").shown).toEqual({});
+    const on = toggleWidget(DEFAULT_WIDGET_PREFS, TOKYO, "time");
+    expect(toggleWidget(on, TOKYO, "time").shown).toEqual({});
+  });
+
   it("from 자리의 위젯을 to 자리로", () => {
     expect(moveWidget(DEFAULT_WIDGET_PREFS, 3, 0).order).toEqual([
       "time",
