@@ -3525,3 +3525,46 @@ describe("메모 홈에 고정 (0064)", () => {
     ).toMatch(/check constraint/);
   });
 });
+
+describe("여행 도시 바꾸기 (0065)", () => {
+  /** 그 여행의 도시를 순서대로 */
+  async function cities(trip: string) {
+    const { rows } = await db.query<{ city_id: string }>(
+      `select city_id from public.trip_cities where trip_id = '${trip}' order by position`,
+    );
+    return rows.map((r) => r.city_id);
+  }
+
+  it("고른 순서대로 통째로 바꾸고, 뺀 도시의 일정 · 장소는 그대로 둔다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-04-01", "2028-04-02");
+    const item = await addPlace(trip, 0, { name: "도쿄 타워", lat: 35.6586, lng: 139.7454 });
+    await db.query(`select public.set_trip_cities('${trip}', array['osaka', 'fukuoka'])`);
+    expect(await cities(trip)).toEqual(["osaka", "fukuoka"]);
+    const kept = await db.query(`select 1 from public.schedule_items where id = '${item}'`);
+    expect(kept.rows).toHaveLength(1);
+    await db.query(`select public.set_trip_cities('${trip}', array['fukuoka', 'tokyo'])`);
+    expect(await cities(trip)).toEqual(["fukuoka", "tokyo"]);
+  });
+
+  it("빈 목록 · 겹친 도시 · 없는 도시 · 멤버가 아닌 사람은 거부하고 그대로 둔다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-04-03", "2028-04-03");
+    expect(await rejects(`select public.set_trip_cities('${trip}', array[]::text[])`)).toMatch(
+      /at least one city/,
+    );
+    expect(
+      await rejects(`select public.set_trip_cities('${trip}', array['osaka', 'osaka'])`),
+    ).toMatch(/duplicate city/);
+    expect(await rejects(`select public.set_trip_cities('${trip}', array['nowhere'])`)).toMatch(
+      /foreign key/,
+    );
+    expect(await cities(trip)).toEqual(["tokyo"]);
+    await as(B);
+    expect(await rejects(`select public.set_trip_cities('${trip}', array['osaka'])`)).toMatch(
+      /not a member/,
+    );
+    await as(A);
+    expect(await cities(trip)).toEqual(["tokyo"]);
+  });
+});

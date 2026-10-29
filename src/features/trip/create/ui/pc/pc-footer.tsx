@@ -1,9 +1,9 @@
+import { PcPickedChips } from "@/entities/city";
 import { Button } from "@/shared/ui/button";
 
 import { dateCtaLabel, pcCityCtaLabel } from "../../lib/cta";
 import type { TripCreateState } from "../../model/use-trip-create";
 import { CreateError } from "../parts/create-error";
-import { PcPickedChips } from "./pc-picked-chips";
 
 type PcFooterProps = { state: TripCreateState };
 

@@ -28,3 +28,16 @@ export async function fetchTripCities(tripId: string): Promise<City[]> {
   const rows = data as unknown as TripCityRow[];
   return [...rows].sort((a, b) => a.position - b.position).map((r) => r.city);
 }
+
+/**
+ * 여행 도시를 고른 순서대로 통째로 바꾼다(set_trip_cities, 0065). 하나 이상이어야 한다.
+ * 뺀 도시의 일정 · 장소는 그대로 남는다
+ */
+export async function setTripCities(tripId: string, cityIds: string[]): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("set_trip_cities", {
+    p_trip_id: tripId,
+    p_city_ids: cityIds,
+  });
+  if (error) throw error;
+}

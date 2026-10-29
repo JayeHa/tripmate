@@ -1,6 +1,7 @@
 export * from "./api/alternatives";
 export * from "./api/memos";
 export * from "./api/moves";
+export * from "./api/schedule-counts";
 export * from "./api/schedule-edit";
 export * from "./api/schedule-items";
 export * from "./lib/add-place-error";

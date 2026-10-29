@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 
-import { type City, CityThumb } from "@/entities/city";
+import type { City } from "../model/types";
+import { CityThumb } from "./city-thumb";
 
 const CHIP = "flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-surface-muted pl-1";
 
@@ -10,7 +11,7 @@ type PcPickedChipsProps = {
   onRemove?: (city: City) => void;
 };
 
-/** PC 바닥의 고른 도시 칩. 도시 단계에서만 눌러서 뺄 수 있다 */
+/** PC 바닥의 고른 도시 칩. onRemove 가 있으면 눌러서 뺀다 */
 export function PcPickedChips({ picked, onRemove }: PcPickedChipsProps) {
   if (picked.length === 0) {
     return <span className="text-[13px] text-ink-350">도시를 1개 이상 골라 주세요</span>;
@@ -37,6 +38,7 @@ export function PcPickedChips({ picked, onRemove }: PcPickedChipsProps) {
 
 type ChipLabelProps = { city: City };
 
+/** 칩 안 — 도시 사진 24 · 이름 */
 function ChipLabel({ city }: ChipLabelProps) {
   return (
     <>

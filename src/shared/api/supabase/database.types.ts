@@ -1129,6 +1129,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_trip_cities: {
+        Args: { p_trip_id: string; p_city_ids: string[] };
+        Returns: undefined;
+      };
       change_home_currency: {
         Args: {
           p_trip_id: string;

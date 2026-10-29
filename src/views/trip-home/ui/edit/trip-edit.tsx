@@ -1,6 +1,7 @@
 "use client";
 
 import { DeleteTripDialog, type Trip } from "@/entities/trip";
+import { EditCitiesDialog } from "@/features/trip/edit-cities";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { InviteDialog } from "@/features/trip/invite-member";
 
@@ -18,7 +19,7 @@ type TripEditProps = {
 };
 
 /**
- * 여행 홈 머리의 「편집」 — 모바일은 바텀시트, PC 는 드롭다운 메뉴. 고른 줄의 창(제목 · 날짜 · 일행 초대 · 홈 위젯 · 나가기 · 삭제)도 여기서 그린다.
+ * 여행 홈 머리의 「편집」 — 모바일은 바텀시트, PC 는 드롭다운 메뉴. 고른 줄의 창(도시 · 제목 · 날짜 · 일행 초대 · 홈 위젯 · 나가기 · 삭제)도 여기서 그린다.
  * 기준 화폐 · 여행 환율 · 멤버 내보내기는 설정 탭에 그대로 있다
  */
 export function TripEdit({ trip, layout, className }: TripEditProps) {
@@ -27,6 +28,7 @@ export function TripEdit({ trip, layout, className }: TripEditProps) {
   return (
     <>
       <Menu menu={edit.menu} onChoose={edit.choose} className={className} />
+      <EditCitiesDialog tripId={trip.id} open={edit.open === "cities"} onClose={edit.close} />
       <TitleDialog trip={trip} open={edit.open === "title"} onClose={edit.close} />
       <EditDatesDialog trip={edit.open === "dates" ? trip : null} onClose={edit.close} />
       <InviteDialog trip={trip} open={edit.open === "invite"} onClose={edit.close} />

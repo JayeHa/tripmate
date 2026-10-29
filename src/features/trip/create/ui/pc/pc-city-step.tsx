@@ -1,7 +1,7 @@
+import { CityCatalogPicker } from "@/entities/city";
 import { SearchField } from "@/shared/ui/search-field";
 
 import type { TripCreateState } from "../../model/use-trip-create";
-import { CityStepBody } from "../parts/city-step-body";
 
 type PcCityStepProps = { state: TripCreateState };
 
@@ -17,7 +17,12 @@ export function PcCityStep({ state }: PcCityStepProps) {
           aria-label="도시 검색"
         />
       </div>
-      <CityStepBody state={state} layout="pc" />
+      <CityCatalogPicker
+        query={state.query}
+        selected={state.picked.map((c) => c.id)}
+        onToggle={state.toggle}
+        layout="pc"
+      />
     </>
   );
 }
