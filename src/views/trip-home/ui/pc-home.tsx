@@ -20,12 +20,7 @@ export function PcHome({ tripId, trip, tab, onTab }: PcHomeProps) {
   return (
     <main className="flex flex-1 flex-col bg-surface-sunken">
       <div className="sticky top-(--shell-top) z-20 border-b border-divider bg-white">
-        <HomeTitle
-          tripId={tripId}
-          trip={trip}
-          size="pc"
-          className="mx-auto w-full max-w-270 px-10 pt-6.5"
-        />
+        <HomeTitle trip={trip} size="pc" className="mx-auto w-full max-w-270 px-10 pt-6.5" />
         <HomeTabBar tab={tab} onSelect={onTab} variant="pc" />
       </div>
       <HomeTabBody tripId={tripId} trip={trip} tab={tab} layout="pc" />

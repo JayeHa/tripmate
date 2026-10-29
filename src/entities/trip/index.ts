@@ -5,6 +5,7 @@ export * from "./lib/title";
 export * from "./model/schema";
 export * from "./model/types";
 export * from "./model/use-trip";
+export * from "./ui/delete-trip-dialog";
 export * from "./ui/trip-card";
 export * from "./ui/trip-row";
 export * from "./ui/trip-row-compact";

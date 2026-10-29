@@ -169,6 +169,19 @@ export async function updateTrip(tripId: string, values: TripFormValues): Promis
   return toTrip(data);
 }
 
+/** 여행 제목만 바꾼다 — 일행 모두의 제목이 함께 바뀐다 */
+export async function updateTripTitle(tripId: string, title: string): Promise<Trip> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trips")
+    .update({ title })
+    .eq("id", tripId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return toTrip(data);
+}
+
 export async function deleteTrip(tripId: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("trips").delete().eq("id", tripId);

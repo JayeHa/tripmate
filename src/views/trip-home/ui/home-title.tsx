@@ -1,11 +1,9 @@
-import Link from "next/link";
-
 import type { Trip } from "@/entities/trip";
 import { todayISO } from "@/shared/lib/days";
-import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 import { ddayChipLabel, homeRangeLabel } from "../lib/home-header";
+import { TripEdit } from "./edit/trip-edit";
 
 type Size = "mobile" | "pc";
 
@@ -50,13 +48,12 @@ const STYLE: Record<Size, { root: string; col: string; title: string; row: strin
     },
   };
 
-type HomeTitleProps = { tripId: string; trip: Trip; size: Size; className?: string };
+type HomeTitleProps = { trip: Trip; size: Size; className?: string };
 
 /**
- * 홈 머리의 여행 이름 줄 — 왼쪽 여행 이름 · D-day 칩 · 기간, 오른쪽 아래 「편집」.
- * 「편집」 은 여행 편집 메뉴가 생기기 전까지 설정 화면(제목 · 날짜 · 일행 초대)으로 보낸다
+ * 홈 머리의 여행 이름 줄 — 왼쪽 여행 이름 · D-day 칩 · 기간, 오른쪽 아래 「편집」(여행 편집 메뉴)
  */
-export function HomeTitle({ tripId, trip, size, className }: HomeTitleProps) {
+export function HomeTitle({ trip, size, className }: HomeTitleProps) {
   const s = STYLE[size];
   return (
     <div className={cn("flex items-end", s.root, className)}>
@@ -71,13 +68,11 @@ export function HomeTitle({ tripId, trip, size, className }: HomeTitleProps) {
           </span>
         </div>
       </div>
-      <Link
-        href={`/trips/${tripId}/settings`}
-        transitionTypes={NAV.tab}
+      <TripEdit
+        trip={trip}
+        layout={size}
         className={cn("shrink-0 font-semibold whitespace-nowrap text-ink-500", s.edit)}
-      >
-        편집
-      </Link>
+      />
     </div>
   );
 }

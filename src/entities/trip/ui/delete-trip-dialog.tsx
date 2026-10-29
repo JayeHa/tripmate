@@ -1,6 +1,5 @@
 "use client";
 
-import type { Trip } from "@/entities/trip";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -10,7 +9,9 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
 
-type Props = {
+import type { Trip } from "../model/types";
+
+type DeleteTripDialogProps = {
   trip: Trip | null;
   pending: boolean;
   /** 요청이 서버에 가 있는 동안은 닫지 못하게 한다. 오프라인 대기 중이면 false. */
@@ -20,7 +21,15 @@ type Props = {
   onConfirm: (trip: Trip) => void;
 };
 
-export function DeleteTripDialog({ trip, pending, locked, error, onCancel, onConfirm }: Props) {
+/** 여행 삭제 확인 창 — 방장만 연다(여행 목록 · 여행 홈 「편집」). 지우는 동안은 닫지 못하고, 실패하면 이유를 보인다 */
+export function DeleteTripDialog({
+  trip,
+  pending,
+  locked,
+  error,
+  onCancel,
+  onConfirm,
+}: DeleteTripDialogProps) {
   return (
     // 삭제 중에는 닫지 않는다. 닫히면 실패해도 알 수 없다.
     <AlertDialog open={Boolean(trip)} locked={locked} onOpenChange={(open) => !open && onCancel()}>

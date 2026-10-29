@@ -16,6 +16,7 @@ import {
   setTripRate,
   updateTrip,
   updateTripDates,
+  updateTripTitle,
 } from "../api/trips";
 import type { TripFormValues } from "./schema";
 
@@ -46,6 +47,21 @@ export function useUpdateTrip(tripId: string) {
     onSuccess: (trip) => {
       qc.setQueryData(queryKeys.trips.detail(tripId), trip);
       void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
+    },
+  });
+}
+
+/**
+ * 여행 제목 바꾸기(여행 홈 「편집」) — 받은 여행으로 바로 바꾸고 목록만 다시 읽는다.
+ * 여행 키 아래의 일정 · 지출은 제목과 상관없어서 exact 로 목록 하나만
+ */
+export function useUpdateTripTitle(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (title: string) => updateTripTitle(tripId, title),
+    onSuccess: (trip) => {
+      qc.setQueryData(queryKeys.trips.detail(tripId), trip);
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.all, exact: true });
     },
   });
 }
@@ -128,11 +144,19 @@ export function useUpdateTripDates() {
   });
 }
 
+/**
+ * 여행 삭제. 끝나면 이 여행의 캐시(일정 · 지출 등 여행 키 아래 전부)를 지우고 목록만 다시 읽는다.
+ * 여행 키 전체를 다시 읽으면 아직 열려 있는 여행 화면의 쿼리가 빈 값 · 오류 재시도로 바뀌고,
+ * 그게 끝나야 onSuccess 가 끝나서 화면 이동이 늦어진다
+ */
 export function useDeleteTrip() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteTrip,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.trips.all }),
+    onSuccess: (_data, tripId) => {
+      qc.removeQueries({ queryKey: queryKeys.trips.detail(tripId) });
+      return qc.invalidateQueries({ queryKey: queryKeys.trips.all, exact: true });
+    },
   });
 }
 

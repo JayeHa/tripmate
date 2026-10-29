@@ -4,7 +4,7 @@ import { Luggage } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useMyProfile, useUser } from "@/entities/session";
-import { groupTrips, type Trip, useDeleteTrip, useTrips } from "@/entities/trip";
+import { DeleteTripDialog, groupTrips, type Trip, useDeleteTrip, useTrips } from "@/entities/trip";
 import { AccountSheet } from "@/features/account-menu";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
@@ -18,7 +18,6 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { Toast, type ToastMessage } from "@/shared/ui/toast";
 
 import { CreateTripCard } from "./create-trip-card";
-import { DeleteTripDialog } from "./delete-trip-dialog";
 import { TripActionsMenu } from "./trip-actions-menu";
 import { TripActionsSheet } from "./trip-actions-sheet";
 import { TripGroups } from "./trip-groups";

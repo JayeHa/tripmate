@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/** 여행 제목 글자 수 상한 — 설정 폼과 홈 「여행 제목 수정」 이 함께 쓴다 */
+export const TRIP_TITLE_MAX = 50;
+
 export const exchangeRateSchema = z.object({
   currency: z.string().min(1, "화폐를 선택하세요"),
   unit: z.number().positive("단위는 0보다 커야 합니다"),
@@ -8,7 +11,7 @@ export const exchangeRateSchema = z.object({
 
 export const tripFormSchema = z
   .object({
-    title: z.string().trim().min(1, "여행 이름을 입력하세요").max(50),
+    title: z.string().trim().min(1, "여행 이름을 입력하세요").max(TRIP_TITLE_MAX),
     start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "시작일을 선택하세요"),
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "종료일을 선택하세요"),
     home_currency: z.string().min(1),
