@@ -23,7 +23,8 @@ import { HolidayCredit } from "./holiday-credit";
 import { RateCredit } from "./rate-credit";
 import { WeatherCredit } from "./weather-credit";
 
-const ICON: Record<WidgetTile["key"], LucideIcon> = {
+/** 위젯 아이콘 — 「홈 위젯 편집」 줄도 같은 것을 쓴다 */
+export const WIDGET_ICON: Record<WidgetTile["key"], LucideIcon> = {
   weather: CloudSun,
   rate: Coins,
   holiday: CalendarDays,
@@ -42,7 +43,7 @@ const SKY_ICON: Record<Sky, LucideIcon> = {
 };
 
 /** 타일 아이콘 — 날씨는 하늘 모양대로(모르면 구름 낀 해) */
-const iconOf = (t: WidgetTile) => (t.sky ? SKY_ICON[t.sky] : ICON[t.key]);
+const iconOf = (t: WidgetTile) => (t.sky ? SKY_ICON[t.sky] : WIDGET_ICON[t.key]);
 
 type TileProps = {
   tile: WidgetTile;
@@ -99,39 +100,46 @@ export function WidgetRow({ tiles, layout, onOpenRate, credits }: WidgetRowProps
   );
 }
 
+type MobileTilesProps = {
+  tiles: WidgetTile[];
+  /** 환율 타일을 누르면 — 없으면 누를 수 없는 미리보기 */
+  onOpenRate?: () => void;
+};
+
+/** 모바일 타일 — 회색 타일(76 · r12)을 나란히. 「홈 위젯 편집」 의 미리보기도 이것을 쓴다 */
+export function MobileTiles({ tiles, onOpenRate }: MobileTilesProps) {
+  return (
+    <div className="flex gap-2">
+      {tiles.map((t) => {
+        const Icon = iconOf(t);
+        return (
+          <Tile
+            key={t.key}
+            tile={t}
+            onOpen={t.key === "rate" ? onOpenRate : undefined}
+            className="flex h-19 min-w-0 flex-1 flex-col gap-0.5 rounded-card bg-surface-sunken px-3 py-2.5"
+          >
+            <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold whitespace-nowrap text-ink-400">
+              <Icon className="size-3.25 shrink-0" aria-hidden="true" />
+              <span className="truncate">{t.label}</span>
+            </span>
+            <span className="truncate text-base font-extrabold text-ink-900">{t.main}</span>
+            <span className={cn("truncate text-[11px] text-ink-400", t.holiday && "text-holiday")}>
+              {t.sub}
+            </span>
+          </Tile>
+        );
+      })}
+    </div>
+  );
+}
+
 type TilesProps = Omit<WidgetRowProps, "credits">;
 
 /** 타일들 — 모바일 회색 타일 나란히, PC 흰 카드 한 장 */
 function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
+  if (layout === "mobile") return <MobileTiles tiles={tiles} onOpenRate={onOpenRate} />;
   const openOf = (t: WidgetTile) => (t.key === "rate" ? onOpenRate : undefined);
-  if (layout === "mobile") {
-    return (
-      <div className="flex gap-2">
-        {tiles.map((t) => {
-          const Icon = iconOf(t);
-          return (
-            <Tile
-              key={t.key}
-              tile={t}
-              onOpen={openOf(t)}
-              className="flex h-19 min-w-0 flex-1 flex-col gap-0.5 rounded-card bg-surface-sunken px-3 py-2.5"
-            >
-              <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold whitespace-nowrap text-ink-400">
-                <Icon className="size-3.25 shrink-0" aria-hidden="true" />
-                <span className="truncate">{t.label}</span>
-              </span>
-              <span className="truncate text-base font-extrabold text-ink-900">{t.main}</span>
-              <span
-                className={cn("truncate text-[11px] text-ink-400", t.holiday && "text-holiday")}
-              >
-                {t.sub}
-              </span>
-            </Tile>
-          );
-        })}
-      </div>
-    );
-  }
   return (
     <div className="flex overflow-hidden rounded-card border border-line-card bg-white shadow-[0_1px_6px_rgba(0,0,0,.05)]">
       {tiles.map((t, i) => {

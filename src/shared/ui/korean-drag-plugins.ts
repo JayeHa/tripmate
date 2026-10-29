@@ -1,15 +1,20 @@
 import { Accessibility, type DragDropManager } from "@dnd-kit/dom";
 import { isSortable } from "@dnd-kit/react/sortable";
 
-import { DRAG_INSTRUCTIONS, droppedText, movedText, pickedUpText } from "../lib/drag-announcements";
+import {
+  DRAG_INSTRUCTIONS,
+  droppedText,
+  movedText,
+  pickedUpText,
+} from "@/shared/lib/drag-announcements";
 
 /** 끌고 있는 것 */
 type Source = DragDropManager["dragOperation"]["source"];
 
-/** 끄는 일정의 이름과 지금 자리(1부터). 정렬 목록 밖이면 null */
+/** 끄는 항목의 이름과 지금 자리(1부터). 정렬 목록 밖이면 null */
 function describe(source: Source): { name: string; position: number } | null {
   if (!source || !isSortable(source)) return null;
-  const name = (source.data as { name?: string } | undefined)?.name ?? "일정";
+  const name = (source.data as { name?: string } | undefined)?.name ?? "항목";
   return { name, position: source.index + 1 };
 }
 

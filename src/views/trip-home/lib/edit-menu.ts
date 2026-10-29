@@ -1,11 +1,12 @@
 /** 여행 홈 「편집」 메뉴에서 여는 것 */
-export type EditAction = "title" | "dates" | "invite" | "leave" | "delete";
+export type EditAction = "title" | "dates" | "invite" | "widgets" | "leave" | "delete";
 
 /** 메뉴 줄 글자 */
 export const EDIT_LABEL: Record<EditAction, string> = {
   title: "여행 제목 수정",
   dates: "여행 날짜 수정",
   invite: "일행 초대",
+  widgets: "홈 위젯 편집",
   leave: "여행 나가기",
   delete: "여행 삭제",
 };
@@ -15,7 +16,7 @@ export const EDIT_LABEL: Record<EditAction, string> = {
  * 내가 누구인지 아직 모르면(null) 빨간 줄을 숨긴다. 보였다가 바뀌는 쪽보다 낫다
  */
 export function editMenu(isOwner: boolean | null): EditAction[] {
-  const base: EditAction[] = ["title", "dates", "invite"];
+  const base: EditAction[] = ["title", "dates", "invite", "widgets"];
   if (isOwner === null) return base;
   return [...base, isOwner ? "delete" : "leave"];
 }

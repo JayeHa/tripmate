@@ -35,7 +35,7 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
   const auto = tripPhase(trip.start_date, trip.end_date, today);
   const phase = picked ?? auto;
   const widgets = useWidgets(tripId, trip);
-  const showWidgets = phase !== "post" && widgets.tiles.length > 0;
+  const showWidgets = phase !== "post" && widgets !== null && widgets.tiles.length > 0;
   return (
     <div className={cn("flex flex-col pb-6", layout === "pc" && "mx-auto w-full max-w-270")}>
       <div className={cn("flex items-center gap-2", layout === "pc" ? "px-10 pt-5" : "px-5 pt-3")}>
@@ -72,7 +72,7 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
         onPeek={setPeek}
       />
       <PeekDialog peek={peek} onClose={() => setPeek(null)} />
-      {widgets.currency && (
+      {widgets && (
         <RateCalculator
           open={calcOpen}
           onClose={() => setCalcOpen(false)}

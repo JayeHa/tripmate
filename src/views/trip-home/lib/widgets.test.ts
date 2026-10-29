@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { holidayTile, localTimeText, offsetFromKorea, offsetLabel, widgetTiles } from "./widgets";
+import { DEFAULT_WIDGET_PREFS, visibleTiles } from "./widget-prefs";
+import {
+  holidayTile,
+  localTimeText,
+  offsetFromKorea,
+  offsetLabel,
+  widgetSlots,
+  type WidgetSource,
+} from "./widgets";
+
+/** 사용자가 손대지 않았을 때 위젯 줄에 보이는 타일 */
+const widgetTiles = (src: WidgetSource) => visibleTiles(widgetSlots(src), DEFAULT_WIDGET_PREFS);
 
 /** 2026-11-01 05:32 UTC — 한국 14:32 */
 const AT = new Date(Date.UTC(2026, 10, 1, 5, 32));
@@ -32,7 +43,7 @@ describe("localTimeText", () => {
   });
 });
 
-describe("widgetTiles", () => {
+describe("widgetSlots — 손대지 않았을 때 보이는 타일", () => {
   const base = {
     home: "KRW",
     rates: { JPY: { unit: 100, value: 920 } },
@@ -82,6 +93,31 @@ describe("widgetTiles", () => {
     expect(
       widgetTiles({ ...base, currency: "JPY", timeZone: "Asia/Tokyo", weather }).map((t) => t.key),
     ).toEqual(["weather", "rate"]);
+  });
+
+  it("자동으로 숨긴 위젯도 켜면 보일 타일이 있다 — 환율은 그릴 것이 없으면 없음", () => {
+    const slots = widgetSlots({
+      ...base,
+      currency: "KRW",
+      timeZone: "Asia/Seoul",
+      holidays: [],
+    });
+    expect(slots.time).toEqual({
+      tile: { key: "time", label: "현지 시간", main: "14:32", sub: "한국과 같음" },
+      auto: false,
+    });
+    expect(slots.holiday).toEqual({
+      tile: { key: "holiday", label: "공휴일", main: "없음", sub: "남은 기간에 없어요" },
+      auto: false,
+    });
+    expect(slots.rate).toEqual({ tile: null, auto: false });
+  });
+
+  it("공휴일을 받기 전이면 타일 없음(자동으로는 보임)", () => {
+    expect(widgetSlots({ ...base, currency: "JPY", timeZone: "Asia/Tokyo" }).holiday).toEqual({
+      tile: null,
+      auto: true,
+    });
   });
 });
 
