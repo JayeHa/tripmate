@@ -52,7 +52,7 @@ export function PlaceInfoBand({
       </div>
       {onRegisterStay && <RegisterStayNote onRegister={onRegisterStay} />}
       {rows.map((row) => (
-        <InfoLine key={row.label} row={row} />
+        <PlaceInfoLine key={row.label} row={row} />
       ))}
       {rows.length === 0 && (
         <p className="text-[13px] text-ink-350">설명 · 운영시간이 비어 있어요.</p>
@@ -81,10 +81,10 @@ export function PlaceInfoBand({
   );
 }
 
-type InfoLineProps = { row: InfoRow };
+type PlaceInfoLineProps = { row: InfoRow };
 
-/** 표 한 줄: 라벨 · 값. 운영시간이 요일별이면 「요일별 보기」 로 7일을 펼친다 */
-function InfoLine({ row }: InfoLineProps) {
+/** 표 한 줄: 라벨 · 값. 운영시간이 요일별이면 「요일별 보기」 로 7일을 펼친다(홈 가이드 상세도 쓴다) */
+export function PlaceInfoLine({ row }: PlaceInfoLineProps) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex gap-3 text-[13px]/normal">

@@ -103,6 +103,48 @@ export type Database = {
           },
         ];
       };
+      trip_places: {
+        Row: {
+          trip_id: string;
+          place_id: string;
+          added_by: string | null;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          place_id: string;
+          added_by?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          trip_id?: string;
+          place_id?: string;
+          added_by?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "trip_places_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "trip_places_trip_id_fkey";
+            columns: ["trip_id"];
+            isOneToOne: false;
+            referencedRelation: "trips";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       city_regions: {
         Row: {
           id: string;

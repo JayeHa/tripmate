@@ -20,6 +20,11 @@ export const queryKeys = {
   scheduleItems: (tripId: string) => ["trips", tripId, "schedule-items"] as const,
   /** 대체 장소 줄. 일정 키 아래라 일정을 무효화하면 함께 다시 읽는다 */
   alternatives: (tripId: string) => ["trips", tripId, "schedule-items", "alternatives"] as const,
+  /**
+   * 여행 가이드 보관함(trip_places + 장소). 일정 키 아래에 둔다 — 일정에 장소를 넣으면 DB 가 보관함에도 넣으므로,
+   * 일정을 무효화하는 곳(저장 · 실시간 · 장소 수정)이 보관함도 함께 다시 읽게
+   */
+  guidePlaces: (tripId: string) => ["trips", tripId, "schedule-items", "guide"] as const,
   /** 여행이 고른 도시(순서대로, 좌표 포함) */
   tripCities: (tripId: string) => ["trips", tripId, "cities"] as const,
   /** 「일정 추가」의 저장한 장소 — 이 여행 도시의 내 장소 */

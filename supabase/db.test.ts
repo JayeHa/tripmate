@@ -1831,6 +1831,105 @@ describe("여행 환율 저장 (0066)", () => {
   });
 });
 
+describe("여행 가이드 보관함 (0067)", () => {
+  /** 그 여행 보관함의 장소 이름 */
+  async function guideNames(trip: string) {
+    const { rows } = await db.query<{ name: string }>(
+      `select p.name from public.trip_places tp join public.places p on p.id = tp.place_id
+       where tp.trip_id = '${trip}' order by p.name`,
+    );
+    return rows.map((r) => r.name);
+  }
+
+  it("일정에 넣은 장소(대체 장소 포함)가 보관함에 들어가고, 일정에서 지워도 남는다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-03-01", "2028-03-01");
+    const main = await addPlace(trip, 0, { name: "라멘집" });
+    await db.query(`select public.create_place_schedule($1, 0, $2, $3)`, [
+      trip,
+      JSON.stringify({ name: "대체 카페" }),
+      JSON.stringify({ alternative_of: main }),
+    ]);
+    expect(await guideNames(trip)).toEqual(["대체 카페", "라멘집"]);
+    await db.query(`delete from public.schedule_items where id = '${main}'`);
+    expect(await guideNames(trip)).toEqual(["대체 카페", "라멘집"]);
+  });
+
+  it("보관함에만 있는 남의 장소도 멤버는 읽고 일정에 붙인다 — 멤버가 아니면 못 읽는다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-03-03", "2028-03-03");
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.places (city_id, name) values ('tokyo', 'A 의 보관 장소') returning id`,
+    );
+    const place = rows[0].id;
+    await db.exec(
+      `reset role; insert into public.trip_places (trip_id, place_id, added_by) values ('${trip}', '${place}', '${A}');`,
+    );
+    await as(B);
+    expect((await db.query(`select 1 from public.places where id = '${place}'`)).rows).toHaveLength(
+      0,
+    );
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    expect((await db.query(`select 1 from public.places where id = '${place}'`)).rows).toHaveLength(
+      1,
+    );
+    await db.query(`select public.add_schedule_places($1, 0, $2)`, [
+      trip,
+      JSON.stringify([{ place_id: place }]),
+    ]);
+  });
+
+  it("멤버가 나가면 그 사람이 담은 장소의 보관함 줄도 소유자 사본으로 — 줄은 하나, 메모는 남는다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-03-05", "2028-03-05");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    await addPlace(trip, 0, { name: "B 의 맛집", google_place_id: "g-guide-leave" });
+    await db.exec(
+      `reset role; update public.trip_places set memo = '꼭 가기' where trip_id = '${trip}';`,
+    );
+    await as(B);
+    await db.query(
+      `delete from public.trip_members where trip_id = '${trip}' and user_id = '${B}'`,
+    );
+    await as(A);
+    const { rows } = await db.query<{ owner: string; memo: string }>(
+      `select p.created_by owner, tp.memo from public.trip_places tp
+       join public.places p on p.id = tp.place_id where tp.trip_id = '${trip}'`,
+    );
+    expect(rows).toEqual([{ owner: A, memo: "꼭 가기" }]);
+  });
+
+  it("마이그레이션 전에 일정에 있던 장소를 처음 넣은 사람으로 채운다", async () => {
+    const before = MIGRATIONS.filter((f) => f < "0067");
+    const pg = await migratedDb(before);
+    await pg.exec(`insert into auth.users (id, email) values ('${A}', 'a@x');`);
+    await pg.exec(`select set_config('test.uid', '${A}', false); set role authenticated;`);
+    const { rows } = await pg.query<{ id: string }>(
+      `select public.create_trip('t', '2028-03-07', '2028-03-07', array['tokyo']) id`,
+    );
+    await pg.query(`select public.add_schedule_place($1, 0, $2)`, [
+      rows[0].id,
+      JSON.stringify({ name: "옛 장소" }),
+    ]);
+    await pg.exec("reset role;");
+    await applyMigration(
+      pg,
+      MIGRATIONS.find((f) => f.startsWith("0067"))!,
+    );
+    const { rows: got } = await pg.query<{ added_by: string }>(
+      `select added_by from public.trip_places where trip_id = '${rows[0].id}'`,
+    );
+    expect(got).toEqual([{ added_by: A }]);
+    await pg.close();
+  }, 30_000);
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {

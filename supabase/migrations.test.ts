@@ -22,6 +22,8 @@ const ANONYMOUS_ALLOWED: Record<string, string> = {
     "판정 함수. 읽기만 한다. 익명도 자기 장소를 자기 여행에 붙여야 둘러보기가 동작한다",
   handle_new_user: "auth.users 트리거. 익명 가입도 profiles 가 필요하다",
   handle_new_trip: "trips 트리거. 소유자를 멤버로 넣는다. 둘러보기가 이것 없이는 동작하지 않는다",
+  add_trip_place_from_item:
+    "schedule_items 트리거. 내가 일정에 넣은 장소를 같은 여행 보관함에 넣기만 한다. 둘러보기 여행의 일정도 보관함에 보여야 한다",
   sync_place_stay_expenses:
     "places 트리거. 숙소 비용 이름을 장소 이름으로 맞추기만 한다. 익명도 자기 장소 이름을 고친다",
 };
