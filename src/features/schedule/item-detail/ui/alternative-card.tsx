@@ -53,11 +53,12 @@ export function AlternativeCard({
   const [swapping, setSwapping] = useState(false);
   const sub = alt.place?.description;
   return (
-    // 카드 빈 곳 · 설명 · 거리를 누르면 지도에서 고른다. 이름 · 바꾸기 · 빼기 버튼은 각자 동작한다
-
+    // 카드 빈 곳 · 설명 · 거리를 누르면 지도에서 고른다. 이름 · 바꾸기 · 빼기 버튼은 각자 동작한다.
+    // 확인창(바꾸기 · 빼기)은 body 로 포털되지만 React 이벤트는 이 div 까지 올라온다 — DOM 으로 카드 안을 누른 것만 받는다
     <div
       onClick={(e) => {
-        if (pin && !(e.target as HTMLElement).closest("button,a")) onToggle();
+        const target = e.target as HTMLElement;
+        if (pin && e.currentTarget.contains(target) && !target.closest("button,a")) onToggle();
       }}
       className={cn(
         "flex items-center gap-2 rounded-card border px-3.5 py-3 transition-colors duration-250",
