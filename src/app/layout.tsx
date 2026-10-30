@@ -14,9 +14,15 @@ export const metadata: Metadata = {
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
+/**
+ * maximumScale 1 — iOS 는 글자가 16px 보다 작은 입력칸을 누르면 화면을 확대하고, 키보드를 닫아도 확대가 남는다.
+ * 입력칸 글자는 시안대로 13~15px 이라 이 한 줄로 자동 확대를 끈다. iOS 의 손가락 확대는 그대로지만
+ * 안드로이드는 손가락 확대도 막힌다(2026-10-30 사용자 결정, 글자 크기 유지 쪽)
+ */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#ffffff",
 };
