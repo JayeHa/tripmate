@@ -1,30 +1,18 @@
 "use client";
 
-import {
-  ArrowLeft,
-  CloudDownload,
-  type LucideIcon,
-  Share,
-  Smartphone,
-  SquarePlus,
-} from "lucide-react";
+import { ArrowLeft, CloudDownload } from "lucide-react";
 import { useState } from "react";
 
-import { promptInstall } from "@/shared/lib/install-prompt";
+import { type InstallMode, promptInstall, useInApp } from "@/shared/lib/install-prompt";
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
+import { InAppGuide } from "@/shared/ui/in-app-guide";
+import { InstallSteps } from "@/shared/ui/install-steps";
 
 import type { TitleComponent } from "./profile-editor";
 
-/** iOS Safari 에서 홈 화면에 추가하는 순서 */
-const IOS_STEPS: readonly { n: number; text: string; icon: LucideIcon }[] = [
-  { n: 1, text: "Safari 아래쪽 공유 버튼을 눌러요", icon: Share },
-  { n: 2, text: "「홈 화면에 추가」를 골라요", icon: SquarePlus },
-  { n: 3, text: "홈 화면의 tripmate 아이콘으로 열어요", icon: Smartphone },
-];
-
 type InstallGuideProps = {
-  mode: "ios" | "prompt";
+  mode: NonNullable<InstallMode>;
   /** PC 드롭다운인가 — 설치 뒤 생기는 자리가 「앱 목록」 이다 */
   pc: boolean;
   Title: TitleComponent;
@@ -32,7 +20,8 @@ type InstallGuideProps = {
 };
 
 /**
- * 홈 화면에 앱 추가 — iOS 는 공유 메뉴 3단계, 설치 창을 띄울 수 있는 브라우저(Chrome · Edge)는 「설치하기」.
+ * 홈 화면에 앱 추가 — 설치 창을 띄울 수 있는 브라우저(Chrome · Edge)는 「설치하기」, iPhone 은 공유 메뉴 3단계(Safari 는 아래 · Chrome · Edge 는 주소창 오른쪽),
+ * 앱 안 브라우저는 바깥 브라우저로 열기.
  * 맨 아래 안내 줄은 안 열어 본 화면까지 받는 「오프라인용으로 받기」 로 이끈다
  */
 export function InstallGuide({ mode, pc, Title, onBack }: InstallGuideProps) {
@@ -48,7 +37,7 @@ export function InstallGuide({ mode, pc, Title, onBack }: InstallGuideProps) {
         <p className="text-sm leading-[1.6] text-ink-500">
           앱처럼 바로 열리고, 저장해 둔 일정·바우처를 오프라인에서도 볼 수 있어요.
         </p>
-        {mode === "ios" ? <IosSteps /> : <InstallButton pc={pc} onDone={onBack} />}
+        <GuideBody mode={mode} pc={pc} onBack={onBack} />
         <p className="mt-1 flex items-start gap-1.5 border-t border-surface-muted pt-3.5 text-xs leading-[1.55] text-ink-350">
           <CloudDownload className="mt-0.5 size-3.5 shrink-0" />
           <span className="text-pretty">
@@ -60,21 +49,33 @@ export function InstallGuide({ mode, pc, Title, onBack }: InstallGuideProps) {
   );
 }
 
-/** iOS 3단계 카드 */
-function IosSteps() {
+type GuideBodyProps = { mode: NonNullable<InstallMode>; pc: boolean; onBack: () => void };
+
+/** 브라우저별 내용 — 「설치하기」 · 3단계 · 바깥 브라우저로 열기 */
+function GuideBody({ mode, pc, onBack }: GuideBodyProps) {
+  const inApp = useInApp();
+  const [copied, setCopied] = useState(false);
+  if (mode === "prompt") return <InstallButton pc={pc} onDone={onBack} />;
+  if (mode !== "in-app" || !inApp)
+    return <InstallSteps share={mode === "ios-top" ? "top" : "bottom"} />;
   return (
-    <ol className="flex flex-col gap-3">
-      {IOS_STEPS.map(({ n, text, icon: Icon }) => (
-        <li key={n} className="flex items-center gap-3 rounded-card bg-surface-sunken px-3.5 py-3">
-          <span className="flex size-6.5 shrink-0 items-center justify-center rounded-full bg-action text-[13px] font-extrabold text-on-action">
-            {n}
-          </span>
-          <span className="flex-1 text-sm/normal text-ink-900">{text}</span>
-          <Icon className="size-5 shrink-0 text-ink-700" aria-hidden />
-        </li>
-      ))}
-    </ol>
+    <>
+      <InAppGuide
+        inApp={inApp}
+        Title={PlainTitle}
+        onClose={onBack}
+        onCopied={() => setCopied(true)}
+      />
+      {copied && <p className="text-center text-[13px] text-ink-500">주소를 복사했어요</p>}
+    </>
   );
+}
+
+type PlainTitleProps = { className?: string; children: React.ReactNode };
+
+/** 메뉴 안에서는 창 제목이 따로 있어 안내 제목을 보통 글로 */
+function PlainTitle({ className, children }: PlainTitleProps) {
+  return <p className={className}>{children}</p>;
 }
 
 type InstallButtonProps = { pc: boolean; onDone: () => void };
