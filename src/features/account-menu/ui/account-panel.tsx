@@ -21,7 +21,8 @@ type Props = {
 };
 
 /** 메뉴 안에서 바뀌는 화면 — 앱 추가는 연 때의 안내 방식을 쥔다(설치 창을 띄우면 방식이 사라진다) */
-type View = { name: "main" } | { name: "profile" } | { name: "install"; mode: "ios" | "prompt" };
+type View =
+  { name: "main" } | { name: "profile" } | { name: "install"; mode: NonNullable<InstallMode> };
 
 /**
  * 계정 메뉴 내용. 모바일은 바텀시트, PC 는 드롭다운이 감싼다.

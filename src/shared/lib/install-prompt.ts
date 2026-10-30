@@ -3,10 +3,17 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * 「홈 화면에 앱 추가」 를 어떻게 안내할지 — 설치 창을 띄울 수 있으면 「설치하기」(Chrome · Edge),
- * iOS Safari 는 공유 메뉴 3단계, 둘 다 아니면 null(이미 설치해 앱으로 열었거나 설치할 수 없는 브라우저 — 항목을 숨긴다)
+ * 「홈 화면에 앱 추가」 를 어떻게 안내할지
+ * - `prompt`: 설치 창을 띄울 수 있다(Android Chrome · 삼성 인터넷, 데스크톱 Chrome · Edge) — 「설치」
+ * - `ios`: iPhone · iPad Safari — 아래쪽 공유 버튼 3단계
+ * - `ios-top`: iOS 16.4+ 의 Chrome · Edge — 주소창 오른쪽 공유 버튼 3단계
+ * - `in-app`: 카카오톡 · 인스타그램 · 네이버 같은 앱 안 브라우저 — 홈 화면에 추가할 수 없어 바깥 브라우저로 열게 한다
+ * - null: 이미 앱으로 열었거나 설치할 수 없는 브라우저 — 안내하지 않는다
  */
-export type InstallMode = "prompt" | "ios" | null;
+export type InstallMode = "prompt" | "ios" | "ios-top" | "in-app" | null;
+
+/** 앱 안 브라우저 — 이름(안내 문구) · Android 인가(Chrome 으로, 아니면 Safari 로) · 카카오톡인가(Android 는 바로 넘길 수 있다) */
+export type InApp = { name: string; android: boolean; kakao: boolean };
 
 /** Chrome · Edge 가 설치할 수 있을 때 보내는 이벤트 — 표준 타입에 없다 */
 type BeforeInstallPromptEvent = Event & {
@@ -41,6 +48,39 @@ export function captureInstallPrompt(): void {
   });
 }
 
+/** 앱 안 브라우저의 UA 표시와 이름 — 앞에서부터 찾는다 */
+const IN_APPS: readonly [RegExp, string][] = [
+  [/KAKAOTALK/i, "카카오톡"],
+  [/Instagram/, "인스타그램"],
+  [/NAVER\(inapp/, "네이버 앱"],
+  [/FBAN|FBAV/, "페이스북"],
+  [/Line\//, "라인"],
+  [/DaumApps/, "다음 앱"],
+];
+
+/** 앱 안 브라우저면 그 정보, 아니면 null */
+export function inAppOf(userAgent: string): InApp | null {
+  const hit = IN_APPS.find(([re]) => re.test(userAgent));
+  if (!hit) return null;
+  return { name: hit[1], android: /Android/.test(userAgent), kakao: hit[1] === "카카오톡" };
+}
+
+/** iPhone · iPad 인가 — iPadOS 는 데스크톱 Safari 처럼 「Macintosh」 로 알려 터치로 가른다 */
+function isIos(userAgent: string, maxTouchPoints: number): boolean {
+  return /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+}
+
+/**
+ * iOS 16.4 이상의 Chrome · Edge 인가 — 이때부터 Safari 밖에서도 공유 메뉴로 홈 화면에 추가할 수 있고, 공유 버튼은 주소창 오른쪽에 있다.
+ * 앱 안 브라우저는 아니다
+ */
+export function isIosTopShare(userAgent: string, maxTouchPoints: number): boolean {
+  if (!isIos(userAgent, maxTouchPoints) || !/CriOS|EdgiOS/.test(userAgent)) return false;
+  if (inAppOf(userAgent)) return false;
+  const [, major = "0", minor = "0"] = /OS (\d+)_(\d+)/.exec(userAgent) ?? [];
+  return Number(major) > 16 || (Number(major) === 16 && Number(minor) >= 4);
+}
+
 /** iOS 의 다른 브라우저 · 인앱 브라우저 — UA 에 Safari 가 들어 있어도 Safari 가 아니다 */
 const NOT_SAFARI =
   /CriOS|FxiOS|EdgiOS|OPiOS|KAKAOTALK|NAVER|Line\/|Instagram|FBAN|FBAV|DaumApps|Whale/;
@@ -51,20 +91,29 @@ const NOT_SAFARI =
  * iPadOS 는 데스크톱 Safari 처럼 「Macintosh」 로 알려 터치로 가른다
  */
 export function isIosSafari(userAgent: string, maxTouchPoints: number): boolean {
-  const ios =
-    /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
-  return ios && /Version\/.*Safari\//.test(userAgent) && !NOT_SAFARI.test(userAgent);
+  return (
+    isIos(userAgent, maxTouchPoints) &&
+    /Version\/.*Safari\//.test(userAgent) &&
+    !NOT_SAFARI.test(userAgent)
+  );
 }
 
-/** 안내 방식 — 이미 앱으로 열었으면 없음, 설치 창을 띄울 수 있으면 그것, 아니면 iOS Safari 만 3단계 */
+/**
+ * 안내 방식 — 이미 앱으로 열었으면 없음. 앱 안 브라우저면 바깥에서 열기가 먼저(설치 창도 공유 메뉴도 없다),
+ * 설치 창을 띄울 수 있으면 그것, 아니면 iOS Safari · iOS Chrome/Edge 는 3단계
+ */
 export function installModeOf(env: {
   standalone: boolean;
+  inApp: boolean;
   canPrompt: boolean;
   ios: boolean;
+  iosTop: boolean;
 }): InstallMode {
   if (env.standalone) return null;
+  if (env.inApp) return "in-app";
   if (env.canPrompt) return "prompt";
-  return env.ios ? "ios" : null;
+  if (env.ios) return "ios";
+  return env.iosTop ? "ios-top" : null;
 }
 
 /** 지금 안내 방식 — 기기 · 브라우저에서 읽는다 */
@@ -72,10 +121,13 @@ function snapshot(): InstallMode {
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const ua = navigator.userAgent;
   return installModeOf({
     standalone,
+    inApp: inAppOf(ua) !== null,
     canPrompt: deferred !== null,
-    ios: isIosSafari(navigator.userAgent, navigator.maxTouchPoints),
+    ios: isIosSafari(ua, navigator.maxTouchPoints),
+    iosTop: isIosTopShare(ua, navigator.maxTouchPoints),
   });
 }
 
@@ -101,4 +153,32 @@ export async function promptInstall(): Promise<boolean> {
   const { outcome } = await event.userChoice;
   notify();
   return outcome === "accepted";
+}
+
+/** 앱 안 브라우저 정보 — UA 는 바뀌지 않아 한 번만 읽는다(같은 객체를 돌려줘야 useSyncExternalStore 가 다시 그리지 않는다) */
+let inAppCache: { ua: string; value: InApp | null } | null = null;
+
+/** 지금 브라우저의 앱 안 브라우저 정보 */
+function inAppSnapshot(): InApp | null {
+  const ua = navigator.userAgent;
+  if (inAppCache?.ua !== ua) inAppCache = { ua, value: inAppOf(ua) };
+  return inAppCache.value;
+}
+
+/** 바뀌지 않는 값이라 들을 것이 없다 */
+function noSubscribe(): () => void {
+  return () => undefined;
+}
+
+/** 앱 안 브라우저면 그 정보(안내 문구 · Chrome 으로 바로 넘기기) — 서버 렌더 · 하이드레이션 동안은 null */
+export function useInApp(): InApp | null {
+  return useSyncExternalStore(noSubscribe, inAppSnapshot, () => null);
+}
+
+/**
+ * Android 카카오톡에서 이 주소를 기기 기본 브라우저(보통 Chrome)로 넘기는 주소 — 카카오톡 인앱 브라우저가 알아듣는 스킴이다.
+ * iOS 카카오톡은 이 스킴을 받지 않아 메뉴(⋯ → 다른 브라우저로 열기)로 안내한다
+ */
+export function kakaoOpenExternalUrl(href: string): string {
+  return `kakaotalk://web/openExternal?url=${encodeURIComponent(href)}`;
 }

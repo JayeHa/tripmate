@@ -1,11 +1,12 @@
 "use client";
 
 import { Luggage } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useMyProfile, useUser } from "@/entities/session";
 import { DeleteTripDialog, groupTrips, type Trip, useDeleteTrip, useTrips } from "@/entities/trip";
 import { AccountSheet } from "@/features/account-menu";
+import { InstallNudge } from "@/features/install-nudge";
 import { TripCreateFlow, useTripCreate } from "@/features/trip/create";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
 import { OfflineDownloadDialog, useOfflineDownload } from "@/features/trip/offline-download";
@@ -40,6 +41,7 @@ export function TripListView() {
   const createFlow = useTripCreate(() => setCreateOpen(false));
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const download = useOfflineDownload((next) => setToast({ ...next, id: Date.now() }));
+  const showToast = useCallback((text: string) => setToast({ text, id: Date.now() }), []);
   const openCreate = () => {
     createFlow.reset();
     setCreateOpen(true);
@@ -172,6 +174,7 @@ export function TripListView() {
         onConfirm={(trip) => deleteTrip.mutate(trip.id, { onSuccess: () => setConfirmFor(null) })}
       />
       <OfflineDownloadDialog state={download.dialog} />
+      <InstallNudge onToast={showToast} />
       <Toast message={toast} onDone={() => setToast(null)} />
     </main>
   );
