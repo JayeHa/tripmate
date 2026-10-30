@@ -1,16 +1,26 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 
 import { isHttpUrl } from "@/entities/schedule-item";
 
 import { type GuideCard as Card, isLongText, reviewsLabel } from "../../lib/guide";
+import { GuideCardMenu } from "./guide-card-menu";
 
-type GuideCardProps = { card: Card; onOpen: () => void };
+type GuideCardProps = {
+  card: Card;
+  onOpen: () => void;
+  /** 「+ 일정」 — 아직 일정에 없는 장소만 보인다 */
+  onAdd: () => void;
+  /** 장소 정보 수정 — 만든 사람만, 아니면 null */
+  onEdit: (() => void) | null;
+  onMemo: () => void;
+  onRemove: () => void;
+};
 
 /**
- * 가이드 카드(r12) — 이름 16/800 · 「day N 배치됨」 · ★ 별점 · ⏱ 대기 · 설명 3줄 · 이 여행의 메모 3줄 · 「자세히 보기」 · 구글맵.
- * 카드 어디를 눌러도 상세가 열린다(이름 버튼을 카드 전체로 늘린다). 구글맵만 따로 눌린다
+ * 가이드 카드(r12) — 이름 16/800 · 「day N 배치됨」 · ⋯ · ★ 별점 · ⏱ 대기 · 설명 3줄 · 이 여행의 메모 3줄 · 「자세히 보기」 · 구글맵 · 「+ 일정」.
+ * 카드 어디를 눌러도 상세가 열린다(이름 버튼을 카드 전체로 늘린다). ⋯ · 구글맵 · 「+ 일정」 만 따로 눌린다
  */
-export function GuideCard({ card, onOpen }: GuideCardProps) {
+export function GuideCard({ card, onOpen, onAdd, onEdit, onMemo, onRemove }: GuideCardProps) {
   const { place } = card;
   const long = isLongText(place.description) || isLongText(card.memo);
   return (
@@ -27,6 +37,13 @@ export function GuideCard({ card, onOpen }: GuideCardProps) {
           </button>
         </h3>
         {card.day !== null && <PlacedChip day={card.day} />}
+        <GuideCardMenu
+          name={place.name}
+          hasMemo={!!card.memo}
+          onEdit={onEdit}
+          onMemo={onMemo}
+          onRemove={onRemove}
+        />
       </div>
       {(place.rating != null || place.wait) && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -62,6 +79,16 @@ export function GuideCard({ card, onOpen }: GuideCardProps) {
             <MapPin className="size-3.25 text-ink-500" aria-hidden="true" />
             구글맵
           </a>
+        )}
+        {card.day === null && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="relative flex h-7.5 cursor-pointer items-center gap-0.75 rounded-full bg-brand px-2.5 text-[13px] font-bold text-on-brand"
+          >
+            <Plus className="size-3.25" strokeWidth={2.4} aria-hidden="true" />
+            일정
+          </button>
         )}
       </div>
     </article>

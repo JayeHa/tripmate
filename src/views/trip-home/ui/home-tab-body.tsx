@@ -23,7 +23,7 @@ export function HomeTabBody({ tripId, trip, tab, layout }: HomeTabBodyProps) {
   return (
     <section role="tabpanel" aria-label={HOME_TAB_LABEL[tab]} className="flex flex-1 flex-col">
       {tab === "summary" && <SummaryTab tripId={tripId} trip={trip} layout={layout} />}
-      {isGuideTab(tab) && <GuideTab key={tab} tripId={tripId} tab={tab} />}
+      {isGuideTab(tab) && <GuideTab key={tab} trip={trip} tab={tab} />}
       {tab === "transport" && (
         <EmptyState
           icon={Hammer}

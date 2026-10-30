@@ -1930,6 +1930,74 @@ describe("여행 가이드 보관함 (0067)", () => {
   }, 30_000);
 });
 
+describe("여행 가이드 보관함 쓰기 (0068)", () => {
+  /** A 의 여행 + 멤버 B, A 가 만든 장소 하나 */
+  async function setup(start: string) {
+    await as(A);
+    const trip = await newTrip(start, start);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.places (city_id, name) values ('tokyo', '보관할 곳') returning id`,
+    );
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    return { trip, place: rows[0].id };
+  }
+
+  it("멤버가 담고 메모를 고치고 뺀다 — 메모 말고 다른 칸은 고치지 못한다", async () => {
+    const { trip, place } = await setup("2028-04-01");
+    await as(A);
+    await db.query(`insert into public.trip_places (trip_id, place_id) values ($1, $2)`, [
+      trip,
+      place,
+    ]);
+    await as(B);
+    await db.query(`update public.trip_places set memo = '꼭' where trip_id = $1`, [trip]);
+    expect(
+      await rejects(`update public.trip_places set added_by = '${B}' where trip_id = '${trip}'`),
+    ).toMatch(/permission denied/);
+    const { rows } = await db.query(
+      `delete from public.trip_places where trip_id = $1 and place_id = $2 returning memo`,
+      [trip, place],
+    );
+    expect(rows).toEqual([{ memo: "꼭" }]);
+  });
+
+  it("남의 장소는 붙일 수 있을 때만 담는다 — 멤버가 아니면 못 담는다", async () => {
+    const { trip, place } = await setup("2028-04-03");
+    await as(B);
+    expect(
+      await rejects(
+        `insert into public.trip_places (trip_id, place_id) values ('${trip}', '${place}')`,
+      ),
+    ).toMatch(/row-level security/);
+    await as(A);
+    const other = await newTrip("2028-04-04", "2028-04-04");
+    await as(B);
+    expect(
+      await rejects(
+        `insert into public.trip_places (trip_id, place_id) values ('${other}', '${place}')`,
+      ),
+    ).toMatch(/row-level security/);
+  });
+
+  it("일정(대체 장소 포함)에 있는 장소는 빼지 못한다 — 0행", async () => {
+    await as(A);
+    const trip = await newTrip("2028-04-06", "2028-04-06");
+    const main = await addPlace(trip, 0, { name: "일정 장소" });
+    await db.query(`select public.create_place_schedule($1, 0, $2, $3)`, [
+      trip,
+      JSON.stringify({ name: "대체만" }),
+      JSON.stringify({ alternative_of: main }),
+    ]);
+    const { rows } = await db.query(
+      `delete from public.trip_places where trip_id = $1 returning 1`,
+      [trip],
+    );
+    expect(rows).toEqual([]);
+  });
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {

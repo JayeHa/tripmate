@@ -35,6 +35,12 @@ export function useRealtimeTrip(tripId: string) {
         void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
         void qc.invalidateQueries({ queryKey: queryKeys.dayRoutes(tripId) });
       })
+      // 가이드 보관함 — 일행이 담고 · 빼고 · 메모를 고친 것(일정에 넣어 생긴 줄은 schedule_items 이벤트로도 온다)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trip_places", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.guidePlaces(tripId), exact: true }),
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "memos", filter }, () =>
         refreshAfterSync(queryKeys.memos(tripId)),
       )
