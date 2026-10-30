@@ -23,6 +23,7 @@ function place(patch: Partial<Place> = {}): Place {
     category: "food",
     emoji: "🍖",
     area_id: null,
+    subtype: null,
     rating: 4.8,
     review_count: 1355,
     wait: "40분",

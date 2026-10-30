@@ -2188,6 +2188,65 @@ describe("장소 지역 (0070)", () => {
   }, 30_000);
 });
 
+describe("장소 메뉴 · 종류 (0071)", () => {
+  it("장소 저장이 종류를 받고, 다시 담을 때 보내지 않으면 그대로 · 모르는 값은 거부", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-11", "2028-05-11");
+    const save = (place: Record<string, unknown>) =>
+      db.query<{ id: string }>(`select public.save_guide_place($1, $2) id`, [
+        trip,
+        JSON.stringify(place),
+      ]);
+    const { rows } = await save({
+      name: "라멘집",
+      category: "food",
+      subtype: "ramen",
+      google_place_id: "g-sub",
+    });
+    await save({ name: "라멘집", category: "food", google_place_id: "g-sub" });
+    const got = await db.query(`select subtype from public.places where id = $1`, [rows[0].id]);
+    expect(got.rows).toEqual([{ subtype: "ramen" }]);
+    expect(
+      await rejects(`select public.save_guide_place('${trip}', '{"name":"x","subtype":"pizza"}')`),
+    ).toMatch(/check constraint/);
+  });
+
+  it("마이그레이션 전 장소를 이름 먼저, 안 되면 설명으로 채운다 — 휴식은 이름만, 카페 · 휴식은 나머지도", async () => {
+    const before = MIGRATIONS.filter((f) => f < "0071");
+    const pg = await migratedDb(before);
+    await pg.exec(`insert into auth.users (id, email) values ('${A}', 'a@x');`);
+    const put = (name: string, category: string | null, description: string | null) =>
+      pg.query(
+        `insert into public.places (city_id, created_by, name, category, description) values ('tokyo', '${A}', $1, $2, $3)`,
+        [name, category, description],
+      );
+    await put("텐동 카네코", "food", "장어 튀김이 유명합니다");
+    await put("우나기노 나루세", "food", "장어덮밥 전문점입니다");
+    await put("The KITCHEN", "food", "스파 안 식당입니다");
+    await put("타임스 스파", "rest", "마사지도 받을 수 있습니다");
+    await put("조이풀 마사지 스파", "rest", null);
+    await put("코히테이", "cafe", null);
+    await put("센소지", "sight", null);
+    await applyMigration(
+      pg,
+      MIGRATIONS.find((f) => f.startsWith("0071"))!,
+    );
+    const { rows } = await pg.query<{ name: string; subtype: string | null }>(
+      `select name, subtype from public.places order by name`,
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.name, r.subtype]))).toEqual({
+      "The KITCHEN": null,
+      "텐동 카네코": "tendon",
+      "우나기노 나루세": "unagi",
+      "타임스 스파": "onsen",
+      "조이풀 마사지 스파": "massage",
+      코히테이: "sweets",
+      센소지: null,
+    });
+    await pg.close();
+  }, 30_000);
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {

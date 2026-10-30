@@ -34,7 +34,7 @@ export function useLocationPick({
           ...blankPlaceForm(at),
           name: initial.name,
           googleId: initial.googlePlaceId,
-          auto: { name: initial.name, category: null, gmap: initial.gmapUrl },
+          auto: { name: initial.name, category: null, subtype: null, gmap: initial.gmapUrl },
           gmap: initial.gmapUrl,
         }
       : blankPlaceForm(null),

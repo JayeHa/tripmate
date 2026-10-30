@@ -298,6 +298,7 @@ export type Database = {
           category: string | null;
           emoji: string | null;
           area_id: string | null;
+          subtype: string | null;
           rating: number | null;
           review_count: number | null;
           wait: string | null;
@@ -324,6 +325,7 @@ export type Database = {
           category?: string | null;
           emoji?: string | null;
           area_id?: string | null;
+          subtype?: string | null;
           rating?: number | null;
           review_count?: number | null;
           wait?: string | null;
@@ -350,6 +352,7 @@ export type Database = {
           category?: string | null;
           emoji?: string | null;
           area_id?: string | null;
+          subtype?: string | null;
           rating?: number | null;
           review_count?: number | null;
           wait?: string | null;

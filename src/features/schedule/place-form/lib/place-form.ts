@@ -2,6 +2,8 @@ import {
   isHttpUrl,
   type NewPlaceFields,
   type PlaceCategory,
+  type PlaceSubtype,
+  subtypeForCategory,
   WEEK_DAYS,
   type WeekDay,
   type WeekHours,
@@ -15,6 +17,7 @@ import {
   dropPickedLink,
   fillFromPick,
   googleMapsUrl,
+  subtypeFromGoogle,
 } from "./google-autofill";
 
 export type LatLng = { lat: number; lng: number };
@@ -43,6 +46,8 @@ export type PlaceFormValues = {
    * 이미 가진 장소를 다시 담으면 기존 지역을 둔다. 지역 목록이 없는 도시는 칸이 없다
    */
   areaId: string | null;
+  /** 메뉴 · 종류(0071). 고르지 않으면 null(「기타」). 그 카테고리에 없는 값은 저장할 때 비운다 */
+  subtype: PlaceSubtype | null;
   /**
    * 저장할 위치(지도 중앙 핀). 처음엔 비어 있고(지도만 도시 중심을 보인다) 검색으로 고르거나 지도를 끌면 정해진다.
    * 위치는 반드시 정한다 — 열자마자 도시 중심(도쿄역)이 그대로 저장되지 않게
@@ -70,9 +75,10 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
   return {
     emoji: "",
     name: "",
-    auto: { name: "", category: null, gmap: "" },
+    auto: { name: "", category: null, subtype: null, gmap: "" },
     category: null,
     areaId: null,
+    subtype: null,
     at: center,
     googleId: null,
     addressDetail: "",
@@ -120,6 +126,7 @@ export function withGooglePick(
     ...fillFromPick(v, {
       name: picked.name,
       category: categoryFromGoogle(picked.types),
+      subtype: subtypeFromGoogle(picked.types),
       gmap: id ? googleMapsUrl(picked.name, id) : "",
     }),
     at,
@@ -225,6 +232,7 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
       name: v.name.trim().slice(0, 100),
       category: v.category,
       area_id: v.areaId,
+      subtype: subtypeForCategory(v.category, v.subtype),
       lat: v.at?.lat ?? null,
       lng: v.at?.lng ?? null,
       address: found.address,

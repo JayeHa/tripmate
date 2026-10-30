@@ -3,6 +3,7 @@ import {
   PLACE_CATEGORIES,
   type PlaceCategory,
   placeLinksOf,
+  placeSubtypeOf,
   WEEK_DAYS,
   weekHoursOf,
 } from "@/entities/schedule-item";
@@ -43,6 +44,7 @@ export function placeFormOf(place: Place): PlaceFormValues {
     name: place.name,
     category: categoryOf(place.category),
     areaId: place.area_id,
+    subtype: placeSubtypeOf(place),
     googleId: place.google_place_id,
     addressDetail: place.address_detail ?? "",
     hoursMode: week ? "week" : "same",

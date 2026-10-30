@@ -2,7 +2,13 @@
 
 import { Link as LinkIcon, MapPin, Pencil, Plus } from "lucide-react";
 
-import { CATEGORY_LABEL, isHttpUrl, placeLinksOf } from "@/entities/schedule-item";
+import {
+  CATEGORY_LABEL,
+  isHttpUrl,
+  placeLinksOf,
+  placeSubtypeOf,
+  SUBTYPE_LABEL,
+} from "@/entities/schedule-item";
 import { PlaceInfoLine, placeInfoRows } from "@/features/schedule/item-detail";
 import { withKeys } from "@/shared/lib/keys";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
@@ -45,15 +51,15 @@ type DetailBodyProps = DetailActions & { card: GuideCard };
 /** 창 안 */
 function DetailBody({ card, onAdd, onMemo, onEdit, myId }: DetailBodyProps) {
   const { place } = card;
-  const category = place.category as keyof typeof CATEGORY_LABEL | null;
+  const kind = kindOf(place);
   const links = placeLinksOf({ place });
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex flex-col gap-1.5">
         <div className="flex flex-wrap gap-1.5">
-          {category && category in CATEGORY_LABEL && (
+          {kind && (
             <span className="flex h-6 items-center rounded-full bg-surface-muted px-2.25 text-xs font-bold text-ink-700">
-              {CATEGORY_LABEL[category]}
+              {kind}
             </span>
           )}
           {card.area && (
@@ -149,4 +155,12 @@ function DetailBody({ card, onAdd, onMemo, onEdit, myId }: DetailBodyProps) {
       </div>
     </div>
   );
+}
+
+/** 종류 칩 글자 — 메뉴 · 종류가 있으면 그것(「🍜 라멘 · 면」), 없으면 카테고리(「음식점」), 둘 다 없으면 null */
+function kindOf(place: GuideCard["place"]): string | null {
+  const subtype = placeSubtypeOf(place);
+  if (subtype) return SUBTYPE_LABEL[subtype];
+  const category = place.category as keyof typeof CATEGORY_LABEL | null;
+  return category && category in CATEGORY_LABEL ? CATEGORY_LABEL[category] : null;
 }

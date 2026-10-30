@@ -14,6 +14,7 @@ export * from "./model/memo";
 export * from "./model/memo-sync";
 export * from "./model/move";
 export * from "./model/place";
+export * from "./model/place-subtype";
 export * from "./model/reservation-status";
 export * from "./model/types";
 export * from "./model/use-alternatives";

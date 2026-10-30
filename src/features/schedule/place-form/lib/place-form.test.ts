@@ -185,6 +185,7 @@ describe("toNewPlace", () => {
         name: "유야 온천",
         category: "rest",
         area_id: null,
+        subtype: null,
         lat: 35.7,
         lng: 139.7,
         address: "Shibuya, Tokyo",
