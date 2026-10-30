@@ -1,14 +1,14 @@
 "use client";
 
 import { DeleteTripDialog, type Trip } from "@/entities/trip";
+import { LeaveTripDialog } from "@/entities/trip-member";
 import { EditCitiesDialog } from "@/features/trip/edit-cities";
 import { EditDatesDialog } from "@/features/trip/edit-dates";
+import { TitleDialog } from "@/features/trip/edit-title";
 import { InviteDialog } from "@/features/trip/invite-member";
 
 import { useTripEdit } from "../../model/use-trip-edit";
 import { MobileEditMenu, PcEditMenu } from "./edit-menus";
-import { LeaveTripDialog } from "./leave-trip-dialog";
-import { TitleDialog } from "./title-dialog";
 import { WidgetEditor } from "./widget-editor";
 
 type TripEditProps = {
