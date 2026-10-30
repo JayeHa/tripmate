@@ -139,7 +139,8 @@ export async function fetchSavedPlaces(userId: string, cityIds: string[]): Promi
 }
 
 /**
- * 이 여행에 붙일 수 있는 장소 중 같은 구글 장소 — 내가 만든 것, 없으면 이 여행 일정이 쓰는 것(can_attach_place 와 같은 범위).
+ * 이 여행에 붙일 수 있는 장소 중 같은 구글 장소 — 내가 만든 것, 없으면 이 여행 보관함에 있는 것(can_attach_place 와 같은 범위).
+ * 보관함에는 일정이 쓰는 장소도 다 들어 있다(0067).
  * 없으면 null. 직접 추가에서 이미 있는 장소를 고르면 새로 만들지 않고 그 장소를 쓰게 묻는 데 쓴다
  */
 export async function findAttachablePlace(
@@ -157,7 +158,7 @@ export async function findAttachablePlace(
   if (mine.error) throw mine.error;
   if (mine.data) return mine.data;
   const used = await supabase
-    .from("schedule_items")
+    .from("trip_places")
     .select("place:places!inner(*)")
     .eq("trip_id", tripId)
     .eq("place.google_place_id", googlePlaceId)

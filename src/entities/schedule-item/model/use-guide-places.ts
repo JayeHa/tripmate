@@ -4,7 +4,14 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { fetchGuidePlaces, removeGuidePlace, setGuideMemo } from "../api/guide-places";
+import {
+  addGuidePlace,
+  fetchGuidePlaces,
+  removeGuidePlace,
+  saveGuidePlace,
+  setGuideMemo,
+} from "../api/guide-places";
+import type { NewPlaceFields } from "../api/schedule-items";
 
 /** 가이드 보관함의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
 export const guidePlacesQuery = (tripId: string) =>
@@ -35,6 +42,33 @@ export function useSetGuideMemo(tripId: string) {
   return useMutation({
     mutationFn: ({ placeId, memo }: { placeId: string; memo: string }) =>
       setGuideMemo(tripId, placeId, memo),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.guidePlaces(tripId), exact: true });
+    },
+  });
+}
+
+/**
+ * 「장소 저장」 — 새 장소(또는 고쳐 쓴 내 장소)를 보관함에. 장소 칸이 바뀌었을 수 있어 일정(가이드 키가 그 아래에 있다) ·
+ * 저장한 장소 목록을 다시 읽는다
+ */
+export function useSaveGuidePlace(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ place, emoji }: { place: NewPlaceFields; emoji: string | null }) =>
+      saveGuidePlace(tripId, place, emoji),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.scheduleItems(tripId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.savedPlaces(tripId) });
+    },
+  });
+}
+
+/** 이미 있는 장소를 보관함에 넣기 — 끝나면 보관함을 다시 읽는다. 결과는 새로 넣었는지 */
+export function useAddGuidePlace(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (placeId: string) => addGuidePlace(tripId, placeId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.guidePlaces(tripId), exact: true });
     },

@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { GuidePlace, Place, ScheduleItem } from "@/entities/schedule-item";
 
-import { guideCards, isGuideTab, isLongText, reviewsLabel } from "./guide";
+import {
+  guideCards,
+  guideSavedToast,
+  guideTabOf,
+  isGuideTab,
+  isLongText,
+  reviewsLabel,
+} from "./guide";
 
 /** 테스트용 장소 */
 function place(id: string, category: string | null, emoji: string | null = null): Place {
@@ -79,5 +86,26 @@ describe("isLongText", () => {
     expect(isLongText("가".repeat(91))).toBe(true);
     expect(isLongText("가".repeat(90))).toBe(false);
     expect(isLongText(null)).toBe(false);
+  });
+});
+
+describe("guideTabOf · guideSavedToast", () => {
+  it("카테고리가 보이는 탭 — 카페는 식당, 빈 카테고리는 관광지, 숙소는 없음", () => {
+    expect(guideTabOf("cafe")).toBe("food");
+    expect(guideTabOf(null)).toBe("sight");
+    expect(guideTabOf("stay")).toBeNull();
+  });
+
+  it("지금 탭에 보이면 저장했다고, 다른 탭이면 그 탭을, 이미 있던 장소면 그렇게 알린다", () => {
+    expect(guideSavedToast({ added: true, category: "cafe" }, "food")).toBe("장소를 저장했어요");
+    expect(guideSavedToast({ added: true, category: "sight" }, "food")).toBe(
+      "「관광지」 탭에 저장했어요",
+    );
+    expect(guideSavedToast({ added: true, category: "stay" }, "rest")).toBe(
+      "저장했어요. 숙소는 가이드 탭에 보이지 않아요",
+    );
+    expect(guideSavedToast({ added: false, category: "food" }, "food")).toBe(
+      "이미 보관함에 있는 장소예요",
+    );
   });
 });

@@ -18,7 +18,8 @@ type GuideCardProps = {
 
 /**
  * 가이드 카드(r12) — 이름 16/800 · 「day N 배치됨」 · ⋯ · ★ 별점 · ⏱ 대기 · 설명 3줄 · 이 여행의 메모 3줄 · 「자세히 보기」 · 구글맵 · 「+ 일정」.
- * 카드 어디를 눌러도 상세가 열린다(이름 버튼을 카드 전체로 늘린다). ⋯ · 구글맵 · 「+ 일정」 만 따로 눌린다
+ * 카드 어디를 눌러도 상세가 열린다(이름 버튼을 카드 전체로 늘린다). ⋯ · 구글맵 · 「+ 일정」 만 따로 눌린다.
+ * PC 3열은 같은 줄 카드 높이를 맞춘다 — 이름 · 설명은 2줄에서 자르고, 버튼 줄은 카드 맨 아래로(mt-auto)
  */
 export function GuideCard({ card, onOpen, onAdd, onEdit, onMemo, onRemove }: GuideCardProps) {
   const { place } = card;
@@ -32,8 +33,10 @@ export function GuideCard({ card, onOpen, onAdd, onEdit, onMemo, onRemove }: Gui
             onClick={onOpen}
             className="cursor-pointer text-left after:absolute after:inset-0 after:rounded-card"
           >
-            {card.emoji && <span className="mr-1">{card.emoji}</span>}
-            {place.name}
+            <span className="lg:line-clamp-2">
+              {card.emoji && <span className="mr-1">{card.emoji}</span>}
+              {place.name}
+            </span>
           </button>
         </h3>
         {card.day !== null && <PlacedChip day={card.day} />}
@@ -57,7 +60,7 @@ export function GuideCard({ card, onOpen, onAdd, onEdit, onMemo, onRemove }: Gui
         </div>
       )}
       {place.description && (
-        <p className="line-clamp-3 text-sm/normal text-pretty whitespace-pre-line text-ink-700">
+        <p className="line-clamp-3 text-sm/normal text-pretty whitespace-pre-line text-ink-700 lg:line-clamp-2">
           {place.description}
         </p>
       )}
@@ -66,7 +69,7 @@ export function GuideCard({ card, onOpen, onAdd, onEdit, onMemo, onRemove }: Gui
           {card.memo}
         </p>
       )}
-      <div className="flex items-center gap-1.5 pt-1">
+      <div className="mt-auto flex items-center gap-1.5 pt-1">
         {long && <span className="text-[13px] font-bold text-ink-400">자세히 보기</span>}
         <span className="flex-1" />
         {isHttpUrl(place.gmap_url) && (

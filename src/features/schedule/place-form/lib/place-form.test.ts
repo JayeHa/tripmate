@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  blankGuideForm,
   blankPlaceForm,
   mondayToAll,
   normalizeRating,
@@ -111,6 +112,31 @@ describe("withGooglePick", () => {
       category: "food",
       gmap: "https://www.google.com/maps/search/?api=1&query=%EC%95%84%ED%9B%84%EB%A6%AC&query_place_id=ChIJ1",
     });
+  });
+});
+
+describe("blankGuideForm", () => {
+  const pick = (types: string[]) => ({
+    name: "센소지",
+    google_place_id: "ChIJ2",
+    lat: 35.71,
+    lng: 139.79,
+    address: null,
+    types,
+  });
+  const at = { lat: 35.71, lng: 139.79 };
+
+  it("탭의 카테고리로 시작하고, 고른 구글 장소의 카테고리를 알면 그것으로 바뀐다", () => {
+    expect(blankGuideForm("food").category).toBe("food");
+    expect(withGooglePick(blankGuideForm("food"), pick(["tourist_attraction"]), at).category).toBe(
+      "sight",
+    );
+  });
+
+  it("구글 카테고리를 모르면 탭의 카테고리 그대로, 사용자가 고른 카테고리는 바꾸지 않는다", () => {
+    expect(withGooglePick(blankGuideForm("shop"), pick([]), at).category).toBe("shop");
+    const chosen = { ...blankGuideForm("food"), category: "rest" as const };
+    expect(withGooglePick(chosen, pick(["tourist_attraction"]), at).category).toBe("rest");
   });
 });
 

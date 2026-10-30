@@ -1998,6 +1998,78 @@ describe("여행 가이드 보관함 쓰기 (0068)", () => {
   });
 });
 
+describe("가이드 장소 저장 (0069)", () => {
+  /** 장소를 저장하고 장소 id 를 돌려준다 */
+  async function save(trip: string, place: Record<string, unknown>) {
+    const { rows } = await db.query<{ id: string }>(`select public.save_guide_place($1, $2) id`, [
+      trip,
+      JSON.stringify(place),
+    ]);
+    return rows[0].id;
+  }
+
+  it("새 장소를 만들어 보관함에 넣는다 — 아이콘은 장소의 기본 아이콘, 일정은 생기지 않는다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-01", "2028-05-01");
+    const id = await save(trip, { name: "센소지", category: "sight", emoji: "⛩️" });
+    const { rows } = await db.query(
+      `select p.name, p.category, p.emoji, tp.added_by from public.trip_places tp
+       join public.places p on p.id = tp.place_id where tp.trip_id = $1`,
+      [trip],
+    );
+    expect(rows).toEqual([{ name: "센소지", category: "sight", emoji: "⛩️", added_by: A }]);
+    const items = await db.query(`select 1 from public.schedule_items where place_id = $1`, [id]);
+    expect(items.rows).toHaveLength(0);
+  });
+
+  it("이미 가진 구글 장소는 고쳐 쓰고, 기본 아이콘은 비어 있을 때만 채운다 — 보관함 줄은 하나, 메모 유지", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-03", "2028-05-03");
+    const first = await save(trip, { name: "카페", google_place_id: "g-guide-1", emoji: "☕" });
+    await db.query(`update public.trip_places set memo = '아침에' where trip_id = $1`, [trip]);
+    const again = await save(trip, {
+      name: "카페 본점",
+      google_place_id: "g-guide-1",
+      emoji: "🍰",
+    });
+    expect(again).toBe(first);
+    const { rows } = await db.query(
+      `select p.name, p.emoji, tp.memo from public.trip_places tp
+       join public.places p on p.id = tp.place_id where tp.trip_id = $1`,
+      [trip],
+    );
+    expect(rows).toEqual([{ name: "카페 본점", emoji: "☕", memo: "아침에" }]);
+  });
+
+  it("일정 직접 추가는 장소의 기본 아이콘을 건드리지 않는다 — 아이콘은 일정 줄에", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-05", "2028-05-05");
+    await save(trip, { name: "라멘", google_place_id: "g-guide-2" });
+    await db.query(`select public.create_place_schedule($1, 0, $2, $3)`, [
+      trip,
+      JSON.stringify({ name: "라멘", google_place_id: "g-guide-2", emoji: "🍜" }),
+      JSON.stringify({ emoji: "🍥" }),
+    ]);
+    const { rows } = await db.query(
+      `select p.emoji place_emoji, si.emoji item_emoji from public.schedule_items si
+       join public.places p on p.id = si.place_id where si.trip_id = $1`,
+      [trip],
+    );
+    expect(rows).toEqual([{ place_emoji: null, item_emoji: "🍥" }]);
+  });
+
+  it("멤버가 아니면 장소도 만들지 않고 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-07", "2028-05-07");
+    await as(B);
+    expect(await rejects(`select public.save_guide_place('${trip}', '{"name":"x"}')`)).toMatch(
+      /not a member/,
+    );
+    const { rows } = await db.query(`select 1 from public.places where name = 'x'`);
+    expect(rows).toHaveLength(0);
+  });
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {

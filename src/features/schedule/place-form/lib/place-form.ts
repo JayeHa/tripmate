@@ -83,6 +83,15 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
 }
 
 /**
+ * 가이드 「장소 추가」 의 처음 값 — 지금 탭의 카테고리를 골라 둔다. 화면이 채운 값으로 표시해서(auto),
+ * 위치 검색으로 고른 구글 장소의 카테고리를 알면 그것으로 바뀐다. 사용자가 고르면 그대로 둔다
+ */
+export function blankGuideForm(category: PlaceCategory | null): PlaceFormValues {
+  const blank = blankPlaceForm(null);
+  return { ...blank, category, auto: { ...blank.auto, category } };
+}
+
+/**
  * 두 좌표가 같은 지점인지. 지도 중심은 부동소수 오차가 있어 1e-6°(약 10cm) 안이면 같다고 본다.
  * 지도 이동이 코드가 옮긴 것(검색으로 고름)인지 사용자가 옮긴 것인지 가를 때 쓴다.
  */

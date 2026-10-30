@@ -1,6 +1,6 @@
-import type { GuidePlace, Place, ScheduleItem } from "@/entities/schedule-item";
+import type { GuidePlace, Place, PlaceCategory, ScheduleItem } from "@/entities/schedule-item";
 
-import type { HomeTab } from "./home-tabs";
+import { HOME_TAB_LABEL, type HomeTab } from "./home-tabs";
 
 /** 가이드 탭 — 홈 탭 중 장소 보관함을 보이는 넷 */
 export type GuideTab = Extract<HomeTab, "sight" | "food" | "shop" | "rest">;
@@ -73,4 +73,41 @@ export function reviewsLabel(place: Pick<Place, "review_count">): string {
 export function isLongText(text: string | null): boolean {
   if (!text) return false;
   return text.split("\n").length > 3 || text.length > 90;
+}
+
+/** 탭 맨 아래 「+ ○○ 추가」 의 글자 */
+export const GUIDE_ADD_LABEL: Record<GuideTab, string> = {
+  sight: "관광지 추가",
+  food: "식당 추가",
+  shop: "쇼핑 장소 추가",
+  rest: "휴식 장소 추가",
+};
+
+/** 「+ ○○ 추가」 로 연 장소 입력의 처음 카테고리 — 식당 탭은 음식점(카페는 직접 고른다) */
+export const GUIDE_TAB_CATEGORY: Record<GuideTab, PlaceCategory> = {
+  sight: "sight",
+  food: "food",
+  shop: "shop",
+  rest: "rest",
+};
+
+/** 이 카테고리의 장소가 보이는 가이드 탭. 숙소 · 공항은 어느 탭에도 없어 null */
+export function guideTabOf(category: string | null): GuideTab | null {
+  const tabs = Object.keys(TAB_CATEGORIES) as GuideTab[];
+  return tabs.find((tab) => TAB_CATEGORIES[tab].includes(category)) ?? null;
+}
+
+/**
+ * 「장소 저장」 뒤 토스트 — 지금 탭에 보이면 「장소를 저장했어요」, 다른 탭이면 그 탭 이름을 알린다
+ * (구글 장소를 고르면 카테고리가 바뀌어 지금 탭에 안 보일 수 있다). 이미 보관함에 있던 장소면 그렇게 알린다
+ */
+export function guideSavedToast(
+  saved: { added: boolean; category: string | null },
+  tab: GuideTab,
+): string {
+  if (!saved.added) return "이미 보관함에 있는 장소예요";
+  const shown = guideTabOf(saved.category);
+  if (shown === tab) return "장소를 저장했어요";
+  if (shown === null) return "저장했어요. 숙소는 가이드 탭에 보이지 않아요";
+  return `「${HOME_TAB_LABEL[shown]}」 탭에 저장했어요`;
 }

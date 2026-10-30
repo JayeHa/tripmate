@@ -10,15 +10,16 @@ import {
   useSetGuideMemo,
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
+import type { GuideSaved } from "@/features/schedule/place-form";
 import type { ToastMessage } from "@/shared/ui/toast";
 
-import type { GuideCard } from "../lib/guide";
+import { type GuideCard, guideSavedToast, type GuideTab } from "../lib/guide";
 
 /**
- * 가이드 탭의 창 · 동작 — 상세, 「+ 일정」(날짜 고르기), 메모, 보관함에서 빼기, 장소 정보 수정, 토스트(탭에 하나).
+ * 가이드 탭의 창 · 동작 — 상세, 「+ 일정」(날짜 고르기), 메모, 보관함에서 빼기, 장소 정보 수정, 「+ ○○ 추가」(장소 입력), 토스트(탭에 하나).
  * 창마다 대상 카드의 장소 id 만 들고, 카드는 그릴 때 목록에서 다시 찾는다(일행이 고친 값이 바로 보이게)
  */
-export function useGuideActions(tripId: string) {
+export function useGuideActions(tripId: string, tab: GuideTab) {
   const { data: user } = useUser();
   const { data: cities = [] } = useTripCities(tripId);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export function useGuideActions(tripId: string) {
   const [memoFor, setMemoFor] = useState<string | null>(null);
   const [removeFor, setRemoveFor] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ place: Place; city: City | null } | null>(null);
+  const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const add = useAddPlacesToSchedule(tripId);
   const remove = useRemoveGuidePlace(tripId);
@@ -127,6 +129,17 @@ export function useGuideActions(tripId: string) {
         if (changed) show("장소 정보를 수정했어요");
       },
       cancel: () => setEditing(null),
+    },
+    create: {
+      open: creating,
+      /** 장소 입력의 도시 — 여행의 첫 도시(검색 범위 · 처음 지도). 저장할 때 DB 가 좌표로 가장 가까운 여행 도시에 둔다 */
+      city: cities[0] ?? null,
+      ask: () => setCreating(true),
+      cancel: () => setCreating(false),
+      done: (saved: GuideSaved) => {
+        setCreating(false);
+        show(guideSavedToast(saved, tab));
+      },
     },
     toast,
     clearToast: () => setToast(null),
