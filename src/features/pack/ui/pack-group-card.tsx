@@ -32,7 +32,7 @@ type PackGroupCardProps = {
 };
 
 /**
- * 그룹 카드(r12) — 머리(이름 입력 14/800 · 「챙긴 수/전체」 · 휴지통), 항목 줄, 맨 아래 「+ 항목 추가」(Enter 로 담는다).
+ * 그룹 카드(r12) — 머리(이름 입력 14/800 · 「챙긴 수/전체」 · 휴지통), 항목 줄, 맨 아래 「+ 항목 추가」(Enter · 「등록」 으로 담는다).
  * 접기 · 순서 바꾸기는 없다(시안). 항목이 있는 그룹은 지우기 전에 묻는다
  */
 export function PackGroupCard({ view, state, actions, photos }: PackGroupCardProps) {
@@ -73,13 +73,14 @@ export function PackGroupCard({ view, state, actions, photos }: PackGroupCardPro
           />
         ))}
       </ul>
-      <div className="border-t border-surface-sunken px-3 pt-1.5 pb-2.5">
+      <div className="flex items-center gap-2 border-t border-surface-sunken px-3 pt-1.5 pb-2.5">
         <PackTextInput
           onSubmit={(name) => state.addItem(group.id, name)}
           maxLength={ITEM_NAME_MAX}
           placeholder="+ 항목 추가"
           label={`${group.name}에 항목 추가`}
-          className="h-9 w-full bg-transparent px-1 text-sm text-ink-900 outline-none placeholder:text-ink-350"
+          button="sm"
+          className="h-9 min-w-0 flex-1 bg-transparent px-1 text-sm text-ink-900 outline-none placeholder:text-ink-350"
         />
       </div>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
