@@ -252,6 +252,36 @@ export type Database = {
           },
         ];
       };
+      city_areas: {
+        Row: {
+          id: string;
+          city_id: string;
+          name: string;
+          position: number;
+          lat: number;
+          lng: number;
+          radius_m: number;
+        };
+        Insert: {
+          id: string;
+          city_id: string;
+          name: string;
+          position: number;
+          lat: number;
+          lng: number;
+          radius_m: number;
+        };
+        Update: {
+          id?: string;
+          city_id?: string;
+          name?: string;
+          position?: number;
+          lat?: number;
+          lng?: number;
+          radius_m?: number;
+        };
+        Relationships: [];
+      };
       places: {
         Row: {
           id: string;
@@ -267,6 +297,7 @@ export type Database = {
           address_detail: string | null;
           category: string | null;
           emoji: string | null;
+          area_id: string | null;
           rating: number | null;
           review_count: number | null;
           wait: string | null;
@@ -292,6 +323,7 @@ export type Database = {
           address_detail?: string | null;
           category?: string | null;
           emoji?: string | null;
+          area_id?: string | null;
           rating?: number | null;
           review_count?: number | null;
           wait?: string | null;
@@ -317,6 +349,7 @@ export type Database = {
           address_detail?: string | null;
           category?: string | null;
           emoji?: string | null;
+          area_id?: string | null;
           rating?: number | null;
           review_count?: number | null;
           wait?: string | null;
@@ -1122,6 +1155,10 @@ export type Database = {
       create_place_schedule: {
         Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };
         Returns: string;
+      };
+      nearest_city_area: {
+        Args: { p_city: string; p_lat: number; p_lng: number };
+        Returns: string | null;
       };
       upsert_my_place: {
         Args: { p_trip: string; p_place: Json };

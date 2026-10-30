@@ -22,6 +22,7 @@ function place(patch: Partial<Place> = {}): Place {
     address_detail: "B1",
     category: "food",
     emoji: "🍖",
+    area_id: null,
     rating: 4.8,
     review_count: 1355,
     wait: "40분",
@@ -100,6 +101,18 @@ describe("toPlacePatch", () => {
     expect(
       toPlacePatch({ ...opened, name: " 히로키야 본점 ", wait: "" }, stored, opened, stored),
     ).toEqual({ ok: true, patch: { name: "히로키야 본점", wait: null } });
+  });
+
+  it("지역을 바꾸거나 비우면 그 칸만 보낸다", () => {
+    expect(toPlacePatch({ ...opened, areaId: "tokyo-shinjuku" }, stored, opened, stored)).toEqual({
+      ok: true,
+      patch: { area_id: "tokyo-shinjuku" },
+    });
+    const withArea = placeFormOf(place({ area_id: "tokyo-shinjuku" }));
+    expect(toPlacePatch({ ...withArea, areaId: null }, stored, withArea, stored)).toEqual({
+      ok: true,
+      patch: { area_id: null },
+    });
   });
 
   it("위치를 옮기면 좌표 · 새 주소 · 구글 장소 연결 해제가 함께 간다", () => {

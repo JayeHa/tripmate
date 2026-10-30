@@ -39,6 +39,11 @@ export type PlaceFormValues = {
    */
   category: PlaceCategory | null;
   /**
+   * 지역(긴자 · 시부야 …, 0070). 고르지 않으면 null — 새 장소는 DB 가 좌표로 가장 가까운 지역을 정하고,
+   * 이미 가진 장소를 다시 담으면 기존 지역을 둔다. 지역 목록이 없는 도시는 칸이 없다
+   */
+  areaId: string | null;
+  /**
    * 저장할 위치(지도 중앙 핀). 처음엔 비어 있고(지도만 도시 중심을 보인다) 검색으로 고르거나 지도를 끌면 정해진다.
    * 위치는 반드시 정한다 — 열자마자 도시 중심(도쿄역)이 그대로 저장되지 않게
    */
@@ -67,6 +72,7 @@ export function blankPlaceForm(center: LatLng | null): PlaceFormValues {
     name: "",
     auto: { name: "", category: null, gmap: "" },
     category: null,
+    areaId: null,
     at: center,
     googleId: null,
     addressDetail: "",
@@ -218,6 +224,7 @@ export function toNewPlace(v: PlaceFormValues, found: FoundAddress): PlaceFormRe
     value: {
       name: v.name.trim().slice(0, 100),
       category: v.category,
+      area_id: v.areaId,
       lat: v.at?.lat ?? null,
       lng: v.at?.lng ?? null,
       address: found.address,

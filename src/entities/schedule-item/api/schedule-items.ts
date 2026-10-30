@@ -179,6 +179,8 @@ export async function updatePlace(id: string, patch: TablesUpdate<"places">): Pr
 export type NewPlaceFields = {
   name: string;
   category: string | null;
+  /** 지역(0070). null 이면 새 장소는 좌표로 정하고, 이미 가진 장소는 기존 값을 둔다 */
+  area_id: string | null;
   lat: number | null;
   lng: number | null;
   address: string | null;

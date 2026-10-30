@@ -11,6 +11,8 @@ import {
 type GuideFilterRowProps = {
   filters: GuideFilters;
   onChange: (filters: GuideFilters) => void;
+  /** 「전 지역 ⌄」 의 옵션(guideAreaOptions). 비면 칩을 숨긴다 */
+  areaOptions: { value: string; label: string }[];
 };
 
 const SORT_OPTIONS = [
@@ -24,12 +26,23 @@ const STATUS_OPTIONS = [
 ];
 
 /**
- * 가이드 필터 줄(P33 FilterSelect) — 정렬(추천순 · 평점순, 늘 하나) · 일정 포함 여부. 칩 폭은 가장 긴 글자로 고정해 골라도 줄이 밀리지 않는다.
+ * 가이드 필터 줄(P33 FilterSelect) — 지역(목록이 있는 도시만) · 정렬(추천순 · 평점순, 늘 하나) · 일정 포함 여부. 칩 폭은 가장 긴 글자로 고정해 골라도 줄이 밀리지 않는다.
  * 필터가 걸리면 끝에 「초기화」(정렬은 그대로)
  */
-export function GuideFilterRow({ filters, onChange }: GuideFilterRowProps) {
+export function GuideFilterRow({ filters, onChange, areaOptions }: GuideFilterRowProps) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      {areaOptions.length > 0 && (
+        <FilterSelect
+          label="전 지역"
+          sheetTitle="지역 선택"
+          allLabel="전 지역"
+          width="fit"
+          value={filters.area === "all" ? FILTER_ALL : filters.area}
+          onChange={(area) => onChange({ ...filters, area: area === FILTER_ALL ? "all" : area })}
+          options={areaOptions}
+        />
+      )}
       <FilterSelect
         label="추천순"
         sheetTitle="정렬"
