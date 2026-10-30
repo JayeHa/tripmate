@@ -17,8 +17,12 @@ import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
 import { startSyncOutbox } from "@/shared/api/sync-outbox";
 import { captureInstallPrompt } from "@/shared/lib/install-prompt";
 
+import { keepStartScreen } from "./keep-start-screen";
+
 // 「홈 화면에 앱 추가」 의 설치 이벤트는 페이지마다 한 번 일찍 와서, 앱이 뜰 때부터 받아 둔다
 captureInstallPrompt();
+// 오프라인에서도 첫 화면(내 여행)이 열리게 — 새 버전이 켜지면 지워지는 화면 칸에 다시 담는다
+keepStartScreen();
 
 const DAY = 24 * 60 * 60 * 1000;
 /**
@@ -91,7 +95,7 @@ export function Providers({ children }: ProvidersProps) {
         maxAge: CACHE_KEEP,
         buster: QUERY_CACHE_BUSTER,
         dehydrateOptions: {
-          // 사용자/경로 캐시는 영구 저장하지 않음. 일정·가계부·여행만 오프라인용으로 저장.
+          // 여행 데이터 · 도시 기준 데이터 · 내 프로필만 오프라인용으로 저장(shouldPersistQuery)
           shouldDehydrateQuery: (q) =>
             q.state.status === "success" && shouldPersistQuery(q.queryKey),
           // 저장(뮤테이션)은 캐시와 함께 남기지 않는다 — 함수 없이 되살아나 실행되지 못하고(#195), 대기열은 sync-outbox 가 따로 남긴다
