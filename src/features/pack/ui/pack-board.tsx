@@ -110,14 +110,15 @@ export function PackBoard({ tripId, kind, onToast }: PackBoardProps) {
           />
         ))}
       </div>
-      <label className="flex h-12 items-center gap-2 rounded-card border-[1.5px] border-dashed border-line-dashed bg-white px-3.5">
+      <label className="flex h-12 items-center gap-2 rounded-card border-[1.5px] border-dashed border-line-dashed bg-white pr-1.5 pl-3.5">
         <Plus className="size-4.5 shrink-0 text-primary" strokeWidth={2.2} aria-hidden="true" />
         <PackTextInput
           onSubmit={state.addGroup}
           maxLength={GROUP_NAME_MAX}
-          placeholder="그룹 추가 (예: 🎁 선물) 후 엔터"
+          placeholder="그룹 추가 (예: 🎁 선물)"
+          pcPlaceholder="그룹 추가 (예: 🎁 선물) 후 엔터"
           label="그룹 추가"
-          showButton
+          button="md"
           className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-bold text-ink-900 outline-none placeholder:font-normal placeholder:text-ink-350"
         />
       </label>
