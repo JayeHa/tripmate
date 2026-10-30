@@ -86,6 +86,11 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "moves", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.moves(tripId) }),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transport_fares", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.transportFares(tripId) }),
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>
         refreshAfterSync(queryKeys.expenses(tripId)),
       )

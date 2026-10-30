@@ -47,6 +47,8 @@ export const queryKeys = {
   packLists: (tripId: string) => ["trips", tripId, "pack-lists"] as const,
   /** 쇼핑 참고 사진 — 읽기 주소는 그 아래 "urls" */
   packPhotos: (tripId: string) => ["trips", tripId, "pack-photos"] as const,
+  /** 여행 홈 「교통」 의 1인 예상 교통비(0072) */
+  transportFares: (tripId: string) => ["trips", tripId, "transport-fares"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
