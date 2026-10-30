@@ -5,11 +5,16 @@ import { isHttpUrl } from "@/entities/schedule-item";
 import { type GuideCard, guideKindLabel } from "../../../lib/guide";
 import { directionsUrl, type GuidePin } from "../../../lib/guide-map";
 import { WaitChip } from "../guide-card";
-import { MetaLine, SmallPlacedChip } from "./guide-map-parts";
+import { MetaLine, PinNumber, SmallPlacedChip } from "./guide-map-parts";
 
 type GuideMapDetailProps = {
   pin: GuidePin;
+  /** 가까운 다른 장소(nearbyPins) — 누르면 그 장소로 */
+  nearby: { pin: GuidePin; label: string }[];
   onBack: () => void;
+  onPick: (placeId: string) => void;
+  /** 모바일 시트에서 머리를 끌어 높이를 바꾼다. PC 는 없음 */
+  onHeadPointerDown?: (e: React.PointerEvent) => void;
   onAdd: (card: GuideCard) => void;
   /** 장소 정보 수정 — 만든 사람의 장소만, 아니면 null */
   onEdit: ((card: GuideCard) => void) | null;
@@ -20,15 +25,26 @@ const CHIP =
 
 /**
  * 지도 시트 · 패널의 장소 상세 — 「‹ 목록」 · 종류 · 배치 칩, 이름 20/800, 「★ 평점 (리뷰) · 지역」 · 대기,
- * 설명, 행동 칩 줄(「+ 일정」 아직 안 넣었을 때 · 길찾기 · 구글맵 · 수정), 이 여행의 메모. 사진은 넣지 않는다
+ * 설명, 행동 칩 줄(「+ 일정」 아직 안 넣었을 때 · 길찾기 · 구글맵 · 수정), 이 여행의 메모, 근처 다른 장소 3곳(도보 N분). 사진은 넣지 않는다
  */
-export function GuideMapDetail({ pin, onBack, onAdd, onEdit }: GuideMapDetailProps) {
+export function GuideMapDetail({
+  pin,
+  nearby,
+  onBack,
+  onPick,
+  onAdd,
+  onEdit,
+  onHeadPointerDown,
+}: GuideMapDetailProps) {
   const { card } = pin;
   const { place } = card;
   const kind = guideKindLabel(place);
   return (
-    <div className="flex flex-col gap-3.5 px-5 pt-1 pb-6">
-      <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-3.5 px-5 pt-1 pb-20 lg:pb-6">
+      <div
+        onPointerDown={onHeadPointerDown}
+        className="flex touch-none flex-col gap-1.5 lg:touch-auto"
+      >
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -96,6 +112,25 @@ export function GuideMapDetail({ pin, onBack, onAdd, onEdit }: GuideMapDetailPro
         <p className="rounded-card bg-surface-sunken px-4 py-3.5 text-sm/[1.7] text-pretty whitespace-pre-line text-ink-700">
           {card.memo}
         </p>
+      )}
+      {nearby.length > 0 && (
+        <div className="flex flex-col gap-1 pt-0.5">
+          <span className="pb-1 text-[15px] font-extrabold text-ink-900">근처 다른 장소</span>
+          {nearby.map(({ pin: near, label }) => (
+            <button
+              key={near.card.place.id}
+              type="button"
+              onClick={() => onPick(near.card.place.id)}
+              className="flex cursor-pointer items-center gap-2.5 py-2 text-left"
+            >
+              <PinNumber num={near.num} placed={near.card.day !== null} />
+              <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink-900">
+                {near.card.place.name}
+              </span>
+              <span className="shrink-0 text-[13px] font-bold text-ink-500">{label}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
