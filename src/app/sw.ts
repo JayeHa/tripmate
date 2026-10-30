@@ -15,6 +15,7 @@ import {
 
 import { isOfflineFileUrl, offlineFileCacheKey } from "@/shared/api/offline-files";
 
+import { START_URL } from "./keep-start-screen";
 import { fromSavedTripFiles, fromSavedTripPages, listenForTripMessages } from "./sw-saved-trips";
 
 declare global {
@@ -49,9 +50,23 @@ function pageCache(cacheName: string, ...extra: SerwistPlugin[]) {
   return new NetworkFirst({
     cacheName,
     networkTimeoutSeconds: 5,
-    plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 7 * DAY }), ...extra],
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 7 * DAY }),
+      savedPageOnly,
+      ...extra,
+    ],
   });
 }
+
+/**
+ * 제대로 받은 화면만 남긴다 — 로그인이 풀려 /login 으로 넘어간 응답은 그 주소의 화면이 아니다.
+ * 서비스 워커가 직접 받을 때(첫 화면 다시 담기)는 넘어간 뒤의 화면이 오고, 브라우저 이동은 넘김 응답(opaqueredirect, 상태 0)이 온다.
+ * 기본 규칙은 상태 0 도 남겨서, 직접 정한다
+ */
+const savedPageOnly: SerwistPlugin = {
+  cacheWillUpdate: ({ response }) =>
+    Promise.resolve(response.status === 200 && !response.redirected ? response : null),
+};
 
 /** 화면 주소인가 — API · 인증 · 서비스 워커 · 빌드 파일 · 확장자 있는 파일은 아니다 */
 function isPagePath(pathname: string): boolean {
@@ -94,6 +109,24 @@ const rules: RuntimeCaching[] = [
   // 다른 도메인(Supabase 데이터 · 인증, 구글 지도)은 저장하지 않는다 — 데이터는 앱이 IndexedDB 에 따로 두고,
   // 지도는 약관상 저장할 수 없고 스크립트만 남으면 오프라인에서 지도가 반쯤 떠 깨진다
   { matcher: ({ sameOrigin }) => !sameOrigin, handler: new NetworkOnly() },
+  {
+    // 「/」 는 서버가 늘 첫 화면(내 여행)으로 넘긴다. 넘김 응답은 남길 수 없어 오프라인이면 열리지 않았다 — 여기서 넘긴다
+    matcher: ({ request, sameOrigin, url }) =>
+      sameOrigin && request.mode === "navigate" && url.pathname === "/",
+    handler: ({ url }) => Promise.resolve(Response.redirect(new URL(START_URL, url).href, 307)),
+  },
+  {
+    // 도시 사진(내 여행 카드 · 여행 홈) — Next 이미지 최적화를 거쳐 기본 규칙(next-image)은 24시간만 남긴다.
+    // 파일 이름에 내용 해시가 붙어 바뀌지 않으니 한 번 받은 것을 데이터 캐시만큼 쓴다 — 오프라인 첫 화면의 사진이 깨지지 않게
+    matcher: ({ sameOrigin, url }) =>
+      sameOrigin &&
+      url.pathname === "/_next/image" &&
+      (url.searchParams.get("url") ?? "").startsWith("/city-images/"),
+    handler: new CacheFirst({
+      cacheName: "city-images",
+      plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 61 * DAY })],
+    }),
+  },
   {
     matcher: ({ request, sameOrigin, url }) =>
       sameOrigin &&

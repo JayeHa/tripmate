@@ -64,6 +64,8 @@ export const queryKeys = {
  */
 export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (["cities", "holidays", "weather"].includes(String(queryKey[0]))) return true;
+  // 내 프로필(이름 · 사진) — 오프라인 첫 화면의 계정 버튼이 「?」 로 보이지 않게. 로그인 정보(["user"])는 남기지 않는다
+  if (queryKey[0] === "user" && queryKey[1] === "profile") return true;
   // 영수증 · 바우처 · 쇼핑 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
   const files = ["receipts", "vouchers", "pack-photos"];
   if (files.includes(String(queryKey[2])) && queryKey[3] === "urls") {

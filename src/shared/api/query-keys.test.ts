@@ -11,10 +11,13 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery(queryKeys.weather.forecast("tokyo"))).toBe(true);
   });
 
-  it("경로와 사용자 정보는 남기지 않는다", () => {
+  it("내 프로필은 남긴다 — 오프라인 첫 화면의 계정 버튼", () => {
+    expect(shouldPersistQuery(queryKeys.myProfile)).toBe(true);
+  });
+
+  it("경로와 로그인 정보는 남기지 않는다", () => {
     expect(shouldPersistQuery(queryKeys.dayRoute("t1", 0, "WALK"))).toBe(false);
     expect(shouldPersistQuery(queryKeys.user)).toBe(false);
-    expect(shouldPersistQuery(queryKeys.myProfile)).toBe(false);
     // 실시간 환율은 참고용 — 오프라인에서는 「지금」 값을 빼고 그린다
     expect(shouldPersistQuery(queryKeys.liveRates("KRW"))).toBe(false);
   });
