@@ -65,6 +65,7 @@ export function DetailExtras({
           <AlternativesBlock
             tripId={tripId}
             main={item}
+            mainPin={{ num: row.num, status: row.status, category: row.category }}
             alternatives={row.alternatives}
             actions={alt.actions}
             onAdd={() => setPicking(true)}

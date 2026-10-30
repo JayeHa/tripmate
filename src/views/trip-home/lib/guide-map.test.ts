@@ -14,7 +14,6 @@ import {
   nearestStage,
   nextStage,
   stageHeight,
-  walkLabel,
 } from "./guide-map";
 
 /** 테스트용 카드 — 좌표만 */
@@ -112,13 +111,7 @@ describe("시트 단계", () => {
   });
 });
 
-describe("walkLabel · nearbyPins", () => {
-  it("× 1.3 ÷ 80m/분, 최소 1분, 1.5km 넘으면 km", () => {
-    expect(walkLabel(10)).toBe("도보 1분");
-    expect(walkLabel(400)).toBe("도보 7분");
-    expect(walkLabel(1200)).toBe("1.6km");
-  });
-
+describe("nearbyPins", () => {
   it("고른 핀을 빼고 가까운 순 3곳", () => {
     const { pins } = guidePins([
       card("a", 35.7, 139.7),

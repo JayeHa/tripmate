@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { etaLabel, formatKm, haversineKm, transitRouteUrl } from "./distance";
+import { etaLabel, formatKm, haversineKm, transitRouteUrl, walkLabel } from "./distance";
 
 describe("haversineKm", () => {
   it("도쿄역 → 스카이트리 직선 약 5.1km", () => {
@@ -50,5 +50,13 @@ describe("transitRouteUrl", () => {
     expect(transitRouteUrl({ lat: 1.5, lng: 2 }, { lat: 3, lng: 4.25 })).toBe(
       "https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=1.5%2C2&destination=3%2C4.25",
     );
+  });
+});
+
+describe("walkLabel", () => {
+  it("× 1.3 ÷ 80m/분, 최소 1분, 걸어서 1.5km 넘으면 km", () => {
+    expect(walkLabel(0.01)).toBe("도보 1분");
+    expect(walkLabel(0.4)).toBe("도보 7분");
+    expect(walkLabel(1.2)).toBe("1.6km");
   });
 });

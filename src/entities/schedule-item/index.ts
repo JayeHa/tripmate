@@ -6,6 +6,7 @@ export * from "./api/schedule-counts";
 export * from "./api/schedule-edit";
 export * from "./api/schedule-items";
 export * from "./lib/add-place-error";
+export { haversineKm, walkLabel } from "./lib/distance";
 export * from "./lib/format-leg";
 export * from "./lib/link-pick";
 export { fitZoom } from "./lib/map-fit";

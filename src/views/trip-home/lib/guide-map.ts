@@ -1,3 +1,5 @@
+import { walkLabel } from "@/entities/schedule-item";
+
 import type { GuideCard } from "./guide";
 
 export type LatLng = { lat: number; lng: number };
@@ -99,15 +101,6 @@ export function nextStage(stage: SheetStage): SheetStage {
   return stage === "half" ? "full" : "half";
 }
 
-/**
- * 거리 글자 — 직선거리 × 1.3(길이 굽는 만큼) ÷ 80m/분 = 「도보 N분」(최소 1분), 1.5km 넘으면 「N.Nkm」
- */
-export function walkLabel(straightM: number): string {
-  const m = straightM * 1.3;
-  if (m > 1500) return `${(m / 1000).toFixed(1)}km`;
-  return `도보 ${Math.max(1, Math.round(m / 80))}분`;
-}
-
 /** 고른 핀에서 가까운 다른 핀 n곳(가까운 순)과 거리 글자 */
 export function nearbyPins(
   pins: readonly GuidePin[],
@@ -119,5 +112,5 @@ export function nearbyPins(
     .map((pin) => ({ pin, m: distanceM(selected.at, pin.at) }))
     .toSorted((a, b) => a.m - b.m)
     .slice(0, n)
-    .map(({ pin, m }) => ({ pin, label: walkLabel(m) }));
+    .map(({ pin, m }) => ({ pin, label: walkLabel(m / 1000) }));
 }

@@ -40,6 +40,16 @@ export function etaLabel(km: number): string {
   return m ? `약 ${h}시간 ${m}분` : `약 ${h}시간`;
 }
 
+/**
+ * 장소 사이 「도보 N분」 — 직선거리 × 1.3(길이 굽는 만큼) ÷ 80m/분(최소 1분), 걸어서 1.5km 넘으면 「N.Nkm」.
+ * 홈 가이드 지도의 근처 장소 · 일정 상세의 대체 장소가 쓴다(시안 규칙). 카드 사이 pill 은 etaLabel
+ */
+export function walkLabel(straightKm: number): string {
+  const m = straightKm * 1000 * 1.3;
+  if (m > 1500) return `${(m / 1000).toFixed(1)}km`;
+  return `도보 ${Math.max(1, Math.round(m / 80))}분`;
+}
+
 /** 구글맵 대중교통 길찾기 URL. 앱이 깔려 있으면 앱으로 열린다 */
 export function transitRouteUrl(from: LatLng, to: LatLng): string {
   const params = new URLSearchParams({
