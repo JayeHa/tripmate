@@ -22,12 +22,13 @@ type MobileHomeProps = {
 /**
  * 모바일 여행 홈 — 흰 머리(✕ 줄 · 여행 이름 줄) + 홈 탭 줄 + 탭 내용.
  * ✕ 줄과 탭 줄은 위에 붙고, 그 사이의 여행 이름 줄은 스크롤하면 ✕ 줄 아래로 밀려 올라간다.
- * 80px 넘게 내리면 ✕ 옆에 여행 이름 · D-day 칩이 나온다. 둘 다 page 의 직계 자식이어야 sticky 가 끝까지 붙는다
+ * 80px 넘게 내리면 ✕ 옆에 여행 이름 · D-day 칩이 나온다. 둘 다 page 의 직계 자식이어야 sticky 가 끝까지 붙는다.
+ * 가이드 지도 보기(data-guide-map)면 화면 높이에 맞춰 지도가 남은 칸을 채운다(스크롤 없음)
  */
 export function MobileHome({ tripId, trip, tab, onTab }: MobileHomeProps) {
   const collapsed = useHeaderCollapse();
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col has-data-guide-map:h-[calc(100dvh-var(--shell-top)-var(--tab-bar))]">
       <div className="sticky top-(--shell-top) z-20 flex h-13 shrink-0 items-center gap-3.5 bg-white px-4.5 text-ink-900">
         <Link href="/trips" transitionTypes={NAV.back} aria-label="내 여행으로" className="flex">
           <X className="size-6.5" strokeWidth={2} />

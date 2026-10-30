@@ -1,4 +1,12 @@
-import type { GuidePlace, Place, PlaceCategory, ScheduleItem } from "@/entities/schedule-item";
+import {
+  CATEGORY_LABEL,
+  type GuidePlace,
+  type Place,
+  type PlaceCategory,
+  placeSubtypeOf,
+  type ScheduleItem,
+  SUBTYPE_LABEL,
+} from "@/entities/schedule-item";
 
 import { HOME_TAB_LABEL, type HomeTab } from "./home-tabs";
 
@@ -115,4 +123,12 @@ export function guideSavedToast(
   if (shown === tab) return "장소를 저장했어요";
   if (shown === null) return "저장했어요. 숙소는 가이드 탭에 보이지 않아요";
   return `「${HOME_TAB_LABEL[shown]}」 탭에 저장했어요`;
+}
+
+/** 종류 칩 글자 — 메뉴 · 종류가 있으면 그것(「🍜 라멘 · 면」), 없으면 카테고리(「음식점」), 둘 다 없으면 null */
+export function guideKindLabel(place: Pick<Place, "category" | "subtype">): string | null {
+  const subtype = placeSubtypeOf(place);
+  if (subtype) return SUBTYPE_LABEL[subtype];
+  const category = place.category as PlaceCategory | null;
+  return category && category in CATEGORY_LABEL ? CATEGORY_LABEL[category] : null;
 }
