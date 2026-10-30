@@ -12,6 +12,7 @@ import { flightsQuery } from "@/entities/flight";
 import { fetchPackPhotoUrls, packListsQuery } from "@/entities/pack";
 import {
   alternativesQuery,
+  guidePlacesQuery,
   memosQuery,
   movesQuery,
   scheduleItemsQuery,
@@ -50,6 +51,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...tripMembersQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...scheduleItemsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...alternativesQuery(tripId), ...fresh }),
+    qc.fetchQuery({ ...guidePlacesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...movesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...memosQuery(tripId), ...fresh }),
     qc.fetchQuery(cityCatalogQuery()),
