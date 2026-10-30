@@ -14,6 +14,8 @@ import {
   GUIDE_FILTERS_DEFAULT,
   guideAreaOptions,
   guideFilteredEmptyText,
+  guideTypeName,
+  guideTypeOptions,
   hasGuideFilter,
 } from "../../lib/guide-filter";
 import { useGuideActions } from "../../model/use-guide-actions";
@@ -27,7 +29,7 @@ const EMPTY_TEXT = "아직 장소가 없어요. 가고 싶은 곳을 모아 두�
 
 /**
  * 가이드 탭(관광지 · 식당 · 쇼핑 · 휴식) — 이 여행 보관함의 장소를 카드로. 모바일 한 줄, PC 3열(가운데 1080).
- * 위 필터 줄(지역 · 정렬 · 일정 포함 여부)은 탭마다 처음 값에서 시작한다(탭을 바꾸면 부모가 key 로 새로 그린다).
+ * 위 필터 줄(지역 · 정렬 · 메뉴/종류 · 일정 포함 여부)은 탭마다 처음 값에서 시작한다(탭을 바꾸면 부모가 key 로 새로 그린다).
  * 카드를 누르면 상세, ⋯ 는 수정 · 메모 · 빼기, 「+ 일정」 은 날짜 고르기, 맨 아래 「+ ○○ 추가」 는 장소 입력
  */
 export function GuideTab({ trip, tab }: GuideTabProps) {
@@ -57,11 +59,12 @@ export function GuideTab({ trip, tab }: GuideTabProps) {
           filters={filters}
           onChange={setFilters}
           areaOptions={guideAreaOptions(cards ?? [], areas)}
+          types={{ name: guideTypeName(tab), options: guideTypeOptions(cards ?? [], tab) }}
         />
         {shown === null && <GuideSkeleton />}
         {shown && (
           <GuideList
-            key={`${filters.sort}-${filters.status}-${filters.area}`}
+            key={`${filters.sort}-${filters.status}-${filters.area}-${filters.type}`}
             cards={shown}
             emptyText={
               hasGuideFilter(filters) ? guideFilteredEmptyText(filters.status) : EMPTY_TEXT

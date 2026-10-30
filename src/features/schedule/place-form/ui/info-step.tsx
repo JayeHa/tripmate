@@ -8,6 +8,7 @@ import type { PlaceFormState } from "../model/use-place-fields";
 import { AddressCard } from "./address-card";
 import { Field, inputClass, LinkListField } from "./form-parts";
 import { HoursField } from "./hours-field";
+import { PlaceTagFields } from "./place-tag-fields";
 
 /** 장소 폼에서 고르는 카테고리. 공항 · 교통은 담을 장소가 아니라 뺀다 */
 const CATEGORIES = PLACE_CATEGORIES.filter((c) => c !== "air");
@@ -29,7 +30,7 @@ const SCHEDULE_NOTE =
   "장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.";
 
 /**
- * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 카테고리 · 지역(목록이 있는 도시만) ·
+ * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 카테고리 · 메뉴/종류 · 지역(목록이 있을 때만) ·
  * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크. 새로 담을 때는 이름 옆에 아이콘도 받는다
  * (일정 직접 추가는 그 일정의 아이콘, 가이드는 장소의 기본 아이콘).
  */
@@ -96,26 +97,7 @@ export function InfoStep({
           ))}
         </div>
       </Field>
-      {form.areas.length > 0 && (
-        <Field label="지역" optional>
-          <div className="flex flex-wrap gap-2">
-            {form.areas.map((a) => (
-              <FilterChip
-                key={a.id}
-                selected={v.areaId === a.id}
-                onClick={() => set("areaId", v.areaId === a.id ? null : a.id)}
-              >
-                {a.name}
-              </FilterChip>
-            ))}
-          </div>
-          {!editing && !v.areaId && (
-            <span className="text-xs text-ink-400">
-              고르지 않으면 위치에서 가까운 지역으로 정해져요
-            </span>
-          )}
-        </Field>
-      )}
+      <PlaceTagFields form={form} editing={editing} />
       <HoursField form={form} />
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)] gap-2.5">
         <Field label="별점">

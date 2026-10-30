@@ -10,18 +10,20 @@ import {
   guideAreaOptions,
   guideFilteredEmptyText,
   type GuideFilters,
+  guideTypeOptions,
   hasGuideFilter,
 } from "./guide-filter";
 
-/** 테스트용 카드 — 이름 · 별점 · 일정에 넣은 날 · 지역 */
+/** 테스트용 카드 — 이름 · 별점 · 일정에 넣은 날 · 지역 · 종류(음식점) */
 function card(
   name: string,
   rating: number | null,
   day: number | null,
   area: string | null = null,
+  subtype: string | null = null,
 ): GuideCard {
   return {
-    place: { id: name, name, rating, area_id: area } as Place,
+    place: { id: name, name, rating, area_id: area, category: "food", subtype } as Place,
     addedBy: null,
     memo: null,
     addedAt: "2026-10-30T00:00:00Z",
@@ -66,6 +68,30 @@ describe("filterGuideCards", () => {
   it("지역 — 고른 지역, 「기타」 는 지역 없는 곳", () => {
     expect(names(filterGuideCards(CARDS, f({ area: "shibuya" })))).toEqual(["a", "d"]);
     expect(names(filterGuideCards(CARDS, f({ area: "none" })))).toEqual(["b"]);
+  });
+});
+
+describe("메뉴 · 종류", () => {
+  const FOOD = [
+    card("ramen1", null, null, null, "ramen"),
+    card("sushi1", null, null, null, "sushi"),
+    card("ramen2", null, null, null, "ramen"),
+    card("etc", null, null),
+  ];
+
+  it("고른 종류만, 「기타」 는 종류 없는 곳", () => {
+    expect(names(filterGuideCards(FOOD, f({ type: "ramen" })))).toEqual(["ramen1", "ramen2"]);
+    expect(names(filterGuideCards(FOOD, f({ type: "none" })))).toEqual(["etc"]);
+  });
+
+  it("옵션은 목록 순서대로 개수와 함께, 기타는 끝 — 관광지 · 한 종류뿐이면 숨긴다", () => {
+    expect(guideTypeOptions(FOOD, "food")).toEqual([
+      { value: "sushi", label: "🍣 스시 1" },
+      { value: "ramen", label: "🍜 라멘 · 면 2" },
+      { value: "none", label: "기타 1" },
+    ]);
+    expect(guideTypeOptions(FOOD, "sight")).toEqual([]);
+    expect(guideTypeOptions(FOOD.slice(0, 1), "food")).toEqual([]);
   });
 });
 
