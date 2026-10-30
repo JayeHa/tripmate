@@ -24,8 +24,15 @@ const TAB_CATEGORIES: Record<GuideTab, (string | null)[]> = {
 /** 한 번에 그리는 카드 수 — 끝에 닿으면 이만큼 더 */
 export const GUIDE_PAGE = 15;
 
-/** 가이드 카드 한 장 — 보관함 줄 + 일정에 넣은 첫날(day_index, 없으면 null) · 보일 이모지 */
-export type GuideCard = GuidePlace & { day: number | null; emoji: string | null };
+/**
+ * 가이드 카드 한 장 — 보관함 줄 + 일정에 넣은 첫날(day_index, 없으면 null) · 보일 이모지.
+ * inSchedule 은 대체 장소로라도 일정에 있는가 — 있으면 보관함에서 뺄 수 없다(DB 도 막는다)
+ */
+export type GuideCard = GuidePlace & {
+  day: number | null;
+  emoji: string | null;
+  inSchedule: boolean;
+};
 
 /**
  * 그 탭의 카드 — 보관함 순서(최근에 담은 것부터) 그대로. 일정에 넣은 장소는 가장 이른 날을 붙인다(대체 장소는 넣은 것으로 치지 않는다).
@@ -38,8 +45,10 @@ export function guideCards(
 ): GuideCard[] {
   const first = new Map<string, ScheduleItem>();
   const emoji = new Map<string, string>();
+  const used = new Set<string>();
   for (const item of items) {
     if (!item.place_id) continue;
+    used.add(item.place_id);
     if (item.emoji && !emoji.has(item.place_id)) emoji.set(item.place_id, item.emoji);
     if (item.alternative_of) continue;
     const seen = first.get(item.place_id);
@@ -50,7 +59,8 @@ export function guideCards(
     .map((row) => {
       const item = first.get(row.place.id);
       const icon = row.place.emoji || item?.emoji || emoji.get(row.place.id) || null;
-      return { ...row, day: item?.day_index ?? null, emoji: icon };
+      const inSchedule = item !== undefined || used.has(row.place.id);
+      return { ...row, day: item?.day_index ?? null, emoji: icon, inSchedule };
     });
 }
 

@@ -44,6 +44,9 @@ describe("guideCards", () => {
     const items = [item("ramen", 3), item("ramen", 1), item("cafe", 0, { alternative_of: "x" })];
     const cards = guideCards(ROWS, items, "food");
     expect(cards.map((c) => c.day)).toEqual([1, null]);
+    // 대체 장소로만 있어도 일정에 있는 것 — 보관함에서 빼지 못한다
+    expect(cards.map((c) => c.inSchedule)).toEqual([true, true]);
+    expect(guideCards(ROWS, [], "food").map((c) => c.inSchedule)).toEqual([false, false]);
   });
 
   it("이모지는 장소 것, 없으면 첫 일정의 것, 그것도 없으면 대체 장소 일정의 것", () => {

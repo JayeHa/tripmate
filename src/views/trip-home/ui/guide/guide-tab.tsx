@@ -1,31 +1,32 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import { useState } from "react";
 
 import { useAlternatives, useGuidePlaces, useScheduleItems } from "@/entities/schedule-item";
+import type { Trip } from "@/entities/trip";
 import { Skeleton } from "@/shared/ui/skeleton";
 
 import { guideCards, type GuideTab as Tab } from "../../lib/guide";
+import { useGuideActions } from "../../model/use-guide-actions";
 import { useGuidePaging } from "../../model/use-guide-paging";
 import { GuideCard } from "./guide-card";
-import { GuideDetail } from "./guide-detail";
+import { GuideOverlays } from "./guide-overlays";
 
-type GuideTabProps = { tripId: string; tab: Tab };
+type GuideTabProps = { trip: Trip; tab: Tab };
 
 /**
  * 가이드 탭(관광지 · 식당 · 쇼핑 · 휴식) — 이 여행 보관함의 장소를 카드로. 모바일 한 줄, PC 3열(가운데 1080).
- * 일정에 넣은 장소는 「day N 배치됨」. 15장씩 그리고 끝에 닿으면 더. 카드를 누르면 상세
+ * 일정에 넣은 장소는 「day N 배치됨」. 15장씩 그리고 끝에 닿으면 더. 카드를 누르면 상세, ⋯ 는 수정 · 메모 · 빼기, 「+ 일정」 은 날짜 고르기
  */
-export function GuideTab({ tripId, tab }: GuideTabProps) {
+export function GuideTab({ trip, tab }: GuideTabProps) {
+  const tripId = trip.id;
   const { data: rows } = useGuidePlaces(tripId);
   const { data: items = [] } = useScheduleItems(tripId);
   // 대체 장소 줄은 일정 조회에 없다 — 대체 장소로만 넣은 장소의 이모지를 찾으려고 함께 넘긴다
   const { data: alternatives = [] } = useAlternatives(tripId);
   const cards = rows ? guideCards(rows, [...items, ...alternatives], tab) : null;
   const { limit, hasMore, watchEnd } = useGuidePaging(cards?.length ?? 0);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const opened = cards?.find((c) => c.place.id === openId) ?? null;
+  const a = useGuideActions(tripId);
 
   return (
     <div className="flex flex-1 flex-col bg-surface-sunken">
@@ -46,7 +47,15 @@ export function GuideTab({ tripId, tab }: GuideTabProps) {
         {cards && cards.length > 0 && (
           <div className="grid grid-cols-1 items-start gap-2.5 lg:grid-cols-3">
             {cards.slice(0, limit).map((card) => (
-              <GuideCard key={card.place.id} card={card} onOpen={() => setOpenId(card.place.id)} />
+              <GuideCard
+                key={card.place.id}
+                card={card}
+                onOpen={() => a.openDetail(card.place.id)}
+                onAdd={() => a.day.ask(card)}
+                onEdit={card.place.created_by === a.myId ? () => a.edit.ask(card) : null}
+                onMemo={() => a.memo.ask(card)}
+                onRemove={() => a.remove.ask(card)}
+              />
             ))}
           </div>
         )}
@@ -56,7 +65,7 @@ export function GuideTab({ tripId, tab }: GuideTabProps) {
           </div>
         )}
       </div>
-      <GuideDetail card={opened} onClose={() => setOpenId(null)} />
+      <GuideOverlays trip={trip} cards={cards ?? []} a={a} />
     </div>
   );
 }

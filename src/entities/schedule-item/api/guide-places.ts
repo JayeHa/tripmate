@@ -28,3 +28,32 @@ export async function fetchGuidePlaces(tripId: string): Promise<GuidePlace[]> {
       : [],
   );
 }
+
+/**
+ * 보관함에서 빼기 — 보관함 줄만 지운다(메모 포함, 장소 · 일정은 그대로).
+ * 이 여행 일정(대체 장소 포함)에 있는 장소는 DB 가 0행으로 막는다(0068) — 그때 오류로 알린다
+ */
+export async function removeGuidePlace(tripId: string, placeId: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trip_places")
+    .delete()
+    .eq("trip_id", tripId)
+    .eq("place_id", placeId)
+    .select("place_id");
+  if (error) throw error;
+  if (data.length === 0) throw new Error("일정에 있는 장소는 일정에서 먼저 지워 주세요");
+}
+
+/** 이 여행에서 이 장소에 대한 메모 — 비우면 지운다(null). 일행 누구나 고친다 */
+export async function setGuideMemo(tripId: string, placeId: string, memo: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("trip_places")
+    .update({ memo: memo.trim() || null })
+    .eq("trip_id", tripId)
+    .eq("place_id", placeId)
+    .select("place_id");
+  if (error) throw error;
+  if (data.length === 0) throw new Error("보관함에서 빠진 장소예요");
+}
