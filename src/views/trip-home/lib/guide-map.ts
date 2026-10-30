@@ -59,14 +59,65 @@ export type MapPadding = { top: number; right: number; bottom: number; left: num
 
 /**
  * 지도에서 시트 · 패널에 가리지 않는 칸 — 핀을 맞추거나 고른 핀을 옮길 때 이 안에 둔다.
- * 모바일은 아래 시트 높이만큼, PC 는 왼쪽 패널(16 + 380 + 여유)만큼 비운다
+ * 모바일은 아래 시트가 덮는 높이(sheetCover)만큼, PC 는 왼쪽 패널(16 + 380 + 여유)만큼 비운다
  */
-export function mapPadding(layout: "mobile" | "pc", mapHeight: number): MapPadding {
+export function mapPadding(layout: "mobile" | "pc", sheetCover: number): MapPadding {
   if (layout === "pc") return { top: 40, right: 40, bottom: 40, left: 420 };
-  return { top: 24, right: 24, bottom: sheetHeight(mapHeight) + 24, left: 24 };
+  return { top: 24, right: 24, bottom: sheetCover + 24, left: 24 };
 }
 
 /** 가리지 않는 칸의 가운데가 지도 가운데에서 떨어진 만큼(px) — panBy 에 그대로 넘기면 지도 가운데의 점이 그 칸 가운데로 간다 */
 export function freeCenterOffset(p: MapPadding): [number, number] {
   return [(p.right - p.left) / 2, (p.bottom - p.top) / 2];
+}
+
+/** 모바일 지도 시트 단계 — 접힘(제목 줄만) · 반 · 펼침(지도 칸 전체) */
+export type SheetStage = "peek" | "half" | "full";
+
+/** 접힌 시트 높이 — 핸들 24 + 제목 줄 40 */
+export const PEEK_HEIGHT = 64;
+
+/** 단계의 시트 높이 */
+export function stageHeight(stage: SheetStage, mapHeight: number): number {
+  if (stage === "peek") return PEEK_HEIGHT;
+  if (stage === "full") return mapHeight;
+  return sheetHeight(mapHeight);
+}
+
+/** 끌기를 놓은 높이에서 가장 가까운 단계 */
+export function nearestStage(height: number, mapHeight: number): SheetStage {
+  const stages: SheetStage[] = ["peek", "half", "full"];
+  return stages.reduce((best, s) =>
+    Math.abs(stageHeight(s, mapHeight) - height) < Math.abs(stageHeight(best, mapHeight) - height)
+      ? s
+      : best,
+  );
+}
+
+/** 핸들을 눌렀을 때 다음 단계 — 접힘 → 반 → 펼침 → 반 */
+export function nextStage(stage: SheetStage): SheetStage {
+  return stage === "half" ? "full" : "half";
+}
+
+/**
+ * 거리 글자 — 직선거리 × 1.3(길이 굽는 만큼) ÷ 80m/분 = 「도보 N분」(최소 1분), 1.5km 넘으면 「N.Nkm」
+ */
+export function walkLabel(straightM: number): string {
+  const m = straightM * 1.3;
+  if (m > 1500) return `${(m / 1000).toFixed(1)}km`;
+  return `도보 ${Math.max(1, Math.round(m / 80))}분`;
+}
+
+/** 고른 핀에서 가까운 다른 핀 n곳(가까운 순)과 거리 글자 */
+export function nearbyPins(
+  pins: readonly GuidePin[],
+  selected: GuidePin,
+  n = 3,
+): { pin: GuidePin; label: string }[] {
+  return pins
+    .filter((p) => p !== selected)
+    .map((pin) => ({ pin, m: distanceM(selected.at, pin.at) }))
+    .toSorted((a, b) => a.m - b.m)
+    .slice(0, n)
+    .map(({ pin, m }) => ({ pin, label: walkLabel(m) }));
 }

@@ -10,6 +10,11 @@ import {
   freeCenterOffset,
   guidePins,
   mapPadding,
+  nearbyPins,
+  nearestStage,
+  nextStage,
+  stageHeight,
+  walkLabel,
 } from "./guide-map";
 
 /** 테스트용 카드 — 좌표만 */
@@ -76,14 +81,52 @@ describe("directionsUrl", () => {
 });
 
 describe("mapPadding · freeCenterOffset", () => {
-  it("모바일은 아래 시트(절반, 최대 300)만큼, PC 는 왼쪽 패널만큼 비운다", () => {
-    expect(mapPadding("mobile", 500).bottom).toBe(274);
-    expect(mapPadding("mobile", 900).bottom).toBe(324);
-    expect(mapPadding("pc", 700).left).toBe(420);
+  it("모바일은 아래 시트가 덮는 만큼, PC 는 왼쪽 패널만큼 비운다", () => {
+    expect(mapPadding("mobile", 300).bottom).toBe(324);
+    expect(mapPadding("pc", 300).left).toBe(420);
   });
 
   it("가리지 않는 칸 가운데로 옮기는 양 — 모바일은 아래로, PC 는 왼쪽으로", () => {
-    expect(freeCenterOffset(mapPadding("mobile", 900))).toEqual([0, 150]);
-    expect(freeCenterOffset(mapPadding("pc", 700))).toEqual([-190, 0]);
+    expect(freeCenterOffset(mapPadding("mobile", 300))).toEqual([0, 150]);
+    expect(freeCenterOffset(mapPadding("pc", 300))).toEqual([-190, 0]);
+  });
+});
+
+describe("시트 단계", () => {
+  it("접힘 64 · 반 = 절반(최대 300) · 펼침 = 지도 칸 전체", () => {
+    expect([stageHeight("peek", 700), stageHeight("half", 700), stageHeight("full", 700)]).toEqual([
+      64, 300, 700,
+    ]);
+    expect(stageHeight("half", 400)).toBe(200);
+  });
+
+  it("놓은 높이에서 가장 가까운 단계 · 핸들은 접힘 → 반 → 펼침 → 반", () => {
+    expect(nearestStage(120, 700)).toBe("peek");
+    expect(nearestStage(420, 700)).toBe("half");
+    expect(nearestStage(560, 700)).toBe("full");
+    expect([nextStage("peek"), nextStage("half"), nextStage("full")]).toEqual([
+      "half",
+      "full",
+      "half",
+    ]);
+  });
+});
+
+describe("walkLabel · nearbyPins", () => {
+  it("× 1.3 ÷ 80m/분, 최소 1분, 1.5km 넘으면 km", () => {
+    expect(walkLabel(10)).toBe("도보 1분");
+    expect(walkLabel(400)).toBe("도보 7분");
+    expect(walkLabel(1200)).toBe("1.6km");
+  });
+
+  it("고른 핀을 빼고 가까운 순 3곳", () => {
+    const { pins } = guidePins([
+      card("a", 35.7, 139.7),
+      card("far", 35.8, 139.8),
+      card("b", 35.701, 139.7),
+      card("c", 35.703, 139.7),
+      card("d", 35.71, 139.7),
+    ]);
+    expect(nearbyPins(pins, pins[0]).map((x) => x.pin.card.place.id)).toEqual(["b", "c", "d"]);
   });
 });

@@ -11,6 +11,9 @@ import {
   type GuidePin,
   type LatLng,
   mapPadding,
+  sheetHeight,
+  type SheetStage,
+  stageHeight,
 } from "../../../lib/guide-map";
 
 /** 첫 화면 줌 상한 — 한 동네만 있어도 너무 당겨지지 않게 */
@@ -22,6 +25,8 @@ type GuideMapCanvasProps = {
   pins: GuidePin[];
   selectedId: string | null;
   layout: "mobile" | "pc";
+  /** 모바일 시트 단계 — 고른 핀을 시트 위 칸 가운데로 옮긴다(펼친 동안은 옮기지 않는다). PC 는 null */
+  sheetStage: SheetStage | null;
   onSelect: (placeId: string) => void;
   /** 지도 빈 곳을 눌렀다 — 상세를 닫는다 */
   onBackground: () => void;
@@ -36,6 +41,7 @@ export function GuideMapCanvas({
   pins,
   selectedId,
   layout,
+  sheetStage,
   onSelect,
   onBackground,
 }: GuideMapCanvasProps) {
@@ -79,7 +85,7 @@ export function GuideMapCanvas({
         );
       })}
       <FitGuidePins points={pins.map((p) => p.at)} layout={layout} />
-      <PanToSelected at={selected?.at ?? null} layout={layout} />
+      <PanToSelected at={selected?.at ?? null} layout={layout} stage={sheetStage} />
     </Map>
   );
 }
@@ -99,7 +105,8 @@ function FitGuidePins({ points, layout }: FitGuidePinsProps) {
     const bounds = new google.maps.LatLngBounds();
     core.forEach((p) => bounds.extend(p));
     const div = map.getDiv();
-    const pad = mapPadding(layout, div.clientHeight);
+    // 처음 맞출 때는 시트가 반 단계라고 본다
+    const pad = mapPadding(layout, sheetHeight(div.clientHeight));
     const width = Math.max(div.clientWidth - pad.left - pad.right, 1);
     const height = Math.max(div.clientHeight - pad.top - pad.bottom, 1);
     if (fitZoom(core, width, height, 0) >= MAX_ZOOM) {
@@ -115,17 +122,22 @@ function FitGuidePins({ points, layout }: FitGuidePinsProps) {
   return null;
 }
 
-type PanToSelectedProps = { at: LatLng | null; layout: "mobile" | "pc" };
+type PanToSelectedProps = { at: LatLng | null; layout: "mobile" | "pc"; stage: SheetStage | null };
 
-/** 고른 핀이 바뀌면 줌은 그대로 두고 그 핀을 가리지 않는 칸 가운데로 옮긴다. 좌표 값으로 비교한다 */
-function PanToSelected({ at, layout }: PanToSelectedProps) {
+/**
+ * 고른 핀이 바뀌거나 시트 단계가 바뀌면 줌은 그대로 두고 그 핀을 가리지 않는 칸 가운데로 옮긴다. 좌표 값으로 비교한다.
+ * 시트가 덮는 높이는 단계로 정하고 위에 120 은 남긴다. 시트를 펼친 동안은 지도가 가려져 옮기지 않는다
+ */
+function PanToSelected({ at, layout, stage }: PanToSelectedProps) {
   const map = useMap();
   const key = at ? `${at.lat},${at.lng}` : null;
   useEffect(() => {
-    if (!map || !at) return;
+    if (!map || !at || stage === "full") return;
+    const h = map.getDiv().clientHeight;
+    const cover = stage ? Math.min(stageHeight(stage, h), h - 120) : 0;
     map.setCenter(at);
-    map.panBy(...freeCenterOffset(mapPadding(layout, map.getDiv().clientHeight)));
+    map.panBy(...freeCenterOffset(mapPadding(layout, cover)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, key]);
+  }, [map, key, stage]);
   return null;
 }

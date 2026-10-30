@@ -6,22 +6,27 @@ type GuideMapListProps = {
   /** 좌표가 없어 지도에 없는 장소 수 */
   noLocation: number;
   onPick: (placeId: string) => void;
+  /** 모바일 시트에서 머리 줄을 끌어 높이를 바꾼다. PC 는 없음 */
+  onHeadPointerDown?: (e: React.PointerEvent) => void;
 };
 
 /**
  * 지도 시트 · 패널의 장소 목록 — 머리 「장소 N곳」(+ 「위치 없는 N곳은 목록에서」), 줄마다 번호 원 · 이름 · 배치 칩 ·
  * 「★ 평점 (리뷰) · 지역」 · 설명 한 줄. 줄을 누르면 그 장소 상세
  */
-export function GuideMapList({ pins, noLocation, onPick }: GuideMapListProps) {
+export function GuideMapList({ pins, noLocation, onPick, onHeadPointerDown }: GuideMapListProps) {
   return (
     <div className="flex flex-col">
-      <div className="flex min-h-10 items-center gap-2 px-5 pt-1">
+      <div
+        onPointerDown={onHeadPointerDown}
+        className="flex min-h-10 touch-none items-center gap-2 px-5 pt-1 lg:touch-auto"
+      >
         <span className="flex-1 text-base font-extrabold text-ink-900">장소 {pins.length}곳</span>
         {noLocation > 0 && (
           <span className="text-xs text-ink-400">위치 없는 {noLocation}곳은 목록에서</span>
         )}
       </div>
-      <ul className="px-5 pb-6">
+      <ul className="px-5 pb-20 lg:pb-6">
         {pins.map(({ card, num }) => (
           <li key={card.place.id}>
             <button
