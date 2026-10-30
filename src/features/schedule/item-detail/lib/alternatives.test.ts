@@ -27,6 +27,7 @@ function place(id: string, patch: Partial<Place> = {}): Place {
     address_detail: null,
     category: null,
     emoji: null,
+    area_id: null,
     rating: null,
     review_count: null,
     wait: null,

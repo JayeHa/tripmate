@@ -32,6 +32,8 @@ export type GuideCard = GuidePlace & {
   day: number | null;
   emoji: string | null;
   inSchedule: boolean;
+  /** 지역 이름(긴자 · 시부야 …). 지역이 없거나 목록을 모르면 null */
+  area: string | null;
 };
 
 /**
@@ -42,6 +44,8 @@ export function guideCards(
   rows: readonly GuidePlace[],
   items: readonly ScheduleItem[],
   tab: GuideTab,
+  /** 지역 id → 이름 */
+  areaNames: ReadonlyMap<string, string> = new Map(),
 ): GuideCard[] {
   const first = new Map<string, ScheduleItem>();
   const emoji = new Map<string, string>();
@@ -60,7 +64,8 @@ export function guideCards(
       const item = first.get(row.place.id);
       const icon = row.place.emoji || item?.emoji || emoji.get(row.place.id) || null;
       const inSchedule = item !== undefined || used.has(row.place.id);
-      return { ...row, day: item?.day_index ?? null, emoji: icon, inSchedule };
+      const area = row.place.area_id ? (areaNames.get(row.place.area_id) ?? null) : null;
+      return { ...row, day: item?.day_index ?? null, emoji: icon, inSchedule, area };
     });
 }
 

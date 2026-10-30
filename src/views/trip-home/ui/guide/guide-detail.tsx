@@ -27,7 +27,7 @@ type GuideDetailProps = DetailActions & {
 };
 
 /**
- * 가이드 상세 — 모바일은 바텀시트, PC 는 가운데 480 창. 종류 · 배치 칩, 이름 20/800, 대기,
+ * 가이드 상세 — 모바일은 바텀시트, PC 는 가운데 480 창. 종류 · 지역 · 배치 칩, 이름 20/800, 대기,
  * 장소 정보 표(일정 상세와 같은 줄 — 설명 · 주소 · 별점 · 운영시간), 이 여행의 메모(쓰기/고치기), 장소 링크,
  * 아래 ✏️(장소 정보 수정, 만든 사람만) · 구글맵 · 「일정에 추가」(아직 일정에 없을 때)
  */
@@ -54,6 +54,11 @@ function DetailBody({ card, onAdd, onMemo, onEdit, myId }: DetailBodyProps) {
           {category && category in CATEGORY_LABEL && (
             <span className="flex h-6 items-center rounded-full bg-surface-muted px-2.25 text-xs font-bold text-ink-700">
               {CATEGORY_LABEL[category]}
+            </span>
+          )}
+          {card.area && (
+            <span className="flex h-6 items-center rounded-full bg-surface-muted px-2.25 text-xs font-bold text-ink-700">
+              {card.area}
             </span>
           )}
           {card.day !== null && <PlacedChip day={card.day} />}

@@ -1,7 +1,7 @@
 import { onlineManager, type QueryClient } from "@tanstack/react-query";
 
 import { checklistQuery, checklistTargetsQuery } from "@/entities/checklist";
-import { cityCatalogQuery, tripCitiesQuery } from "@/entities/city";
+import { cityAreasQuery, cityCatalogQuery, tripCitiesQuery } from "@/entities/city";
 import {
   expensesQuery,
   settlementsQuery,
@@ -55,6 +55,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...movesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...memosQuery(tripId), ...fresh }),
     qc.fetchQuery(cityCatalogQuery()),
+    qc.fetchQuery(cityAreasQuery()),
     qc.fetchQuery({ ...tripCitiesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...staysQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...flightsQuery(tripId), ...fresh }),

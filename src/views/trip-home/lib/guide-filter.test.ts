@@ -1,30 +1,50 @@
 import { describe, expect, it } from "vitest";
 
+import type { CityArea } from "@/entities/city";
 import type { Place } from "@/entities/schedule-item";
 
 import type { GuideCard } from "./guide";
 import {
   filterGuideCards,
   GUIDE_FILTERS_DEFAULT,
+  guideAreaOptions,
   guideFilteredEmptyText,
+  type GuideFilters,
   hasGuideFilter,
 } from "./guide-filter";
 
-/** 테스트용 카드 — 이름 · 별점 · 일정에 넣은 날 */
-function card(name: string, rating: number | null, day: number | null): GuideCard {
+/** 테스트용 카드 — 이름 · 별점 · 일정에 넣은 날 · 지역 */
+function card(
+  name: string,
+  rating: number | null,
+  day: number | null,
+  area: string | null = null,
+): GuideCard {
   return {
-    place: { id: name, name, rating } as Place,
+    place: { id: name, name, rating, area_id: area } as Place,
     addedBy: null,
     memo: null,
     addedAt: "2026-10-30T00:00:00Z",
     day,
     emoji: null,
     inSchedule: day !== null,
+    area: null,
   };
 }
 
-const CARDS = [card("a", 4.1, null), card("b", null, 0), card("c", 4.6, 2), card("d", 4.1, null)];
+/** 지역 목록 한 줄 */
+function area(id: string, name: string): CityArea {
+  return { id, name, city_id: "tokyo", position: 0, lat: 0, lng: 0, radius_m: 1 };
+}
+
+const CARDS = [
+  card("a", 4.1, null, "shibuya"),
+  card("b", null, 0),
+  card("c", 4.6, 2, "ginza"),
+  card("d", 4.1, null, "shibuya"),
+];
 const names = (cards: GuideCard[]) => cards.map((c) => c.place.name);
+const f = (patch: Partial<GuideFilters>) => ({ ...GUIDE_FILTERS_DEFAULT, ...patch });
 
 describe("filterGuideCards", () => {
   it("추천순 · 전체는 보관함 순서 그대로", () => {
@@ -32,24 +52,44 @@ describe("filterGuideCards", () => {
   });
 
   it("평점순은 높은 것부터, 별점 없으면 뒤로, 같으면 보관함 순서", () => {
-    expect(names(filterGuideCards(CARDS, { sort: "rating", status: "all" }))).toEqual([
-      "c",
-      "a",
-      "d",
-      "b",
-    ]);
+    expect(names(filterGuideCards(CARDS, f({ sort: "rating" })))).toEqual(["c", "a", "d", "b"]);
   });
 
   it("일정에 있음 · 아직 안 넣음 — 일정에 넣은 날이 있는지로 가른다", () => {
-    expect(names(filterGuideCards(CARDS, { sort: "rec", status: "in" }))).toEqual(["b", "c"]);
-    expect(names(filterGuideCards(CARDS, { sort: "rating", status: "out" }))).toEqual(["a", "d"]);
+    expect(names(filterGuideCards(CARDS, f({ status: "in" })))).toEqual(["b", "c"]);
+    expect(names(filterGuideCards(CARDS, f({ sort: "rating", status: "out" })))).toEqual([
+      "a",
+      "d",
+    ]);
+  });
+
+  it("지역 — 고른 지역, 「기타」 는 지역 없는 곳", () => {
+    expect(names(filterGuideCards(CARDS, f({ area: "shibuya" })))).toEqual(["a", "d"]);
+    expect(names(filterGuideCards(CARDS, f({ area: "none" })))).toEqual(["b"]);
+  });
+});
+
+describe("guideAreaOptions", () => {
+  const AREAS = [area("ginza", "긴자"), area("ikebukuro", "이케부쿠로"), area("shibuya", "시부야")];
+
+  it("카드가 있는 지역만 목록 순서대로 개수와 함께, 지역 없는 카드는 끝에 「기타」", () => {
+    expect(guideAreaOptions(CARDS, AREAS)).toEqual([
+      { value: "ginza", label: "긴자 1" },
+      { value: "shibuya", label: "시부야 2" },
+      { value: "none", label: "기타 1" },
+    ]);
+  });
+
+  it("지역 목록이 없으면 빈 배열 — 칩을 숨긴다", () => {
+    expect(guideAreaOptions(CARDS, [])).toEqual([]);
   });
 });
 
 describe("hasGuideFilter · guideFilteredEmptyText", () => {
   it("정렬은 필터로 치지 않는다", () => {
-    expect(hasGuideFilter({ sort: "rating", status: "all" })).toBe(false);
-    expect(hasGuideFilter({ sort: "rec", status: "out" })).toBe(true);
+    expect(hasGuideFilter(f({ sort: "rating" }))).toBe(false);
+    expect(hasGuideFilter(f({ status: "out" }))).toBe(true);
+    expect(hasGuideFilter(f({ area: "ginza" }))).toBe(true);
   });
 
   it("일정 포함 여부에 맞는 안내", () => {

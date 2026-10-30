@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import { useCityAreas } from "@/entities/city";
 import type { Place } from "@/entities/schedule-item";
 import {
   localLanguage,
@@ -81,6 +82,7 @@ export function usePlaceFields({
   const suggestions = usePlaceSuggestions(locationQuery, city);
   const addressHit = useAddressSearch(locationQuery, city);
   const found = usePinAddress(values.at, stored, city);
+  const { data: allAreas } = useCityAreas();
 
   /** 칸 하나를 고친다 */
   function set<K extends keyof PlaceFormValues>(key: K, value: PlaceFormValues[K]) {
@@ -134,6 +136,8 @@ export function usePlaceFields({
     values,
     setValues,
     set,
+    /** 이 도시의 지역 목록(순서대로). 없으면 지역 칸을 숨긴다 */
+    areas: (allAreas ?? []).filter((a) => a.city_id === city?.id),
     setRating: (input: string) => set("rating", normalizeRating(input)),
     setReviews: (input: string) => set("reviews", normalizeReviews(input)),
     step,

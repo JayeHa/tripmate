@@ -2070,6 +2070,124 @@ describe("가이드 장소 저장 (0069)", () => {
   });
 });
 
+describe("장소 지역 (0070)", () => {
+  /** 장소를 넣고 지역 id 를 돌려준다(superuser — 트리거만 본다) */
+  async function insertPlace(cols: Record<string, unknown>) {
+    const keys = Object.keys(cols);
+    const { rows } = await db.query<{ id: string; area_id: string | null }>(
+      `insert into public.places (created_by, ${keys.join(", ")}) values ('${A}', ${keys
+        .map((_, i) => `$${i + 1}`)
+        .join(", ")}) returning id, area_id`,
+      Object.values(cols),
+    );
+    return rows[0];
+  }
+
+  it("넣을 때 반경 안의 가장 가까운 지역으로, 든 곳이 없거나 좌표가 없으면 비운다", async () => {
+    await db.exec("reset role;");
+    const ginza = await insertPlace({
+      city_id: "tokyo",
+      name: "긴자 가게",
+      lat: 35.6717,
+      lng: 139.766,
+    });
+    expect(ginza.area_id).toBe("tokyo-ginza");
+    const far = await insertPlace({
+      city_id: "tokyo",
+      name: "오다이바",
+      lat: 35.627,
+      lng: 139.775,
+    });
+    expect(far.area_id).toBeNull();
+    const none = await insertPlace({ city_id: "tokyo", name: "좌표 없음" });
+    expect(none.area_id).toBeNull();
+    const osaka = await insertPlace({
+      city_id: "osaka",
+      name: "도톤보리",
+      lat: 34.6687,
+      lng: 135.5013,
+    });
+    expect(osaka.area_id).toBeNull();
+  });
+
+  it("고른 지역은 두고, 위치만 옮기면 다시 정하고, 다른 도시의 지역은 붙지 않는다", async () => {
+    await db.exec("reset role;");
+    const p = await insertPlace({
+      city_id: "tokyo",
+      name: "고른 곳",
+      lat: 35.6717,
+      lng: 139.766,
+      area_id: "tokyo-nihonbashi",
+    });
+    expect(p.area_id).toBe("tokyo-nihonbashi");
+    const area = async () =>
+      (
+        await db.query<{ area_id: string | null }>(
+          `select area_id from public.places where id = $1`,
+          [p.id],
+        )
+      ).rows[0].area_id;
+    await db.query(`update public.places set name = '이름만' where id = $1`, [p.id]);
+    expect(await area()).toBe("tokyo-nihonbashi");
+    await db.query(`update public.places set lat = 35.7295, lng = 139.7109 where id = $1`, [p.id]);
+    expect(await area()).toBe("tokyo-ikebukuro");
+    await db.query(
+      `update public.places set lat = 35.659, lng = 139.701, area_id = 'tokyo-ginza' where id = $1`,
+      [p.id],
+    );
+    expect(await area()).toBe("tokyo-ginza");
+    await db.exec(
+      `insert into public.city_areas (id, city_id, name, position, lat, lng, radius_m)
+       values ('osaka-namba', 'osaka', '난바', 1, 34.6656, 135.5013, 1500);`,
+    );
+    await db.query(`update public.places set area_id = 'osaka-namba' where id = $1`, [p.id]);
+    expect(await area()).toBe("tokyo-shibuya");
+    await db.exec(`delete from public.city_areas where id = 'osaka-namba';`);
+  });
+
+  it("장소 저장(가이드)이 고른 지역을 받는다 — 고쳐 쓸 때 보내지 않으면 그대로", async () => {
+    await as(A);
+    const trip = await newTrip("2028-05-09", "2028-05-09");
+    const save = async (place: Record<string, unknown>) =>
+      (
+        await db.query<{ id: string }>(`select public.save_guide_place($1, $2) id`, [
+          trip,
+          JSON.stringify(place),
+        ])
+      ).rows[0].id;
+    const id = await save({
+      name: "도쿄역 라멘",
+      google_place_id: "g-area-1",
+      lat: 35.6812,
+      lng: 139.7671,
+      area_id: "tokyo-ginza",
+    });
+    await save({ name: "도쿄역 라멘", google_place_id: "g-area-1", lat: 35.6812, lng: 139.7671 });
+    const { rows } = await db.query(`select area_id from public.places where id = $1`, [id]);
+    expect(rows).toEqual([{ area_id: "tokyo-ginza" }]);
+  });
+
+  it("마이그레이션 전에 있던 장소를 좌표로 채우고 고친 시각은 그대로 둔다", async () => {
+    const before = MIGRATIONS.filter((f) => f < "0070");
+    const pg = await migratedDb(before);
+    await pg.exec(`insert into auth.users (id, email) values ('${A}', 'a@x');`);
+    const { rows } = await pg.query<{ id: string; updated_at: string }>(
+      `insert into public.places (city_id, created_by, name, lat, lng)
+       values ('tokyo', '${A}', '옛 장소', 35.7295, 139.7109) returning id, updated_at::text`,
+    );
+    await applyMigration(
+      pg,
+      MIGRATIONS.find((f) => f.startsWith("0070"))!,
+    );
+    const { rows: got } = await pg.query(
+      `select area_id, updated_at::text from public.places where id = $1`,
+      [rows[0].id],
+    );
+    expect(got).toEqual([{ area_id: "tokyo-ikebukuro", updated_at: rows[0].updated_at }]);
+    await pg.close();
+  }, 30_000);
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {

@@ -4,7 +4,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/shared/api/query-keys";
 
-import { fetchCityCatalog, fetchTripCities } from "../api/cities";
+import { fetchCityAreas, fetchCityCatalog, fetchTripCities } from "../api/cities";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -25,3 +25,12 @@ export function useTripCities(tripId: string) {
 /** 여행 도시의 조회 정의 — 화면 훅과 오프라인용으로 받기가 같이 쓴다 */
 export const tripCitiesQuery = (tripId: string) =>
   queryOptions({ queryKey: queryKeys.tripCities(tripId), queryFn: () => fetchTripCities(tripId) });
+
+/** 도시별 지역 목록의 조회 정의 — 기준 데이터라 하루 동안 다시 받지 않는다. 오프라인용으로 받기도 같이 받는다 */
+export const cityAreasQuery = () =>
+  queryOptions({ queryKey: queryKeys.cityAreas, queryFn: fetchCityAreas, staleTime: DAY });
+
+/** 도시별 지역 목록(모든 도시). 쓰는 쪽이 도시로 거른다 */
+export function useCityAreas() {
+  return useQuery(cityAreasQuery());
+}

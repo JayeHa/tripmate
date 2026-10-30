@@ -1,6 +1,6 @@
 import { createClient } from "@/shared/api/supabase/client";
 
-import type { City, CityCatalog } from "../model/types";
+import type { City, CityArea, CityCatalog } from "../model/types";
 
 /** 권역과 도시를 화면 순서대로 읽는다. 105행 정도라 한 번에 받는다. */
 export async function fetchCityCatalog(): Promise<CityCatalog> {
@@ -40,4 +40,16 @@ export async function setTripCities(tripId: string, cityIds: string[]): Promise<
     p_city_ids: cityIds,
   });
   if (error) throw error;
+}
+
+/** 모든 도시의 지역 목록(도시 · 순서대로). 몇십 줄이라 한 번에 받는다 */
+export async function fetchCityAreas(): Promise<CityArea[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("city_areas")
+    .select("*")
+    .order("city_id")
+    .order("position");
+  if (error) throw error;
+  return data;
 }
