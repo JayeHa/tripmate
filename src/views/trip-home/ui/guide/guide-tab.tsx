@@ -1,12 +1,12 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 
 import { useAlternatives, useGuidePlaces, useScheduleItems } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import { Skeleton } from "@/shared/ui/skeleton";
 
-import { guideCards, type GuideTab as Tab } from "../../lib/guide";
+import { GUIDE_ADD_LABEL, guideCards, type GuideTab as Tab } from "../../lib/guide";
 import { useGuideActions } from "../../model/use-guide-actions";
 import { useGuidePaging } from "../../model/use-guide-paging";
 import { GuideCard } from "./guide-card";
@@ -16,7 +16,8 @@ type GuideTabProps = { trip: Trip; tab: Tab };
 
 /**
  * 가이드 탭(관광지 · 식당 · 쇼핑 · 휴식) — 이 여행 보관함의 장소를 카드로. 모바일 한 줄, PC 3열(가운데 1080).
- * 일정에 넣은 장소는 「day N 배치됨」. 15장씩 그리고 끝에 닿으면 더. 카드를 누르면 상세, ⋯ 는 수정 · 메모 · 빼기, 「+ 일정」 은 날짜 고르기
+ * 일정에 넣은 장소는 「day N 배치됨」. 15장씩 그리고 끝에 닿으면 더. 카드를 누르면 상세, ⋯ 는 수정 · 메모 · 빼기, 「+ 일정」 은 날짜 고르기.
+ * 맨 아래 「+ ○○ 추가」 는 장소 입력(가이드 모드) — 다 그린 뒤에만 보인다
  */
 export function GuideTab({ trip, tab }: GuideTabProps) {
   const tripId = trip.id;
@@ -26,7 +27,7 @@ export function GuideTab({ trip, tab }: GuideTabProps) {
   const { data: alternatives = [] } = useAlternatives(tripId);
   const cards = rows ? guideCards(rows, [...items, ...alternatives], tab) : null;
   const { limit, hasMore, watchEnd } = useGuidePaging(cards?.length ?? 0);
-  const a = useGuideActions(tripId);
+  const a = useGuideActions(tripId, tab);
 
   return (
     <div className="flex flex-1 flex-col bg-surface-sunken">
@@ -45,7 +46,7 @@ export function GuideTab({ trip, tab }: GuideTabProps) {
           </p>
         )}
         {cards && cards.length > 0 && (
-          <div className="grid grid-cols-1 items-start gap-2.5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-2.5 lg:grid-cols-3 lg:items-stretch">
             {cards.slice(0, limit).map((card) => (
               <GuideCard
                 key={card.place.id}
@@ -64,8 +65,18 @@ export function GuideTab({ trip, tab }: GuideTabProps) {
             불러오는 중…
           </div>
         )}
+        {cards && !hasMore && (
+          <button
+            type="button"
+            onClick={a.create.ask}
+            className="flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-card border-[1.5px] border-dashed border-line-dashed bg-white text-[15px] font-bold text-brand"
+          >
+            <Plus className="size-4.5" strokeWidth={2.2} aria-hidden="true" />
+            {GUIDE_ADD_LABEL[tab]}
+          </button>
+        )}
       </div>
-      <GuideOverlays trip={trip} cards={cards ?? []} a={a} />
+      <GuideOverlays trip={trip} cards={cards ?? []} tab={tab} a={a} />
     </div>
   );
 }

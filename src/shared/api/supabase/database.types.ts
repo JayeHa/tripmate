@@ -1123,6 +1123,14 @@ export type Database = {
         Args: { p_trip: string; p_day: number; p_place: Json; p_item: Json };
         Returns: string;
       };
+      upsert_my_place: {
+        Args: { p_trip: string; p_place: Json };
+        Returns: string;
+      };
+      save_guide_place: {
+        Args: { p_trip: string; p_place: Json };
+        Returns: string;
+      };
       apply_schedule_edit: {
         Args: { p_trip: string; p_days: Json; p_deletes: string[]; p_summaries: Json };
         Returns: undefined;

@@ -18,6 +18,8 @@ type PlaceFormLayoutProps = {
   saveLabel: string;
   /** 장소 정보 수정이면 true(InfoStep 참고) */
   editing?: boolean;
+  /** 새로 담을 때 ② 맨 아래 안내(InfoStep 참고) */
+  addNote?: string;
   /** ① 하단을 바꿀 때(이미 있는 장소를 쓸지 묻기). null 이면 「이 위치로 선택」 */
   locationFooter: React.ReactNode;
 };
@@ -31,6 +33,7 @@ export function PlaceFormLayout({
   back,
   saveLabel,
   editing = false,
+  addNote,
   locationFooter,
 }: PlaceFormLayoutProps) {
   const onInfo = form.step === "info";
@@ -53,7 +56,7 @@ export function PlaceFormLayout({
         <span className="w-6" />
       </div>
       {onInfo ? (
-        <InfoStep form={form} cityName={cityName} editing={editing} />
+        <InfoStep form={form} cityName={cityName} editing={editing} addNote={addNote} />
       ) : (
         <LocationStep form={form} />
       )}

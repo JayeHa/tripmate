@@ -21,13 +21,24 @@ type InfoStepProps = {
    * 아이콘은 일정마다 따로라 「이번 일정 · 수정」 에서 바꾼다
    */
   editing?: boolean;
+  /** 새로 담을 때 맨 아래 연파랑 안내. 없으면 일정 직접 추가 문구(장소가 저장되고 일정에 담긴다) */
+  addNote?: string;
 };
+
+const SCHEDULE_NOTE =
+  "장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.";
 
 /**
  * ② 장소 정보 — 다음 여행에서도 맞는 정보(장소 테이블). 위치(① 에서 고른 주소 + 상세 위치) · 이름 · 카테고리 ·
- * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크. 새로 담을 때는 이름 옆에 담을 일정의 아이콘도 받는다.
+ * 운영시간 · 별점 · 리뷰 수 · 대기 · 설명 · 구글맵 · 장소 링크. 새로 담을 때는 이름 옆에 아이콘도 받는다
+ * (일정 직접 추가는 그 일정의 아이콘, 가이드는 장소의 기본 아이콘).
  */
-export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
+export function InfoStep({
+  form,
+  cityName,
+  editing = false,
+  addNote = SCHEDULE_NOTE,
+}: InfoStepProps) {
   const { values: v, set } = form;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-4.5 pb-6">
@@ -152,7 +163,7 @@ export function InfoStep({ form, cityName, editing = false }: InfoStepProps) {
       {!editing && (
         <p className="flex items-start gap-2 rounded-card bg-surface-memo px-3.5 py-3 text-[13px]/relaxed text-status-ok">
           <Info className="mt-0.5 size-4 shrink-0" />
-          장소가 저장되고 일정에 담겨요. 시간 · 예약 상태 · 메모는 담은 뒤 일정 상세에서 입력해요.
+          {addNote}
         </p>
       )}
     </div>
