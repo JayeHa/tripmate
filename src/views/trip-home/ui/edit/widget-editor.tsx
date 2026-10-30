@@ -81,6 +81,7 @@ function EditorBody({ trip, onClose }: EditorBodyProps) {
             rows={widgetEditRows(widgets.slots, draft, widgets.info)}
             onMove={(from, to) => setDraft((d) => moveWidget(d, from, to))}
             onToggle={(key) => setDraft((d) => toggleWidget(d, widgets.slots, key))}
+            rateHref={`/trips/${trip.id}/settings?open=rates`}
           />
         )}
         <p className="px-5 pt-4.5 pb-2 text-[13px] font-bold text-ink-400">미리보기</p>

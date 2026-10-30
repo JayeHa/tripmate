@@ -3,8 +3,10 @@
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable, useSortable } from "@dnd-kit/react/sortable";
 import { GripVertical } from "lucide-react";
+import Link from "next/link";
 
 import { DRAG_ROLE } from "@/shared/lib/drag-announcements";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import { koreanPlugins } from "@/shared/ui/korean-drag-plugins";
 import { Switch } from "@/shared/ui/switch";
@@ -17,13 +19,15 @@ type WidgetEditListProps = {
   rows: WidgetEditRow[];
   onMove: (from: number, to: number) => void;
   onToggle: (key: WidgetKey) => void;
+  /** 여행 환율이 없어 막힌 환율 줄의 「넣기」 — 설정의 환율 창 */
+  rateHref: string;
 };
 
 /**
  * 「홈 위젯 편집」 줄 목록 — 손잡이로 끌어 순서를 바꾸고(터치는 길게 눌러서, 키보드는 손잡이에서 스페이스), 스위치로 보이기를 바꾼다.
  * 끌기 · 자동 스크롤 · 화면 읽기 안내는 @dnd-kit/react 가 맡고, 놓으면 초안 순서를 바꾼다
  */
-export function WidgetEditList({ rows, onMove, onToggle }: WidgetEditListProps) {
+export function WidgetEditList({ rows, onMove, onToggle, rateHref }: WidgetEditListProps) {
   return (
     <div className="flex flex-col border-t border-surface-muted">
       <DragDropProvider
@@ -40,6 +44,7 @@ export function WidgetEditList({ rows, onMove, onToggle }: WidgetEditListProps) 
             row={row}
             index={index}
             onToggle={() => onToggle(row.key)}
+            rateHref={rateHref}
           />
         ))}
       </DragDropProvider>
@@ -47,10 +52,15 @@ export function WidgetEditList({ rows, onMove, onToggle }: WidgetEditListProps) 
   );
 }
 
-type WidgetEditItemProps = { row: WidgetEditRow; index: number; onToggle: () => void };
+type WidgetEditItemProps = {
+  row: WidgetEditRow;
+  index: number;
+  onToggle: () => void;
+  rateHref: string;
+};
 
-/** 한 줄(68) — 손잡이 · 아이콘 칸 36 · 이름 15/700 · 설명 12 · 스위치 */
-function WidgetEditItem({ row, index, onToggle }: WidgetEditItemProps) {
+/** 한 줄(68) — 손잡이 · 아이콘 칸 36 · 이름 15/700 · 설명 12 · 스위치(여행 환율이 없으면 「넣기」) */
+function WidgetEditItem({ row, index, onToggle, rateHref }: WidgetEditItemProps) {
   const { ref, handleRef, isDragging } = useSortable({
     id: row.key,
     index,
@@ -81,12 +91,23 @@ function WidgetEditItem({ row, index, onToggle }: WidgetEditItemProps) {
         <span className="text-[15px] font-bold text-ink-900">{row.name}</span>
         <span className="truncate text-xs text-ink-400">{row.sub}</span>
       </span>
-      <Switch
-        checked={row.on}
-        disabled={row.disabled}
-        onCheckedChange={onToggle}
-        aria-label={`${row.name} 보이기`}
-      />
+      {row.needsRate ? (
+        <Link
+          href={rateHref}
+          transitionTypes={NAV.tab}
+          aria-label="여행 환율 넣기"
+          className="flex h-8 shrink-0 items-center rounded-pill-sm bg-surface-muted px-3 text-[13px] font-bold text-ink-700"
+        >
+          넣기
+        </Link>
+      ) : (
+        <Switch
+          checked={row.on}
+          disabled={row.disabled}
+          onCheckedChange={onToggle}
+          aria-label={`${row.name} 보이기`}
+        />
+      )}
     </div>
   );
 }

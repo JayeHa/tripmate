@@ -14,9 +14,12 @@ import { Toast } from "@/shared/ui/toast";
 
 import { type TripSettingsState, useTripSettings } from "../model/use-trip-settings";
 import { ExitSection } from "./exit-section";
+import { HomeCurrencyDialog } from "./home-currency-dialog";
+import { HomeCurrencyPicker } from "./home-currency-picker";
 import { InviteCard } from "./invite-card";
 import { KickMemberDialog } from "./kick-member-dialog";
 import { MembersCard } from "./members-card";
+import { RatesDialog } from "./rates-dialog";
 import { SettingsSkeleton } from "./settings-skeleton";
 import { TripInfoCard } from "./trip-info-card";
 
@@ -33,7 +36,7 @@ type SettingsScreenProps = { trip: Trip };
 
 /**
  * 일행 초대 → 멤버 → 여행 정보 → 여행 삭제(멤버는 나가기). 모바일은 한 줄로, PC 는 왼쪽(초대 · 멤버) · 오른쪽(정보 · 삭제) 2열.
- * 여행 정보의 이름 · 도시 · 기간은 여행 홈 「편집」 과 같은 창을 연다. 내 정보 · 로그아웃은 계정 메뉴(모바일 머리 아바타 · PC 헤더)에 있다
+ * 여행 정보의 이름 · 도시 · 기간은 여행 홈 「편집」 과 같은 창, 기준 화폐 · 환율은 이 화면의 창을 연다. 내 정보 · 로그아웃은 계정 메뉴(모바일 머리 아바타 · PC 헤더)에 있다
  */
 function SettingsScreen({ trip }: SettingsScreenProps) {
   const s = useTripSettings(trip);
@@ -64,6 +67,8 @@ function SettingsScreen({ trip }: SettingsScreenProps) {
                   title: () => s.choose("title"),
                   cities: () => s.choose("cities"),
                   dates: () => s.choose("dates"),
+                  home: () => s.choose("home"),
+                  rates: () => s.choose("rates"),
                 }}
               />
               <ExitSection
@@ -103,13 +108,32 @@ function MobileHeader({ profile }: MobileHeaderProps) {
 
 type SettingsDialogsProps = { trip: Trip; s: TripSettingsState };
 
-/** 설정에서 여는 창 — 이름 · 도시 · 기간(홈 「편집」 과 같은 창), 멤버 내보내기, 나가기 · 삭제 */
+/** 설정에서 여는 창 — 이름 · 도시 · 기간(홈 「편집」 과 같은 창), 기준 화폐 · 환율, 멤버 내보내기, 나가기 · 삭제 */
 function SettingsDialogs({ trip, s }: SettingsDialogsProps) {
   return (
     <>
       <TitleDialog trip={trip} open={s.open === "title"} onClose={s.close} />
       <EditCitiesDialog tripId={trip.id} open={s.open === "cities"} onClose={s.close} />
       <EditDatesDialog trip={s.open === "dates" ? trip : null} onClose={s.close} />
+      <HomeCurrencyPicker
+        current={trip.home_currency}
+        open={s.open === "home"}
+        onClose={s.close}
+        onPick={s.rebase.pick}
+      />
+      <HomeCurrencyDialog
+        trip={trip}
+        to={s.rebase.to}
+        onCancel={s.rebase.cancel}
+        onChanged={s.rebase.done}
+      />
+      <RatesDialog
+        trip={trip}
+        destination={s.destination}
+        open={s.open === "rates"}
+        onClose={s.close}
+        onSaved={s.ratesSaved}
+      />
       <KickMemberDialog kick={s.kick} />
       <LeaveTripDialog
         open={s.open === "leave"}

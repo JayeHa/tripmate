@@ -112,10 +112,12 @@ describe("widgetEditRows", () => {
     expect(domestic).toMatchObject({
       on: false,
       disabled: true,
+      needsRate: false,
       sub: "여행지 통화가 기준 화폐와 같아요",
     });
-    expect(widgetEditRows(slots, prefs, { ...INFO, rate: null })[1].sub).toBe(
-      "여행 환율이 없어요 · 설정에서 넣으면 보여요",
-    );
+    expect(widgetEditRows(slots, prefs, { ...INFO, rate: null })[1]).toMatchObject({
+      sub: "여행 환율이 없어요 · 넣으면 보여요",
+      needsRate: true,
+    });
   });
 });

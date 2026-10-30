@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { useExpenses, useSettlements } from "@/entities/expense";
-import { type Trip, type TripFormValues, useChangeHomeCurrency } from "@/entities/trip";
+import { type Trip, useChangeHomeCurrency } from "@/entities/trip";
 import { appliedFactor, currencyName, rebaseFactor, rebaseRates } from "@/shared/lib/money";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import {
@@ -18,28 +18,27 @@ import { Button } from "@/shared/ui/button";
 
 type HomeCurrencyDialogProps = {
   trip: Trip;
-  /** 저장하려는 여행 정보(기준 화폐가 바뀐 것). null 이면 닫힘 */
-  values: TripFormValues | null;
+  /** 바꿀 기준 화폐. null 이면 닫힘 */
+  to: string | null;
   onCancel: () => void;
-  /** 바꾼 뒤 — 나머지 칸(제목 · 기간)을 새 환율과 함께 저장한다 */
-  onChanged: (values: TripFormValues, rates: Trip["exchange_rates"]) => void;
+  /** 바꾼 뒤 */
+  onChanged: () => void;
 };
 
 /**
  * 기준 화폐를 바꾸기 전 확인 — 「원 → 엔으로 바꿔요」, 새 기준으로 다시 계산한 여행 환율과
  * 「지출 N건 · 송금 기록 M건을 엔 기준으로 다시 계산해요」. 옛 환율에 새 기준 화폐가 없으면
- * 「1달러 = [ ] 원」 을 물어 그 값으로 계산한다(넣어야 바꿀 수 있다). 폼에서 고친 환율 줄 대신 다시 계산한 환율이 저장된다
+ * 「1달러 = [ ] 원」 을 물어 그 값으로 계산한다(넣어야 바꿀 수 있다)
  */
-export function HomeCurrencyDialog({ trip, values, onCancel, onChanged }: HomeCurrencyDialogProps) {
-  // 요청을 창 바깥에 둔다 — 바꾸는 동안 Esc · 바깥 누르기로 닫히면 본문이 사라져,
-  // 기준 화폐는 바뀌었는데 같은 저장의 제목 · 기간이 저장되지 않는다(사라진 쪽의 onSuccess 는 불리지 않는다)
+export function HomeCurrencyDialog({ trip, to, onCancel, onChanged }: HomeCurrencyDialogProps) {
+  // 요청을 창 바깥에 둔다 — 바꾸는 동안 본문이 사라져도 끝난 뒤 onChanged 가 불리게
   const change = useChangeHomeCurrency(trip.id);
   // 닫히는 동안에도 본문을 그리고, 열 때마다 새로 그린다(지난번에 적은 환율이 남지 않게)
-  const shown = useHeldWhileClosing(values !== null, values);
-  const opens = useOpenCount(values !== null);
+  const shown = useHeldWhileClosing(to !== null, to);
+  const opens = useOpenCount(to !== null);
   return (
     <AlertDialog
-      open={values !== null}
+      open={to !== null}
       locked={change.isPending}
       onOpenChange={(open) => !open && onCancel()}
     >
@@ -48,7 +47,7 @@ export function HomeCurrencyDialog({ trip, values, onCancel, onChanged }: HomeCu
           <Body
             key={opens}
             trip={trip}
-            values={shown}
+            to={shown}
             change={change}
             onCancel={onCancel}
             onChanged={onChanged}
@@ -59,17 +58,16 @@ export function HomeCurrencyDialog({ trip, values, onCancel, onChanged }: HomeCu
   );
 }
 
-type BodyProps = Omit<HomeCurrencyDialogProps, "values"> & {
-  values: TripFormValues;
+type BodyProps = Omit<HomeCurrencyDialogProps, "to"> & {
+  to: string;
   change: ReturnType<typeof useChangeHomeCurrency>;
 };
 
 /** 창 안 — 계산한 환율 미리 보기 · 모르는 환율 묻기 · 바꾸기 */
-function Body({ trip, values, change, onCancel, onChanged }: BodyProps) {
+function Body({ trip, to, change, onCancel, onChanged }: BodyProps) {
   const { data: expenses = [] } = useExpenses(trip.id);
   const { data: settlements = [] } = useSettlements(trip.id);
   const from = trip.home_currency;
-  const to = values.home_currency;
   const known = rebaseFactor(trip.exchange_rates, to);
   const [asked, setAsked] = useState("");
   const typed = Number(asked.replace(/,/g, ""));
@@ -138,7 +136,7 @@ function Body({ trip, values, change, onCancel, onChanged }: BodyProps) {
             change.mutate(
               // 저장할 옛 기준 줄에서 거꾸로 구한 값 — 원화 지출(여행 환율)과 송금 기록이 같은 값으로 바뀌게
               { from, currency: to, rates, factor: appliedFactor(rates, from) },
-              { onSuccess: () => onChanged(values, rates) },
+              { onSuccess: onChanged },
             );
           }}
         >
