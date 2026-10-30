@@ -2,19 +2,10 @@ import { createClient } from "@/shared/api/supabase/client";
 import type { Tables } from "@/shared/api/supabase/database.types";
 import type { ExchangeRates } from "@/shared/lib/money";
 
-import type { TripFormValues } from "../model/schema";
 import type { Trip } from "../model/types";
 
 function toTrip(row: Tables<"trips">): Trip {
   return { ...row, exchange_rates: (row.exchange_rates ?? {}) as ExchangeRates };
-}
-
-export function ratesFromForm(rates: TripFormValues["rates"]): ExchangeRates {
-  return Object.fromEntries(rates.map((r) => [r.currency, { unit: r.unit, value: r.value }]));
-}
-
-export function ratesToForm(rates: ExchangeRates): TripFormValues["rates"] {
-  return Object.entries(rates).map(([currency, r]) => ({ currency, unit: r.unit, value: r.value }));
 }
 
 /** 목록에 보이는 도시. 사진이 있는 첫 도시가 여행 썸네일이 된다. */
@@ -151,22 +142,23 @@ export async function setTripRate(
   if (error) throw error;
 }
 
-export async function updateTrip(tripId: string, values: TripFormValues): Promise<Trip> {
+/**
+ * 여행 환율 저장(설정) — 고친 통화(set)만 바꾸거나 더하고 뺀 통화(remove)만 지운다(0066).
+ * 그사이 일행이 더한 통화는 남는다. home = 화면이 알던 기준 화폐 — 그사이 바뀌었으면 DB 가 거부한다
+ */
+export async function saveTripRates(
+  tripId: string,
+  home: string,
+  changes: { set: ExchangeRates; remove: string[] },
+) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("trips")
-    .update({
-      title: values.title,
-      start_date: values.start_date,
-      end_date: values.end_date,
-      home_currency: values.home_currency,
-      exchange_rates: ratesFromForm(values.rates),
-    })
-    .eq("id", tripId)
-    .select("*")
-    .single();
+  const { error } = await supabase.rpc("save_trip_rates", {
+    p_trip_id: tripId,
+    p_home: home,
+    p_set: changes.set,
+    p_remove: changes.remove,
+  });
   if (error) throw error;
-  return toTrip(data);
 }
 
 /** 여행 제목만 바꾼다 — 일행 모두의 제목이 함께 바뀐다 */

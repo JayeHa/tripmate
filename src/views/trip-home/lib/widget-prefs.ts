@@ -79,13 +79,17 @@ export type WidgetInfo = {
   rate: { unit: number; value: number } | null;
 };
 
-/** 편집 줄 하나 — 이름 · 설명 · 켜짐 · 막힘(켜도 보일 것이 없는 환율) */
+/**
+ * 편집 줄 하나 — 이름 · 설명 · 켜짐 · 막힘(켜도 보일 것이 없는 환율).
+ * needsRate 면 여행 환율이 없어 막힌 것 — 스위치 대신 설정의 환율 창으로 가는 「넣기」
+ */
 export type WidgetEditRow = {
   key: WidgetKey;
   name: string;
   sub: string;
   on: boolean;
   disabled: boolean;
+  needsRate: boolean;
 };
 
 /** 위젯이 무엇을 보이는지, 자동으로 숨긴 이유 */
@@ -101,7 +105,7 @@ function describe(key: WidgetKey, slots: WidgetSlots, info: WidgetInfo): string 
     return `${unit} = ${formatMoney(info.rate.value, info.home)} · 설정의 여행 환율`;
   }
   if (info.currency === info.home) return "여행지 통화가 기준 화폐와 같아요";
-  return "여행 환율이 없어요 · 설정에서 넣으면 보여요";
+  return "여행 환율이 없어요 · 넣으면 보여요";
 }
 
 /**
@@ -123,6 +127,7 @@ export function widgetEditRows(
       sub: autoHidden ? `${sub} · 자동으로 숨겼어요` : sub,
       on: !disabled && isWidgetOn(prefs, slots, key),
       disabled,
+      needsRate: disabled && info.rate === null && info.currency !== info.home,
     };
   });
 }

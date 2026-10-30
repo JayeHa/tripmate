@@ -13,12 +13,11 @@ import {
   fetchTrip,
   fetchTrips,
   rotateInviteToken,
+  saveTripRates,
   setTripRate,
-  updateTrip,
   updateTripDates,
   updateTripTitle,
 } from "../api/trips";
-import type { TripFormValues } from "./schema";
 
 export function useTrips({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({ queryKey: queryKeys.trips.all, queryFn: fetchTrips, enabled });
@@ -37,17 +36,6 @@ export function useCreateTrip() {
   return useMutation({
     mutationFn: createTrip,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.trips.all }),
-  });
-}
-
-export function useUpdateTrip(tripId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (values: TripFormValues) => updateTrip(tripId, values),
-    onSuccess: (trip) => {
-      qc.setQueryData(queryKeys.trips.detail(tripId), trip);
-      void qc.invalidateQueries({ queryKey: queryKeys.trips.all });
-    },
   });
 }
 
@@ -126,6 +114,23 @@ export function useSetTripRate(tripId: string) {
     }) => setTripRate(tripId, home, code, rate),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true }),
+  });
+}
+
+/** 여행 환율 저장(설정 「환율」 창) — 끝나면 여행을 다시 읽는다 */
+export function useSaveTripRates(tripId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      home,
+      changes,
+    }: {
+      home: string;
+      changes: { set: ExchangeRates; remove: string[] };
+    }) => saveTripRates(tripId, home, changes),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.trips.detail(tripId), exact: true });
+    },
   });
 }
 

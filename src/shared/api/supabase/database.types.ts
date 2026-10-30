@@ -1129,6 +1129,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      save_trip_rates: {
+        Args: { p_home: string; p_remove: string[]; p_set: Json; p_trip_id: string };
+        Returns: undefined;
+      };
       set_trip_cities: {
         Args: { p_trip_id: string; p_city_ids: string[] };
         Returns: undefined;

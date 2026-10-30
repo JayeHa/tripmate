@@ -47,7 +47,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 - 같은 도메인 슬라이스가 **3개 이상** 모이면 묶는다.
 - 그룹 이름이 **그 안의 슬라이스 이름과 겹치면 아직 이르다.** `entities/expense/expense`
   가 되면 묶지 않는다. 형제 슬라이스가 생겨서 이름이 자연스러워질 때까지 기다린다.
-- 그룹 안에서는 도메인 접두사를 뗀다. `features/trip/form` (`trip-form` 아님)
+- 그룹 안에서는 도메인 접두사를 뗀다. `features/trip/create` (`trip-create` 아님)
 
 **그룹을 만들면 `fsd.config.mjs` 의 `GROUPS` 에 반드시 추가한다.** 적지 않으면 ESLint 가
 그룹을 슬라이스로 착각해서 그룹 안의 교차 import 를 **조용히** 통과시킨다.

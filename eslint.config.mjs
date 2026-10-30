@@ -21,7 +21,7 @@ import { GROUPS, ORDER, SLICED } from "./fsd.config.mjs";
 /**
  * 자기 자신(app·shared 는 레이어 전체, 나머지는 같은 슬라이스) + 아래 레이어 전부.
  *
- * 그룹 안에서는 도메인 접두사를 떼므로 `trip/form` 과 `expense/form` 처럼 이름이 겹친다.
+ * 그룹 안에서는 도메인 접두사를 떼므로 `trip/form` 과 `expense/form` 처럼 이름이 겹칠 수 있다.
  * 그래서 그룹 슬라이스는 `slice` 대신 `group`·`groupedSlice` 를 캡처한다. 셀렉터의 캡처
  * 키가 대상에 없으면 불일치이므로 평면 슬라이스와 그룹 슬라이스가 서로 섞이지 않는다.
  */

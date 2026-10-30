@@ -1791,6 +1791,46 @@ describe("여행 환율 하나 바꾸기 (0063)", () => {
   });
 });
 
+describe("여행 환율 저장 (0066)", () => {
+  it("고친 통화만 바꾸고 · 더하고 · 뺀 통화만 지운다 — 그사이 일행이 더한 통화는 남는다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-02-09", "2028-02-09");
+    await db.exec(
+      `update public.trips set exchange_rates = '{"JPY":{"unit":100,"value":920},"USD":{"unit":1,"value":1400}}' where id = '${trip}'`,
+    );
+    // 설정 창을 연 뒤 일행이 비용 입력에서 EUR 를 더했다
+    await db.query(`select public.add_trip_currency('${trip}', 'KRW', 'EUR', 1, 1500)`);
+    await db.query(
+      `select public.save_trip_rates('${trip}', 'KRW', '{"JPY":{"unit":100,"value":900},"TWD":{"unit":1,"value":43,"extra":1}}', array['USD'])`,
+    );
+    const { rows } = await db.query<{ rates: unknown }>(
+      `select exchange_rates rates from public.trips where id = '${trip}'`,
+    );
+    expect(rows[0].rates).toEqual({
+      JPY: { unit: 100, value: 900 },
+      TWD: { unit: 1, value: 43 },
+      EUR: { unit: 1, value: 1500 },
+    });
+  });
+
+  it("잘못된 코드 · 0 이하 · 숫자 아닌 환율 · 기준 화폐 · 화면이 알던 기준이 다름 · 멤버가 아닌 사람은 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2028-02-11", "2028-02-11");
+    const save = (home: string, set: string) =>
+      rejects(`select public.save_trip_rates('${trip}', '${home}', '${set}', null)`);
+    expect(await save("KRW", '{"usd":{"unit":1,"value":1400}}')).toMatch(/3 capital letters/);
+    expect(await save("KRW", '{"USD":{"unit":1,"value":0}}')).toMatch(/rate must be positive/);
+    expect(await save("KRW", '{"USD":{"unit":1,"value":"1400"}}')).toMatch(/rate must be positive/);
+    expect(await save("KRW", '{"KRW":{"unit":1,"value":1}}')).toMatch(/home currency has no rate/);
+    expect(await save("USD", '{"JPY":{"unit":100,"value":920}}')).toMatch(
+      /changed by someone else/,
+    );
+    expect(await save("KRW", "[]")).toMatch(/must be an object/);
+    await as(B);
+    expect(await save("KRW", '{"JPY":{"unit":100,"value":920}}')).toMatch(/not a member/);
+  });
+});
+
 describe("지출 영수증 (0041 · 0042)", () => {
   /** 여행 · 지출 하나 */
   async function setup(start: string) {
