@@ -2,19 +2,13 @@
 
 import { Link as LinkIcon, MapPin, Pencil, Plus } from "lucide-react";
 
-import {
-  CATEGORY_LABEL,
-  isHttpUrl,
-  placeLinksOf,
-  placeSubtypeOf,
-  SUBTYPE_LABEL,
-} from "@/entities/schedule-item";
+import { isHttpUrl, placeLinksOf } from "@/entities/schedule-item";
 import { PlaceInfoLine, placeInfoRows } from "@/features/schedule/item-detail";
 import { withKeys } from "@/shared/lib/keys";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
-import type { GuideCard } from "../../lib/guide";
+import { type GuideCard, guideKindLabel } from "../../lib/guide";
 import { PlacedChip, WaitChip } from "./guide-card";
 
 /** 상세에서 할 수 있는 것 — 카드 ⋯ · 「+ 일정」 과 같다 */
@@ -51,7 +45,7 @@ type DetailBodyProps = DetailActions & { card: GuideCard };
 /** 창 안 */
 function DetailBody({ card, onAdd, onMemo, onEdit, myId }: DetailBodyProps) {
   const { place } = card;
-  const kind = kindOf(place);
+  const kind = guideKindLabel(place);
   const links = placeLinksOf({ place });
   return (
     <div className="flex flex-col gap-3.5">
@@ -155,12 +149,4 @@ function DetailBody({ card, onAdd, onMemo, onEdit, myId }: DetailBodyProps) {
       </div>
     </div>
   );
-}
-
-/** 종류 칩 글자 — 메뉴 · 종류가 있으면 그것(「🍜 라멘 · 면」), 없으면 카테고리(「음식점」), 둘 다 없으면 null */
-function kindOf(place: GuideCard["place"]): string | null {
-  const subtype = placeSubtypeOf(place);
-  if (subtype) return SUBTYPE_LABEL[subtype];
-  const category = place.category as keyof typeof CATEGORY_LABEL | null;
-  return category && category in CATEGORY_LABEL ? CATEGORY_LABEL[category] : null;
 }
