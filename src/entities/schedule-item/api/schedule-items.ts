@@ -89,19 +89,6 @@ export async function addDayMemo(
   if (error) throw error;
 }
 
-/** dayIndex 일째부터 끝까지의 일정 수(대체 장소 빼고). 기간을 줄일 때 옮겨질 일정을 미리 센다 */
-export async function countScheduleItemsFrom(tripId: string, dayIndex: number): Promise<number> {
-  const supabase = createClient();
-  const { count, error } = await supabase
-    .from("schedule_items")
-    .select("id", { count: "exact", head: true })
-    .eq("trip_id", tripId)
-    .is("alternative_of", null)
-    .gte("day_index", dayIndex);
-  if (error) throw error;
-  return count ?? 0;
-}
-
 /** 장소 검색에서 고른 곳. 0013 add_schedule_place 가 받는 모양 */
 /** 구글 검색 · 이름만 입력으로 고른 곳. 0015 add_schedule_place 가 받는 모양 */
 export type PickedPlaceInput = {

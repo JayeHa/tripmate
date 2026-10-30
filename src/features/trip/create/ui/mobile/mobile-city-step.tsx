@@ -2,16 +2,13 @@
 
 import { ArrowLeft, Search } from "lucide-react";
 
+import { CityCatalogPicker, cityCtaLabel, CitySearchInput, PickedTray } from "@/entities/city";
 import { Button } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 
-import { cityCtaLabel } from "../../lib/cta";
 import type { TripCreateState } from "../../model/use-trip-create";
-import { CitySearchInput } from "../parts/city-search-input";
-import { CityStepBody } from "../parts/city-step-body";
 import type { TitleComponent } from "../parts/title";
 import { MobileFooter } from "./mobile-footer";
-import { PickedTray } from "./picked-tray";
 
 type MobileCityStepProps = {
   state: TripCreateState;
@@ -31,7 +28,12 @@ export function MobileCityStep({ state, onClose, Title }: MobileCityStepProps) {
         <CitySearchInput value={state.query} onChange={state.setQuery} className="text-[17px]" />
         <Search className="size-5.5 shrink-0 text-ink-700" />
       </div>
-      <CityStepBody state={state} layout="mobile" />
+      <CityCatalogPicker
+        query={state.query}
+        selected={state.picked.map((c) => c.id)}
+        onToggle={state.toggle}
+        layout="mobile"
+      />
       <MobileFooter>
         <PickedTray picked={state.picked} onRemove={state.toggle} />
         <Button

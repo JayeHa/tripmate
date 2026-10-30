@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   LogOut,
   type LucideIcon,
+  MapPin,
   PenLine,
   Trash2,
   UserPlus,
@@ -27,6 +28,7 @@ const DANGER: ReadonlySet<EditAction> = new Set(["leave", "delete"]);
 
 /** PC 드롭다운의 줄 아이콘 */
 const ICON: Record<EditAction, LucideIcon> = {
+  cities: MapPin,
   title: PenLine,
   dates: CalendarDays,
   invite: UserPlus,

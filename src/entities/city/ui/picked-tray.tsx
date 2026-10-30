@@ -1,7 +1,9 @@
 import { X } from "lucide-react";
 
-import { type City, CityThumb } from "@/entities/city";
 import { IconButton } from "@/shared/ui/icon-button";
+
+import type { City } from "../model/types";
+import { CityThumb } from "./city-thumb";
 
 type PickedTrayProps = {
   picked: City[];
