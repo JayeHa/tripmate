@@ -47,7 +47,8 @@ export function pinAnchor(focus: boolean) {
 }
 
 type MapPinProps = {
-  num: number;
+  /** 순서 번호. 대체 장소 지도는 A · B · C 글자 */
+  num: number | string;
   size?: MapPinSize;
   status: ReservationStatus | null;
   category: PlaceCategory | null;
