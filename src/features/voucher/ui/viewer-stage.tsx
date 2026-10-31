@@ -26,9 +26,15 @@ type ViewerStageProps = {
  * 그림이 없으면: 번호가 있는 사진 · 파일 없는 바우처는 번호 카드, 그 밖은 큰 아이콘과 안내(그림이 없는 PDF 는 「원본 열기」)
  */
 export function ViewerStage({ voucher, viewer, numbers, dateText }: ViewerStageProps) {
-  // 확대한 그림의 주소 — 쪽을 넘기면 새 그림은 원래 크기라 저절로 풀린다
-  const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
-  const swipe = usePageSwipe(viewer.go, zoomedSrc !== null && zoomedSrc === viewer.image);
+  // 지금 그림을 확대했는지. 쪽을 넘기면 확대 칸이 새로 그려져 원래 크기가 되는데, 사라지는 칸은 알리지 않으므로
+  // 그림이 바뀐 렌더에서 함께 버린다 — 확대했던 쪽으로 돌아와도 밀어 넘기기가 막히지 않게
+  const [zoomed, setZoomed] = useState(false);
+  const [shownImage, setShownImage] = useState(viewer.image);
+  if (shownImage !== viewer.image) {
+    setShownImage(viewer.image);
+    setZoomed(false);
+  }
+  const swipe = usePageSwipe(viewer.go, zoomed);
   if (viewer.total === 0) {
     if (!isPdf(voucher) && numbers[0]) {
       return <NumberCard first={numbers[0]} dateText={dateText} />;
@@ -44,10 +50,7 @@ export function ViewerStage({ voucher, viewer, numbers, dateText }: ViewerStageP
       >
         <div className="flex size-full items-center justify-center overflow-hidden rounded-button bg-white">
           {viewer.image && (
-            <ZoomPane
-              key={viewer.image}
-              onZoomChange={(zoomed) => setZoomedSrc(zoomed ? viewer.image : null)}
-            >
+            <ZoomPane key={viewer.image} onZoomChange={setZoomed}>
               <PlateImage
                 src={viewer.image}
                 alt={`${voucher.title}${many ? ` ${viewer.page + 1}쪽` : ""}`}
