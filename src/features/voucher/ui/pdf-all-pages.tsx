@@ -16,7 +16,8 @@ type PdfAllPagesViewProps = {
 /**
  * 뷰어의 「PDF 전체 보기」 — 원본 PDF 의 모든 쪽을 세로로 이어서. 쪽 크기대로 자리를 먼저 잡고(그리는 동안 밀리지 않게)
  * 앞에서부터 그려진 쪽을 채운다. 받지 못하면(오프라인 · 깨진 파일) 안내와 「다시 시도」.
- * 쪽마다 두 손가락으로 확대한다(ZoomPane) — 확대한 쪽 위에서는 한 손가락이 그 쪽을 움직이고, 두 번 누르면 원래대로 돌아와 다시 스크롤된다
+ * 쪽은 화면 폭 끝까지(여백 · 모서리 없음). 확대는 쪽마다가 아니라 머리 아래 화면 전체에 건다(ZoomPane) — 확대하면 지금 보이는 곳이
+ * 화면을 가득 채우고 한 손가락이 그곳을 움직인다. 다른 쪽으로 가려면 두 번 눌러 원래 크기로 돌아와 스크롤한다
  */
 export function PdfAllPagesView({ tripId, fileKey, title, onBack }: PdfAllPagesViewProps) {
   const { state, retry } = usePdfAllPages(tripId, fileKey);
@@ -48,34 +49,39 @@ export function PdfAllPagesView({ tripId, fileKey, title, onBack }: PdfAllPagesV
         </Notice>
       )}
       {state.status === "ready" && (
-        <ol className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pt-1 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          {state.sizes.map((size, i) => (
-            <li
-              // 쪽은 순서 말고 구분할 것이 없다(PDF 쪽 번호)
-              key={`page-${i + 1}`}
-              className="flex shrink-0 items-center justify-center overflow-hidden rounded-button bg-white"
-              style={{ aspectRatio: `${size.width} / ${size.height}` }}
-            >
-              {state.images[i] ? (
-                <ZoomPane>
-                  {/* 앱 안에서 그린 그림(blob 주소)이라 next/image 를 거치지 않는다 */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={state.images[i]}
-                    alt={`${title} ${i + 1}쪽`}
-                    draggable={false}
-                    className="size-full object-contain select-none"
-                  />
-                </ZoomPane>
-              ) : (
-                <LoaderCircle
-                  className="size-6 animate-spin text-ink-350"
-                  aria-label={`${i + 1}쪽 그리는 중`}
-                />
-              )}
-            </li>
-          ))}
-        </ol>
+        // 확대 칸은 크기가 정해져 있어야 해서 남은 칸을 채우는 상자 안에 꽉 차게 둔다
+        <div className="relative min-h-0 flex-1">
+          <div className="absolute inset-0">
+            <ZoomPane>
+              <ol className="flex size-full flex-col gap-2 overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+                {state.sizes.map((size, i) => (
+                  <li
+                    // 쪽은 순서 말고 구분할 것이 없다(PDF 쪽 번호)
+                    key={`page-${i + 1}`}
+                    className="flex shrink-0 items-center justify-center overflow-hidden bg-white"
+                    style={{ aspectRatio: `${size.width} / ${size.height}` }}
+                  >
+                    {state.images[i] ? (
+                      // 앱 안에서 그린 그림(blob 주소)이라 next/image 를 거치지 않는다
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={state.images[i]}
+                        alt={`${title} ${i + 1}쪽`}
+                        draggable={false}
+                        className="size-full object-contain select-none"
+                      />
+                    ) : (
+                      <LoaderCircle
+                        className="size-6 animate-spin text-ink-350"
+                        aria-label={`${i + 1}쪽 그리는 중`}
+                      />
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </ZoomPane>
+          </div>
+        </div>
       )}
     </div>
   );
