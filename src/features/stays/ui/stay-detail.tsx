@@ -17,6 +17,7 @@ import {
 import { STAY_DEFAULT_EMOJI } from "../lib/stay-form";
 import { STAY_LEDGER_LABEL, type StayPaymentRequest } from "../lib/stay-payment";
 import { useStayPayment } from "../model/use-stay-payment";
+import { StayExpenses } from "./stay-expenses";
 
 type StayDetailProps = {
   tripId: string;
@@ -31,7 +32,7 @@ type StayDetailProps = {
 
 /**
  * 숙소 상세 — (결제 예정일 지남 안내) · 제목(아이콘 이름) · 기간 · 예약 상태(「수정」 없이 바로 바꾼다) ·
- * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제 · 바우처(화면이 넣는다) · 이 숙소에 연결된 끝나지 않은 체크리스트
+ * 표(주소 · 체크인 · 체크아웃 · 메모 · 링크) · 결제 · 숙소 카드에 연결된 비용 · 바우처(화면이 넣는다) · 이 숙소에 연결된 끝나지 않은 체크리스트
  */
 export function StayDetail({ tripId, stay, onPayment, onToast, vouchers }: StayDetailProps) {
   const status = useUpdateStayStatus(tripId);
@@ -107,6 +108,11 @@ export function StayDetail({ tripId, stay, onPayment, onToast, vouchers }: StayD
         onOpen={() =>
           onPayment({ kind: "saved", stayId: stay.id, name: p.name, expenseId: pay.expenseId })
         }
+      />
+      <StayExpenses
+        tripId={tripId}
+        stayId={stay.id}
+        onOpen={(expenseId) => onPayment({ kind: "linked", expenseId })}
       />
       {vouchers}
       <LinkedChecklist tripId={tripId} items={checklist.items} onComplete={checklist.complete} />

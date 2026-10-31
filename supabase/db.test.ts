@@ -3013,6 +3013,78 @@ describe("숙소 결제 (0051)", () => {
   });
 });
 
+describe("숙소 카드 비용 → 숙소 결제 (0073)", () => {
+  const PLACE = {
+    name: "호텔 몬토레 긴자",
+    lat: 35.671,
+    lng: 139.765,
+    google_place_id: "g-card-1",
+  };
+  const FIELDS = { check_in_date: "2027-11-01", check_out_date: "2027-11-03", links: [] };
+
+  /** 3일 여행 · 숙소 · 그 숙소의 첫 카드 */
+  async function setup() {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-02");
+    const stay = (await saveStay(trip, null, PLACE, FIELDS)).id;
+    const { rows } = await db.query<{ id: string }>(
+      `select id from public.schedule_items where stay_id = '${stay}' order by day_index limit 1`,
+    );
+    return { trip, stay, card: rows[0].id };
+  }
+
+  /** 카드에 연결한 비용을 넣는다(가계부 「일정 연결」) */
+  async function linkToCard(trip: string, card: string, category = "lodging") {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name, category, schedule_item_id)
+       values ('${trip}', '${A}', 312677, 'KRW', '아무 이름', '${category}', '${card}') returning id`,
+    );
+    return rows[0].id;
+  }
+
+  /** 비용의 숙소 · 일정 연결 · 이름 */
+  async function owner(id: string) {
+    const { rows } = await db.query<{
+      stay_id: string | null;
+      schedule_item_id: string | null;
+      name: string;
+    }>(`select stay_id, schedule_item_id, name from public.expenses where id = '${id}'`);
+    return rows[0];
+  }
+
+  it("숙소 카드를 고른 숙소 비용은 결제가 없으면 그 숙소의 결제가 된다", async () => {
+    const { trip, stay, card } = await setup();
+    const id = await linkToCard(trip, card);
+    expect(await owner(id)).toEqual({
+      stay_id: stay,
+      schedule_item_id: null,
+      name: "호텔 몬토레 긴자",
+    });
+  });
+
+  it("결제가 이미 있거나 카테고리가 숙소가 아니면 카드에 연결된 채 둔다", async () => {
+    const { trip, card } = await setup();
+    await linkToCard(trip, card);
+    const second = await linkToCard(trip, card);
+    expect(await owner(second)).toMatchObject({ stay_id: null, schedule_item_id: card });
+    const food = await linkToCard(trip, card, "food");
+    expect(await owner(food)).toMatchObject({ stay_id: null, schedule_item_id: card });
+  });
+
+  it("금액만 고치면 그대로, 일정 연결을 다시 고르면 결제가 된다", async () => {
+    const { trip, stay, card } = await setup();
+    const first = await linkToCard(trip, card);
+    const second = await linkToCard(trip, card);
+    await db.query(`delete from public.expenses where id = '${first}'`);
+    await db.query(`update public.expenses set amount = 1000 where id = '${second}'`);
+    expect(await owner(second)).toMatchObject({ stay_id: null, schedule_item_id: card });
+    await db.query(
+      `update public.expenses set schedule_item_id = '${card}' where id = '${second}'`,
+    );
+    expect(await owner(second)).toMatchObject({ stay_id: stay, schedule_item_id: null });
+  });
+});
+
 describe("항공편 (0052)", () => {
   const FIELDS = {
     airline_name: "제주항공",
