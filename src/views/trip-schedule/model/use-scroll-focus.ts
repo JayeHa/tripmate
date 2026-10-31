@@ -18,7 +18,8 @@ type ScrollFocusOptions = {
   list: RefObject<HTMLElement | null>;
   /**
    * 스크롤 위치 → 기준선의 화면 y. 고를 때마다 부른다 — 모바일은 지도를 접고 펴면 바뀐다.
-   * 스크롤에 따라 움직여도 되지만, 스크롤이 내려갈수록 같거나 아래로만 가야 한다(핀 스크롤 계산의 전제)
+   * 스크롤에 따라 움직여도 되지만, 스크롤 1 에 행보다 빨리(1 넘게) 올라가면 안 된다(핀 스크롤 계산의 전제).
+   * 모바일은 sticky 가 붙기 전에는 스크롤만큼 올라가고 붙으면 멈춘다, PC 는 내려간다
    */
   line: (scrollTop: number) => number;
   /** false 면 강조하지 않고 스크롤도 무시한다(모바일 지도가 접혔을 때) */
@@ -138,12 +139,12 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
   }, [scroller, list, scan, holdScan]);
 
   /**
-   * 핀으로 고른 장소를 바로 강조하고, 그 행을 기준선보다 조금 위로 스크롤한다.
+   * 핀으로 고른 장소를 바로 강조하고, 그 행을 기준선보다 조금 위로 스크롤한다(smooth 가 false 면 애니메이션 없이 — 화면에 들어갈 때).
    * scrollIntoView 는 쓰지 않는다 — sticky 를 몰라서 모바일에서는 행이 지도 밑에 가려진다.
    * 기준선은 누를 때마다 다시 잰다(지도를 접으면 바뀐다).
    */
   const focusOn = useCallback(
-    (id: string) => {
+    (id: string, smooth = true) => {
       setState({ key: latest.current.resetKey, id });
       pinnedAtEnd.current = false;
       holdScan();
@@ -162,7 +163,7 @@ export function useScrollFocus({ scroller, list, line, enabled, resetKey }: Scro
       // 끝까지 내려도 기준선에 닿지 않는 행(하루씩 보기의 마지막 장소들 — 끝 여백이 없다)
       pinnedAtEnd.current =
         to >= max && row.getBoundingClientRect().top - (max - top) > lineOf(max);
-      target.scrollTo({ top: to, behavior: "smooth" });
+      target.scrollTo({ top: to, behavior: smooth ? "smooth" : "instant" });
     },
     [holdScan],
   );

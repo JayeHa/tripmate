@@ -19,6 +19,9 @@ const TITLE_SIZE = {
   note: "text-[15px] font-medium whitespace-pre-line",
 } satisfies Record<TimelineRow["kind"], string>;
 
+/** 다녀온 일정의 모양 — 흐리게 · 색 빼기(타임라인의 표식 · 이동 줄도 같은 값) */
+export const PAST = "opacity-50 grayscale";
+
 type ItemCardProps = {
   row: TimelineRow;
   open: boolean;
@@ -29,6 +32,8 @@ type ItemCardProps = {
   checklist?: { count: number; href: string };
   /** 이 카드의 바우처 수와 누르면 할 일(하나면 뷰어, 여럿이면 상세) — 수가 0 이거나 없으면 칩을 그리지 않는다 */
   vouchers?: { count: number; onOpen: () => void };
+  /** 다녀온 일정 — 흐리게 그린다(누르기는 그대로) */
+  past?: boolean;
 };
 
 /**
@@ -46,6 +51,7 @@ export function ItemCard({
   authorOf,
   checklist,
   vouchers,
+  past = false,
 }: ItemCardProps) {
   const look = lookOf(row);
   return (
@@ -53,6 +59,7 @@ export function ItemCard({
       className={cn(
         "relative flex min-w-0 flex-1 flex-col rounded-card border border-line-card bg-white px-4.5 shadow-card",
         look.card,
+        past && PAST,
       )}
     >
       {look.photo && (

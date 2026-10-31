@@ -39,6 +39,11 @@ describe("pinScrollTarget", () => {
     expect(500 - t).toBeLessThanOrEqual(Math.min(400, t + 120) - 12 + 0.5);
   });
 
+  it("기준선이 붙기 전에는 스크롤만큼 올라가다 붙으면 멈춰도(모바일 sticky) 붙은 뒤의 기준선에 맞춘다", () => {
+    // 기준선 = max(300, 500 − t) + 48: t ≥ 200 에서 348 에 멈춘다 → 행 1000 − t = 336 → t = 664
+    expect(pinScrollTarget(1000, 0, 3000, (s) => Math.max(300, 500 - s) + 48, 12)).toBe(664);
+  });
+
   it("이미 기준선 위면 맨 위(0)보다 위로는 가지 않는다", () => {
     expect(pinScrollTarget(60, 0, 2000, () => 120, 12)).toBe(0);
   });

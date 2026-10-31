@@ -2,6 +2,7 @@ import type { MemoAuthor, TimelineRow } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { ScheduleEditState } from "@/features/schedule/edit-mode";
 
+import type { ScheduleEntry } from "../model/use-entry-scroll";
 import type { DaySectionData } from "../model/use-schedule-sections";
 
 /** 뷰가 「그 날을 보여 줘」 할 때 레이아웃에 보내는 스크롤 요청. at 이 바뀌면 같은 날이라도 다시 간다 */
@@ -25,6 +26,11 @@ export type ScheduleLayoutProps = {
   isPending: boolean;
   /** 뷰가 보내는 「그 날로 스크롤」 요청 */
   jump: DayJump | null;
+  /** 다녀온 일정(여행 중 · 홈 「다음 장소」 와 같은 기준) — 흐리게 그린다 */
+  pastIds: ReadonlySet<string>;
+  /** 들어갈 때 보여 줄 곳(여행 중 · `?day` 없이 들어왔을 때). 처리하면 onEntryDone */
+  entry: ScheduleEntry | null;
+  onEntryDone: () => void;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   /** 그 날짜의 「일정 추가」 · 플로팅 — 그 날로 일정 추가 창을 연다 */

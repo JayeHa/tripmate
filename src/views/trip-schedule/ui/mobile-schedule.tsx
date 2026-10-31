@@ -11,6 +11,7 @@ import { AppHeader } from "@/shared/ui/app-header";
 
 import { mapDayOf } from "../lib/focus";
 import { useDayJumps } from "../model/use-day-jumps";
+import { useEntryScroll } from "../model/use-entry-scroll";
 import { useScrollFocus } from "../model/use-scroll-focus";
 import { useVisibleDay } from "../model/use-visible-day";
 import { useWindowScrolled } from "../model/use-window-scrolled";
@@ -43,6 +44,8 @@ export function MobileSchedule({
   sections,
   isPending,
   jump,
+  entry,
+  onEntryDone,
   startEditAt,
   onOpenStays,
   stayCount,
@@ -57,10 +60,21 @@ export function MobileSchedule({
   const stickyHeight = useElementHeight(stickyRef);
   /** sticky 영역(상단바 + 지도 + 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
+  /**
+   * 스크롤 위치 t 에서의 sticky 아래 끝 — 붙기 전에는 목록 위 끝(스크롤만큼 올라간다), 붙으면 붙은 자리(top + 높이)에서 멈춘다.
+   * 맨 위에서 줄로 옮길 때(들어갈 때) 옮긴 뒤의 기준선을 써야 줄이 지도 밑에 가지 않는다
+   */
+  const stickyBottomAt = (t: number) => {
+    const sticky = stickyRef.current;
+    const list = listRef.current;
+    if (!sticky || !list) return stickyBottom();
+    const stuck = parseFloat(getComputedStyle(sticky).top) + sticky.offsetHeight;
+    return Math.max(stuck, list.getBoundingClientRect().top + window.scrollY - t);
+  };
   // 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
   const focus = useScrollFocus({
     list: listRef,
-    line: () => stickyBottom() + FOCUS_LINE_OFFSET,
+    line: (t) => stickyBottomAt(t) + FOCUS_LINE_OFFSET,
     enabled: mapOpen,
     resetKey: null,
   });
@@ -71,6 +85,13 @@ export function MobileSchedule({
     onChange: onDayChange,
   });
   useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump });
+  useEntryScroll({
+    ready: !isPending && !!trip,
+    entry,
+    scrollToDay,
+    focusOn: focus.focusOn,
+    onDone: onEntryDone,
+  });
 
   return (
     <>

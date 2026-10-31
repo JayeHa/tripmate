@@ -13,6 +13,7 @@ import { mapDayOf } from "../../lib/focus";
 import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
+import { useEntryScroll } from "../../model/use-entry-scroll";
 import { usePcDayView } from "../../model/use-pc-day-view";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useVisibleDay } from "../../model/use-visible-day";
@@ -66,6 +67,8 @@ export function PcSchedule({
   sections,
   isPending,
   jump,
+  entry,
+  onEntryDone,
   startEditAt,
   onGuide,
   onOpenStays,
@@ -103,6 +106,15 @@ export function PcSchedule({
   });
   useDayJumps({ scrollToDay, day, ready: !isPending && !!trip, jump, enabled: !one });
   useDayViewScroll({ one, day, list: listRef, scrollToDay });
+  useEntryScroll({
+    ready: !isPending && !!trip,
+    entry,
+    scrollToDay,
+    focusOn: focus.focusOn,
+    openDay: onDayChange,
+    oneDay: one,
+    onDone: onEntryDone,
+  });
 
   /** 레일 · 목록 끝에서 날짜를 골랐다 — 편집 중이면 편집할 날, 하루씩이면 그 날을 그리고, 이어서면 그 날로 스크롤 */
   function pickDay(d: number) {

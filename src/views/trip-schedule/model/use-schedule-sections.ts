@@ -31,9 +31,9 @@ export function useScheduleSections(tripId: string, trip: Trip | undefined, tota
   const { data: items = NO_ITEMS, isPending, isSuccess: itemsReady } = useScheduleItems(tripId);
   // 이동 기록을 다 불러오기 전(또는 실패)에는 이동 방법 창을 열지 않는다. 빈 창에서 저장하면 기존 기록을 덮어쓴다
   const { data: moves, isSuccess: movesReady } = useMoves(tripId);
-  const { data: alternatives } = useAlternatives(tripId);
-  const { data: memos } = useMemos(tripId);
-  const { data: stays } = useStays(tripId);
+  const { data: alternatives, isSuccess: altsReady } = useAlternatives(tripId);
+  const { data: memos, isSuccess: memosReady } = useMemos(tripId);
+  const { data: stays, isSuccess: staysReady } = useStays(tripId);
   const startDate = trip?.start_date;
   const sections = useMemo<DaySectionData[]>(
     () =>
@@ -51,5 +51,7 @@ export function useScheduleSections(tripId: string, trip: Trip | undefined, tota
   );
   // 여행 · 일정을 다 읽었다 — 여행을 읽기 전에는 날짜 수를 몰라 첫날 줄만 있다
   const sectionsReady = itemsReady && startDate !== undefined;
-  return { items, isPending, itemsReady, movesReady, sections, sectionsReady };
+  // 줄 높이를 바꾸는 것(이동 · 대체 장소 · 메모 · 숙소 모양)까지 다 읽었다 — 들어갈 때 줄로 옮기는 스크롤이 기다린다(늦게 오면 줄이 밀린다)
+  const settled = sectionsReady && movesReady && altsReady && memosReady && staysReady;
+  return { items, isPending, itemsReady, movesReady, sections, sectionsReady, settled };
 }
