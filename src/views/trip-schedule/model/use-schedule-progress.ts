@@ -4,7 +4,12 @@ import { differenceInCalendarDays, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 
-import { dayProgress, type ScheduleItem, useVisited } from "@/entities/schedule-item";
+import {
+  dayProgress,
+  type PastKind,
+  type ScheduleItem,
+  useVisitMarks,
+} from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import { dayCount, nowHHmm, todayISO } from "@/shared/lib/days";
 
@@ -12,14 +17,14 @@ import type { ScheduleEntry } from "./use-entry-scroll";
 
 /** 여행 중 오늘의 진행 — 다녀온 줄(회색) · 오늘 날짜 · 다음 장소 */
 export type ScheduleProgress = {
-  past: ReadonlySet<string>;
+  past: ReadonlyMap<string, PastKind>;
   todayIndex: number;
   /** 오늘의 다음 장소. 다 마쳤으면 null */
   nextId: string | null;
 };
 
 /**
- * 일정 화면의 「다녀온 일정」 — 홈 「오늘」 카드와 같은 기준(dayProgress · 기기별 「들렀어요」 · 지금 시각).
+ * 일정 화면의 「다녀온 일정」 — 홈 「오늘」 카드와 같은 기준(dayProgress · 기기별 다녀감 표시 · 지금 시각).
  * 여행 중일 때만 — 여행 전 · 후, 여행 · 일정을 읽기 전에는 null(아무것도 흐리게 하지 않는다).
  * 시각은 그릴 때마다 다시 본다(화면을 띄워 둔 채로 시간이 지나도 다시 그려질 때 따라간다)
  */
@@ -29,15 +34,15 @@ export function useScheduleProgress(
   items: readonly ScheduleItem[] | null,
 ): ScheduleProgress | null {
   const today = todayISO();
-  const [visited] = useVisited(tripId, today, true);
+  const [marks] = useVisitMarks(tripId);
   if (!trip || !items) return null;
   const todayIndex = differenceInCalendarDays(parseISO(today), parseISO(trip.start_date));
   if (todayIndex < 0 || todayIndex >= dayCount(trip.start_date, trip.end_date)) return null;
-  return { ...dayProgress(items, todayIndex, visited, nowHHmm()), todayIndex };
+  return { ...dayProgress(items, todayIndex, marks, nowHHmm()), todayIndex };
 }
 
 /** 여행 중이 아닐 때의 다녀온 줄 — 렌더마다 새 Set 을 만들지 않게 */
-const NO_PAST: ReadonlySet<string> = new Set();
+const NO_PAST: ReadonlyMap<string, PastKind> = new Map();
 
 /**
  * 일정 화면이 레이아웃에 내리는 「다녀온 일정」 과 「들어갈 때 보여 줄 곳」.
@@ -63,5 +68,5 @@ export function useScheduleEntry(
     [fromTop, done, settled, day, id],
   );
   const onEntryDone = useCallback(() => setDone(true), []);
-  return { pastIds: progress?.past ?? NO_PAST, entry, onEntryDone };
+  return { past: progress?.past ?? NO_PAST, entry, onEntryDone };
 }

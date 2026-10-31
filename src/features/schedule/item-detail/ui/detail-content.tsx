@@ -4,6 +4,7 @@ import { useUser } from "@/entities/session";
 import { dayOfWeek } from "@/shared/lib/days";
 
 import type { PlanEditState } from "../model/use-plan-edit";
+import type { VisitToggle } from "../model/use-visit-toggle";
 import type { DetailVoucherSlot } from "../model/voucher-slot";
 import { ChecklistBlock } from "./checklist-block";
 import { type AlternativesSlot, DetailExtras } from "./detail-extras";
@@ -18,6 +19,8 @@ type DetailContentProps = {
   startDate: string;
   row: TimelineRow;
   plan: PlanEditState;
+  /** 「이번 일정」 의 「방문」 줄(다녀왔어요 · 패스). 없으면(여행 중 오늘까지의 장소가 아님 · 대체 장소의 상세) 줄이 없다 */
+  visit?: VisitToggle | null;
   /** 메모 「+ 메모」 · 메모 누르기 — 부른 쪽이 메모 작성 창을 연다(고칠 메모, 새로 쓰면 null) */
   onMemo: (memo: Memo | null) => void;
   /** 비용 「+」 · 비용 줄 — 부른 쪽이 비용 창을 연다(고칠 비용, 새로 쓰면 null — 이 일정에 연결된 채) */
@@ -46,6 +49,7 @@ export function DetailContent({
   startDate,
   row,
   plan,
+  visit = null,
   onMemo,
   onExpense,
   onToast,
@@ -76,7 +80,7 @@ export function DetailContent({
       {item.stay_id && onEditStay && (
         <StayBlock tripId={tripId} stayId={item.stay_id} onEdit={onEditStay} />
       )}
-      <PlanSection item={item} edit={plan} />
+      <PlanSection item={item} edit={plan} visit={visit} />
       <div aria-hidden="true" className="-mx-5 h-2 shrink-0 bg-surface-sunken" />
       <ExpenseBlock tripId={tripId} item={item} onOpen={onExpense} />
       <VoucherBlock slot={vouchers} item={item} />

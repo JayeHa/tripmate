@@ -4,6 +4,7 @@ import Link from "next/link";
 import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
+import type { PastKind } from "../../lib/day-progress";
 import type { TimelineRow } from "../../lib/timeline";
 import type { MemoAuthor } from "../../model/memo";
 import { itemName } from "../../model/place";
@@ -11,6 +12,7 @@ import { ReservationBadge } from "../reservation-badge";
 import { AlternativesLine } from "./alternatives-line";
 import { LinkChips } from "./link-chips";
 import { MemoSection } from "./memo-section";
+import { SkippedBadge } from "./skipped-badge";
 
 const TITLE_SIZE = {
   place: "text-[17px] font-bold",
@@ -32,8 +34,8 @@ type ItemCardProps = {
   checklist?: { count: number; href: string };
   /** 이 카드의 바우처 수와 누르면 할 일(하나면 뷰어, 여럿이면 상세) — 수가 0 이거나 없으면 칩을 그리지 않는다 */
   vouchers?: { count: number; onOpen: () => void };
-  /** 다녀온 일정 — 흐리게 그린다(누르기는 그대로) */
-  past?: boolean;
+  /** 다녀온 일정 — 흐리게 그린다(누르기는 그대로). 패스(skipped)면 예약 배지 자리에 「패스」 */
+  past?: PastKind | null;
 };
 
 /**
@@ -51,7 +53,7 @@ export function ItemCard({
   authorOf,
   checklist,
   vouchers,
-  past = false,
+  past = null,
 }: ItemCardProps) {
   const look = lookOf(row);
   return (
@@ -59,7 +61,7 @@ export function ItemCard({
       className={cn(
         "relative flex min-w-0 flex-1 flex-col rounded-card border border-line-card bg-white px-4.5 shadow-card",
         look.card,
-        past && PAST,
+        past !== null && PAST,
       )}
     >
       {look.photo && (
@@ -73,7 +75,11 @@ export function ItemCard({
           {look.photo}
         </span>
       )}
-      {row.status && <ReservationBadge status={row.status} className="mb-0.5" />}
+      {past === "skipped" ? (
+        <SkippedBadge />
+      ) : (
+        row.status && <ReservationBadge status={row.status} className="mb-0.5" />
+      )}
       <button
         type="button"
         onClick={onOpen}

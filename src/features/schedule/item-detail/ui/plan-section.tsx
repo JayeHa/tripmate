@@ -1,4 +1,4 @@
-import { ArrowUpRight, Pencil } from "lucide-react";
+import { ArrowUpRight, Ban, Check, Pencil } from "lucide-react";
 
 import {
   planLinksOf,
@@ -8,23 +8,28 @@ import {
 } from "@/entities/schedule-item";
 import { withKeys } from "@/shared/lib/keys";
 import { cn } from "@/shared/lib/utils";
+import { FilterChip } from "@/shared/ui/filter-chip";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import type { PlanEditState } from "../model/use-plan-edit";
+import type { VisitToggle } from "../model/use-visit-toggle";
 import { ALTERNATIVE_TIME_NOTE, PlanEditForm } from "./plan-edit-form";
 
 type PlanSectionProps = {
   item: ScheduleItem;
   edit: PlanEditState;
+  /** 「방문」 줄 — 없으면 그리지 않는다 */
+  visit: VisitToggle | null;
 };
 
 /**
- * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크).
+ * 이번 일정 — 이 여행 · 이 방문에만 해당하는 칸. 머리는 「메모 N」 과 같은 회색 라벨 「이번 일정」 + 「수정」. 보기는 표(예약 상태 · 시간 · 링크),
+ * 여행 중이면 맨 아래 「방문」(다녀왔어요 · 패스 — 기기별 표시라 「수정」 창 없이 바로 바꾼다).
  * 「수정」 을 누르면 상세 위에 「이번 일정 수정」 창(모바일 시트 · PC 480 모달)이 뜬다.
  * note · flight 는 상태 · 링크가 없고 제목 · 시간만 고친다. 대체 장소는 시간이 자리의 것이라 고칠 수 없다고 안내한다.
  * 숙소 연결 카드는 예약 상태 줄이 없다 — 상태는 숙소 하나에만 있고 「숙소 예약」 블록이 보인다
  */
-export function PlanSection({ item, edit }: PlanSectionProps) {
+export function PlanSection({ item, edit, visit }: PlanSectionProps) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
@@ -39,6 +44,7 @@ export function PlanSection({ item, edit }: PlanSectionProps) {
         </button>
       </div>
       <PlanView item={item} />
+      {visit && <VisitLine visit={visit} />}
       <SheetDialog
         open={!!edit.draft}
         onClose={edit.cancel}
@@ -102,6 +108,36 @@ function PlanView({ item }: PlanViewProps) {
           )}
         </Line>
       )}
+    </div>
+  );
+}
+
+type VisitLineProps = { visit: VisitToggle };
+
+/** 「방문」 줄 — 「✓ 다녀왔어요」 · 「패스」 칩. 고른 칩을 다시 누르면 표시를 지운다(순서 · 시각으로 자동) */
+function VisitLine({ visit }: VisitLineProps) {
+  return (
+    <div className="text-sm/normal">
+      <Line label="방문">
+        <span className="flex gap-1.5">
+          <FilterChip
+            size="sm"
+            selected={visit.mark === "visited"}
+            onClick={() => visit.toggle("visited")}
+          >
+            <Check className="size-3.5" strokeWidth={2.4} aria-hidden />
+            다녀왔어요
+          </FilterChip>
+          <FilterChip
+            size="sm"
+            selected={visit.mark === "skipped"}
+            onClick={() => visit.toggle("skipped")}
+          >
+            <Ban className="size-3.5" strokeWidth={2.2} aria-hidden />
+            패스
+          </FilterChip>
+        </span>
+      </Line>
     </div>
   );
 }

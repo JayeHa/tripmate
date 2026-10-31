@@ -27,7 +27,7 @@ export * from "./model/use-memos";
 export * from "./model/use-moves";
 export * from "./model/use-open-memos";
 export * from "./model/use-schedule-items";
-export * from "./model/use-visited";
+export * from "./model/use-visit-marks";
 export * from "./ui/category-thumb";
 export * from "./ui/link-field/schedule-link-field";
 export * from "./ui/memo-card";

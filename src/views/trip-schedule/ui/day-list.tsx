@@ -19,7 +19,7 @@ type DayListProps = Pick<
   | "voucherOf"
   | "startEditAt"
   | "holidayOf"
-  | "pastIds"
+  | "past"
 > & {
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 */
   showCounts?: boolean;

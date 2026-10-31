@@ -14,6 +14,7 @@ import { linkedExpensesOf } from "../lib/alternatives";
 import { useAlternativeActions } from "../model/use-alternative-actions";
 import { useItemActions } from "../model/use-item-actions";
 import { usePlanEdit } from "../model/use-plan-edit";
+import { useVisitToggle } from "../model/use-visit-toggle";
 import type { DetailVoucherSlot } from "../model/voucher-slot";
 import { AlternativeDetail } from "./alternative-detail";
 import { DetailContent } from "./detail-content";
@@ -124,6 +125,7 @@ function MainDetail({
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
+  const visit = useVisitToggle(tripId, startDate, totalDays, row.item);
   const actions = useItemActions(tripId, row.item, (message) => {
     onClose();
     onToast(message);
@@ -142,6 +144,7 @@ function MainDetail({
         startDate={startDate}
         row={row}
         plan={plan}
+        visit={visit}
         onMemo={(memo) => onMemo(row, memo)}
         onExpense={(expenseId) => onExpense(row.item.id, expenseId)}
         onToast={onToast}

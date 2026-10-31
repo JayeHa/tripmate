@@ -10,6 +10,7 @@ import {
   placeNumbers,
   type ReservationStatus,
   type ScheduleItem,
+  type VisitMarks,
 } from "@/entities/schedule-item";
 import { dayCount } from "@/shared/lib/days";
 
@@ -38,8 +39,8 @@ export type PlaceLine = {
 /** 오늘 카드 — 자유 일정(장소 없음) · 다 마침 · 다음 장소 */
 export type TodayPlan =
   | { kind: "free" }
-  /** last = 마지막 장소의 자리 — 「되돌리기」 로 돌아갈 곳 */
-  | { kind: "done"; tomorrow: string | null; last: number }
+  /** reopenId = 표시를 지우면 다시 다음 장소가 되는 곳(그날 마지막으로 표시한 장소) */
+  | { kind: "done"; tomorrow: string | null; reopenId: string | null }
   | { kind: "next"; index: number; label: string; place: PlaceLine; after: PlaceLine[] };
 
 /** 장소 분류 이름. 모르는 값이면 null */
@@ -78,20 +79,22 @@ function tomorrowText(items: ScheduleItem[], dayIndex: number): string | null {
 }
 
 /**
- * 오늘 카드. 다음 장소 = 들른 개수(visited) 다음 일정이되, 시각이 지난 일정이 있으면 적어도 그 자리부터(nextPlaceIndex —
+ * 오늘 카드. 다음 장소 = 다녀감 표시(marks)를 한 마지막 장소 다음 일정이되, 시각이 지난 일정이 있으면 적어도 그 자리부터(nextPlaceIndex —
  * 일정 화면의 「다녀온 일정」 과 같은 기준). 「이후」 는 그다음 두 곳
  */
 export function todayPlan(
   items: ScheduleItem[],
   dayIndex: number,
-  visited: number,
+  marks: VisitMarks,
   now: string | null,
 ): TodayPlan {
   const places = dayPlaces(items, dayIndex);
   if (places.length === 0) return { kind: "free" };
-  const index = nextPlaceIndex(items, dayIndex, visited, now);
-  if (index >= places.length)
-    return { kind: "done", tomorrow: tomorrowText(items, dayIndex), last: places.length - 1 };
+  const index = nextPlaceIndex(items, dayIndex, marks, now);
+  if (index >= places.length) {
+    const reopenId = places.findLast((p) => marks[p.id])?.id ?? null;
+    return { kind: "done", tomorrow: tomorrowText(items, dayIndex), reopenId };
+  }
   const nums = placeNumbers(
     items.filter((i) => i.day_index === dayIndex).sort((a, b) => a.position - b.position),
   );
