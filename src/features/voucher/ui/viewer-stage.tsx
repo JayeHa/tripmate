@@ -1,17 +1,16 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { isPdf, type Voucher } from "@/entities/voucher";
 import { cn } from "@/shared/lib/utils";
 
 import type { ViewerNumber } from "../lib/voucher-view";
+import { usePageSwipe } from "../model/use-page-swipe";
 import type { VoucherViewerState } from "../model/use-voucher-viewer";
 import { NoImage, NumberCard } from "./viewer-fallbacks";
-
-/** 손가락으로 이만큼(px) 밀면 넘긴다 */
-const SWIPE_PX = 50;
+import { ZoomPane } from "./zoom-pane";
 
 type ViewerStageProps = {
   voucher: Voucher;
@@ -23,10 +22,13 @@ type ViewerStageProps = {
 
 /**
  * 뷰어 가운데 — 흰 판(r8)에 그림을 맞춰 넣고(contain), 여러 장이면 판 양옆 화살표(끝에서 흐리게) · 손가락으로 밀어 넘기기 · 아래 점.
+ * 그림은 두 손가락으로 확대한다(ZoomPane). 확대 중에는 밀어도 넘기지 않고 그림이 움직인다 — 화살표로는 넘기고, 넘기면 원래 크기로.
  * 그림이 없으면: 번호가 있는 사진 · 파일 없는 바우처는 번호 카드, 그 밖은 큰 아이콘과 안내(그림이 없는 PDF 는 「원본 열기」)
  */
 export function ViewerStage({ voucher, viewer, numbers, dateText }: ViewerStageProps) {
-  const startX = useRef<number | null>(null);
+  // 확대한 그림의 주소 — 쪽을 넘기면 새 그림은 원래 크기라 저절로 풀린다
+  const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
+  const swipe = usePageSwipe(viewer.go, zoomedSrc !== null && zoomedSrc === viewer.image);
   if (viewer.total === 0) {
     if (!isPdf(voucher) && numbers[0]) {
       return <NumberCard first={numbers[0]} dateText={dateText} />;
@@ -38,26 +40,19 @@ export function ViewerStage({ voucher, viewer, numbers, dateText }: ViewerStageP
     <>
       <div
         className="relative flex min-h-0 flex-1 items-center justify-center px-5 py-2"
-        onPointerDown={(e) => {
-          if (e.pointerType === "touch") startX.current = e.clientX;
-        }}
-        onPointerUp={(e) => {
-          if (startX.current === null) return;
-          const dx = e.clientX - startX.current;
-          startX.current = null;
-          if (Math.abs(dx) >= SWIPE_PX) viewer.go(dx < 0 ? 1 : -1);
-        }}
-        onPointerCancel={() => {
-          startX.current = null;
-        }}
+        {...swipe}
       >
         <div className="flex size-full items-center justify-center overflow-hidden rounded-button bg-white">
           {viewer.image && (
-            <PlateImage
+            <ZoomPane
               key={viewer.image}
-              src={viewer.image}
-              alt={`${voucher.title}${many ? ` ${viewer.page + 1}쪽` : ""}`}
-            />
+              onZoomChange={(zoomed) => setZoomedSrc(zoomed ? viewer.image : null)}
+            >
+              <PlateImage
+                src={viewer.image}
+                alt={`${voucher.title}${many ? ` ${viewer.page + 1}쪽` : ""}`}
+              />
+            </ZoomPane>
           )}
         </div>
         {many && (
@@ -78,7 +73,7 @@ export function ViewerStage({ voucher, viewer, numbers, dateText }: ViewerStageP
 
 type PlateImageProps = { src: string; alt: string };
 
-/** 판 안의 그림 — 이 브라우저가 그리지 못하는 사진(Chrome 의 HEIC)이면 원본 저장을 안내한다. 주소마다 key 로 새로 그린다 */
+/** 판 안의 그림 — 이 브라우저가 그리지 못하는 사진(Chrome 의 HEIC)이면 원본 저장을 안내한다. 주소마다 감싼 확대 칸의 key 로 새로 그린다 */
 function PlateImage({ src, alt }: PlateImageProps) {
   const [broken, setBroken] = useState(false);
   if (broken) {
