@@ -6,10 +6,10 @@ import { ChecklistSheet } from "@/features/checklist";
 import { cn } from "@/shared/lib/utils";
 import { FilterChip } from "@/shared/ui/filter-chip";
 import { floatingAddClass } from "@/shared/ui/floating-add-button";
+import { MobileVoucherDetail } from "@/widgets/trip-voucher";
 
 import { NOTE_TAB_INFO, NOTE_TABS } from "../lib/tabs";
 import type { NotesState } from "../model/use-notes";
-import { MobileVoucherDetail } from "./mobile-voucher-detail";
 import { NotesTabBody } from "./notes-tab-body";
 
 type MobileNotesProps = { tripId: string; notes: NotesState };

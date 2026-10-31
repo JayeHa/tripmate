@@ -7,6 +7,7 @@ import { todayISO } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Segmented } from "@/shared/ui/segmented";
 import { Toast, type ToastMessage } from "@/shared/ui/toast";
+import { VoucherDetailOverlay } from "@/widgets/trip-voucher";
 
 import type { Peek } from "../../lib/peek";
 import { type Phase, PHASE_LABEL, phaseNote, PHASES, tripPhase } from "../../lib/phase";
@@ -24,7 +25,8 @@ type SummaryTabProps = { tripId: string; trip: Trip; layout: "mobile" | "pc" };
 /**
  * 「요약」 탭 — 위 세그먼트(여행 전 · 중 · 후, 날짜로 자동 선택 · 다른 시점은 미리보기) + 현지 정보 위젯 줄 + 그 시점의 상태판.
  * 위젯 줄은 여행 후에는 숨긴다(현지 날씨 · 환율 · 시간이 더 필요 없다). 환율 타일을 누르면 계산기, 상태판 줄을 누르면 미리 보기.
- * 고른 시점은 이 화면에서만 기억한다(다시 열면 날짜로 정한 시점). 여행 홈의 토스트는 이 탭이 하나를 그린다
+ * 고른 시점은 이 화면에서만 기억한다(다시 열면 날짜로 정한 시점). 여행 홈의 토스트는 이 탭이 하나를 그린다.
+ * 모바일 「오늘 쓸 바우처」 줄은 홈 위에 그 바우처 상세를 연다(VoucherDetailOverlay)
  */
 export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
   const today = todayISO();
@@ -32,6 +34,8 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
   const [peek, setPeek] = useState<Peek | null>(null);
+  const [voucherId, setVoucherId] = useState<string | null>(null);
+  const showToast = (text: string) => setToast({ text, id: Date.now() });
   const auto = tripPhase(trip.start_date, trip.end_date, today);
   const phase = picked ?? auto;
   const widgets = useWidgets(tripId, trip);
@@ -70,8 +74,15 @@ export function SummaryTab({ tripId, trip, layout }: SummaryTabProps) {
         layout={layout}
         onToast={(m) => setToast({ ...m, id: Date.now() })}
         onPeek={setPeek}
+        onOpenVoucher={setVoucherId}
       />
       <PeekDialog peek={peek} onClose={() => setPeek(null)} />
+      <VoucherDetailOverlay
+        tripId={tripId}
+        voucherId={voucherId}
+        onClose={() => setVoucherId(null)}
+        onToast={showToast}
+      />
       {widgets && (
         <RateCalculator
           open={calcOpen}

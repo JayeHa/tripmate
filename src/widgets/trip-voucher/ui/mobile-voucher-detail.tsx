@@ -7,8 +7,8 @@ import { useVoucherDownload } from "@/features/voucher";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
-import { useVoucherDetail } from "@/widgets/trip-voucher";
 
+import { useVoucherDetail } from "../model/use-voucher-detail";
 import { VoucherDetailBody } from "./voucher-detail-body";
 
 type MobileVoucherDetailProps = {
