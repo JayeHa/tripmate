@@ -5,6 +5,7 @@ import { ExpenseCategoryTile } from "@/entities/expense";
 import type { Voucher } from "@/entities/voucher";
 import { directionsUrl } from "@/shared/lib/google-places";
 import { NAV } from "@/shared/lib/nav-transition";
+import { OPEN_PARAM } from "@/shared/lib/use-open-param";
 
 import type { NowBoard } from "../../model/use-now-board";
 import { BoardCard, BoardRow } from "./board-card";
@@ -21,7 +22,10 @@ type VoucherCardProps = {
   layout: Layout;
 };
 
-/** 오늘 쓸 바우처 — 그림 자리 · 이름 · 「정원 · 동규 · day 2」, 줄을 누르면 노트의 바우처 */
+/**
+ * 오늘 쓸 바우처 — 그림 자리 · 이름 · 「정원 · 동규 · day 2」. 줄을 누르면 노트에서 그 바우처 상세를 연다(`?open=`),
+ * 머리의 「노트」 는 바우처 목록. 그림 자리(48)가 줄 최소 높이(44)보다 커서 줄 사이를 8 띄운다
+ */
 function VoucherCard({ tripId, vouchers, dayIndex, ownersOf, layout }: VoucherCardProps) {
   const href = `/trips/${tripId}/notes?tab=voucher`;
   return (
@@ -31,11 +35,11 @@ function VoucherCard({ tripId, vouchers, dayIndex, ownersOf, layout }: VoucherCa
       link={{ label: "노트", href }}
       layout={layout}
     >
-      <ul className="flex flex-col">
+      <ul className="flex flex-col gap-2">
         {vouchers.map((v) => (
           <BoardRow
             key={v.id}
-            href={href}
+            href={`${href}&${OPEN_PARAM}=${v.id}`}
             lead={
               <span className="flex size-12 shrink-0 items-center justify-center rounded-button bg-voucher-thumb">
                 <QrCode className="size-5.5 text-voucher-thumb-icon" aria-hidden="true" />
