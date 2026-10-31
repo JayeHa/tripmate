@@ -21,6 +21,7 @@ import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
 import { useOpenRequest } from "../model/use-open-request";
+import { useScheduleEntry } from "../model/use-schedule-progress";
 import { useScheduleSections } from "../model/use-schedule-sections";
 import { useScheduleVouchers } from "../model/use-schedule-vouchers";
 import { useStaysOverlay } from "../model/use-stays-overlay";
@@ -45,11 +46,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
   const holidays = useTripHolidays(tripId, trip);
-  const { items, isPending, itemsReady, movesReady, sections, sectionsReady } = useScheduleSections(
-    tripId,
-    trip,
-    totalDays,
-  );
+  const { items, isPending, itemsReady, movesReady, sections, sectionsReady, settled } =
+    useScheduleSections(tripId, trip, totalDays);
   const [day, setDay] = useDayParam(totalDays);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   // 뷰가 그 날을 보여 줘야 할 때(직접 추가로 담은 날 · 편집을 마친 날) 레이아웃에 보내는 스크롤 요청
@@ -118,6 +116,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     sections,
     isPending,
     jump,
+    // 여행 중이면 다녀온 일정(회색)과 들어갈 때 보여 줄 오늘의 다음 장소
+    ...useScheduleEntry(tripId, trip, items, { items: itemsReady, settled }),
     onOpen: openCard,
     onEditMove: moveDialog.openFor,
     onAddPlace: add.open,

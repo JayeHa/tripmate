@@ -17,7 +17,7 @@ export function pickFocus(candidates: FocusCandidate[], line: number): string | 
 /**
  * 핀으로 고른 행이 「기준선 − margin」에 오도록 스크롤할 위치. 그러면 다시 골라도 그 행이다.
  * 기준선이 스크롤 위치에 따라 움직일 수 있어서(`lineAt`) 이분 탐색으로 찾는다.
- * `lineAt` 은 스크롤이 내려갈수록 같거나 아래로만 가야 한다. 범위 밖이면 끝(0 · maxScroll)에서 멈춘다.
+ * `lineAt` 은 스크롤 1 에 행보다 빨리(1 넘게) 올라가면 안 된다 — 그래야 「행 − 기준선」 이 스크롤에 따라 줄기만 한다. 범위 밖이면 끝(0 · maxScroll)에서 멈춘다.
  *
  * @param rowTop 지금 행 윗변의 화면 y
  * @param scrollTop 지금 스크롤 위치

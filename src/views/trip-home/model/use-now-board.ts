@@ -1,25 +1,17 @@
 "use client";
 
-import { format } from "date-fns";
-
 import { peopleOf, type PersonRef, useExpenses, useTripGuests } from "@/entities/expense";
 import { useFlights } from "@/entities/flight";
-import { useScheduleItems } from "@/entities/schedule-item";
+import { useScheduleItems, useVisited } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { useStays } from "@/entities/stay";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { useVouchers } from "@/entities/voucher";
-import { dayIndexToDate, todayISO } from "@/shared/lib/days";
+import { dayIndexToDate, nowHHmm, todayISO } from "@/shared/lib/days";
 
 import { todaySpend, todayVouchers, tonightStay } from "../lib/now-board";
 import { boardDayIndex, todayPlan } from "../lib/today-plan";
-import { useVisited } from "./use-visited";
-
-/** 지금 시각 「HH:mm」 */
-function nowHHmm(): string {
-  return format(new Date(), "HH:mm");
-}
 
 /**
  * 여행 중 상태판 — 오늘(여행 전 · 후에 미리 보면 첫날 · 마지막 날)의 다음 장소 · 들른 기록 · 바우처 · 지출 · 숙소.

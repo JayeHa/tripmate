@@ -74,3 +74,8 @@ export function ddayLabel(startDate: string, today: string): string | null {
 export function todayISO(): string {
   return format(new Date(), "yyyy-MM-dd");
 }
+
+/** 지금 시각 (HH:mm, 로컬 기준) */
+export function nowHHmm(): string {
+  return format(new Date(), "HH:mm");
+}

@@ -2,7 +2,10 @@ import { differenceInCalendarDays, parseISO } from "date-fns";
 
 import {
   CATEGORY_LABEL,
+  dayPlaces,
+  itemHHmm as hhmm,
   itemName,
+  nextPlaceIndex,
   type PlaceCategory,
   placeNumbers,
   type ReservationStatus,
@@ -39,18 +42,6 @@ export type TodayPlan =
   | { kind: "done"; tomorrow: string | null; last: number }
   | { kind: "next"; index: number; label: string; place: PlaceLine; after: PlaceLine[] };
 
-/** 그날의 장소 일정(대체 장소 · 메모 · 항공편은 빼고), 순서대로 */
-function dayPlaces(items: ScheduleItem[], dayIndex: number): ScheduleItem[] {
-  return items
-    .filter((i) => i.day_index === dayIndex && i.kind === "place" && i.alternative_of === null)
-    .sort((a, b) => a.position - b.position);
-}
-
-/** 「HH:mm」 — 시간이 없으면 null */
-function hhmm(item: ScheduleItem): string | null {
-  return item.start_time?.slice(0, 5) ?? null;
-}
-
 /** 장소 분류 이름. 모르는 값이면 null */
 function categoryOf(item: ScheduleItem): string | null {
   const c = item.place?.category as PlaceCategory | undefined;
@@ -71,18 +62,6 @@ function lineOf(item: ScheduleItem, nums: Map<string, number>, sub: string): Pla
   };
 }
 
-/**
- * 시각이 지난 마지막 일정의 자리 — 그 앞의 시간 없는 일정은 지나간 것으로 본다. 없으면 0.
- * now 가 null 이면(오늘이 아닌 날을 미리 볼 때) 시각으로 건너뛰지 않는다
- */
-function timeFloor(places: ScheduleItem[], now: string | null): number {
-  if (!now) return 0;
-  return places.reduce((floor, p, i) => {
-    const t = hhmm(p);
-    return t && t <= now ? i : floor;
-  }, 0);
-}
-
 /** 다음 장소 위의 파란 글 — 시각이 있으면 「다음 장소 · 16:00」, 없으면 순서(첫 일정이면 「오늘 첫 일정」) */
 function nextLabel(place: ScheduleItem, index: number): string {
   const t = hhmm(place);
@@ -99,8 +78,8 @@ function tomorrowText(items: ScheduleItem[], dayIndex: number): string | null {
 }
 
 /**
- * 오늘 카드. 다음 장소 = 들른 개수(visited) 다음 일정이되, 시각이 지난 일정이 있으면 적어도 그 자리부터.
- * 「이후」 는 그다음 두 곳
+ * 오늘 카드. 다음 장소 = 들른 개수(visited) 다음 일정이되, 시각이 지난 일정이 있으면 적어도 그 자리부터(nextPlaceIndex —
+ * 일정 화면의 「다녀온 일정」 과 같은 기준). 「이후」 는 그다음 두 곳
  */
 export function todayPlan(
   items: ScheduleItem[],
@@ -110,7 +89,7 @@ export function todayPlan(
 ): TodayPlan {
   const places = dayPlaces(items, dayIndex);
   if (places.length === 0) return { kind: "free" };
-  const index = Math.max(visited, timeFloor(places, now));
+  const index = nextPlaceIndex(items, dayIndex, visited, now);
   if (index >= places.length)
     return { kind: "done", tomorrow: tomorrowText(items, dayIndex), last: places.length - 1 };
   const nums = placeNumbers(

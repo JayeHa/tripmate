@@ -22,6 +22,8 @@ type DaySectionProps = {
   showCounts?: boolean;
   /** 지도에 강조된 장소. 그 행에 배경을 깐다 */
   focusId?: string | null;
+  /** 다녀온 일정 — 흐리게 그린다 */
+  pastIds?: ReadonlySet<string>;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: (day: number) => void;
@@ -46,6 +48,7 @@ export function DaySection({
   rows,
   showCounts,
   focusId,
+  pastIds,
   onOpen,
   onEditMove,
   onAddPlace,
@@ -79,6 +82,7 @@ export function DaySection({
         onOpen={onOpen}
         onEditMove={onEditMove}
         focusId={focusId}
+        pastIds={pastIds}
         authorOf={authorOf}
         checklistOf={checklistOf}
         voucherOf={voucherOf}
