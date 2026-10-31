@@ -85,9 +85,14 @@ describe("mapPadding · freeCenterOffset", () => {
     expect(mapPadding("pc", 300).left).toBe(420);
   });
 
-  it("가리지 않는 칸 가운데로 옮기는 양 — 모바일은 아래로, PC 는 왼쪽으로", () => {
-    expect(freeCenterOffset(mapPadding("mobile", 300))).toEqual([0, 150]);
-    expect(freeCenterOffset(mapPadding("pc", 300))).toEqual([-190, 0]);
+  it("위는 띄운 필터 칩 줄(58)만큼 더 비운다", () => {
+    expect(mapPadding("mobile", 300).top).toBe(82);
+    expect(mapPadding("pc", 300).top).toBe(98);
+  });
+
+  it("가리지 않는 칸 가운데로 옮기는 양 — 모바일은 아래로(칩 줄만큼 덜), PC 는 왼쪽 · 조금 위로", () => {
+    expect(freeCenterOffset(mapPadding("mobile", 300))).toEqual([0, 121]);
+    expect(freeCenterOffset(mapPadding("pc", 300))).toEqual([-190, -29]);
   });
 });
 

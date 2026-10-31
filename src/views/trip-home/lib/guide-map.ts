@@ -57,15 +57,19 @@ export function sheetHeight(mapHeight: number): number {
   return Math.min(300, Math.round(mapHeight * 0.5));
 }
 
+/** 지도 위에 띄운 필터 칩 줄의 높이 */
+const FILTER_BAR = 58;
+
 export type MapPadding = { top: number; right: number; bottom: number; left: number };
 
 /**
  * 지도에서 시트 · 패널에 가리지 않는 칸 — 핀을 맞추거나 고른 핀을 옮길 때 이 안에 둔다.
- * 모바일은 아래 시트가 덮는 높이(sheetCover)만큼, PC 는 왼쪽 패널(16 + 380 + 여유)만큼 비운다
+ * 모바일은 아래 시트가 덮는 높이(sheetCover)만큼, PC 는 왼쪽 패널(16 + 380 + 여유)만큼 비운다.
+ * 위는 지도 위에 띄운 필터 칩 줄(위아래 12 + 칩 34 = 58)만큼 더 비운다
  */
 export function mapPadding(layout: "mobile" | "pc", sheetCover: number): MapPadding {
-  if (layout === "pc") return { top: 40, right: 40, bottom: 40, left: 420 };
-  return { top: 24, right: 24, bottom: sheetCover + 24, left: 24 };
+  if (layout === "pc") return { top: 40 + FILTER_BAR, right: 40, bottom: 40, left: 420 };
+  return { top: 24 + FILTER_BAR, right: 24, bottom: sheetCover + 24, left: 24 };
 }
 
 /** 가리지 않는 칸의 가운데가 지도 가운데에서 떨어진 만큼(px) — panBy 에 그대로 넘기면 지도 가운데의 점이 그 칸 가운데로 간다 */

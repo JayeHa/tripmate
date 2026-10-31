@@ -16,16 +16,18 @@ type GuideMapViewProps = {
   cards: GuideCard[];
   layout: "mobile" | "pc";
   a: GuideActions;
+  /** 지도 위 맨 윗줄(GuideMapTopBar) — 시트보다 먼저 그려 펼친 시트가 덮는다 */
+  top: React.ReactNode;
 };
 
 /**
- * 가이드 「지도」 보기 — 필터 줄 아래부터 화면 끝까지 지도, 그 위에 장소 목록 · 상세.
+ * 가이드 「지도」 보기 — 홈 탭 줄 아래부터 화면 끝까지 지도, 그 위에 필터 칩 줄(top) · 장소 목록 · 상세.
  * 모바일은 아래 시트(접힘 · 반 · 펼침, 끌어서 바꾼다), PC 는 왼쪽 패널(380). 핀이나 줄을 고르면 상세(모바일은 반 단계로),
  * 지도 빈 곳 · 「‹ 목록」 은 목록으로. 상세 아래 「근처 다른 장소」 3곳을 누르면 그 장소로.
  * 「+ 일정」 · 「수정」 은 목록 보기와 같은 창(날짜 고르기 · 장소 정보 수정)을 연다.
  * data-guide-map 이 있으면 홈 화면이 높이를 화면에 맞춘다(지도가 남은 칸을 채우게)
  */
-export function GuideMapView({ cards, layout, a }: GuideMapViewProps) {
+export function GuideMapView({ cards, layout, a, top }: GuideMapViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { stage, setStage, dragHeight, measure, startDrag, tapHandle } = useMapSheet();
   const mobile = layout === "mobile";
@@ -56,11 +58,7 @@ export function GuideMapView({ cards, layout, a }: GuideMapViewProps) {
   const scrollKey = selected?.card.place.id ?? "list";
 
   return (
-    <div
-      data-guide-map
-      ref={measure}
-      className="relative isolate z-0 min-h-0 flex-1 border-t border-divider bg-map-bg"
-    >
+    <div data-guide-map ref={measure} className="relative isolate z-0 min-h-0 flex-1 bg-map-bg">
       <GuideMapCanvas
         pins={pins}
         selectedId={selected?.card.place.id ?? null}
@@ -69,6 +67,7 @@ export function GuideMapView({ cards, layout, a }: GuideMapViewProps) {
         onSelect={pick}
         onBackground={() => setSelectedId(null)}
       />
+      {top}
       {mobile ? (
         <GuideMapSheet
           stage={stage}
