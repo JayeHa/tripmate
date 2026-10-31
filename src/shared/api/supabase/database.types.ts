@@ -639,6 +639,7 @@ export type Database = {
           site_url: string;
           memo: string;
           pinned_by: string | null;
+          used_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -664,6 +665,7 @@ export type Database = {
           site_url?: string;
           memo?: string;
           pinned_by?: string | null;
+          used_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -689,6 +691,7 @@ export type Database = {
           site_url?: string;
           memo?: string;
           pinned_by?: string | null;
+          used_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

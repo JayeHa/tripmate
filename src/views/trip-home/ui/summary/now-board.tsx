@@ -20,13 +20,16 @@ type VoucherCardProps = {
   /** 바우처 주인 글 — 「정원 · 동규」 · 「모두」 */
   ownersOf: (v: Voucher) => string;
   layout: Layout;
+  /** 모바일 줄 — 홈 위에 그 바우처 상세를 연다 */
+  onOpen: (id: string) => void;
 };
 
 /**
- * 오늘 쓸 바우처 — 그림 자리 · 이름 · 「정원 · 동규 · day 2」. 줄을 누르면 노트에서 그 바우처 상세를 연다(`?open=`),
+ * 오늘 쓸 바우처 — 그림 자리 · 이름 · 「정원 · 동규 · day 2」. 줄을 누르면 모바일은 홈 위에 그 바우처 상세(노트 목록을 거치지 않고
+ * 뒤로 가면 홈), PC 는 노트에서 그 바우처를 고른 채 연다(`?open=`, 목록과 상세가 함께 보인다).
  * 머리의 「노트」 는 바우처 목록. 그림 자리(48)가 줄 최소 높이(44)보다 커서 줄 사이를 8 띄운다
  */
-function VoucherCard({ tripId, vouchers, dayIndex, ownersOf, layout }: VoucherCardProps) {
+function VoucherCard({ tripId, vouchers, dayIndex, ownersOf, layout, onOpen }: VoucherCardProps) {
   const href = `/trips/${tripId}/notes?tab=voucher`;
   return (
     <BoardCard
@@ -39,7 +42,8 @@ function VoucherCard({ tripId, vouchers, dayIndex, ownersOf, layout }: VoucherCa
         {vouchers.map((v) => (
           <BoardRow
             key={v.id}
-            href={`${href}&${OPEN_PARAM}=${v.id}`}
+            href={layout === "pc" ? `${href}&${OPEN_PARAM}=${v.id}` : undefined}
+            onClick={layout === "pc" ? undefined : () => onOpen(v.id)}
             lead={
               <span className="flex size-12 shrink-0 items-center justify-center rounded-button bg-voucher-thumb">
                 <QrCode className="size-5.5 text-voucher-thumb-icon" aria-hidden="true" />
@@ -129,6 +133,7 @@ type NowBoardCardsProps = {
   ownersOf: (v: Voucher) => string;
   layout: Layout;
   onVisit: () => void;
+  onOpenVoucher: (id: string) => void;
 };
 
 /**
@@ -141,6 +146,7 @@ export function nowBoardCards({
   ownersOf,
   layout,
   onVisit,
+  onOpenVoucher,
 }: NowBoardCardsProps) {
   const { dayIndex } = board;
   return [
@@ -167,6 +173,7 @@ export function nowBoardCards({
           dayIndex={dayIndex}
           ownersOf={ownersOf}
           layout={layout}
+          onOpen={onOpenVoucher}
         />
       ),
     },

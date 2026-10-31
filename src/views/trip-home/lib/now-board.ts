@@ -42,12 +42,33 @@ function ownerRank(v: Voucher, userId: string | null): number {
   return userId && v.owners.includes(userId) ? 0 : 2;
 }
 
-/** 그날 쓸 바우처 — 내 것 → 모두 → 일행 것, 같은 순위는 원래 순서 */
+/** 그날 일정에 자리가 없을 때(카드를 못 찾음 · 연결 없이 사용일만) — 맨 뒤 */
+const NO_POSITION = Number.MAX_SAFE_INTEGER;
+
+/**
+ * 그날 일정에서의 자리 — 연결한 일정, 항공편 · 숙소는 그날의 그 카드 순서. 일정 화면과 같은 순서가 된다.
+ * 카드를 못 찾거나(지움 · 기간 밖) 연결이 없으면 맨 뒤
+ */
+function dayPosition(v: Voucher, day: VoucherDay): number {
+  const card = day.items.find(
+    (i) =>
+      i.day_index === day.dayIndex &&
+      (i.id === v.schedule_item_id ||
+        (v.flight_id !== null && i.flight_id === v.flight_id) ||
+        (v.stay_id !== null && i.stay_id === v.stay_id)),
+  );
+  return card ? card.position : NO_POSITION;
+}
+
+/**
+ * 그날 쓸 바우처 — 이미 쓴 것은 빼고, 그날 일정 순서대로. 같은 자리(한 카드에 여럿 · 자리 없음)는 내 것 → 모두 → 일행 것,
+ * 그다음 원래 순서
+ */
 export function todayVouchers(vouchers: Voucher[], day: VoucherDay, userId: string | null) {
   return vouchers
-    .filter((v) => usedOn(v, day))
-    .map((v, i) => ({ v, i, rank: ownerRank(v, userId) }))
-    .sort((a, b) => a.rank - b.rank || a.i - b.i)
+    .filter((v) => !v.used_at && usedOn(v, day))
+    .map((v, i) => ({ v, i, pos: dayPosition(v, day), rank: ownerRank(v, userId) }))
+    .sort((a, b) => a.pos - b.pos || a.rank - b.rank || a.i - b.i)
     .map(({ v }) => v);
 }
 

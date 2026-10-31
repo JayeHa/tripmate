@@ -113,6 +113,18 @@ export async function setVoucherPin(id: string, pinnedBy: string | null): Promis
   if (data.length === 0) throw new Error(VOUCHER_GONE);
 }
 
+/** 「사용했어요」 · 되돌리기 — 표시한 시각(null 이면 되돌린다). 0행이면 던진다 */
+export async function setVoucherUsed(id: string, usedAt: string | null): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("vouchers")
+    .update({ used_at: usedAt })
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  if (data.length === 0) throw new Error(VOUCHER_GONE);
+}
+
 /**
  * 지우기 — 줄을 지운 뒤 그 줄의 원본 · 그림 · 썸네일 가운데 다른 바우처가 쓰지 않는 키만 저장소에서 지운다(files.md 「키 겹침」).
  * 이미 지워졌으면(0행) 그대로 끝낸다 — 지우려던 결과와 같고, 파일은 지운 쪽이 정리했다

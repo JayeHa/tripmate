@@ -41,13 +41,15 @@ type NowBoardViewProps = {
   trip: Trip;
   layout: Layout;
   onToast: (message: Omit<ToastMessage, "id">) => void;
+  /** 「오늘 쓸 바우처」 줄 — 모바일은 홈 위에 그 바우처 상세 */
+  onOpenVoucher: (id: string) => void;
   tail: BoardCardItem[];
 };
 
 /**
  * 여행 중 상태판. 「들렀어요」 를 누르면 다음 장소로 넘기고 「OO 들렀어요 · 되돌리기」 토스트를 띄운다(토스트는 탭이 하나를 그린다)
  */
-function NowBoardView({ tripId, trip, layout, onToast, tail }: NowBoardViewProps) {
+function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: NowBoardViewProps) {
   const board = useNowBoard(tripId, trip);
   const memberOf = useMemberLookup(tripId);
   if (!board) return <BoardSkeleton layout={layout} />;
@@ -78,6 +80,7 @@ function NowBoardView({ tripId, trip, layout, onToast, tail }: NowBoardViewProps
           ownersOf,
           layout,
           onVisit: visit,
+          onOpenVoucher,
         }),
         ...tail,
       ]}
@@ -104,10 +107,20 @@ type PhaseBoardProps = {
   onToast: (message: Omit<ToastMessage, "id">) => void;
   /** 줄 · 메모를 눌렀을 때 홈 위에 미리 보기 */
   onPeek: (peek: Peek) => void;
+  /** 「오늘 쓸 바우처」 줄 — 모바일은 홈 위에 그 바우처 상세 */
+  onOpenVoucher: (id: string) => void;
 };
 
 /** 고른 시점의 상태판 — 맨 아래에는 시점과 상관없이 고정한 항목 */
-export function PhaseBoard({ tripId, trip, phase, layout, onToast, onPeek }: PhaseBoardProps) {
+export function PhaseBoard({
+  tripId,
+  trip,
+  phase,
+  layout,
+  onToast,
+  onPeek,
+  onOpenVoucher,
+}: PhaseBoardProps) {
   const tail = pinnedCards(usePinned(tripId, trip.start_date), layout, onPeek);
   if (phase === "pre")
     return (
@@ -121,7 +134,14 @@ export function PhaseBoard({ tripId, trip, phase, layout, onToast, onPeek }: Pha
     );
   if (phase === "now")
     return (
-      <NowBoardView tripId={tripId} trip={trip} layout={layout} onToast={onToast} tail={tail} />
+      <NowBoardView
+        tripId={tripId}
+        trip={trip}
+        layout={layout}
+        onToast={onToast}
+        onOpenVoucher={onOpenVoucher}
+        tail={tail}
+      />
     );
   return <PostBoardView tripId={tripId} trip={trip} layout={layout} tail={tail} />;
 }

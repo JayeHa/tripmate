@@ -8,6 +8,7 @@ import {
   ownedBy,
   parsePages,
   targetColumns,
+  usedLabel,
   viewerKeys,
   voucherCountFor,
   voucherFileKeys,
@@ -154,5 +155,12 @@ describe("viewerKeys", () => {
       "t/a.jpg",
     ]);
     expect(viewerKeys({ file_key: null, file_mime: null, page_keys: [] })).toEqual([]);
+  });
+});
+
+describe("usedLabel", () => {
+  it("기기 시간대의 「월.일 시:분」", () => {
+    expect(usedLabel(new Date(2026, 9, 31, 14, 5).toISOString())).toBe("10.31 14:05");
+    expect(usedLabel(new Date(2026, 10, 4, 9, 30).toISOString())).toBe("11.4 09:30");
   });
 });

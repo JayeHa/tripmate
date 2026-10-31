@@ -152,3 +152,10 @@ export function viewerKeys(v: Pick<Voucher, "file_key" | "file_mime" | "page_key
   if (v.file_key && v.file_mime?.startsWith("image/")) return [v.file_key];
   return [];
 }
+
+/** 쓴 시각 → 「10.31 14:05」 — 기기 시간대로(현장에서 표시한 그 시각) */
+export function usedLabel(usedAt: string): string {
+  const d = new Date(usedAt);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getMonth() + 1}.${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
