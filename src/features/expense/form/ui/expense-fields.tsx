@@ -16,6 +16,7 @@ import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
 import { Segmented } from "@/shared/ui/segmented";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
+import { TimeField } from "@/shared/ui/time-field";
 
 import { dayOptions, dayOptionText } from "../lib/day-options";
 import type { ExpenseFormState } from "../model/use-expense-form";
@@ -114,6 +115,22 @@ export function DayField({ form, trip }: DayFieldProps) {
           );
         })}
       </SheetDialog>
+    </div>
+  );
+}
+
+/**
+ * 시간(선택) — 날짜 아래. 여행준비면 그리지 않는다(저장도 안 한다).
+ * 손대지 않았으면 연결한 일정의 시간, 아니면 쓴 날이 오늘이면 연 시각이 들어가 있다. ✕ 로 비울 수 있다
+ */
+export function SpentTimeField({ form }: FormProps) {
+  if (!form.spentOn) return null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-bold text-ink-700">
+        시간 <span className="font-medium text-ink-350">(선택)</span>
+      </span>
+      <TimeField value={form.time} onChange={form.setTime} aria-label="쓴 시간" />
     </div>
   );
 }

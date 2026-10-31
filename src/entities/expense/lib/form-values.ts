@@ -26,9 +26,15 @@ export function formValuesOf(expense: ExpenseWithSplits): ExpenseFormValues {
     category: expense.category as ExpenseCategory,
     memo: expense.memo ?? undefined,
     spent_on: expense.spent_on,
+    spent_time: timeText(expense.spent_time),
     schedule_item_id: expense.schedule_item_id,
     counted: expense.counted,
     paid: expense.paid,
     due_date: expense.due_date,
   };
+}
+
+/** DB 의 시각(「14:20:00」)을 「14:20」 으로. 없으면 null */
+export function timeText(time: string | null | undefined): string | null {
+  return time ? time.slice(0, 5) : null;
 }

@@ -93,26 +93,7 @@ export function ExpenseTableRow({
             excluded={row.excluded}
           />
         </div>
-        {row.overdue ? (
-          <span className="flex items-center gap-1.5 text-xs whitespace-nowrap text-status-wait-text">
-            예정일 지남
-            <button
-              type="button"
-              onClick={onMarkPaid}
-              disabled={paying}
-              className="relative z-10 flex h-5 items-center rounded-memo border border-status-wait-line bg-white px-2 text-[11px] font-semibold disabled:opacity-50"
-            >
-              결제 완료로
-            </button>
-          </span>
-        ) : (
-          row.linkName && (
-            <span className="flex min-w-0 items-center gap-0.75 text-xs text-ink-400">
-              <MapPin className="size-2.75 shrink-0 text-ink-350" aria-hidden="true" />
-              <span className="truncate">{row.linkName}</span>
-            </span>
-          )
-        )}
+        <NameSubLine row={row} onMarkPaid={onMarkPaid} paying={paying} />
       </div>
       <div className="flex min-w-0 flex-col gap-0.75">
         <span className="flex min-w-0 items-center gap-1.5">
@@ -174,5 +155,42 @@ function NameMarks({ ownerLink, receipt, memo, excluded }: NameMarksProps) {
       {memo && <StickyNote className="size-3.25 shrink-0 text-ink-350" aria-label="메모 있음" />}
       {excluded && <ExpenseBadge>합계 제외</ExpenseBadge>}
     </>
+  );
+}
+
+type NameSubLineProps = Pick<ExpenseTableRowProps, "row" | "onMarkPaid" | "paying">;
+
+/** 항목명 아래 줄 — 예정일이 지났으면 「예정일 지남 · 결제 완료로」, 아니면 시각 · 연결 일정(둘 다 없으면 그리지 않는다) */
+function NameSubLine({ row, onMarkPaid, paying }: NameSubLineProps) {
+  if (row.overdue)
+    return (
+      <span className="flex items-center gap-1.5 text-xs whitespace-nowrap text-status-wait-text">
+        예정일 지남
+        <button
+          type="button"
+          onClick={onMarkPaid}
+          disabled={paying}
+          className="relative z-10 flex h-5 items-center rounded-memo border border-status-wait-line bg-white px-2 text-[11px] font-semibold disabled:opacity-50"
+        >
+          결제 완료로
+        </button>
+      </span>
+    );
+  if (!row.time && !row.linkName) return null;
+  return (
+    <span className="flex min-w-0 items-center gap-0.75 text-xs text-ink-400">
+      {row.time && (
+        <span className="shrink-0 pr-1 tabular-nums">
+          {row.time}
+          {row.linkName && <span aria-hidden="true"> ·</span>}
+        </span>
+      )}
+      {row.linkName && (
+        <>
+          <MapPin className="size-2.75 shrink-0 text-ink-350" aria-hidden="true" />
+          <span className="truncate">{row.linkName}</span>
+        </>
+      )}
+    </span>
   );
 }

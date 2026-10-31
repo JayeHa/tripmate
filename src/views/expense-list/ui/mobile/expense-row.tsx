@@ -77,6 +77,12 @@ export function ExpenseRow({
           </span>
         ) : (
           <span className="flex min-w-0 items-center gap-1.25 text-xs text-ink-400">
+            {row.time && (
+              <span className="shrink-0 tabular-nums">
+                {row.time}
+                <span aria-hidden="true"> ·</span>
+              </span>
+            )}
             {who.person && (
               <PersonAvatar
                 name={displayNameOf(who.person)}

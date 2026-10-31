@@ -35,6 +35,7 @@ function expense(
     paid: true,
     due_date: null,
     spent_on: "2026-10-29",
+    spent_time: null,
     split_mode: "equal",
     created_by: null,
     created_at: "",

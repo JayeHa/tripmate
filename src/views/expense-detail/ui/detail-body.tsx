@@ -48,7 +48,10 @@ export function DetailBody({ expense, row, trip, receipts, avatarUrlOf }: Detail
         </p>
       </div>
       <dl className="flex flex-col border-t border-surface-muted">
-        <Field label="날짜">{detailDateText(expense.spent_on, trip)}</Field>
+        <Field label="날짜">
+          {detailDateText(expense.spent_on, trip)}
+          {row.time && ` ${row.time}`}
+        </Field>
         {row.linkName && <Field label="일정">{row.linkName}</Field>}
         {row.ownerLink && <Field label="연결">{row.ownerLink}</Field>}
         <Field label="결제수단">{row.methodLabel}</Field>

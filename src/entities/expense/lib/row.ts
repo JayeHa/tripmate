@@ -15,6 +15,7 @@ import {
   type PaymentMethod,
 } from "../model/types";
 import { toHomeFor } from "./amounts";
+import { timeText } from "./form-values";
 import { PAYMENT_OWNER, paymentOwnerOf } from "./payment-owner";
 import { payerOf, type PersonRef, splitPerson } from "./person";
 
@@ -22,6 +23,8 @@ import { payerOf, type PersonRef, splitPerson } from "./person";
 export type ExpenseRowView = {
   id: string;
   name: string;
+  /** 쓴 시각 「14:20」. 없거나 여행준비면 null */
+  time: string | null;
   category: ExpenseCategory;
   categoryLabel: string;
   /** 쓴 통화 그대로 — 「¥3,200」 */
@@ -118,6 +121,7 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
   return {
     id: e.id,
     name: e.name,
+    time: e.spent_on ? timeText(e.spent_time) : null,
     category,
     categoryLabel: EXPENSE_CATEGORY_LABEL[category] ?? "기타",
     amountText: formatMoney(Number(e.amount), e.currency),

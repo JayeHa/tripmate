@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits } from "../model/types";
-import { expenseSections, periodOf } from "./sections";
+import { byDayOrder, expenseSections, periodOf } from "./sections";
 
 const trip = {
   start_date: "2026-10-31",
@@ -76,5 +76,22 @@ describe("expenseSections", () => {
       "prep",
     );
     expect(sections[0].expenses.map((x) => x.id)).toEqual(["first", "later"]);
+  });
+});
+
+describe("byDayOrder", () => {
+  const row = (spent_time: string | null, created_at: string) => ({ spent_time, created_at });
+
+  it("시각순, 시각이 없으면 맨 뒤 — 같으면 만든 순서", () => {
+    const list = [
+      row(null, "2026-10-31T01:00:00Z"),
+      row("14:20:00", "2026-10-31T05:00:00Z"),
+      row("09:05", "2026-10-31T06:00:00Z"),
+      row(null, "2026-10-31T00:00:00Z"),
+      row("14:20", "2026-10-31T02:00:00Z"),
+    ];
+    expect(
+      [...list].sort(byDayOrder).map((r) => `${r.spent_time}|${r.created_at.slice(11, 13)}`),
+    ).toEqual(["09:05|06", "14:20|02", "14:20:00|05", "null|00", "null|01"]);
   });
 });

@@ -16,6 +16,7 @@ import { startValues } from "../lib/start-values";
 import { useExpenseLink } from "./use-expense-link";
 import { useMoney } from "./use-money";
 import { type FormPerson, usePeoplePicker } from "./use-people-picker";
+import { useSpentTime } from "./use-spent-time";
 
 type ExpenseFormOptions = {
   trip: Trip;
@@ -44,7 +45,7 @@ type ExpenseFormOptions = {
 
 /**
  * 비용 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
- * 금액 · 통화 · 환율은 useMoney, 일정 연결은 useExpenseLink 가 쥔다. 금액은 제출할 때 숫자로 바꾼다. 나누기는 균등 분할만 한다
+ * 금액 · 통화 · 환율은 useMoney, 일정 연결은 useExpenseLink, 시간 칸은 useSpentTime 이 쥔다. 금액은 제출할 때 숫자로 바꾼다. 나누기는 균등 분할만 한다
  */
 export function useExpenseForm({
   trip,
@@ -112,6 +113,8 @@ export function useExpenseForm({
     },
   });
 
+  const spent = useSpentTime({ initial, spentOn, linked: link.linked });
+
   const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "알 수 없음";
   const preview = splitPreview({
     amount: homeAmount ?? numAmount,
@@ -140,6 +143,7 @@ export function useExpenseForm({
       category,
       memo: memo || undefined,
       spent_on: spentOn || null,
+      spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
       counted,
       paid,
@@ -169,6 +173,9 @@ export function useExpenseForm({
     setMemo,
     spentOn,
     setSpentOn: link.pickDay,
+    /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */
+    time: spent.time,
+    setTime: spent.setTime,
     link,
     paid,
     setPaid,

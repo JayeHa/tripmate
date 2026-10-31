@@ -947,6 +947,7 @@ export type Database = {
           name: string;
           memo: string | null;
           spent_on: string | null;
+          spent_time: string | null;
           payment_method: string;
           rate: number | null;
           counted: boolean;
@@ -972,6 +973,7 @@ export type Database = {
           name: string;
           memo?: string | null;
           spent_on?: string | null;
+          spent_time?: string | null;
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;
@@ -997,6 +999,7 @@ export type Database = {
           name?: string;
           memo?: string | null;
           spent_on?: string | null;
+          spent_time?: string | null;
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;

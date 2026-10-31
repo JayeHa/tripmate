@@ -18,6 +18,7 @@ const saved: ExpenseWithSplits = {
   name: "돈키호테 시부야",
   memo: null,
   spent_on: null,
+  spent_time: null,
   payment_method: "card",
   rate: 8.883,
   counted: false,
@@ -52,6 +53,7 @@ describe("formValuesOf", () => {
       category: "shopping",
       memo: undefined,
       spent_on: null,
+      spent_time: null,
       schedule_item_id: "s1",
       counted: false,
       paid: false,
@@ -70,5 +72,11 @@ describe("formValuesOf", () => {
     });
     expect(custom.split_mode).toBe("custom");
     expect(custom.custom_shares).toEqual({ "m:a": 7000, "m:b": 5400 });
+  });
+
+  it("시각은 「HH:MM」 으로 옮긴다", () => {
+    expect(
+      formValuesOf({ ...saved, spent_on: "2026-10-31", spent_time: "14:20:00" }).spent_time,
+    ).toBe("14:20");
   });
 });
