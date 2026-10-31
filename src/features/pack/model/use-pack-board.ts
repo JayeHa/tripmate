@@ -17,6 +17,7 @@ import {
 } from "@/entities/pack";
 import { useUser } from "@/entities/session";
 import { useMemberLookup } from "@/entities/trip-member";
+import { saveErrorText } from "@/shared/api/sync";
 
 /** 실패했을 때 — 다시 해 보라고만 알린다 */
 const FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요";
@@ -41,7 +42,7 @@ export function usePackBoard(tripId: string, kind: PackKind, onToast: (text: str
 
   /** 요청을 보내고 실패하면 알린다 */
   function run(p: Promise<unknown>, failed = FAILED) {
-    p.catch(() => onToast(failed));
+    p.catch((e: unknown) => onToast(saveErrorText(e, failed)));
   }
 
   return {

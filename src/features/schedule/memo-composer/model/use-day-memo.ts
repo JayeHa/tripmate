@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useAddDayMemo } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
+import { saveErrorText } from "@/shared/api/sync";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { toDayMemoText } from "../lib/day-memo";
@@ -52,6 +53,10 @@ export function useDayMemo(tripId: string, initialDay: number, onDone: () => voi
     canSave: body.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: add.isPending && !add.isPaused,
-    error: error ?? (add.error ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null),
+    error:
+      error ??
+      (add.error
+        ? saveErrorText(add.error, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.")
+        : null),
   };
 }

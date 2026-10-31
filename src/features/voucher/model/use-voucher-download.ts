@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { fetchVoucherUrls, type Voucher } from "@/entities/voucher";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { downloadName } from "../lib/voucher-view";
 
@@ -67,8 +68,8 @@ export function useVoucherDownload(tripId: string, onToast: (text: string) => vo
     try {
       const file = await fetchOriginal(tripId, v, name);
       if (await saveFile(file)) onToast(`${name} 저장했어요`);
-    } catch {
-      onToast("파일을 받지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (e) {
+      onToast(saveErrorText(e, "파일을 받지 못했어요. 잠시 후 다시 시도해 주세요."));
     } finally {
       setBusy(false);
     }

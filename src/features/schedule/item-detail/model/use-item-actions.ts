@@ -5,6 +5,7 @@ import {
   useDeleteScheduleItem,
   useMoveScheduleItemToDay,
 } from "@/entities/schedule-item";
+import { saveErrorText } from "@/shared/api/sync";
 
 /**
  * 상세 머리 ⋯ 메뉴의 동작 — 다른 날로 이동 · 삭제. 순서 바꾸기는 일정 편집에서 한다.
@@ -33,8 +34,13 @@ export function useItemActions(
     pending: remove.isPending || moveDay.isPending,
     /** 이동 · 삭제 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 상세를 닫지 못하게 */
     locked: [remove, moveDay].some((m) => m.isPending && !m.isPaused),
-    error: remove.error || moveDay.error ? "처리하지 못했어요. 잠시 후 다시 시도해 주세요." : null,
+    error: errorText(remove.error ?? moveDay.error),
   };
 }
 
 export type ItemActions = ReturnType<typeof useItemActions>;
+
+/** 이동 · 삭제 실패 문구. 실패가 없으면 null */
+function errorText(error: Error | null): string | null {
+  return error ? saveErrorText(error, "처리하지 못했어요. 잠시 후 다시 시도해 주세요.") : null;
+}

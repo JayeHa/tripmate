@@ -169,6 +169,7 @@ import, 다른 슬라이스 내부 파일 import(배럴 우회). 외우지 않�
 
 - 키를 `["sync", …]` 로 하고, 함수 · 화면 먼저 바꾸기 · 되돌리기를 `queryClient.setMutationDefaults` 로 등록해 `app/providers.tsx` 에서 부른다(예: `registerChecklistSync`). 훅에 `mutationFn` 을 두면 기기에서 되살린 저장이 함수 없이 남는다(#195)
 - 값(variables)에는 다시 올릴 때 필요한 것을 모두 담는다(여행 id · 누른 시각 · 본 버전) — 앱을 다시 연 뒤에도 그 값만으로 올라간다
+- 대기열 밖 저장의 실패 문구는 `saveErrorText(error, "…다시 시도해 주세요")` 로 감싼다 — 오프라인이면 「오프라인이에요. 연결되면 다시 해 주세요」 가 나간다(#218)
 - 같은 값이 두 번 올라가도 결과가 같게 만든다(상태 · 칸 바꾸기, 화면에서 만든 id 로 넣기). 일행의 수정과 부딪히면 `updateLatestWins`(나중 수정 우선 + 알림)
 
 ## 화면 이동 전환

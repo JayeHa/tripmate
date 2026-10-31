@@ -8,6 +8,7 @@ import {
   useAddGuidePlace,
   useSaveGuidePlace,
 } from "@/entities/schedule-item";
+import { saveErrorText } from "@/shared/api/sync";
 import type { SearchCity } from "@/shared/lib/google-places";
 
 import { blankGuideForm, toNewPlace, withoutGooglePick } from "../lib/place-form";
@@ -112,5 +113,5 @@ function errorOf(e: unknown): string | null {
   if (!e) return null;
   const text = addPlaceErrorMessage(e);
   if (text.startsWith("장소 이름") || text.startsWith("여행에 도시가")) return text;
-  return "장소를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  return saveErrorText(e, "장소를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
 }

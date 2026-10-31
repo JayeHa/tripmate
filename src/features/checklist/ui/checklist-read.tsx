@@ -15,6 +15,7 @@ import {
   useSetChecklistStatus,
 } from "@/entities/checklist";
 import { useUser } from "@/entities/session";
+import { saveErrorText } from "@/shared/api/sync";
 import { todayISO } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -81,7 +82,9 @@ export function ChecklistRead({
           if (!user) return;
           void pin
             .mutateAsync({ id: item.id, pinnedBy: item.pinned_by ? null : user.id })
-            .catch(() => onToast("바꾸지 못했어요. 다시 시도해 주세요"));
+            .catch((e: unknown) =>
+              onToast(saveErrorText(e, "바꾸지 못했어요. 다시 시도해 주세요")),
+            );
         }}
         onClose={onClose}
         titleAs={titleAs}

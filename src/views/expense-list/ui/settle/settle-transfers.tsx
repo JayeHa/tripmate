@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { type PersonKey, personOfKey, useSettlementActions } from "@/entities/expense";
+import { saveErrorText } from "@/shared/api/sync";
 import { Segmented } from "@/shared/ui/segmented";
 
 import { type TransferRow, transferRows } from "../../lib/dashboard";
@@ -30,8 +31,12 @@ export function SettleTransfers({ list, settle, person, avatarOf }: SettleTransf
   const actions = useSettlementActions(list.trip.id);
   const pending = actions.add.isPending || actions.remove.isPending;
   // 마지막으로 시도한 기록의 실패만 알린다 — mutation 마다 isError 를 보면 다른 동작이 성공해도 지난 실패가 남는다
-  const [failed, setFailed] = useState(false);
-  const done = { onSuccess: () => setFailed(false), onError: () => setFailed(true) };
+  const [failed, setFailed] = useState<string | null>(null);
+  const done = {
+    onSuccess: () => setFailed(null),
+    onError: (e: Error) =>
+      setFailed(saveErrorText(e, "송금 기록을 바꾸지 못했어요. 다시 시도해 주세요.")),
+  };
   const home = list.trip.home_currency;
   const rows = transferRows(settle.remaining, settle.sent, settle.me);
   const name = avatarOf(personOfKey(person) ?? { kind: "member", id: "" }).name;
@@ -67,7 +72,7 @@ export function SettleTransfers({ list, settle, person, avatarOf }: SettleTransf
       </div>
       {failed && (
         <p role="alert" className="text-[13px] text-destructive">
-          송금 기록을 바꾸지 못했어요. 다시 시도해 주세요.
+          {failed}
         </p>
       )}
       {all ? (

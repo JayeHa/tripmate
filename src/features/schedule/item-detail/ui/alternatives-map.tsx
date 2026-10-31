@@ -11,6 +11,7 @@ import {
   type ReservationStatus,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
+import { MapGuard } from "@/shared/ui/map-guard";
 
 import type { AltPin, NeighborPin } from "../lib/alt-map";
 import { FitAll, Labeled, PanTo } from "./alternatives-map-parts";
@@ -59,74 +60,76 @@ export function AlternativesMap({
         expanded ? "size-full" : "h-45 rounded-card border border-line-card",
       )}
     >
-      <Map
-        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
-        defaultCenter={current.at}
-        defaultZoom={15}
-        gestureHandling={expanded ? "greedy" : "cooperative"}
-        disableDefaultUI
-        clickableIcons={false}
-        className="size-full"
-      >
-        {neighbors.map((n) => (
-          <AdvancedMarker
-            key={n.id}
-            position={n.at}
-            title={n.label}
-            zIndex={0}
-            {...pinAnchor(false)}
-          >
-            <Labeled label={n.label} tone="muted">
-              <MapPin num={n.num} status={null} category={n.category} />
-            </Labeled>
-          </AdvancedMarker>
-        ))}
-        <AdvancedMarker
-          position={current.at}
-          title="지금 장소"
-          onClick={() => onSelect(null)}
-          zIndex={selected ? 5 : 10}
-          {...pinAnchor(selected === null)}
+      <MapGuard>
+        <Map
+          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
+          defaultCenter={current.at}
+          defaultZoom={15}
+          gestureHandling={expanded ? "greedy" : "cooperative"}
+          disableDefaultUI
+          clickableIcons={false}
+          className="size-full"
         >
-          <Labeled label="지금" tone="ink">
-            <MapPin
-              num={current.num ?? ""}
-              status={current.status}
-              category={current.category}
-              focus={selected === null}
-            />
-          </Labeled>
-        </AdvancedMarker>
-        {pins.map((pin) => {
-          const focus = pin.alt.id === selectedId;
-          return (
+          {neighbors.map((n) => (
             <AdvancedMarker
-              key={pin.alt.id}
-              position={pin.at}
-              title={itemName(pin.alt)}
-              onClick={() => onSelect(pin.alt.id)}
-              zIndex={focus ? 10 : 1}
-              {...pinAnchor(focus)}
+              key={n.id}
+              position={n.at}
+              title={n.label}
+              zIndex={0}
+              {...pinAnchor(false)}
             >
-              <Labeled label={itemName(pin.alt)}>
-                <MapPin num={pin.tag} status="opt" category={null} focus={focus} />
+              <Labeled label={n.label} tone="muted">
+                <MapPin num={n.num} status={null} category={n.category} />
               </Labeled>
             </AdvancedMarker>
-          );
-        })}
-        <FitAll points={[current.at, ...pins.map((p) => p.at), ...neighbors.map((n) => n.at)]} />
-        <PanTo at={selected?.at ?? null} fallback={current.at} />
-      </Map>
-      {onExpand && (
-        <button
-          type="button"
-          onClick={onExpand}
-          className="absolute top-2 right-2 z-10 flex h-8 items-center gap-1 rounded-button bg-white px-2.5 text-xs font-bold text-ink-700 shadow-[0_1px_4px_rgba(0,0,0,.2)]"
-        >
-          <Maximize2 className="size-3.5" />
-          크게 보기
-        </button>
-      )}
+          ))}
+          <AdvancedMarker
+            position={current.at}
+            title="지금 장소"
+            onClick={() => onSelect(null)}
+            zIndex={selected ? 5 : 10}
+            {...pinAnchor(selected === null)}
+          >
+            <Labeled label="지금" tone="ink">
+              <MapPin
+                num={current.num ?? ""}
+                status={current.status}
+                category={current.category}
+                focus={selected === null}
+              />
+            </Labeled>
+          </AdvancedMarker>
+          {pins.map((pin) => {
+            const focus = pin.alt.id === selectedId;
+            return (
+              <AdvancedMarker
+                key={pin.alt.id}
+                position={pin.at}
+                title={itemName(pin.alt)}
+                onClick={() => onSelect(pin.alt.id)}
+                zIndex={focus ? 10 : 1}
+                {...pinAnchor(focus)}
+              >
+                <Labeled label={itemName(pin.alt)}>
+                  <MapPin num={pin.tag} status="opt" category={null} focus={focus} />
+                </Labeled>
+              </AdvancedMarker>
+            );
+          })}
+          <FitAll points={[current.at, ...pins.map((p) => p.at), ...neighbors.map((n) => n.at)]} />
+          <PanTo at={selected?.at ?? null} fallback={current.at} />
+        </Map>
+        {onExpand && (
+          <button
+            type="button"
+            onClick={onExpand}
+            className="absolute top-2 right-2 z-10 flex h-8 items-center gap-1 rounded-button bg-white px-2.5 text-xs font-bold text-ink-700 shadow-[0_1px_4px_rgba(0,0,0,.2)]"
+          >
+            <Maximize2 className="size-3.5" />
+            크게 보기
+          </button>
+        )}
+      </MapGuard>
     </div>
   );
 }

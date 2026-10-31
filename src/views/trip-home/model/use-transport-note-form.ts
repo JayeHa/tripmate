@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useSaveTransportNote } from "@/entities/transport-fare";
+import { saveErrorText } from "@/shared/api/sync";
 
 /** 교통카드 · 패스 메모 500자(0072) */
 export const TRANSPORT_NOTE_MAX = 500;
@@ -15,7 +16,9 @@ export function useTransportNoteForm(tripId: string, initial: string | null, onC
     text,
     setText,
     pending: save.isPending,
-    error: save.error ? "저장하지 못했어요. 잠시 뒤 다시 해 주세요" : null,
+    error: save.error
+      ? saveErrorText(save.error, "저장하지 못했어요. 잠시 뒤 다시 해 주세요")
+      : null,
     submit: () => save.mutate(text, { onSuccess: onClose }),
   };
 }

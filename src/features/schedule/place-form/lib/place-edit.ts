@@ -8,6 +8,7 @@ import {
   weekHoursOf,
 } from "@/entities/schedule-item";
 import type { TablesUpdate } from "@/shared/api/supabase/database.types";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { isPickedMapsUrl } from "./google-autofill";
 import {
@@ -111,5 +112,5 @@ export function placeEditErrorMessage(error: unknown): string {
   }
   // updatePlace 가 0행이면 내는 문구(남의 장소)
   if (message.includes("만든 사람만")) return message;
-  return "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  return saveErrorText(error, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
 }

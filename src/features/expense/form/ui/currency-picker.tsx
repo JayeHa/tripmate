@@ -4,6 +4,7 @@ import { ArrowLeft, Search, X } from "lucide-react";
 import { useState } from "react";
 
 import { useAddTripCurrency } from "@/entities/trip";
+import { saveErrorText } from "@/shared/api/sync";
 import { defaultRate, searchCurrencies } from "@/shared/lib/money";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
@@ -82,7 +83,7 @@ export function CurrencyPicker({
           <p role="alert" className="px-5 pb-1 text-[13px] text-destructive">
             {add.error?.message.includes("changed by someone else")
               ? "다른 사람이 기준 화폐를 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요."
-              : "통화를 추가하지 못했어요. 다시 시도해 주세요."}
+              : saveErrorText(add.error, "통화를 추가하지 못했어요. 다시 시도해 주세요.")}
           </p>
         )}
         <ul className="min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-8">

@@ -4,6 +4,7 @@ import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { MapGuard } from "@/shared/ui/map-guard";
 
 import { fitZoom } from "../../lib/map-fit";
 import type { TimelineRow } from "../../lib/timeline";
@@ -57,37 +58,39 @@ export function ScheduleMap({
   const pins = pinsOf(rows);
   return (
     <div className={cn("relative isolate z-0 size-full bg-map-bg", className)}>
-      <Map
-        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
-        defaultCenter={pins[0]?.at ?? DEFAULT_CENTER}
-        defaultZoom={13}
-        gestureHandling="greedy"
-        disableDefaultUI
-        clickableIcons={false}
-        className="size-full"
-      >
-        {pins.map((pin) => (
-          <AdvancedMarker
-            key={pin.id}
-            position={pin.at}
-            title={itemName(pin.row.item)}
-            onClick={() => onSelect?.(pin.row)}
-            zIndex={focusId === pin.id ? 10 : 1}
-            {...pinAnchor(focusId === pin.id)}
-          >
-            <MapPin
-              num={pin.num}
-              size={pinSize}
-              status={pin.row.status}
-              category={pin.row.category}
-              focus={focusId === pin.id}
-            />
-          </AdvancedMarker>
-        ))}
-        <FitPins points={pins.map((p) => p.at)} fitKey={fitKey} />
-        <DashedPath points={pins.map((p) => p.at)} />
-        <PanToFocus at={pins.find((p) => p.id === focusId)?.at ?? null} />
-      </Map>
+      <MapGuard>
+        <Map
+          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
+          defaultCenter={pins[0]?.at ?? DEFAULT_CENTER}
+          defaultZoom={13}
+          gestureHandling="greedy"
+          disableDefaultUI
+          clickableIcons={false}
+          className="size-full"
+        >
+          {pins.map((pin) => (
+            <AdvancedMarker
+              key={pin.id}
+              position={pin.at}
+              title={itemName(pin.row.item)}
+              onClick={() => onSelect?.(pin.row)}
+              zIndex={focusId === pin.id ? 10 : 1}
+              {...pinAnchor(focusId === pin.id)}
+            >
+              <MapPin
+                num={pin.num}
+                size={pinSize}
+                status={pin.row.status}
+                category={pin.row.category}
+                focus={focusId === pin.id}
+              />
+            </AdvancedMarker>
+          ))}
+          <FitPins points={pins.map((p) => p.at)} fitKey={fitKey} />
+          <DashedPath points={pins.map((p) => p.at)} />
+          <PanToFocus at={pins.find((p) => p.id === focusId)?.at ?? null} />
+        </Map>
+      </MapGuard>
     </div>
   );
 }
