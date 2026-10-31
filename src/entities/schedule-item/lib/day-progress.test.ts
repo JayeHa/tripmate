@@ -37,31 +37,54 @@ describe("dayPlaces · nextPlaceIndex", () => {
     expect(dayPlaces(ITEMS, 1).map((i) => i.id)).toEqual(["a", "b", "c"]);
   });
 
-  it("들른 수와 지난 시각 중 큰 쪽, 장소 수를 넘지 않는다", () => {
-    expect(nextPlaceIndex(ITEMS, 1, 0, null)).toBe(0);
-    expect(nextPlaceIndex(ITEMS, 1, 1, "09:00")).toBe(1);
-    expect(nextPlaceIndex(ITEMS, 1, 0, "15:30")).toBe(2);
-    expect(nextPlaceIndex(ITEMS, 1, 9, null)).toBe(3);
+  it("표시한 마지막 장소 다음과 지난 시각 중 큰 쪽, 장소 수를 넘지 않는다", () => {
+    expect(nextPlaceIndex(ITEMS, 1, {}, null)).toBe(0);
+    expect(nextPlaceIndex(ITEMS, 1, { a: "visited" }, "09:00")).toBe(1);
+    expect(nextPlaceIndex(ITEMS, 1, {}, "15:30")).toBe(2);
+    expect(nextPlaceIndex(ITEMS, 1, { c: "skipped" }, null)).toBe(3);
+  });
+
+  it("뒤의 장소를 표시하면 그 앞의 표시 없는 장소는 지나간 것으로 본다", () => {
+    expect(nextPlaceIndex(ITEMS, 1, { b: "visited" }, null)).toBe(2);
+  });
+
+  it("다른 날의 표시는 보지 않는다", () => {
+    expect(nextPlaceIndex(ITEMS, 1, { y1: "visited", t1: "visited" }, null)).toBe(0);
   });
 });
 
 describe("dayProgress", () => {
   it("앞의 날은 모두, 오늘은 다음 장소보다 앞 줄(항공편 · 메모 포함), 대체 장소는 원래 일정을 따른다", () => {
-    const { past, nextId } = dayProgress(ITEMS, 1, 2, null);
+    const { past, nextId } = dayProgress(ITEMS, 1, { b: "visited" }, null);
     expect(nextId).toBe("c");
-    expect([...past].sort()).toEqual(["a", "b", "b-alt", "flight", "note", "y1"]);
+    expect([...past.keys()].sort()).toEqual(["a", "b", "b-alt", "flight", "note", "y1"]);
   });
 
   it("아직 아무 데도 안 갔으면 다음 장소 앞의 항공편만", () => {
-    const { past, nextId } = dayProgress(ITEMS, 1, 0, null);
+    const { past, nextId } = dayProgress(ITEMS, 1, {}, null);
     expect(nextId).toBe("a");
-    expect([...past].sort()).toEqual(["flight", "y1"]);
+    expect([...past.keys()].sort()).toEqual(["flight", "y1"]);
   });
 
   it("다 마쳤으면 그날 모두, 다음 장소는 없다", () => {
-    const { past, nextId } = dayProgress(ITEMS, 1, 3, null);
+    const { past, nextId } = dayProgress(ITEMS, 1, { c: "visited" }, null);
     expect(nextId).toBeNull();
     expect(past.has("c")).toBe(true);
+    expect(past.has("t1")).toBe(false);
+  });
+
+  it("패스한 줄은 skipped — 대체 장소도 따른다, 지난 날도 표시를 보고, 뒤의 날은 넣지 않는다", () => {
+    const { past } = dayProgress(
+      ITEMS,
+      1,
+      { y1: "skipped", b: "skipped", c: "visited", t1: "skipped" },
+      null,
+    );
+    expect(past.get("y1")).toBe("skipped");
+    expect(past.get("b")).toBe("skipped");
+    expect(past.get("b-alt")).toBe("skipped");
+    expect(past.get("a")).toBe("done");
+    expect(past.get("c")).toBe("done");
     expect(past.has("t1")).toBe(false);
   });
 });

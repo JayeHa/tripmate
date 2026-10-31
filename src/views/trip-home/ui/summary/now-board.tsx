@@ -160,7 +160,10 @@ export function nowBoardCards({
           plan={board.plan}
           layout={layout}
           onVisit={onVisit}
-          onReopen={() => board.plan.kind === "done" && board.setVisited(board.plan.last)}
+          onReopen={() => {
+            if (board.plan.kind === "done" && board.plan.reopenId)
+              board.setMark(board.plan.reopenId, null);
+          }}
         />
       ),
     },

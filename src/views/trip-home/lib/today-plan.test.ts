@@ -34,11 +34,11 @@ describe("todayPlan", () => {
   const items = [...day, tomorrow, place("other", 0, 0)];
 
   it("장소가 없는 날은 자유 일정", () => {
-    expect(todayPlan(items, 3, 0, null)).toEqual({ kind: "free" });
+    expect(todayPlan(items, 3, {}, null)).toEqual({ kind: "free" });
   });
 
-  it("들른 개수 다음 일정이 다음 장소, 이후는 두 곳", () => {
-    const plan = todayPlan(items, 1, 1, null);
+  it("표시한 마지막 장소 다음 일정이 다음 장소, 이후는 두 곳", () => {
+    const plan = todayPlan(items, 1, { a: "visited" }, null);
     expect(plan).toMatchObject({
       kind: "next",
       index: 1,
@@ -51,21 +51,25 @@ describe("todayPlan", () => {
   });
 
   it("첫 일정 · 시각 있는 일정의 파란 글", () => {
-    expect(todayPlan([place("x", 0, 0)], 0, 0, null)).toMatchObject({ label: "오늘 첫 일정" });
-    expect(todayPlan(items, 1, 0, null)).toMatchObject({ label: "다음 장소 · 09:00" });
+    expect(todayPlan([place("x", 0, 0)], 0, {}, null)).toMatchObject({ label: "오늘 첫 일정" });
+    expect(todayPlan(items, 1, {}, null)).toMatchObject({ label: "다음 장소 · 09:00" });
   });
 
   it("시각이 지난 일정이 있으면 그 앞의 일정은 건너뛴다", () => {
-    expect(todayPlan(items, 1, 0, "14:32")).toMatchObject({ index: 2 });
-    expect(todayPlan(items, 1, 0, "08:00")).toMatchObject({ index: 0 });
+    expect(todayPlan(items, 1, {}, "14:32")).toMatchObject({ index: 2 });
+    expect(todayPlan(items, 1, {}, "08:00")).toMatchObject({ index: 0 });
   });
 
-  it("다 들르면 내일 첫 일정을 알려 준다", () => {
-    expect(todayPlan(items, 1, 3, null)).toEqual({
+  it("다 들르면 내일 첫 일정을 알려 준다 — 되돌릴 곳은 마지막으로 표시한 장소", () => {
+    expect(todayPlan(items, 1, { b: "visited", c: "skipped" }, null)).toEqual({
       kind: "done",
       tomorrow: "내일 첫 일정 · day 3 t 17:30",
-      last: 2,
+      reopenId: "c",
     });
-    expect(todayPlan(items, 2, 1, null)).toEqual({ kind: "done", tomorrow: null, last: 0 });
+    expect(todayPlan(items, 2, { t: "visited" }, null)).toEqual({
+      kind: "done",
+      tomorrow: null,
+      reopenId: "t",
+    });
   });
 });

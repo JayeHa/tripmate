@@ -53,7 +53,7 @@ function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: No
   const board = useNowBoard(tripId, trip);
   const memberOf = useMemberLookup(tripId);
   if (!board) return <BoardSkeleton layout={layout} />;
-  const { plan, visited, setVisited } = board;
+  const { plan, setMark } = board;
   /** 바우처 주인 — 비면 「모두」, 아니면 멤버 이름(나간 사람은 뺀다) */
   const ownersOf = (v: Voucher) =>
     v.owners.length === 0
@@ -64,10 +64,11 @@ function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: No
           .join(" · ");
   const visit = () => {
     if (plan.kind !== "next") return;
-    setVisited(plan.index + 1);
+    const { id, name } = plan.place;
+    setMark(id, "visited");
     onToast({
-      text: `${plan.place.name} 들렀어요`,
-      action: { label: "되돌리기", onClick: () => setVisited(visited) },
+      text: `${name} 들렀어요`,
+      action: { label: "되돌리기", onClick: () => setMark(id, null) },
     });
   };
   return (

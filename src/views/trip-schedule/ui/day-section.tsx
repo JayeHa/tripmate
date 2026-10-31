@@ -2,6 +2,7 @@
 
 import {
   type MemoAuthor,
+  type PastKind,
   Timeline,
   type TimelineRow,
   useOpenMemos,
@@ -23,7 +24,7 @@ type DaySectionProps = {
   /** 지도에 강조된 장소. 그 행에 배경을 깐다 */
   focusId?: string | null;
   /** 다녀온 일정 — 흐리게 그린다 */
-  pastIds?: ReadonlySet<string>;
+  past?: ReadonlyMap<string, PastKind>;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   onAddPlace: (day: number) => void;
@@ -48,7 +49,7 @@ export function DaySection({
   rows,
   showCounts,
   focusId,
-  pastIds,
+  past,
   onOpen,
   onEditMove,
   onAddPlace,
@@ -82,7 +83,7 @@ export function DaySection({
         onOpen={onOpen}
         onEditMove={onEditMove}
         focusId={focusId}
-        pastIds={pastIds}
+        past={past}
         authorOf={authorOf}
         checklistOf={checklistOf}
         voucherOf={voucherOf}

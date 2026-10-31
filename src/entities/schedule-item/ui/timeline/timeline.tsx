@@ -1,5 +1,6 @@
 import { cn } from "@/shared/lib/utils";
 
+import type { PastKind } from "../../lib/day-progress";
 import type { TimelineRow } from "../../lib/timeline";
 import type { MemoAuthor } from "../../model/memo";
 import { ItemCard, PAST } from "./item-card";
@@ -19,8 +20,8 @@ type TimelineProps = {
   onEditMove?: (row: TimelineRow) => void;
   /** 지도에 강조된 장소. 그 행 전체(거터 포함)에 옅은 파란 배경을 깐다 */
   focusId?: string | null;
-  /** 다녀온 일정 — 표식 · 시각 · 카드 · 들어오는 이동 줄을 흐리고 색을 뺀다(누르기는 그대로) */
-  pastIds?: ReadonlySet<string>;
+  /** 다녀온 일정 — 표식 · 시각 · 카드 · 들어오는 이동 줄을 흐리고 색을 뺀다(누르기는 그대로). 패스한 카드엔 「패스」 칩 */
+  past?: ReadonlyMap<string, PastKind>;
   /** 메모 작성자 표시(여행 멤버에서 찾는다). 모르면 null */
   authorOf: (authorId: string | null) => MemoAuthor | null;
   /** 카드의 「체크리스트 N」 칩 — 끝나지 않은 항목 수와 노트 주소. 없으면 칩을 그리지 않는다 */
@@ -40,7 +41,7 @@ export function Timeline({
   onOpen,
   onEditMove,
   focusId,
-  pastIds,
+  past: pastOf,
   authorOf,
   checklistOf,
   voucherOf,
@@ -52,7 +53,8 @@ export function Timeline({
       <span aria-hidden="true" className="absolute inset-y-0 left-8.75 w-0.5 bg-divider" />
       {rows.map((row) => {
         const focused = focusId === row.item.id;
-        const past = pastIds?.has(row.item.id) ?? false;
+        const pastKind = pastOf?.get(row.item.id) ?? null;
+        const past = pastKind !== null;
         return (
           <li key={row.item.id} id={`item-${row.item.id}`} className="relative">
             {row.leg && (
@@ -99,7 +101,7 @@ export function Timeline({
                 authorOf={authorOf}
                 checklist={row.kind === "note" ? undefined : checklistOf?.(row)}
                 vouchers={row.kind === "note" ? undefined : voucherOf?.(row)}
-                past={past}
+                past={pastKind}
               />
             </div>
           </li>
