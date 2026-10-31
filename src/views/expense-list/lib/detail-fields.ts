@@ -63,7 +63,10 @@ export function detailFields(
 ): DetailField[] {
   const memo = e.memo?.trim();
   return [
-    { label: "날짜", value: detailDateText(e.spent_on, ctx.trip) },
+    {
+      label: "날짜",
+      value: `${detailDateText(e.spent_on, ctx.trip)}${row.time ? ` ${row.time}` : ""}`,
+    },
     { label: "카테고리", value: row.categoryLabel },
     { label: "결제수단", value: row.methodLabel },
     { label: "결제", value: payerText(row, ctx) },

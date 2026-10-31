@@ -25,6 +25,8 @@ function formColumns(values: ExpenseFormValues) {
     category: values.category,
     memo: values.memo || null,
     spent_on: values.spent_on,
+    // 여행준비(쓴 날 없음)에는 시각이 없다
+    spent_time: values.spent_on ? (values.spent_time ?? null) : null,
     split_mode: values.split_mode,
     schedule_item_id: values.schedule_item_id ?? null,
     counted: values.counted,

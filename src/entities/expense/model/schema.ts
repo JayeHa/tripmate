@@ -9,6 +9,7 @@ const personSchema = z.object({
 });
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME = /^\d{2}:\d{2}$/;
 
 export const expenseFormSchema = z
   .object({
@@ -31,6 +32,8 @@ export const expenseFormSchema = z
     memo: z.string().trim().max(200).optional(),
     /** 쓴 날. null 이면 여행준비 */
     spent_on: z.string().regex(DATE, "날짜를 선택하세요").nullable(),
+    /** 쓴 시각 「HH:MM」(선택). 여행준비면 저장하지 않는다. 기기에 남은 예전 대기열 값에는 없다 */
+    spent_time: z.string().regex(TIME).nullable().optional(),
     schedule_item_id: z.string().nullable().optional(),
     /** 합계 · 통계 · 정산에 넣을지 */
     counted: z.boolean(),
