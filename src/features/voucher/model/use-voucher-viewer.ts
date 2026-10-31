@@ -7,6 +7,7 @@ import {
   isPdf,
   useDeleteVoucher,
   useSetVoucherPin,
+  useSetVoucherUsed,
   useVoucherUrls,
   viewerKeys,
   type Voucher,
@@ -21,7 +22,7 @@ type VoucherViewerOptions = {
 };
 
 /**
- * 뷰어 상태 — 넘겨 보는 그림(현장용 페이지 · 사진)과 지금 쪽, 그림이 없는 PDF 의 원본 주소, 홈 고정, 지우기.
+ * 뷰어 상태 — 넘겨 보는 그림(현장용 페이지 · 사진)과 지금 쪽, 그림이 없는 PDF 의 원본 주소, 홈 고정, 「사용했어요」, 지우기.
  * 열 때마다 새로 마운트돼 첫 쪽에서 시작한다. 일행이 페이지를 줄이면 마지막 쪽으로 당긴다
  */
 export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: VoucherViewerOptions) {
@@ -33,6 +34,7 @@ export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: Vouche
   const page = Math.min(rawPage, Math.max(keys.length - 1, 0));
   const { data: user } = useUser();
   const pin = useSetVoucherPin(tripId);
+  const used = useSetVoucherUsed(tripId);
   const remove = useDeleteVoucher(tripId);
 
   /** 지운다 — 끝나면 알리고 닫는다 */
@@ -61,7 +63,17 @@ export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: Vouche
     togglePin: () => {
       if (!user) return;
       void pin
-        .mutateAsync({ id: voucher.id, pinnedBy: voucher.pinned_by ? null : user.id })
+        .mutateAsync({ id: voucher.id, value: voucher.pinned_by ? null : user.id })
+        .catch(() => onToast("바꾸지 못했어요. 잠시 후 다시 시도해 주세요."));
+    },
+    /** 쓴 시각 — 아직 안 썼으면 null */
+    usedAt: voucher.used_at,
+    /** 「사용했어요」 · 되돌리기 — 누구나. 바뀐 뒤 알린다 */
+    toggleUsed: () => {
+      const next = voucher.used_at ? null : new Date().toISOString();
+      void used
+        .mutateAsync({ id: voucher.id, value: next })
+        .then(() => onToast(next ? "사용한 바우처로 표시했어요" : "사용 표시를 되돌렸어요"))
         .catch(() => onToast("바꾸지 못했어요. 잠시 후 다시 시도해 주세요."));
     },
     remove: () => void deleteVoucher(),

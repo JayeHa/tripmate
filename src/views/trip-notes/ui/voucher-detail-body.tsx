@@ -1,8 +1,8 @@
 "use client";
 
-import { FileText, Maximize2, QrCode } from "lucide-react";
+import { CircleCheck, FileText, Maximize2, QrCode } from "lucide-react";
 
-import { isPdf } from "@/entities/voucher";
+import { isPdf, usedLabel } from "@/entities/voucher";
 import { NumberCopyRow } from "@/features/voucher";
 import type { VoucherDetail } from "@/widgets/trip-voucher";
 
@@ -13,7 +13,7 @@ type VoucherDetailBodyProps = {
 };
 
 /**
- * 바우처 상세의 내용(모바일 페이지 · PC 칸 공통) — 위 줄(썸네일 132 · 제목 22/800 · 파일 정보 · 주인),
+ * 바우처 상세의 내용(모바일 페이지 · PC 칸 공통) — 위 줄(썸네일 132 · 제목 22/800 · 파일 정보 · 주인 · 이미 썼으면 「10.31 14:05 사용함」),
  * 번호 줄(내 것 → 모두 → 일행 것, 누르면 복사), 정보 표(연결된 일정 · 사용일 · 예약 사이트 · 메모, 비면 「없음」)
  */
 export function VoucherDetailBody({ detail, onShow }: VoucherDetailBodyProps) {
@@ -28,6 +28,12 @@ export function VoucherDetailBody({ detail, onShow }: VoucherDetailBodyProps) {
           </h2>
           {detail.fileInfo && <p className="text-[13px] text-ink-400">{detail.fileInfo}</p>}
           <p className="text-[13px] font-bold text-primary">{detail.owners}</p>
+          {v.used_at && (
+            <p className="flex items-center gap-1 text-[13px] font-bold text-ink-450">
+              <CircleCheck className="size-3.5" aria-hidden="true" />
+              {usedLabel(v.used_at)} 사용함
+            </p>
+          )}
         </div>
       </div>
       {detail.numbers.length > 0 && (

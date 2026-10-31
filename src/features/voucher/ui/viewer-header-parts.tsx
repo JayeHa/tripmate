@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Pencil, Pin, Trash2 } from "lucide-react";
+import { CircleCheck, Ellipsis, Pencil, Pin, Trash2, Undo2 } from "lucide-react";
 
 import { iGa } from "@/shared/lib/josa";
 import { cn } from "@/shared/lib/utils";
@@ -43,10 +43,17 @@ export function PinButton({ viewer }: PinButtonProps) {
   );
 }
 
-type ViewerMenuProps = { disabled: boolean; onEdit: () => void; onDelete: () => void };
+type ViewerMenuProps = {
+  disabled: boolean;
+  /** 이미 썼다 — 「사용했어요」 대신 「사용 표시 되돌리기」 */
+  used: boolean;
+  onToggleUsed: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+};
 
-/** ⋯ 메뉴(150) — 수정 · 삭제(빨강) */
-export function ViewerMenu({ disabled, onEdit, onDelete }: ViewerMenuProps) {
+/** ⋯ 메뉴(170) — 사용했어요(쓴 뒤에는 되돌리기) · 수정 · 삭제(빨강) */
+export function ViewerMenu({ disabled, used, onToggleUsed, onEdit, onDelete }: ViewerMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -56,7 +63,15 @@ export function ViewerMenu({ disabled, onEdit, onDelete }: ViewerMenuProps) {
       >
         <Ellipsis className="size-5.5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-37.5">
+      <DropdownMenuContent align="end" className="w-42.5">
+        <DropdownMenuItem onClick={onToggleUsed}>
+          {used ? (
+            <Undo2 className="size-4 text-ink-700" />
+          ) : (
+            <CircleCheck className="size-4 text-ink-700" />
+          )}
+          {used ? "사용 표시 되돌리기" : "사용했어요"}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onEdit}>
           <Pencil className="size-4 text-ink-700" />
           수정

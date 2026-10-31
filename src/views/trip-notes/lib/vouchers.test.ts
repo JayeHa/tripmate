@@ -31,6 +31,7 @@ function v(id: string, patch: Partial<Voucher> = {}): Voucher {
     flight_id: null,
     stay_id: null,
     use_date: null,
+    used_at: null,
     ...patch,
   } as Voucher;
 }
@@ -55,6 +56,12 @@ describe("필터 · 묶음", () => {
     expect(ids({ ...all, day: "1" })).toEqual(["flight"]);
     expect(ids({ ...all, day: NO_DAY })).toEqual(["etc"]);
     expect(ids({ ...all, group: "stay" })).toEqual(["stay"]);
+  });
+
+  it("이미 쓴 바우처는 그 묶음 맨 아래(나머지 순서는 그대로)", () => {
+    const used = "2027-11-01T03:00:00Z";
+    const items = [v("a", { used_at: used }), v("b"), v("c", { used_at: used }), v("d")];
+    expect(groupVouchers(items, null)[0].items.map((x) => x.id)).toEqual(["b", "d", "a", "c"]);
   });
 
   it("묶음은 항공편 · 숙소 · 일정 · 기타 순, 빈 묶음은 뺀다", () => {

@@ -132,9 +132,13 @@ type VoucherRowProps = {
   onOpen: () => void;
 };
 
-/** 줄(P5 가로형) — 썸네일 48 · r8(없으면 아이콘) · 제목 15/700 · 보조 12 · 주인 12/700 블루 · › */
+/**
+ * 줄(P5 가로형) — 썸네일 48 · r8(없으면 아이콘) · 제목 15/700 · 보조 12 · 주인 12/700 블루 · ›.
+ * 이미 쓴 바우처는 썸네일 · 글을 흐리게 하고 제목 옆에 회색 「사용함」 칩(고른 줄 바탕은 그대로)
+ */
 function VoucherRow({ voucher: v, list, selected, onOpen }: VoucherRowProps) {
   const thumb = list.thumbOf(v);
+  const used = Boolean(v.used_at);
   return (
     <li>
       <button
@@ -146,7 +150,12 @@ function VoucherRow({ voucher: v, list, selected, onOpen }: VoucherRowProps) {
           selected ? "bg-row-focus" : "hover:bg-surface-sunken",
         )}
       >
-        <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-button bg-surface-muted">
+        <span
+          className={cn(
+            "flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-button bg-surface-muted",
+            used && "opacity-45",
+          )}
+        >
           {thumb ? (
             // 서명 주소라 next/image 최적화를 거치지 않는다
             // eslint-disable-next-line @next/next/no-img-element
@@ -155,8 +164,15 @@ function VoucherRow({ voucher: v, list, selected, onOpen }: VoucherRowProps) {
             <FallbackIcon voucher={v} />
           )}
         </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-[15px] font-bold text-ink-900">{v.title}</span>
+        <span className={cn("flex min-w-0 flex-1 flex-col gap-0.5", used && "opacity-55")}>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-[15px] font-bold text-ink-900">{v.title}</span>
+            {used && (
+              <span className="flex h-5 shrink-0 items-center rounded-pill-sm bg-surface-muted px-1.5 text-[11px] font-extrabold text-ink-500">
+                사용함
+              </span>
+            )}
+          </span>
           <span className="truncate text-xs text-ink-400">{list.subOf(v)}</span>
           <span className="truncate text-xs font-bold text-primary">{list.ownersOf(v)}</span>
         </span>

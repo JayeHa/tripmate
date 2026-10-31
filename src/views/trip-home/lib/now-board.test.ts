@@ -17,6 +17,7 @@ function voucher(id: string, owners: string[], link: Partial<Voucher>): Voucher 
     flight_id: null,
     stay_id: null,
     use_date: null,
+    used_at: null,
     ...link,
   } as Voucher;
 }
@@ -34,8 +35,10 @@ function stay(id: string, checkIn: string, checkOut: string): Stay {
 describe("todayVouchers", () => {
   const day = {
     items: [
-      { id: "i2", day_index: 1 },
-      { id: "i3", day_index: 2 },
+      { id: "i2", day_index: 1, position: 2, flight_id: null, stay_id: null },
+      { id: "i3", day_index: 2, position: 0, flight_id: null, stay_id: null },
+      { id: "fc", day_index: 1, position: 0, flight_id: "f", stay_id: null },
+      { id: "sc", day_index: 1, position: 5, flight_id: null, stay_id: "s" },
     ] as ScheduleItem[],
     flights: [{ id: "f", dep_date: "2026-11-01" }] as Flight[],
     stays: [stay("s", "2026-10-31", "2026-11-02")],
@@ -43,20 +46,45 @@ describe("todayVouchers", () => {
     date: "2026-11-01",
   };
 
-  it("일정 · 탑승일 · 숙박 기간 · 사용일로 그날 것만, 내 것 → 모두 → 일행 것", () => {
+  it("일정 · 탑승일 · 숙박 기간 · 사용일로 그날 것만, 그날 일정 순서대로(자리 없는 것은 뒤)", () => {
     const list = todayVouchers(
       [
-        voucher("other", ["u2"], { schedule_item_id: "i2" }),
-        voucher("all", [], { flight_id: "f" }),
-        voucher("mine", ["me"], { stay_id: "s" }),
         voucher("etc", ["me"], { use_date: "2026-11-01" }),
+        voucher("stay", ["me"], { stay_id: "s" }),
+        voucher("other", ["u2"], { schedule_item_id: "i2" }),
+        voucher("flight", [], { flight_id: "f" }),
         voucher("nextDay", ["me"], { schedule_item_id: "i3" }),
         voucher("noDate", ["me"], {}),
       ],
       day,
       "me",
     );
-    expect(list.map((v) => v.id)).toEqual(["mine", "etc", "all", "other"]);
+    expect(list.map((v) => v.id)).toEqual(["flight", "other", "stay", "etc"]);
+  });
+
+  it("같은 일정에 여럿이면 내 것 → 모두 → 일행 것", () => {
+    const list = todayVouchers(
+      [
+        voucher("other", ["u2"], { schedule_item_id: "i2" }),
+        voucher("all", [], { schedule_item_id: "i2" }),
+        voucher("mine", ["me"], { schedule_item_id: "i2" }),
+      ],
+      day,
+      "me",
+    );
+    expect(list.map((v) => v.id)).toEqual(["mine", "all", "other"]);
+  });
+
+  it("이미 쓴 바우처는 뺀다", () => {
+    const list = todayVouchers(
+      [
+        voucher("used", ["me"], { schedule_item_id: "i2", used_at: "2026-11-01T03:00:00Z" }),
+        voucher("left", ["me"], { flight_id: "f" }),
+      ],
+      day,
+      "me",
+    );
+    expect(list.map((v) => v.id)).toEqual(["left"]);
   });
 });
 

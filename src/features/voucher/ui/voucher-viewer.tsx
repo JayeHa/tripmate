@@ -134,6 +134,8 @@ function ViewerBody({
         <PinButton viewer={viewer} />
         <ViewerMenu
           disabled={viewer.deleting}
+          used={viewer.usedAt !== null}
+          onToggleUsed={viewer.toggleUsed}
           onEdit={() => onEdit(voucher)}
           onDelete={() => setConfirming(true)}
         />
@@ -170,7 +172,12 @@ function ViewerBody({
                 PDF 전체 보기
               </button>
             )}
-            <ViewerPanel numbers={content.numbers} memo={voucher.memo} awake={awake} />
+            <ViewerPanel
+              numbers={content.numbers}
+              memo={voucher.memo}
+              awake={awake}
+              used={{ at: viewer.usedAt, onToggle: viewer.toggleUsed }}
+            />
           </>
         )}
       </div>

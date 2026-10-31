@@ -102,8 +102,13 @@ function sortGroup(items: Voucher[], src: TargetSources): Voucher[] {
     .map(({ v }) => v);
 }
 
+/** 이미 쓴 바우처를 뒤로 — 쓴 것끼리 · 안 쓴 것끼리는 순서를 지킨다 */
+function usedLast(items: Voucher[]): Voucher[] {
+  return [...items.filter((v) => !v.used_at), ...items.filter((v) => v.used_at)];
+}
+
 /**
- * 묶음 — 항공편 · 숙소 · 일정 · 기타 순, 빈 묶음은 뺀다. 묶음 안은 `voucherOrder` 순(같으면 넣은 순서).
+ * 묶음 — 항공편 · 숙소 · 일정 · 기타 순, 빈 묶음은 뺀다. 묶음 안은 `voucherOrder` 순(같으면 넣은 순서)이고 이미 쓴 것은 그 묶음 맨 아래.
  * 묶은 뒤에 묶음마다 정렬한다 — 묶음끼리는 키 종류가 달라 한꺼번에 정렬하면 순서가 엉킨다.
  * 일정 · 항공편 · 숙소를 아직 못 읽었으면(src null) 넣은 순서
  */
@@ -113,7 +118,7 @@ export function groupVouchers(
 ): { group: VoucherGroup; items: Voucher[] }[] {
   return VOUCHER_GROUPS.map((group) => {
     const items = list.filter((v) => voucherGroup(v) === group);
-    return { group, items: src ? sortGroup(items, src) : items };
+    return { group, items: usedLast(src ? sortGroup(items, src) : items) };
   }).filter((g) => g.items.length > 0);
 }
 

@@ -11,6 +11,7 @@ import {
   fetchVoucherUrls,
   saveVoucher,
   setVoucherPin,
+  setVoucherUsed,
 } from "../api/vouchers";
 import type { Voucher, VoucherSave } from "./types";
 
@@ -61,22 +62,39 @@ export function useDeleteVoucher(tripId: string) {
 
 /** 「홈에 고정」 — 누르면 바로 바뀌고(화면 먼저) 서버에 보낸다. 실패하면 그 바우처만 되돌린다 */
 export function useSetVoucherPin(tripId: string) {
+  return useVoucherFieldToggle(tripId, "pinned_by", setVoucherPin);
+}
+
+/** 「사용했어요」 · 되돌리기 — 고정과 같다(화면 먼저, 실패하면 그 바우처만 되돌린다) */
+export function useSetVoucherUsed(tripId: string) {
+  return useVoucherFieldToggle(tripId, "used_at", setVoucherUsed);
+}
+
+/**
+ * 바우처 한 칸(고정한 사람 · 쓴 시각)을 바로 바꾸는 저장 — 캐시의 그 바우처만 먼저 바꾸고 보낸 뒤, 실패하면 그 칸만 되돌린다.
+ * 끝나면 목록을 다시 읽는다
+ */
+function useVoucherFieldToggle(
+  tripId: string,
+  field: "pinned_by" | "used_at",
+  send: (id: string, value: string | null) => Promise<void>,
+) {
   const qc = useQueryClient();
   const key = queryKeys.vouchers(tripId);
-  /** 캐시의 그 바우처 고정만 바꾼다 */
-  const setPinIn = (id: string, pinnedBy: string | null) =>
+  /** 캐시의 그 바우처 칸만 바꾼다 */
+  const setIn = (id: string, value: string | null) =>
     qc.setQueryData<Voucher[]>(key, (items) =>
-      items?.map((v) => (v.id === id ? { ...v, pinned_by: pinnedBy } : v)),
+      items?.map((v) => (v.id === id ? { ...v, [field]: value } : v)),
     );
   return useMutation({
-    mutationFn: (v: { id: string; pinnedBy: string | null }) => setVoucherPin(v.id, v.pinnedBy),
+    mutationFn: (v: { id: string; value: string | null }) => send(v.id, v.value),
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: key, exact: true });
       const before = qc.getQueryData<Voucher[]>(key)?.find((x) => x.id === v.id);
-      setPinIn(v.id, v.pinnedBy);
-      return { before: before?.pinned_by ?? null };
+      setIn(v.id, v.value);
+      return { before: before?.[field] ?? null };
     },
-    onError: (_e, v, ctx) => setPinIn(v.id, ctx?.before ?? null),
+    onError: (_e, v, ctx) => setIn(v.id, ctx?.before ?? null),
     onSettled: () => qc.invalidateQueries({ queryKey: key, exact: true }),
   });
 }
