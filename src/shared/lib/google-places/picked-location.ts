@@ -25,3 +25,11 @@ export function coordsMapsUrl(lat: number, lng: number): string {
 export function directionsUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
+
+/**
+ * 구글 장소 id 로 구글맵 링크를 만든다(지도 URL — API 호출 · 과금이 없다). 장소 id 는 약관상 저장해도 되는 값이다.
+ * @see https://developers.google.com/maps/documentation/urls/get-started#search-action
+ */
+export function googleMapsUrl(name: string, placeId: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(placeId)}`;
+}

@@ -9,6 +9,7 @@ export * from "./lib/add-place-error";
 export * from "./lib/day-progress";
 export { haversineKm, walkLabel } from "./lib/distance";
 export * from "./lib/format-leg";
+export { categoryFromGoogle } from "./lib/google-category";
 export * from "./lib/link-pick";
 export { fitZoom } from "./lib/map-fit";
 export * from "./lib/timeline";

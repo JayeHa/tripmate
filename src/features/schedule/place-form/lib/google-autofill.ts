@@ -1,5 +1,9 @@
 import type { PlaceCategory, PlaceSubtype } from "@/entities/schedule-item";
 
+// 비용 입력도 쓰게 옮겼다 — 이 폼의 import 는 그대로 둔다
+export { categoryFromGoogle } from "@/entities/schedule-item";
+export { googleMapsUrl } from "@/shared/lib/google-places";
+
 /** 구글 장소를 고르면 채우는 칸 */
 export type Autofill = {
   name: string;
@@ -42,14 +46,6 @@ export function dropPickedLink(
 }
 
 /**
- * 구글 장소 id 로 구글맵 링크를 만든다(지도 URL — API 호출 · 과금이 없다). 장소 id 는 약관상 저장해도 되는 값이다.
- * @see https://developers.google.com/maps/documentation/urls/get-started#search-action
- */
-export function googleMapsUrl(name: string, placeId: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(placeId)}`;
-}
-
-/**
  * 링크가 그 구글 장소로 화면이 만든 구글맵 링크(googleMapsUrl)인지. 장소 이름은 나중에 바뀔 수 있어 장소 id 만 본다.
  * 저장된 장소를 고칠 때 이 링크를 자동으로 채운 값으로 여겨, 위치 · 고른 장소가 바뀌면 함께 지우거나 바꾸게 한다
  */
@@ -65,83 +61,6 @@ export function isPickedMapsUrl(url: string | null, placeId: string | null): url
   } catch {
     return false;
   }
-}
-
-/** 구글 장소 종류(정확히 같은 이름) → 장소 폼 카테고리 */
-const GOOGLE_TYPE_CATEGORY: Partial<Record<string, PlaceCategory>> = {
-  cafe: "cafe",
-  coffee_shop: "cafe",
-  tea_house: "cafe",
-  bakery: "cafe",
-  dessert_shop: "cafe",
-  ice_cream_shop: "cafe",
-  confectionery: "cafe",
-  donut_shop: "cafe",
-  restaurant: "food",
-  food: "food",
-  meal_takeaway: "food",
-  bar: "food",
-  pub: "food",
-  izakaya: "food",
-  food_court: "food",
-  spa: "rest",
-  sauna: "rest",
-  massage: "rest",
-  public_bath: "rest",
-  wellness_center: "rest",
-  lodging: "stay",
-  hotel: "stay",
-  motel: "stay",
-  hostel: "stay",
-  inn: "stay",
-  guest_house: "stay",
-  bed_and_breakfast: "stay",
-  tourist_attraction: "sight",
-  museum: "sight",
-  park: "sight",
-  art_gallery: "sight",
-  amusement_park: "sight",
-  aquarium: "sight",
-  zoo: "sight",
-  place_of_worship: "sight",
-  church: "sight",
-  hindu_temple: "sight",
-  buddhist_temple: "sight",
-  shinto_shrine: "sight",
-  historical_landmark: "sight",
-  cultural_landmark: "sight",
-  monument: "sight",
-  observation_deck: "sight",
-  national_park: "sight",
-  garden: "sight",
-  botanical_garden: "sight",
-  shopping_mall: "shop",
-  department_store: "shop",
-  market: "shop",
-  supermarket: "shop",
-  store: "shop",
-};
-
-/** 종류 하나 → 카테고리. 정확히 같은 이름을 먼저, 없으면 꼬리(`*_restaurant` 음식점 · `*_hotel` 숙소 · `*_store` 쇼핑) */
-function categoryOfType(type: string): PlaceCategory | null {
-  const exact = GOOGLE_TYPE_CATEGORY[type];
-  if (exact) return exact;
-  if (type.endsWith("_restaurant")) return "food";
-  if (type.endsWith("_hotel")) return "stay";
-  if (type.endsWith("_store")) return "shop";
-  return null;
-}
-
-/**
- * 구글 장소 종류로 고를 카테고리. 대표 종류(맨 앞)부터 보고 처음 맞는 것. 공항 · 역처럼 폼에 없는 종류뿐이면 null(고르지 않음).
- * 카페가 「food」 도 함께 갖는 식이라 순서가 뜻을 정한다 — 구글은 대표 종류를 primaryType 으로 따로 준다
- */
-export function categoryFromGoogle(types: string[]): PlaceCategory | null {
-  for (const type of types) {
-    const category = categoryOfType(type);
-    if (category) return category;
-  }
-  return null;
 }
 
 /** 구글 장소 종류(정확히 같은 이름) → 메뉴 · 종류. 모르는 종류는 고르지 않는다(사용자가 고른다) */
