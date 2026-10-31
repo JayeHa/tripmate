@@ -43,6 +43,8 @@ type FilterSelectProps = {
   layout?: "auto" | "dropdown";
   /** 시트 제목. 없으면 label */
   sheetTitle?: string;
+  /** 지도 위에 띄운 칩(흰 바탕 + 그림자) */
+  floating?: boolean;
 };
 
 /**
@@ -87,11 +89,13 @@ function SheetFilter({
   width = "auto",
   trigger,
   sheetTitle,
+  floating,
 }: FilterSelectProps) {
   const current = options.find((o) => o.value === value);
   const chip = (
     <FilterChipButton
       selected={!!current}
+      floating={floating}
       aria-label={current ? `${label}: ${current.label}` : label}
       aria-haspopup="dialog"
     >
@@ -121,6 +125,7 @@ function DropdownFilter({
   width = "auto",
   align = "start",
   trigger,
+  floating,
 }: FilterSelectProps) {
   const current = options.find((o) => o.value === value);
   return (
@@ -128,7 +133,7 @@ function DropdownFilter({
       <DropdownMenuTrigger
         // 칩에는 겹쳐 그린 옵션 글자가 있어 이름을 직접 준다 — 고른 값이 있으면 함께 읽힌다
         aria-label={current && !trigger ? `${label}: ${current.label}` : label}
-        render={trigger ?? <FilterChipButton selected={!!current} />}
+        render={trigger ?? <FilterChipButton selected={!!current} floating={floating} />}
       >
         {trigger ? undefined : <ChipText {...chipTexts(label, current, options, width)} />}
       </DropdownMenuTrigger>

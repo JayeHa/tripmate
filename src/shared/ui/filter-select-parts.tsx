@@ -15,21 +15,39 @@ export type FilterOption = {
   chipIcon?: React.ReactNode;
 };
 
-type FilterChipButtonProps = React.ComponentProps<"button"> & { selected: boolean };
+type FilterChipButtonProps = React.ComponentProps<"button"> & {
+  selected: boolean;
+  /** 지도 위에 띄운 칩 — 고르지 않았을 때 흰 바탕, 늘 그림자(지도 그림 위에서 칩이 보이게) */
+  floating?: boolean;
+};
 
-/** 칩 모양 버튼(P2) — 고르면 잉크 바탕 · 흰 글자, 아니면 #F2F3F5 · #444 */
-export function FilterChipButton({ selected, className, ...props }: FilterChipButtonProps) {
+/** 띄운 칩의 그림자 — 지도 위 「목록」 버튼 등 같은 줄에 띄우는 버튼도 같은 값을 쓴다 */
+export const FLOAT_SHADOW = "shadow-[0_2px_8px_rgba(0,0,0,.15)]";
+
+/** 칩 모양 버튼(P2) — 고르면 잉크 바탕 · 흰 글자, 아니면 #F2F3F5 · #444(띄운 칩은 흰 바탕) */
+export function FilterChipButton({
+  selected,
+  floating,
+  className,
+  ...props
+}: FilterChipButtonProps) {
   return (
     <button
       type="button"
       className={cn(
         "flex h-8.5 max-w-45 shrink-0 items-center gap-1 rounded-full pr-2.5 pl-3 text-[13px] font-bold whitespace-nowrap",
-        selected ? "bg-ink-900 text-white" : "bg-surface-muted text-ink-700",
+        selected ? "bg-ink-900 text-white" : idleTone(floating),
+        floating && FLOAT_SHADOW,
         className,
       )}
       {...props}
     />
   );
+}
+
+/** 고르지 않은 칩의 바탕 · 글자 */
+function idleTone(floating: boolean | undefined): string {
+  return floating ? "bg-white text-ink-700" : "bg-surface-muted text-ink-700";
 }
 
 /** 칩에 보일 수 있는 글 하나 — 앞에 그릴 것(아바타)이 있으면 함께. key 는 옵션 값(이름은 겹칠 수 있다) */
