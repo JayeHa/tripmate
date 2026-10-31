@@ -11,13 +11,14 @@ import { BoardCard } from "../summary/board-card";
 import { BoardSkeleton } from "../summary/board-grid";
 import { FareDialog } from "./fare-dialog";
 import { DayFares, ExtraFares } from "./fare-rows";
+import { FareSummary } from "./fare-summary";
 import { NoteDialog } from "./note-dialog";
 
 type TransportTabProps = { tripId: string; trip: Trip; layout: "mobile" | "pc" };
 
 /**
- * 「교통」 탭 — 여행 전에 적어 두는 1인 예상 교통비(일행 공유).
- * 1인 합계 · 교통카드 · 패스 메모 · 날짜별 줄(기간의 모든 날) · 그 밖의 교통비(공항 왕복 · 패스).
+ * 「교통」 탭 — 여행 전에 적어 두는 1인 예상 교통비(일행 공유)와 가계부 교통 비용의 내 몫(실제).
+ * 1인 합계(예상 · 실제) · 교통카드 · 패스 메모 · 날짜별 줄(기간의 모든 날) · 그 밖의 교통비(공항 왕복 · 패스).
  * 모바일은 한 줄로, PC 는 왼쪽 날짜별 · 오른쪽 합계 · 메모 · 그 밖의 교통비
  */
 export function TransportTab({ tripId, trip, layout }: TransportTabProps) {
@@ -25,20 +26,17 @@ export function TransportTab({ tripId, trip, layout }: TransportTabProps) {
   if (t.loading) return <BoardSkeleton layout={layout} />;
 
   const total = (
-    <BoardCard key="total" title="1인 예상 교통비" layout={layout}>
-      {t.total ? (
-        <div className="flex flex-col gap-0.5">
-          <p className="text-2xl/tight font-extrabold text-ink-900 tabular-nums">{t.total}</p>
-          {t.approx && <p className="text-[13px] text-ink-400 tabular-nums">{t.approx}</p>}
-          {t.group && (
-            <p className="mt-1 text-[13px] text-ink-500">
-              {t.group.people}명이면 <span className="font-bold tabular-nums">{t.group.total}</span>
-            </p>
-          )}
-        </div>
-      ) : (
-        <p className="text-[13px] text-ink-400">날짜마다 1인 교통비를 적으면 여기서 더해요</p>
-      )}
+    <BoardCard
+      key="total"
+      title="1인 교통비"
+      link={
+        t.actual
+          ? { label: "가계부", href: `/trips/${tripId}/expenses/categories?c=transport` }
+          : undefined
+      }
+      layout={layout}
+    >
+      <FareSummary total={t.total} approx={t.approx} group={t.group} actual={t.actual} />
     </BoardCard>
   );
   const note = (
@@ -70,13 +68,14 @@ export function TransportTab({ tripId, trip, layout }: TransportTabProps) {
         fares={t.fares}
         startDate={trip.start_date}
         totalDays={t.totalDays}
+        actualOf={t.actualOf}
         onEdit={t.setEditing}
       />
     </BoardCard>
   );
   const extras = (
     <BoardCard key="extras" title="그 밖의 교통비" layout={layout}>
-      <ExtraFares fares={t.fares} onEdit={t.setEditing} />
+      <ExtraFares fares={t.fares} undatedActual={t.undatedActual} onEdit={t.setEditing} />
     </BoardCard>
   );
 
