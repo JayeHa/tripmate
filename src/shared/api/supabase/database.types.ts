@@ -32,6 +32,7 @@ export type Database = {
       trips: {
         Row: {
           day_summaries: (string | null)[];
+          transport_note: string | null;
           id: string;
           owner_id: string;
           title: string;
@@ -46,6 +47,7 @@ export type Database = {
         };
         Insert: {
           day_summaries?: (string | null)[];
+          transport_note?: string | null;
           id?: string;
           owner_id: string;
           title: string;
@@ -60,6 +62,7 @@ export type Database = {
         };
         Update: {
           day_summaries?: (string | null)[];
+          transport_note?: string | null;
           id?: string;
           owner_id?: string;
           title?: string;
@@ -543,6 +546,42 @@ export type Database = {
           photo_key?: string | null;
           thumb_key?: string | null;
           created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      transport_fares: {
+        Row: {
+          id: string;
+          trip_id: string;
+          day_index: number | null;
+          title: string | null;
+          amount: number | null;
+          currency: string;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          day_index?: number | null;
+          title?: string | null;
+          amount?: number | null;
+          currency: string;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          day_index?: number | null;
+          title?: string | null;
+          amount?: number | null;
+          currency?: string;
+          memo?: string | null;
           created_at?: string;
           updated_at?: string;
         };

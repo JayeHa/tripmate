@@ -4024,3 +4024,96 @@ describe("여행 도시 바꾸기 (0065)", () => {
     expect(await cities(trip)).toEqual(["tokyo"]);
   });
 });
+
+describe("교통비 (0072)", () => {
+  /** 교통비 줄을 넣고 id 를 돌려준다 */
+  async function addFare(trip: string, fields: Record<string, unknown>) {
+    const cols = { currency: "JPY", ...fields };
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.transport_fares (trip_id, ${Object.keys(cols).join(", ")})
+       values ($1, ${Object.keys(cols)
+         .map((_, i) => `$${i + 2}`)
+         .join(", ")}) returning id`,
+      [trip, ...Object.values(cols)],
+    );
+    return rows[0].id;
+  }
+
+  it("날짜 줄은 날짜마다 하나, 날짜 밖 줄은 이름으로 여러 개. 일행이 고치고 여행 메모도 쓴다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-04");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const day = await addFare(trip, { day_index: 0, amount: 900, memo: "호텔 → 도쿄역" });
+    await addFare(trip, { title: "공항 왕복", amount: 5500 });
+    await addFare(trip, { title: "스카이라이너", amount: 2570 });
+    // 같은 날 다시 넣으면 그 줄을 고친다(upsert)
+    await db.query(
+      `insert into public.transport_fares (trip_id, day_index, amount, currency) values ('${trip}', 0, 1000, 'JPY')
+       on conflict (trip_id, day_index) do update set amount = excluded.amount`,
+    );
+    await as(B);
+    await db.query(`update public.transport_fares set memo = '스카이트리' where id = '${day}'`);
+    await db.query(`update public.trips set transport_note = '이코카' where id = '${trip}'`);
+    const { rows } = await db.query(
+      `select day_index, title, amount::text, memo from public.transport_fares
+       where trip_id = '${trip}' order by day_index nulls last, title`,
+    );
+    expect(rows).toEqual([
+      { day_index: 0, title: null, amount: "1000.00", memo: "스카이트리" },
+      { day_index: null, title: "공항 왕복", amount: "5500.00", memo: null },
+      { day_index: null, title: "스카이라이너", amount: "2570.00", memo: null },
+    ]);
+    expect(
+      (await db.query(`select transport_note from public.trips where id = '${trip}'`)).rows,
+    ).toEqual([{ transport_note: "이코카" }]);
+  });
+
+  it("거부: 같은 날 두 줄 · 이름 있는 날짜 줄 · 이름 없는 날짜 밖 줄 · 빈 날짜 줄 · 음수 · 모르는 통화 · 긴 메모 · 멤버 아님", async () => {
+    await as(A);
+    const trip = await newTrip("2027-10-31", "2027-11-04");
+    await addFare(trip, { day_index: 1, amount: 100 });
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, amount, currency)
+      values ('${trip}', 1, 200, 'JPY')`),
+    ).toMatch(/transport_fares_day_key/);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, title, amount, currency)
+      values ('${trip}', 2, 'x', 1, 'JPY')`),
+    ).toMatch(/transport_fares_kind_chk/);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, amount, currency)
+      values ('${trip}', 1, 'JPY')`),
+    ).toMatch(/transport_fares_kind_chk/);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, currency)
+      values ('${trip}', 3, 'JPY')`),
+    ).toMatch(/transport_fares_filled_chk/);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, amount, currency)
+      values ('${trip}', 3, -1, 'JPY')`),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, amount, currency)
+      values ('${trip}', 3, 1, 'yen')`),
+    ).toMatch(/check constraint/);
+    expect(
+      await rejects(
+        `update public.trips set transport_note = repeat('가', 501) where id = '${trip}'`,
+      ),
+    ).toMatch(/check constraint/);
+    await as(B);
+    expect(
+      await rejects(`insert into public.transport_fares (trip_id, day_index, amount, currency)
+      values ('${trip}', 4, 1, 'JPY')`),
+    ).toMatch(/row-level security/);
+    // RLS 는 오류 없이 0줄 — 그대로인지로 확인한다
+    await db.query(`delete from public.transport_fares where trip_id = '${trip}'`);
+    await as(A);
+    expect(
+      (await db.query(`select 1 from public.transport_fares where trip_id = '${trip}'`)).rows,
+    ).toHaveLength(1);
+  });
+});
