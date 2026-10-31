@@ -2,6 +2,7 @@ export * from "./api/alternatives";
 export * from "./api/guide-places";
 export * from "./api/memos";
 export * from "./api/moves";
+export * from "./api/my-place";
 export * from "./api/schedule-counts";
 export * from "./api/schedule-edit";
 export * from "./api/schedule-items";

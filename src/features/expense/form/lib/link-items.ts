@@ -87,15 +87,21 @@ export function linkGroups(
  */
 export function expenseCategoryOf(item: ScheduleItem): ExpenseCategory | null {
   if (kindOf(item) === "flight") return "flight";
-  const map: Record<string, ExpenseCategory> = {
-    food: "food",
-    cafe: "food",
-    sight: "activity",
-    rest: "activity",
-    shop: "shopping",
-    stay: "lodging",
-    air: "transport",
-  };
-  const category = categoryOf(item);
-  return category ? (map[category] ?? null) : null;
+  return expenseCategoryOfPlace(categoryOf(item));
+}
+
+/** 장소 카테고리 → 비용 카테고리 */
+const PLACE_EXPENSE_CATEGORY: Record<string, ExpenseCategory> = {
+  food: "food",
+  cafe: "food",
+  sight: "activity",
+  rest: "activity",
+  shop: "shopping",
+  stay: "lodging",
+  air: "transport",
+};
+
+/** 장소 카테고리로 비용 카테고리 — 모르면 null(고르지 않음). 일정 연결 · 비용의 장소(#289)가 같이 쓴다 */
+export function expenseCategoryOfPlace(category: string | null): ExpenseCategory | null {
+  return category ? (PLACE_EXPENSE_CATEGORY[category] ?? null) : null;
 }

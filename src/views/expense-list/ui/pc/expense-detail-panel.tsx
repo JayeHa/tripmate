@@ -68,7 +68,18 @@ export function ExpenseDetailPanel({
                 f.muted ? "text-ink-350" : "text-ink-900",
               )}
             >
-              {f.value}
+              {f.href ? (
+                <a
+                  href={f.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-text hover:underline"
+                >
+                  {f.value}
+                </a>
+              ) : (
+                f.value
+              )}
             </dd>
           </div>
         ))}

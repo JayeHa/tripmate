@@ -29,6 +29,8 @@ function formColumns(values: ExpenseFormValues) {
     spent_time: values.spent_on ? (values.spent_time ?? null) : null,
     split_mode: values.split_mode,
     schedule_item_id: values.schedule_item_id ?? null,
+    // 일정을 연결한 비용은 그 일정의 장소를 쓴다
+    place_id: values.schedule_item_id ? null : (values.place_id ?? null),
     counted: values.counted,
     paid: values.paid,
     due_date: values.paid ? null : values.due_date,

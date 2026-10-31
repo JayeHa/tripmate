@@ -10,6 +10,7 @@ import {
 import {
   EXPENSE_CATEGORY_LABEL,
   type ExpenseCategory,
+  type ExpensePlace,
   type ExpenseWithSplits,
   PAYMENT_METHOD_LABEL,
   type PaymentMethod,
@@ -25,6 +26,8 @@ export type ExpenseRowView = {
   name: string;
   /** 쓴 시각 「14:20」. 없거나 여행준비면 null */
   time: string | null;
+  /** 쓴 곳(장소를 붙인 비용만). 일정을 연결한 비용은 null */
+  place: ExpensePlace | null;
   category: ExpenseCategory;
   categoryLabel: string;
   /** 쓴 통화 그대로 — 「¥3,200」 */
@@ -122,6 +125,7 @@ export function expenseRowView(e: ExpenseWithSplits, ctx: RowContext): ExpenseRo
     id: e.id,
     name: e.name,
     time: e.spent_on ? timeText(e.spent_time) : null,
+    place: e.place ?? null,
     category,
     categoryLabel: EXPENSE_CATEGORY_LABEL[category] ?? "기타",
     amountText: formatMoney(Number(e.amount), e.currency),

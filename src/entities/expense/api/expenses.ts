@@ -12,7 +12,7 @@ export async function fetchExpenses(tripId: string): Promise<ExpenseWithSplits[]
   const supabase = createClient();
   const { data, error } = await supabase
     .from("expenses")
-    .select("*, splits:expense_splits(*)")
+    .select("*, splits:expense_splits(*), place:places(id, name, address, gmap_url)")
     .eq("trip_id", tripId)
     .order("spent_on", { ascending: false })
     .order("created_at", { ascending: false });

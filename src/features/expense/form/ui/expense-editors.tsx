@@ -174,6 +174,7 @@ export function EditExpense({
       }
       {...loaded.data}
       initial={initial}
+      initialPlace={expense?.place ?? null}
       quick={quick}
       payFor={payForOf(expense)}
       onToast={onToast}

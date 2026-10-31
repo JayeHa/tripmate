@@ -1,9 +1,11 @@
+import { MapPin } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
   detailDateText,
   ExpenseBadge,
   ExpenseCategoryIcon,
+  type ExpensePlace,
   type ExpenseReceipt,
   type ExpenseRowView,
   type ExpenseWithSplits,
@@ -12,6 +14,7 @@ import {
   type PersonRef,
   ReceiptThumbs,
 } from "@/entities/expense";
+import { isHttpUrl } from "@/entities/schedule-item";
 
 type DetailBodyProps = {
   expense: ExpenseWithSplits;
@@ -53,6 +56,11 @@ export function DetailBody({ expense, row, trip, receipts, avatarUrlOf }: Detail
           {row.time && ` ${row.time}`}
         </Field>
         {row.linkName && <Field label="일정">{row.linkName}</Field>}
+        {row.place && (
+          <Field label="장소">
+            <PlaceValue place={row.place} />
+          </Field>
+        )}
         {row.ownerLink && <Field label="연결">{row.ownerLink}</Field>}
         <Field label="결제수단">{row.methodLabel}</Field>
         <Field label="결제한 사람">
@@ -114,6 +122,34 @@ function People({ people, avatarUrlOf }: PeopleProps) {
           {name}
         </span>
       ))}
+    </span>
+  );
+}
+
+type PlaceValueProps = { place: ExpensePlace };
+
+/** 쓴 곳 — 이름(아래 주소), 구글맵 주소가 http 면 오른쪽 「구글맵」 */
+function PlaceValue({ place }: PlaceValueProps) {
+  return (
+    <span className="flex items-center gap-2">
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate">{place.name}</span>
+        {place.address && (
+          <span className="truncate text-xs font-normal text-ink-400">{place.address}</span>
+        )}
+      </span>
+      {isHttpUrl(place.gmap_url) && (
+        <a
+          href={place.gmap_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${place.name} 구글맵에서 열기`}
+          className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-line px-2.5 text-xs font-semibold text-ink-700"
+        >
+          <MapPin className="size-3.25 text-ink-500" aria-hidden="true" />
+          구글맵
+        </a>
+      )}
     </span>
   );
 }

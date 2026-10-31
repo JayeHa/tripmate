@@ -35,6 +35,8 @@ export const expenseFormSchema = z
     /** 쓴 시각 「HH:MM」(선택). 여행준비면 저장하지 않는다. 기기에 남은 예전 대기열 값에는 없다 */
     spent_time: z.string().regex(TIME).nullable().optional(),
     schedule_item_id: z.string().nullable().optional(),
+    /** 쓴 곳(장소 id, 선택). 일정을 연결하면 저장하지 않는다 — 그 일정의 장소를 쓴다 */
+    place_id: z.string().nullable().optional(),
     /** 합계 · 통계 · 정산에 넣을지 */
     counted: z.boolean(),
     /** 결제 완료(true) / 결제 예정(false) */

@@ -5,6 +5,7 @@ import { useRef } from "react";
 
 import {
   type ExpenseFormValues,
+  type ExpensePlace,
   type ExpenseReceipt,
   type PayFor,
   personKey,
@@ -68,6 +69,8 @@ type ExpenseFormProps = {
   alternatives?: ScheduleItem[];
   currentUserId: string;
   initial?: ExpenseFormValues;
+  /** 수정이면 저장된 쓴 곳(장소) */
+  initialPlace?: ExpensePlace | null;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
   pending?: boolean;
@@ -113,6 +116,7 @@ export function ExpenseForm({
   alternatives = [],
   currentUserId,
   initial,
+  initialPlace,
   defaultSpentOn,
   pending,
   submitError,
@@ -135,6 +139,7 @@ export function ExpenseForm({
     items,
     alternatives,
     initial,
+    initialPlace,
     defaultSpentOn,
     hasReceipts: receipts.length > 0,
     defaultCurrency,

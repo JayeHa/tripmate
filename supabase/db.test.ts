@@ -4189,3 +4189,97 @@ describe("교통비 (0072)", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("비용 장소 (0076)", () => {
+  /** 지금 사람으로 내 장소를 하나 만든다(비용 입력이 부르는 upsert_my_place) */
+  async function myPlace(trip: string, name: string) {
+    const { rows } = await db.query<{ id: string }>(`select public.upsert_my_place($1, $2) as id`, [
+      trip,
+      JSON.stringify({ name, lat: 35.67, lng: 139.76 }),
+    ]);
+    return rows[0].id;
+  }
+  /** 지금 사람으로 장소가 붙은 비용을 넣는다 */
+  async function expenseAt(trip: string, payer: string, place: string) {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name, place_id)
+       values ('${trip}', '${payer}', 500, 'JPY', '편의점', '${place}') returning id`,
+    );
+    return rows[0].id;
+  }
+
+  it("내 장소를 비용에 붙이면 일행도 그 장소를 읽고, 보관함에는 들어가지 않는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-06-01", "2027-06-02");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await myPlace(trip, "로손 긴자점");
+    await expenseAt(trip, A, place);
+
+    await as(B);
+    const shown = await db.query(`select name from public.places where id = '${place}'`);
+    expect(shown.rows).toEqual([{ name: "로손 긴자점" }]);
+    const guide = await db.query(
+      `select 1 from public.trip_places where trip_id = '${trip}' and place_id = '${place}'`,
+    );
+    expect(guide.rows).toEqual([]);
+  });
+
+  it("남의 개인 장소는 비용에 붙이지 못하고, 일행이 붙인 장소가 있는 비용은 고칠 수 있다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-06-03", "2027-06-03");
+    const other = await newTrip("2027-06-04", "2027-06-04");
+    const privatePlace = await myPlace(other, "A 혼자 아는 곳");
+    const used = await myPlace(trip, "마츠모토키요시");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const expense = await expenseAt(trip, A, used);
+
+    await as(B);
+    expect(
+      await rejects(
+        `insert into public.expenses (trip_id, payer_id, amount, currency, name, place_id)
+         values ('${trip}', '${B}', 1, 'JPY', 'x', '${privatePlace}')`,
+      ),
+    ).toMatch(/row-level security/);
+    await db.query(`update public.expenses set amount = 800 where id = '${expense}'`);
+    // 이 여행이 이미 쓰는 장소는 일행도 붙인다
+    await expenseAt(trip, B, used);
+    const { rows } = await db.query<{ n: number }>(
+      `select count(*)::int n from public.expenses where trip_id = '${trip}' and place_id = '${used}'`,
+    );
+    expect(rows[0].n).toBe(2);
+  });
+
+  it("멤버가 나가면 그 사람이 비용에 붙인 장소도 소유자 사본으로 바뀌고, 장소를 지우면 비용의 장소만 빈다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-06-05", "2027-06-05");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(B);
+    const place = await myPlace(trip, "약국");
+    const expense = await expenseAt(trip, B, place);
+    await db.query(
+      `delete from public.trip_members where trip_id = '${trip}' and user_id = '${B}'`,
+    );
+
+    await as(A);
+    const { rows } = await db.query<{ owner: string; name: string; id: string }>(
+      `select p.created_by owner, p.name, p.id from public.expenses e
+       join public.places p on p.id = e.place_id where e.id = '${expense}'`,
+    );
+    expect(rows.map((r) => [r.owner, r.name])).toEqual([[A, "약국"]]);
+    expect(rows[0].id).not.toBe(place);
+
+    await db.query(`delete from public.places where id = '${rows[0].id}'`);
+    const after = await db.query<{ place_id: string | null }>(
+      `select place_id from public.expenses where id = '${expense}'`,
+    );
+    expect(after.rows).toEqual([{ place_id: null }]);
+  });
+});
