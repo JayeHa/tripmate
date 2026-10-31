@@ -3,6 +3,7 @@
 import { ChevronLeft, LoaderCircle } from "lucide-react";
 
 import { usePdfAllPages } from "../model/use-pdf-all-pages";
+import { ZoomPane } from "./zoom-pane";
 
 type PdfAllPagesViewProps = {
   tripId: string;
@@ -14,7 +15,8 @@ type PdfAllPagesViewProps = {
 
 /**
  * 뷰어의 「PDF 전체 보기」 — 원본 PDF 의 모든 쪽을 세로로 이어서. 쪽 크기대로 자리를 먼저 잡고(그리는 동안 밀리지 않게)
- * 앞에서부터 그려진 쪽을 채운다. 받지 못하면(오프라인 · 깨진 파일) 안내와 「다시 시도」
+ * 앞에서부터 그려진 쪽을 채운다. 받지 못하면(오프라인 · 깨진 파일) 안내와 「다시 시도」.
+ * 쪽마다 두 손가락으로 확대한다(ZoomPane) — 확대한 쪽 위에서는 한 손가락이 그 쪽을 움직이고, 두 번 누르면 원래대로 돌아와 다시 스크롤된다
  */
 export function PdfAllPagesView({ tripId, fileKey, title, onBack }: PdfAllPagesViewProps) {
   const { state, retry } = usePdfAllPages(tripId, fileKey);
@@ -55,14 +57,16 @@ export function PdfAllPagesView({ tripId, fileKey, title, onBack }: PdfAllPagesV
               style={{ aspectRatio: `${size.width} / ${size.height}` }}
             >
               {state.images[i] ? (
-                // 앱 안에서 그린 그림(blob 주소)이라 next/image 를 거치지 않는다
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={state.images[i]}
-                  alt={`${title} ${i + 1}쪽`}
-                  draggable={false}
-                  className="size-full object-contain select-none"
-                />
+                <ZoomPane>
+                  {/* 앱 안에서 그린 그림(blob 주소)이라 next/image 를 거치지 않는다 */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={state.images[i]}
+                    alt={`${title} ${i + 1}쪽`}
+                    draggable={false}
+                    className="size-full object-contain select-none"
+                  />
+                </ZoomPane>
               ) : (
                 <LoaderCircle
                   className="size-6 animate-spin text-ink-350"
