@@ -12,6 +12,7 @@ import {
   VOUCHER_MAX_BYTES,
   type VoucherTargetRef,
 } from "@/entities/voucher";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { prepareVoucherFiles } from "./voucher-files";
 
@@ -70,9 +71,9 @@ export function useQuickAddVoucher(tripId: string, onToast: (text: string) => vo
       onToast(
         prepared.drawFailed ? "PDF 를 그림으로 만들지 못해 원본으로 보여요" : "바우처를 추가했어요",
       );
-    } catch {
+    } catch (e) {
       void removeVoucherFiles(tripId, created);
-      onToast("바우처를 올리지 못했어요. 잠시 후 다시 시도해 주세요.");
+      onToast(saveErrorText(e, "바우처를 올리지 못했어요. 잠시 후 다시 시도해 주세요."));
     } finally {
       setBusy(false);
     }

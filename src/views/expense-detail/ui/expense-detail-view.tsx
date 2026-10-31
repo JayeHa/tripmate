@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useDeleteExpense } from "@/entities/expense";
 import { DeleteExpenseConfirm } from "@/features/expense/form";
+import { saveErrorText } from "@/shared/api/sync";
 import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -73,7 +74,7 @@ export function ExpenseDetailView({ tripId, expenseId }: ExpenseDetailViewProps)
           <div className="flex shrink-0 flex-col gap-2 border-t border-surface-muted bg-background px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:sticky lg:bottom-0">
             {remove.isError && (
               <p role="alert" className="text-center text-[13px] text-destructive">
-                삭제하지 못했어요. 다시 시도해 주세요.
+                {saveErrorText(remove.error, "삭제하지 못했어요. 다시 시도해 주세요.")}
               </p>
             )}
             <div className="flex gap-2">

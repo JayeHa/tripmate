@@ -10,6 +10,7 @@ import {
   VOUCHER_GONE,
   type VoucherSave,
 } from "@/entities/voucher";
+import { saveErrorText } from "@/shared/api/sync";
 import { useMountedDone, useMountedRef } from "@/shared/lib/use-mounted-done";
 
 import {
@@ -154,7 +155,7 @@ const EMPTY_FILE = {
 /** 요청 실패 문구 — 그사이 지워진 바우처면 그대로 알리고, 그 밖은 다시 시도 */
 function messageOf(e: unknown): string {
   if (e instanceof Error && e.message === VOUCHER_GONE) return VOUCHER_GONE;
-  return "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  return saveErrorText(e, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
 }
 
 export type VoucherFormState = ReturnType<typeof useVoucherForm>;

@@ -4,6 +4,7 @@ import { Copy, RefreshCw, Share2 } from "lucide-react";
 
 import { type Trip, useRotateInviteToken } from "@/entities/trip";
 import { useInviteLink } from "@/features/trip/invite-member";
+import { saveErrorText } from "@/shared/api/sync";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 
@@ -40,7 +41,7 @@ export function InviteCard({ trip, onToast }: InviteCardProps) {
   function regenerate() {
     rotate.mutate(undefined, {
       onSuccess: () => onToast("새 링크를 만들었어요", "이전 링크는 더 이상 쓸 수 없어요"),
-      onError: () => onToast("링크를 다시 만들지 못했어요"),
+      onError: (e) => onToast(saveErrorText(e, "링크를 다시 만들지 못했어요")),
     });
   }
 

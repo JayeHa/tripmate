@@ -6,6 +6,7 @@ import {
   useDeleteScheduleItem,
   useSwapAlternative,
 } from "@/entities/schedule-item";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { swapDoneMessage } from "../lib/alternatives";
 
@@ -55,8 +56,13 @@ export function useAlternativeActions(
     pending,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 상세를 닫지 못하게 */
     locked: mutations.some((m) => m.isPending && !m.isPaused),
-    error: mutations.some((m) => m.error) ? "처리하지 못했어요. 잠시 후 다시 시도해 주세요." : null,
+    error: errorText(mutations.find((m) => m.error)?.error ?? null),
   };
 }
 
 export type AlternativeActions = ReturnType<typeof useAlternativeActions>;
+
+/** 대체 장소 동작 실패 문구. 실패가 없으면 null */
+function errorText(error: Error | null): string | null {
+  return error ? saveErrorText(error, "처리하지 못했어요. 잠시 후 다시 시도해 주세요.") : null;
+}

@@ -21,6 +21,7 @@ import { itemName, useAlternatives, useScheduleItems } from "@/entities/schedule
 import { useUser } from "@/entities/session";
 import { useTrip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
+import { saveErrorText } from "@/shared/api/sync";
 import { todayISO } from "@/shared/lib/days";
 import { type ExchangeRates, MissingRateError } from "@/shared/lib/money";
 import type { ToastMessage } from "@/shared/ui/toast";
@@ -143,7 +144,8 @@ export function useExpenseList(tripId: string) {
     /** 「결제 완료로」 — 실패하면 토스트로 알린다 */
     markPaid: (expenseId: string) =>
       markPaid.mutate(expenseId, {
-        onError: () => setToast({ text: "결제 완료로 바꾸지 못했어요", id: Date.now() }),
+        onError: (e) =>
+          setToast({ text: saveErrorText(e, "결제 완료로 바꾸지 못했어요"), id: Date.now() }),
       }),
     /** 결제 완료로 바꾸는 중인 지출 — 그 줄의 버튼을 막는다 */
     paying: markPaid.isPending ? markPaid.variables : null,

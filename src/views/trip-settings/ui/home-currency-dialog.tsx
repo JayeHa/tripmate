@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useExpenses, useSettlements } from "@/entities/expense";
 import { type Trip, useChangeHomeCurrency } from "@/entities/trip";
+import { saveErrorText } from "@/shared/api/sync";
 import { appliedFactor, currencyName, rebaseFactor, rebaseRates } from "@/shared/lib/money";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import {
@@ -152,5 +153,5 @@ function changeErrorText(error: Error | null): string {
   if (error?.message.includes("changed by someone else")) {
     return "다른 사람이 기준 화폐를 먼저 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요.";
   }
-  return "기준 화폐를 바꾸지 못했어요. 다시 시도해 주세요.";
+  return saveErrorText(error, "기준 화폐를 바꾸지 못했어요. 다시 시도해 주세요.");
 }

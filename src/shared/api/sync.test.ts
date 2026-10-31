@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { onlineManager, QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -7,8 +7,10 @@ import {
   dropFailedTwins,
   isDuplicateKey,
   isNetworkError,
+  OfflineError,
   rememberOwnWrite,
   retrySync,
+  saveErrorText,
   updateLatestWins,
   versionToCompare,
 } from "./sync";
@@ -22,6 +24,18 @@ describe("오프라인 편집 대기열", () => {
     expect(isNetworkError({ message: "Load failed" })).toBe(true);
     expect(isNetworkError({ message: "new row violates row-level security policy" })).toBe(false);
     expect(isNetworkError(null)).toBe(false);
+  });
+
+  it("저장 실패 문구 — 오프라인으로 막혔거나 브라우저가 오프라인이면 오프라인 문구, 아니면 화면 문구", () => {
+    const offline = "오프라인이에요. 연결되면 다시 해 주세요";
+    onlineManager.setOnline(true);
+    expect(saveErrorText(new OfflineError(), "저장하지 못했어요")).toBe(offline);
+    expect(saveErrorText(new Error("boom"), "저장하지 못했어요")).toBe("저장하지 못했어요");
+    expect(saveErrorText(null, "저장하지 못했어요")).toBe("저장하지 못했어요");
+    // 파일을 먼저 올리다 서버에 닿지 못한 실패 — 오류는 OfflineError 가 아니지만 브라우저가 오프라인
+    onlineManager.setOnline(false);
+    expect(saveErrorText(new TypeError("Failed to fetch"), "올리지 못했어요")).toBe(offline);
+    onlineManager.setOnline(true);
   });
 
   it("같은 줄을 다시 넣은 unique 위반만 — 화면에서 만든 id 로 두 번 올라간 저장", () => {

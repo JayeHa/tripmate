@@ -12,6 +12,7 @@ import {
   viewerKeys,
   type Voucher,
 } from "@/entities/voucher";
+import { saveErrorText } from "@/shared/api/sync";
 
 type VoucherViewerOptions = {
   tripId: string;
@@ -20,6 +21,9 @@ type VoucherViewerOptions = {
   onDeleted: () => void;
   onToast: (text: string) => void;
 };
+
+/** 고정 · 사용 표시를 바꾸지 못했을 때 */
+const CHANGE_FAILED = "바꾸지 못했어요. 잠시 후 다시 시도해 주세요.";
 
 /**
  * 뷰어 상태 — 넘겨 보는 그림(현장용 페이지 · 사진)과 지금 쪽, 그림이 없는 PDF 의 원본 주소, 홈 고정, 「사용했어요」, 지우기.
@@ -43,8 +47,8 @@ export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: Vouche
       await remove.mutateAsync(voucher.id);
       onToast("바우처를 삭제했어요");
       onDeleted();
-    } catch {
-      onToast("지우지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (e) {
+      onToast(saveErrorText(e, "지우지 못했어요. 잠시 후 다시 시도해 주세요."));
     }
   }
 
@@ -64,7 +68,7 @@ export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: Vouche
       if (!user) return;
       void pin
         .mutateAsync({ id: voucher.id, value: voucher.pinned_by ? null : user.id })
-        .catch(() => onToast("바꾸지 못했어요. 잠시 후 다시 시도해 주세요."));
+        .catch((e: unknown) => onToast(saveErrorText(e, CHANGE_FAILED)));
     },
     /** 쓴 시각 — 아직 안 썼으면 null */
     usedAt: voucher.used_at,
@@ -74,7 +78,7 @@ export function useVoucherViewer({ tripId, voucher, onDeleted, onToast }: Vouche
       void used
         .mutateAsync({ id: voucher.id, value: next })
         .then(() => onToast(next ? "사용한 바우처로 표시했어요" : "사용 표시를 되돌렸어요"))
-        .catch(() => onToast("바꾸지 못했어요. 잠시 후 다시 시도해 주세요."));
+        .catch((e: unknown) => onToast(saveErrorText(e, CHANGE_FAILED)));
     },
     remove: () => void deleteVoucher(),
     deleting: remove.isPending,

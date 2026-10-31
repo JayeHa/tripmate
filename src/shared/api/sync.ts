@@ -21,12 +21,26 @@ export function isSyncKey(mutationKey: readonly unknown[] | undefined): boolean 
   return mutationKey?.[0] === SYNC_KEY;
 }
 
+/** 오프라인이라 저장하지 못했을 때 화면에 보이는 문구 */
+const OFFLINE_SAVE_TEXT = "오프라인이에요. 연결되면 다시 해 주세요";
+
 /** 오프라인이라 막은 저장 — 화면에 그대로 보여도 되는 문구 */
 export class OfflineError extends Error {
   constructor() {
-    super("오프라인이에요. 연결되면 다시 해 주세요");
+    super(OFFLINE_SAVE_TEXT);
     this.name = "OfflineError";
   }
+}
+
+/**
+ * 저장 실패 문구 — 오프라인이라 실패했으면 「오프라인이에요. 연결되면 다시 해 주세요」, 아니면 화면이 정한 문구.
+ * 「다시 시도해 주세요」 만 보이면 다시 눌러도 계속 실패한다(#218).
+ * 대기열 밖 저장은 오프라인이면 `OfflineError` 로 막히고, 저장 함수 밖에서 먼저 올리는 파일(바우처 · 영수증 · 사진)은 서버에 닿지 못해 실패한다 —
+ * 그때도 브라우저가 오프라인이면 같은 문구. 화면만의 문구(지워졌어요 · 권한)는 이것보다 먼저 고른다
+ */
+export function saveErrorText(error: unknown, fallback: string): string {
+  if (error instanceof OfflineError || !onlineManager.isOnline()) return OFFLINE_SAVE_TEXT;
+  return fallback;
 }
 
 /**

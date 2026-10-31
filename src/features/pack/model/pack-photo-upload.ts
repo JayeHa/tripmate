@@ -9,6 +9,7 @@ import {
   uploadPackPhotoFile,
 } from "@/entities/pack";
 import { ApiError } from "@/shared/api/post-json";
+import { saveErrorText } from "@/shared/api/sync";
 import { compressImage } from "@/shared/lib/compress-image";
 
 /** 화면에 그대로 보여 줄 사진 오류 — 받지 않는 사진 · 너무 큰 사진 */
@@ -46,5 +47,5 @@ export async function uploadPackPhoto(tripId: string, file: File): Promise<PackP
 export function photoErrorText(e: unknown): string {
   if (e instanceof PhotoError || e instanceof ApiError) return e.message;
   if (e instanceof Error && e.message === PACK_PHOTO_CHANGED) return PACK_PHOTO_CHANGED;
-  return "사진을 올리지 못했어요. 잠시 후 다시 시도해 주세요";
+  return saveErrorText(e, "사진을 올리지 못했어요. 잠시 후 다시 시도해 주세요");
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useAddChecklistItem } from "@/entities/checklist";
+import { saveErrorText } from "@/shared/api/sync";
 
 /**
  * 체크리스트 빠른 추가 — 제목만 쳐서 Enter · 「추가」 로 「해야 할 것」 에 담는다. 한글 조합 중 Enter 는 무시한다.
@@ -21,9 +22,9 @@ export function useQuickAdd(tripId: string, onToast: (text: string) => void) {
     setText("");
     add.mutateAsync(title).then(
       () => onToast("해야 할 것에 담았어요"),
-      () => {
+      (e: unknown) => {
         setText((now) => now || title);
-        onToast("담지 못했어요. 다시 시도해 주세요");
+        onToast(saveErrorText(e, "담지 못했어요. 다시 시도해 주세요"));
       },
     );
   }
