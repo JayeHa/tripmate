@@ -59,7 +59,7 @@ export function useStaysOverlay(tripId: string, trip: { start_date: string } | n
     closePick: () => setPick(null),
     city: cities[0] ?? null,
     payment,
-    /** 숙소의 결제 — 붙은 비용이 있으면 그 수정, 없으면 그 숙소의 결제로 새 비용. 새 숙소면 초안 */
+    /** 숙소의 결제 — 붙은 비용이 있으면 그 수정, 없으면 그 숙소의 결제로 새 비용. 새 숙소면 초안. 연결된 비용 줄은 그 비용 수정(빠른 입력) */
     openPayment: (req: StayPaymentRequest) => setPayment(paymentTarget(req)),
     closePayment: () => setPayment(null),
   };
@@ -69,6 +69,7 @@ export type StaysOverlayState = ReturnType<typeof useStaysOverlay>;
 
 /** 숙소의 결제 요청 → 비용 창 대상 */
 function paymentTarget(req: StayPaymentRequest): ExpenseDialogTarget {
+  if (req.kind === "linked") return { kind: "edit", expenseId: req.expenseId, quick: true };
   if (req.kind === "draft") {
     return {
       kind: "draft",
