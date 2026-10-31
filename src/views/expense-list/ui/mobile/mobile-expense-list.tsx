@@ -2,8 +2,9 @@
 
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
+import { personKey } from "@/entities/expense";
 import { todayISO } from "@/shared/lib/days";
 import { formatMoney } from "@/shared/lib/money";
 import { NAV } from "@/shared/lib/nav-transition";
@@ -13,6 +14,7 @@ import { buttonVariants } from "@/shared/ui/button";
 import { floatingAddClass } from "@/shared/ui/floating-add-button";
 
 import { calendarCells } from "../../lib/calendar";
+import { byPayer } from "../../lib/filters";
 import { newPeriod } from "../../lib/new-period";
 import { periodLabel } from "../../lib/period";
 import { useCalendarScroll } from "../../model/use-calendar-scroll";
@@ -21,6 +23,7 @@ import { useScrolledPast } from "../../model/use-scrolled-past";
 import { CalendarStrip } from "./calendar-strip";
 import { ExpenseRow } from "./expense-row";
 import { ListTabs } from "./list-tabs";
+import { PayerChips } from "./payer-chips";
 import { SummaryCard } from "./summary-card";
 
 /**
@@ -35,13 +38,19 @@ type MobileExpenseListProps = { tripId: string; list: ExpenseList };
  * 모바일 가계부 「내역」 — 머리 · 탭(내역 | 지출 · 정산) · 요약 카드 + 「+ 비용 추가」(52) · 날짜 묶음.
  * 「+ 비용 추가」 가 위로 사라지면 날짜 이동 줄과 플로팅 「+ 비용 추가」 가 나타난다(목록은 밀리지 않는다).
  * 줄의 칸을 누르면 그 묶음으로 스크롤하고, 스크롤하면 줄이 따라간다. 「+ 비용 추가」 는 줄에서 고른 날(맨 위에서는 오늘)로 연다.
- * 「지출 · 정산」 탭은 대시보드 주소(/stats)로 간다
+ * 「지출 · 정산」 탭은 대시보드 주소(/stats)로 간다.
+ * 일행이 있으면 목록 위 「결제한 사람」 칩으로 그 사람이 낸 비용만 본다 — 날짜 합계 · 날짜 줄도 따라가고, 맨 위 총 지출은 그대로.
+ * 고른 사람은 이 화면에서만 기억한다
  */
 export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   const { trip } = list;
   const base = `/trips/${tripId}/expenses`;
   const statsHref = `${base}/stats`;
-  const cells = calendarCells(list.allSections, trip.start_date, list.holidays);
+  const [picked, setPicked] = useState<string | null>(null);
+  // 고른 사람이 여행에서 빠졌으면(정산 인원 지움) 전체로
+  const payer = list.people.some((p) => personKey(p) === picked) ? picked : null;
+  const sections = payer === null ? list.allSections : list.sectionsOf(byPayer(payer));
+  const cells = calendarCells(sections, trip.start_date, list.holidays);
   const scroll = useCalendarScroll(cells.map((c) => c.key));
   const cta = useRef<HTMLAnchorElement>(null);
   const past = useScrolledPast(cta, scroll.stickyRef);
@@ -79,13 +88,15 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
       />
       <div aria-hidden="true" className="h-2 bg-surface-sunken" />
       <main className="flex flex-col gap-7 pt-4 pb-45">
-        {list.allSections.map((s, i) => (
+        {!list.solo && <PayerChips list={list} value={payer} onChange={setPicked} />}
+        {sections.map((s, i) => (
           <DayGroup
             key={cells[i].key}
             sectionRef={scroll.sectionRef(cells[i].key)}
             section={s}
             list={list}
             base={base}
+            filtered={payer !== null}
           />
         ))}
       </main>
@@ -113,10 +124,12 @@ type DayGroupProps = {
   list: ExpenseList;
   base: string;
   sectionRef: (el: HTMLElement | null) => void;
+  /** 결제한 사람으로 거른 중 — 빈 날 문구가 바뀐다 */
+  filtered: boolean;
 };
 
-/** 날짜 묶음 — 머리 「day 2 · 11.1 (일)」 · 합계(13/600 회색), 비용이 없으면 점선 「아직 지출이 없어요」 */
-function DayGroup({ section, list, base, sectionRef }: DayGroupProps) {
+/** 날짜 묶음 — 머리 「day 2 · 11.1 (일)」 · 합계(13/600 회색), 비용이 없으면 점선 「아직 지출이 없어요」(거른 중이면 「결제한 지출이 없어요」) */
+function DayGroup({ section, list, base, sectionRef, filtered }: DayGroupProps) {
   const { label, date } = periodLabel(section.period, list.trip.start_date);
   return (
     <section ref={sectionRef} className="flex flex-col">
@@ -129,7 +142,7 @@ function DayGroup({ section, list, base, sectionRef }: DayGroupProps) {
       </div>
       {section.rows.length === 0 ? (
         <p className="mx-5 rounded-card border border-dashed border-line p-3.5 text-center text-[13px] text-ink-350">
-          아직 지출이 없어요
+          {filtered ? "결제한 지출이 없어요" : "아직 지출이 없어요"}
         </p>
       ) : (
         <div className="divide-y divide-divider border-y border-divider bg-white">

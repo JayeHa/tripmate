@@ -98,3 +98,10 @@ export function moreGroups(
     excluded: expenses.some((e) => !e.counted) || f.hideExcluded,
   };
 }
+
+/** 모바일 「결제한 사람」 칩 — 그 사람이 결제한 비용만 남기는 조건(각자 냄은 결제한 사람이 없어 빠진다). null 이면 거르지 않는다 */
+export function byPayer(key: string | null): ((e: ExpenseWithSplits) => boolean) | undefined {
+  if (key === null) return undefined;
+  const filters = { ...NO_FILTERS, payers: [key] };
+  return (e) => matchesFilters(e, filters);
+}

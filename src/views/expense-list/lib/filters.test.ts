@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { ExpenseWithSplits } from "@/entities/expense";
 
-import { filtersActive, matchesFilters, moreCount, moreGroups, NO_FILTERS } from "./filters";
+import {
+  byPayer,
+  filtersActive,
+  matchesFilters,
+  moreCount,
+  moreGroups,
+  NO_FILTERS,
+} from "./filters";
 
 /** 필터가 보는 칸만 채운 비용 */
 function expense(patch: Partial<ExpenseWithSplits> = {}): ExpenseWithSplits {
@@ -109,5 +116,16 @@ describe("moreGroups", () => {
       status: true,
       excluded: true,
     });
+  });
+});
+
+describe("byPayer", () => {
+  it("전체면 거르지 않고, 사람을 고르면 그 사람이 결제한 비용만 — 정산 인원 · 각자 냄 포함", () => {
+    expect(byPayer(null)).toBeUndefined();
+    const keep = byPayer("m:a")!;
+    expect(keep(expense())).toBe(true);
+    expect(keep(expense({ payer_id: "b" }))).toBe(false);
+    expect(keep(expense({ payer_id: null, split_each: true }))).toBe(false);
+    expect(byPayer("g:x")!(expense({ payer_id: null, payer_guest_id: "x" }))).toBe(true);
   });
 });
