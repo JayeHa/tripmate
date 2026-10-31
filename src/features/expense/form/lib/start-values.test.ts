@@ -33,13 +33,13 @@ const saved: ExpenseFormValues = {
 };
 
 describe("startValues", () => {
-  it("새 지출 — 마지막 통화 · 현금 · 내가 결제 · 모두와 나눔(null) · 여행 첫날, 카테고리는 비운다", () => {
+  it("새 지출 — 마지막 통화 · 카드 · 내가 결제 · 모두와 나눔(null) · 여행 첫날, 카테고리는 비운다", () => {
     expect(startValues(base)).toEqual({
       name: "",
       amount: "",
       currency: "JPY",
       rate: null,
-      paymentMethod: "cash",
+      paymentMethod: "card",
       payer: "m:a",
       splitEach: false,
       participants: null,

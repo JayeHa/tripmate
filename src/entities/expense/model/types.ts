@@ -30,8 +30,8 @@ export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, string> = {
   other: "기타",
 };
 
-/** 결제수단 */
-export const PAYMENT_METHODS = ["cash", "card", "transit"] as const;
+/** 결제수단 — 이 순서로 입력 칸 · PC 필터에 보인다. 여행지에서 가장 많이 쓰는 카드가 먼저 */
+export const PAYMENT_METHODS = ["card", "cash", "transit"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {

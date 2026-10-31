@@ -71,7 +71,8 @@ function newValues(trip: Trip, currency: string, me: string, defaultSpentOn?: st
     amount: "",
     currency,
     rate: null as number | null,
-    paymentMethod: "cash" as ExpenseFormValues["payment_method"],
+    // 여행지에서 대부분 카드로 낸다(2026-10-31 사용자 결정, #286)
+    paymentMethod: "card" as ExpenseFormValues["payment_method"],
     payer: me as string | null,
     splitEach: false,
     participants: null as string[] | null,
