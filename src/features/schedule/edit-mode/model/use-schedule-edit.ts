@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { buildTimeline, type ScheduleItem, useApplyScheduleEdit } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
+import { saveErrorText } from "@/shared/api/sync";
 
 import {
   draftOf,
@@ -207,7 +208,9 @@ export function useScheduleEdit({
     },
     /** 저장 중 — 화면은 목록 · 버튼을 막는다(오프라인으로 멈춰도 다시 연결되면 이 초안으로 저장된다) */
     saving: apply.isPending,
-    error: apply.error ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null,
+    error: apply.error
+      ? saveErrorText(apply.error, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.")
+      : null,
   };
 }
 

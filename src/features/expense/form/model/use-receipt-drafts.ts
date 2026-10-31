@@ -11,6 +11,7 @@ import {
   removeReceiptFiles,
   uploadReceipt,
 } from "@/entities/expense";
+import { saveErrorText } from "@/shared/api/sync";
 import { compressImage } from "@/shared/lib/compress-image";
 
 /** 폼의 영수증 한 장 — 이미 붙어 있던 것(id), 방금 올린 것, 올리는 중인 것(key 없음) */
@@ -70,7 +71,7 @@ export function useReceiptDrafts(tripId: string, initial: ExpenseReceipt[]) {
       setError(
         (e as Error).message === "too-big"
           ? `${file.name} 은(는) 10MB 를 넘어요.`
-          : "영수증을 올리지 못했어요. 다시 시도해 주세요.",
+          : saveErrorText(e, "영수증을 올리지 못했어요. 다시 시도해 주세요."),
       );
     }
   }

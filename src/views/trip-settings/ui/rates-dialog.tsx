@@ -167,9 +167,7 @@ function Notes({ r }: NotesProps) {
       ))}
       {r.saveError && (
         <p role="alert" className="text-[13px] text-destructive">
-          {r.saveError.includes("changed by someone else")
-            ? "다른 사람이 기준 화폐를 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요."
-            : "저장하지 못했어요. 다시 시도해 주세요."}
+          {r.saveError}
         </p>
       )}
     </>

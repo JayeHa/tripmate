@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { type TransportFare, useDeleteFare, useSaveFare } from "@/entities/transport-fare";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { amountDraft, parseAmount } from "../lib/transport";
 
@@ -62,7 +63,7 @@ export function useFareForm(
     canSave: target.kind === "day" || title.trim().length > 0,
     canDelete: target.kind === "extra" && fare !== null,
     pending,
-    error: failed ? "저장하지 못했어요. 잠시 뒤 다시 해 주세요" : null,
+    error: failed ? saveErrorText(failed, "저장하지 못했어요. 잠시 뒤 다시 해 주세요") : null,
     submit,
     destroy,
   };

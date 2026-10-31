@@ -10,6 +10,7 @@ import {
   usePackPhotoUrls,
   useSetPackPhoto,
 } from "@/entities/pack";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { photoErrorText, uploadPackPhoto } from "./pack-photo-upload";
 
@@ -90,7 +91,7 @@ export function usePackPhotoActions(
           onToast(
             e instanceof Error && e.message === PACK_PHOTO_CHANGED
               ? PACK_PHOTO_CHANGED
-              : "지우지 못했어요. 잠시 후 다시 시도해 주세요",
+              : saveErrorText(e, "지우지 못했어요. 잠시 후 다시 시도해 주세요"),
           ),
         );
     },

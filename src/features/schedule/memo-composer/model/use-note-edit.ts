@@ -8,6 +8,7 @@ import {
   useUpdateScheduleItem,
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
+import { saveErrorText } from "@/shared/api/sync";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
 
 import { type NoteDraft, noteDraftOf, toNotePatch } from "../lib/day-memo";
@@ -61,8 +62,11 @@ export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => vo
     canSave: draft.text.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: [update, remove].some((m) => m.isPending && !m.isPaused),
-    error:
-      error ??
-      (update.error || remove.error ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null),
+    error: error ?? saveFailedText(update.error ?? remove.error),
   };
+}
+
+/** 고치기 · 지우기 실패 문구. 실패가 없으면 null */
+function saveFailedText(error: Error | null): string | null {
+  return error ? saveErrorText(error, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.") : null;
 }

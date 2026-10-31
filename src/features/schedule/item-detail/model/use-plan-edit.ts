@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { type ScheduleItem, useUpdateScheduleItem } from "@/entities/schedule-item";
+import { saveErrorText } from "@/shared/api/sync";
 
 import { type PlanDraft, planDraftOf, toPlanPatch } from "../lib/detail";
 
@@ -56,7 +57,11 @@ export function usePlanEdit(tripId: string, item: ScheduleItem) {
     saving: update.isPending,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 상세를 닫지 못하게 */
     locked: update.isPending && !update.isPaused,
-    error: error ?? (update.error ? "저장하지 못했어요. 잠시 후 다시 시도해 주세요." : null),
+    error:
+      error ??
+      (update.error
+        ? saveErrorText(update.error, "저장하지 못했어요. 잠시 후 다시 시도해 주세요.")
+        : null),
   };
 }
 

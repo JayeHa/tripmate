@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useExpenses } from "@/entities/expense";
 import { type Trip, useSaveTripRates } from "@/entities/trip";
+import { saveErrorText } from "@/shared/api/sync";
 
 import {
   checkRates,
@@ -47,7 +48,8 @@ export function useRatesDraft(trip: Trip, destination: string | null, onSaved: (
     inUse: removedInUse(check.changes.remove, expenses),
     canSave: check.error === null && hasChanges(check.changes) && !save.isPending,
     pending: save.isPending,
-    saveError: save.error?.message ?? null,
+    /** 저장 실패 문구 — 실패가 없으면 null */
+    saveError: save.error ? saveFailedText(save.error) : null,
     submit: () => {
       if (check.error !== null || !hasChanges(check.changes)) return;
       save.mutate({ home: trip.home_currency, changes: check.changes }, { onSuccess: onSaved });
@@ -56,3 +58,11 @@ export function useRatesDraft(trip: Trip, destination: string | null, onSaved: (
 }
 
 export type RatesDraftState = ReturnType<typeof useRatesDraft>;
+
+/** 환율 저장 실패 문구 — 일행이 기준 화폐를 바꿨으면 새로 불러오라고, 오프라인이면 연결되면, 그 밖은 다시 시도 */
+function saveFailedText(error: Error): string {
+  if (error.message.includes("changed by someone else")) {
+    return "다른 사람이 기준 화폐를 바꿨어요. 화면을 새로 불러온 뒤 다시 해 주세요.";
+  }
+  return saveErrorText(error, "저장하지 못했어요. 다시 시도해 주세요.");
+}
