@@ -4,6 +4,7 @@ import { Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { MapGuard } from "@/shared/ui/map-guard";
 import { SearchField } from "@/shared/ui/search-field";
 
 import { type LatLng, samePoint } from "../lib/place-form";
@@ -84,33 +85,35 @@ export function LocationStep({ form }: LocationStepProps) {
           className="relative isolate min-h-40 flex-1 border-t border-divider bg-map-bg"
           onPointerDown={() => setListOpen(false)}
         >
-          <Map
-            defaultCenter={form.mapCenter}
-            defaultZoom={PICKED_ZOOM}
-            gestureHandling="greedy"
-            // 화살표 키 이동은 끌기(dragstart)로 잡히지 않아 핀으로 되돌아간다. 키보드로는 위 검색으로 위치를 정한다
-            keyboardShortcuts={false}
-            disableDefaultUI
-            clickableIcons={false}
-            className="size-full"
-          >
-            <CenterSync at={at} onMove={form.moveTo} />
-          </Map>
-          {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울. 위치를 정하기 전엔 흐리게 */}
-          <span
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full",
-              !at && "opacity-40",
-            )}
-          >
-            <span className="block size-7.5 -rotate-45 rounded-[50%_50%_50%_0] border-2 border-white bg-primary shadow-[0_2px_6px_rgba(0,0,0,.3)]" />
-          </span>
-          <span className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex h-7.5 items-center justify-center rounded-button bg-white/95 text-xs font-semibold text-ink-700">
-            {at
-              ? "지도를 움직여 핀 위치를 맞춰 주세요"
-              : "장소를 검색하거나 지도를 움직여 위치를 정해 주세요"}
-          </span>
+          <MapGuard>
+            <Map
+              defaultCenter={form.mapCenter}
+              defaultZoom={PICKED_ZOOM}
+              gestureHandling="greedy"
+              // 화살표 키 이동은 끌기(dragstart)로 잡히지 않아 핀으로 되돌아간다. 키보드로는 위 검색으로 위치를 정한다
+              keyboardShortcuts={false}
+              disableDefaultUI
+              clickableIcons={false}
+              className="size-full"
+            >
+              <CenterSync at={at} onMove={form.moveTo} />
+            </Map>
+            {/* 중앙 핀: 아래 끝이 지도 중앙에 닿는 파란 물방울. 위치를 정하기 전엔 흐리게 */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full",
+                !at && "opacity-40",
+              )}
+            >
+              <span className="block size-7.5 -rotate-45 rounded-[50%_50%_50%_0] border-2 border-white bg-primary shadow-[0_2px_6px_rgba(0,0,0,.3)]" />
+            </span>
+            <span className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex h-7.5 items-center justify-center rounded-button bg-white/95 text-xs font-semibold text-ink-700">
+              {at
+                ? "지도를 움직여 핀 위치를 맞춰 주세요"
+                : "장소를 검색하거나 지도를 움직여 위치를 정해 주세요"}
+            </span>
+          </MapGuard>
         </div>
       ) : (
         <p className="mx-5 rounded-card bg-surface-muted px-3.5 py-3 text-[13px] text-ink-500">

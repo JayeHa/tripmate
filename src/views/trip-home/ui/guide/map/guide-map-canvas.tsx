@@ -4,6 +4,7 @@ import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
 
 import { fitZoom, MapPin, pinAnchor } from "@/entities/schedule-item";
+import { MapGuard } from "@/shared/ui/map-guard";
 
 import {
   corePoints,
@@ -47,46 +48,48 @@ export function GuideMapCanvas({
 }: GuideMapCanvasProps) {
   const selected = pins.find((p) => p.card.place.id === selectedId) ?? null;
   return (
-    <Map
-      mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
-      defaultCenter={pins[0]?.at ?? DEFAULT_CENTER}
-      defaultZoom={13}
-      gestureHandling="greedy"
-      disableDefaultUI
-      clickableIcons={false}
-      onClick={onBackground}
-      className="size-full"
-    >
-      {pins.map((pin) => {
-        const focus = pin.card.place.id === selectedId;
-        return (
-          <AdvancedMarker
-            key={pin.card.place.id}
-            position={pin.at}
-            title={pin.card.place.name}
-            onClick={() => onSelect(pin.card.place.id)}
-            zIndex={focus ? 10 : 1}
-            {...pinAnchor(focus)}
-          >
-            <span className="relative block">
-              <MapPin
-                num={pin.num}
-                status={pin.card.day !== null ? "ok" : null}
-                category={pin.card.place.category === "food" ? "food" : null}
-                focus={focus}
-              />
-              {focus && (
-                <span className="absolute top-full left-1/2 mt-2 -translate-x-1/2 rounded-pill-sm bg-ink-900 px-1.5 py-0.5 text-[11px] font-extrabold whitespace-nowrap text-white shadow-[0_1px_4px_rgba(0,0,0,.2)]">
-                  {pin.card.place.name}
-                </span>
-              )}
-            </span>
-          </AdvancedMarker>
-        );
-      })}
-      <FitGuidePins points={pins.map((p) => p.at)} layout={layout} />
-      <PanToSelected at={selected?.at ?? null} layout={layout} stage={sheetStage} />
-    </Map>
+    <MapGuard>
+      <Map
+        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
+        defaultCenter={pins[0]?.at ?? DEFAULT_CENTER}
+        defaultZoom={13}
+        gestureHandling="greedy"
+        disableDefaultUI
+        clickableIcons={false}
+        onClick={onBackground}
+        className="size-full"
+      >
+        {pins.map((pin) => {
+          const focus = pin.card.place.id === selectedId;
+          return (
+            <AdvancedMarker
+              key={pin.card.place.id}
+              position={pin.at}
+              title={pin.card.place.name}
+              onClick={() => onSelect(pin.card.place.id)}
+              zIndex={focus ? 10 : 1}
+              {...pinAnchor(focus)}
+            >
+              <span className="relative block">
+                <MapPin
+                  num={pin.num}
+                  status={pin.card.day !== null ? "ok" : null}
+                  category={pin.card.place.category === "food" ? "food" : null}
+                  focus={focus}
+                />
+                {focus && (
+                  <span className="absolute top-full left-1/2 mt-2 -translate-x-1/2 rounded-pill-sm bg-ink-900 px-1.5 py-0.5 text-[11px] font-extrabold whitespace-nowrap text-white shadow-[0_1px_4px_rgba(0,0,0,.2)]">
+                    {pin.card.place.name}
+                  </span>
+                )}
+              </span>
+            </AdvancedMarker>
+          );
+        })}
+        <FitGuidePins points={pins.map((p) => p.at)} layout={layout} />
+        <PanToSelected at={selected?.at ?? null} layout={layout} stage={sheetStage} />
+      </Map>
+    </MapGuard>
   );
 }
 
