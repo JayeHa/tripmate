@@ -4370,3 +4370,35 @@ describe("택스 리펀 (0077)", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("택스 리펀 누구 것 · 바코드 (0078)", () => {
+  it("환급 받는 사람은 그 여행 멤버만, 바코드 번호를 적는다. 남의 사람 · 긴 번호는 거부", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-08", "2027-11-09");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    const solo = await newTrip("2027-11-10", "2027-11-10");
+    await as(A);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method, owner_id, barcode)
+       values ('${trip}', 'ASICS', 'JPY', 'card', '${B}', '31248121703003980985') returning id`,
+    );
+    const saved = await db.query(
+      `select owner_id, barcode from public.tax_refunds where id = '${rows[0].id}'`,
+    );
+    expect(saved.rows).toEqual([{ owner_id: B, barcode: "31248121703003980985" }]);
+    // B 가 멤버가 아닌 여행에는 B 를 받는 사람으로 적지 못한다
+    expect(
+      await rejects(
+        `insert into public.tax_refunds (trip_id, store, currency, method, owner_id)
+         values ('${solo}', 'x', 'JPY', 'card', '${B}')`,
+      ),
+    ).toMatch(/row-level security/);
+    expect(
+      await rejects(
+        `update public.tax_refunds set barcode = repeat('1', 61) where id = '${rows[0].id}'`,
+      ),
+    ).toMatch(/check constraint/);
+  });
+});
