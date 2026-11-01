@@ -8,8 +8,9 @@ import { fareTotals, useTransportFares } from "@/entities/transport-fare";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { dayCount } from "@/shared/lib/days";
+import { tripCurrencies } from "@/shared/lib/money";
 
-import { homeApprox, startFareCurrency, totalsLabel, tripCurrencies } from "../lib/transport";
+import { homeApprox, startFareCurrency, totalsLabel } from "../lib/transport";
 import { actualFares } from "../lib/transport-actual";
 import type { FareTarget } from "./use-fare-form";
 

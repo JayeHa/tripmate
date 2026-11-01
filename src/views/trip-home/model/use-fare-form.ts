@@ -4,8 +4,7 @@ import { useState } from "react";
 
 import { type TransportFare, useDeleteFare, useSaveFare } from "@/entities/transport-fare";
 import { saveErrorText } from "@/shared/api/sync";
-
-import { amountDraft, parseAmount } from "../lib/transport";
+import { amountDraft, parseAmount } from "@/shared/lib/money";
 
 /** 고치는 줄 — 그날 줄(없으면 새로) · 날짜 밖 줄(없으면 새로) */
 export type FareTarget =
