@@ -1,27 +1,12 @@
-import {
-  CalendarDays,
-  ChevronRight,
-  Clock,
-  Cloud,
-  CloudDrizzle,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSnow,
-  CloudSun,
-  Coins,
-  type LucideIcon,
-  Sun,
-} from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, CloudSun, Coins, type LucideIcon } from "lucide-react";
 import type * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
-import type { Sky } from "@/shared/lib/weather";
+import { SKY_ICON, WeatherCredit } from "@/shared/ui/weather";
 
 import type { WidgetTile } from "../../lib/widgets";
 import { HolidayCredit } from "./holiday-credit";
 import { RateCredit } from "./rate-credit";
-import { WeatherCredit } from "./weather-credit";
 
 /** 위젯 아이콘 — 「홈 위젯 편집」 줄도 같은 것을 쓴다 */
 export const WIDGET_ICON: Record<WidgetTile["key"], LucideIcon> = {
@@ -29,17 +14,6 @@ export const WIDGET_ICON: Record<WidgetTile["key"], LucideIcon> = {
   rate: Coins,
   holiday: CalendarDays,
   time: Clock,
-};
-
-const SKY_ICON: Record<Sky, LucideIcon> = {
-  clear: Sun,
-  partly: CloudSun,
-  cloudy: Cloud,
-  fog: CloudFog,
-  drizzle: CloudDrizzle,
-  rain: CloudRain,
-  snow: CloudSnow,
-  storm: CloudLightning,
 };
 
 /** 타일 아이콘 — 날씨는 하늘 모양대로(모르면 구름 낀 해) */
