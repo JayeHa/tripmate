@@ -50,6 +50,8 @@ export const queryKeys = {
   packPhotos: (tripId: string) => ["trips", tripId, "pack-photos"] as const,
   /** 여행 홈 「교통」 의 1인 예상 교통비(0072) */
   transportFares: (tripId: string) => ["trips", tripId, "transport-fares"] as const,
+  /** 가계부 「환급」 의 택스 리펀(0077) */
+  taxRefunds: (tripId: string) => ["trips", tripId, "tax-refunds"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,

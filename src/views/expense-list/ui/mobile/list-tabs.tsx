@@ -4,17 +4,18 @@ import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 type ListTabsProps = {
-  active: "list" | "stats";
-  /** 「내역」 · 「지출 · 정산」 탭이 갈 곳 */
+  active: "list" | "stats" | "refund";
+  /** 「내역」 · 「지출 · 정산」 · 「환급」 탭이 갈 곳 */
   listHref: string;
   statsHref: string;
+  refundHref: string;
 };
 
 /**
- * 가계부 머리 아래 탭 「내역 | 지출 · 정산」 — 42 높이, 고른 탭은 16/800 잉크 + 밑줄 2.5, 아닌 탭은 16/600 회색.
+ * 가계부 머리 아래 탭 「내역 | 지출 · 정산 | 환급」 — 42 높이, 고른 탭은 16/800 잉크 + 밑줄 2.5, 아닌 탭은 16/600 회색.
  * 머리 바로 아래에 붙어(sticky) 스크롤해도 보인다. 탭마다 주소가 따로라 뒤로 가기로 앞 탭에 돌아온다
  */
-export function ListTabs({ active, listHref, statsHref }: ListTabsProps) {
+export function ListTabs({ active, listHref, statsHref, refundHref }: ListTabsProps) {
   return (
     <nav className="sticky top-[calc(var(--shell-top)+3.25rem)] z-20 flex gap-5.5 border-b border-surface-muted bg-white px-5">
       <Tab href={listHref} on={active === "list"}>
@@ -22,6 +23,9 @@ export function ListTabs({ active, listHref, statsHref }: ListTabsProps) {
       </Tab>
       <Tab href={statsHref} on={active === "stats"}>
         지출 · 정산
+      </Tab>
+      <Tab href={refundHref} on={active === "refund"}>
+        환급
       </Tab>
     </nav>
   );

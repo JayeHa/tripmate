@@ -29,6 +29,7 @@ import { ExpenseTable } from "./expense-table";
 import { FilterBar } from "./filter-bar";
 import { filterOptions } from "./filter-options";
 import { PcDashboard } from "./pc-dashboard";
+import { RefundModal } from "./refund-modal";
 import { SettleModal } from "./settle-modal";
 
 /**
@@ -180,6 +181,7 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
               dash={dash}
               onCategory={screens.openCategory}
               onSettle={screens.openSettle}
+              onRefund={screens.openRefund}
             />
           )}
         </aside>
@@ -192,6 +194,12 @@ export function PcExpenseList({ tripId, list, initial }: PcExpenseListProps) {
       />
       <CategoryModal list={list} opened={screens.category} onClose={screens.closeCategory} />
       <SettleModal list={list} dash={dash} opened={screens.settle} onClose={screens.closeSettle} />
+      <RefundModal
+        tripId={tripId}
+        list={list}
+        open={screens.refund}
+        onClose={screens.closeRefund}
+      />
     </div>
   );
 }

@@ -59,7 +59,12 @@ export function MobileExpenseList({ tripId, list }: MobileExpenseListProps) {
   return (
     <>
       <AppHeader title="가계부" subtitle={trip.title} back="/trips" />
-      <ListTabs active="list" listHref={base} statsHref={statsHref} />
+      <ListTabs
+        active="list"
+        listHref={base}
+        statsHref={statsHref}
+        refundHref={`${base}/refunds`}
+      />
       <SummaryCard
         total={list.total}
         home={trip.home_currency}

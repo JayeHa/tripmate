@@ -91,6 +91,12 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "transport_fares", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.transportFares(tripId) }),
       )
+      // 택스 리펀 — 일행이 공항에서 「세관 확인했어요」 를 누르면 바로
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tax_refunds", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.taxRefunds(tripId) }),
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>
         refreshAfterSync(queryKeys.expenses(tripId)),
       )
