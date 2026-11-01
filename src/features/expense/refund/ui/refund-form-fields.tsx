@@ -76,8 +76,9 @@ export function WhenFields({ form }: FieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <FieldLabel optional>구매 날짜 · 시각</FieldLabel>
-      <div className="flex gap-2">
-        <div className="min-w-0 flex-1">
+      {/* 폰 폭(350)에서는 날짜 칸이 잘리지 않게 시각 칸이 아래 줄로 내려간다 */}
+      <div className="flex flex-wrap gap-2">
+        <div className="min-w-46 flex-1">
           <DateField
             value={boughtOn}
             onChange={(d) => form.set("boughtOn", d)}
