@@ -28,6 +28,7 @@ export function formValuesOf(expense: ExpenseWithSplits): ExpenseFormValues {
     spent_on: expense.spent_on,
     spent_time: timeText(expense.spent_time),
     schedule_item_id: expense.schedule_item_id,
+    place_id: expense.place_id,
     counted: expense.counted,
     paid: expense.paid,
     due_date: expense.due_date,

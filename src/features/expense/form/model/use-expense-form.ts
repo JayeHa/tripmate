@@ -4,6 +4,7 @@ import {
   type ExpenseCategory,
   expenseFormSchema,
   type ExpenseFormValues,
+  type ExpensePlace,
   type PayFor,
   personOfKey,
 } from "@/entities/expense";
@@ -14,6 +15,7 @@ import { missingText } from "../lib/missing";
 import { splitPreview } from "../lib/split-preview";
 import { startValues } from "../lib/start-values";
 import { useExpenseLink } from "./use-expense-link";
+import { useExpensePlace } from "./use-expense-place";
 import { useMoney } from "./use-money";
 import { type FormPerson, usePeoplePicker } from "./use-people-picker";
 import { useSpentTime } from "./use-spent-time";
@@ -27,6 +29,8 @@ type ExpenseFormOptions = {
   items: ScheduleItem[];
   alternatives: ScheduleItem[];
   initial?: ExpenseFormValues;
+  /** 수정이면 저장된 쓴 곳(장소) */
+  initialPlace?: ExpensePlace | null;
   /** 새 지출의 처음 날짜 — ""(여행준비) 또는 yyyy-MM-dd */
   defaultSpentOn?: string;
   /** 새 지출을 처음부터 이 일정에 연결한다(일정 상세의 「+ 비용」) */
@@ -45,7 +49,7 @@ type ExpenseFormOptions = {
 
 /**
  * 비용 입력의 상태와 검증. 화면 조각들은 이 값을 나눠 받아 그리기만 한다.
- * 금액 · 통화 · 환율은 useMoney, 일정 연결은 useExpenseLink, 시간 칸은 useSpentTime 이 쥔다. 금액은 제출할 때 숫자로 바꾼다. 나누기는 균등 분할만 한다
+ * 금액 · 통화 · 환율은 useMoney, 일정 연결은 useExpenseLink, 시간 칸은 useSpentTime, 쓴 곳은 useExpensePlace 가 쥔다. 금액은 제출할 때 숫자로 바꾼다. 나누기는 균등 분할만 한다
  */
 export function useExpenseForm({
   trip,
@@ -54,6 +58,7 @@ export function useExpenseForm({
   items,
   alternatives,
   initial,
+  initialPlace = null,
   defaultSpentOn,
   hasReceipts = false,
   presetItem = null,
@@ -114,6 +119,11 @@ export function useExpenseForm({
   });
 
   const spent = useSpentTime({ initial, spentOn, linked: link.linked });
+  const place = useExpensePlace({
+    tripId: trip.id,
+    initialPlace,
+    fields: { name, setName, category, setCategory },
+  });
 
   const nameOf = (key: string) => people.find((p) => p.key === key)?.name ?? "알 수 없음";
   const preview = splitPreview({
@@ -145,6 +155,7 @@ export function useExpenseForm({
       spent_on: spentOn || null,
       spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
+      place_id: link.itemId ? null : (place.picked?.id ?? null),
       counted,
       paid,
       due_date: paid ? null : dueDate || null,
@@ -176,6 +187,8 @@ export function useExpenseForm({
     /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */
     time: spent.time,
     setTime: spent.setTime,
+    /** 쓴 곳(선택) — 일정을 연결하지 않았을 때만 보이고 저장한다 */
+    place,
     link,
     paid,
     setPaid,

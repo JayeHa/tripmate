@@ -6,6 +6,7 @@ import {
   toHomeFor,
   withLine,
 } from "@/entities/expense";
+import { isHttpUrl } from "@/entities/schedule-item";
 import {
   decimalsOf,
   type ExchangeRates,
@@ -15,7 +16,8 @@ import {
 } from "@/shared/lib/money";
 
 /** 상세 패널 한 줄. muted 면 값이 비어 있다는 뜻(「연결 안 함」 · 「없음」) — 흐리게 */
-export type DetailField = { label: string; value: string; muted?: boolean };
+/** 표 한 줄. href 가 있으면 값을 새 창 링크로(쓴 곳의 구글맵) */
+export type DetailField = { label: string; value: string; muted?: boolean; href?: string };
 
 type FieldContext = {
   trip: {
@@ -77,6 +79,14 @@ export function detailFields(
     row.ownerLink
       ? { label: "연결", value: row.ownerLink }
       : { label: "일정", value: row.linkName ?? "연결 안 함", muted: !row.linkName },
+    ...placeField(row),
     { label: "메모", value: memo || "없음", muted: !memo },
   ];
+}
+
+/** 쓴 곳 줄 — 장소를 붙인 비용만. 구글맵 주소가 http 면 링크 */
+function placeField(row: ExpenseRowView): DetailField[] {
+  if (!row.place) return [];
+  const url = row.place.gmap_url;
+  return [{ label: "장소", value: row.place.name, href: isHttpUrl(url) ? url : undefined }];
 }

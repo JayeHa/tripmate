@@ -948,6 +948,7 @@ export type Database = {
           memo: string | null;
           spent_on: string | null;
           spent_time: string | null;
+          place_id: string | null;
           payment_method: string;
           rate: number | null;
           counted: boolean;
@@ -974,6 +975,7 @@ export type Database = {
           memo?: string | null;
           spent_on?: string | null;
           spent_time?: string | null;
+          place_id?: string | null;
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;
@@ -1000,6 +1002,7 @@ export type Database = {
           memo?: string | null;
           spent_on?: string | null;
           spent_time?: string | null;
+          place_id?: string | null;
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;
@@ -1010,7 +1013,15 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "expenses_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "places";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       expense_splits: {
         Row: {

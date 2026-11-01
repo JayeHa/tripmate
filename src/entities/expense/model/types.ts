@@ -2,7 +2,12 @@ import type { Tables } from "@/shared/api/supabase/database.types";
 
 export type Expense = Tables<"expenses">;
 export type ExpenseSplit = Tables<"expense_splits">;
-export type ExpenseWithSplits = Expense & { splits: ExpenseSplit[] };
+/** 비용을 쓴 곳(#289) — 목록 · 상세에 보일 칸만 */
+export type ExpensePlace = Pick<Tables<"places">, "id" | "name" | "address" | "gmap_url">;
+/**
+ * 지출 + 나눔 줄 + 쓴 곳. 쓴 곳은 장소를 붙인 비용만 있고, 화면에 먼저 보인 지출 · 예전에 기기에 남은 목록에는 칸이 없다(undefined)
+ */
+export type ExpenseWithSplits = Expense & { splits: ExpenseSplit[]; place?: ExpensePlace | null };
 /** 앱에 초대하지 않고 가계부 정산에만 넣는 사람 */
 export type TripGuest = Tables<"trip_guests">;
 /** 정산에서 이미 보낸 돈 한 줄 */
