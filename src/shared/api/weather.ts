@@ -1,8 +1,9 @@
 "use client";
 
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
 
 import type { WeatherDay, WeatherNormals } from "@/shared/lib/weather";
+import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
 import { queryKeys } from "./query-keys";
 
@@ -47,4 +48,39 @@ export function useForecast(city: string | null) {
 /** 도시(id)의 그 달 평년 기온. 도시 · 달을 모르거나(null) 받는 중 · 실패하면 data 가 없다 */
 export function useNormals(city: string | null, month: number | null) {
   return useQuery({ ...normalsQuery(city ?? "", month ?? 1), enabled: !!city && month !== null });
+}
+
+/** 도시의 기간(양끝 포함) 날마다 날씨 조회 정의 — 기록 · 예보 · 작년 · 평년이 섞여 와서 예보에 맞춰 한 시간마다 다시 받는다 */
+export const weatherDaysQuery = (city: string, from: string, to: string) =>
+  queryOptions({
+    queryKey: queryKeys.weather.days(city, from, to),
+    queryFn: () =>
+      getJson<SourcedWeatherDay[]>(
+        `/api/weather/days?${new URLSearchParams({ city, from, to }).toString()}`,
+      ),
+    staleTime: HOUR,
+    retry: 1,
+  });
+
+/**
+ * 도시들(id)의 기간 날마다 날씨 — 도시 → 날짜 → 그날 날씨. 기간을 모르면(null) 부르지 않는다.
+ * 받는 중 · 실패한 도시는 빠진다(그 도시의 날은 날씨 줄이 없다)
+ */
+export function useWeatherDays(
+  cities: readonly string[],
+  range: { from: string; to: string } | null,
+) {
+  return useQueries({
+    queries: cities.map((city) => ({
+      ...weatherDaysQuery(city, range?.from ?? "", range?.to ?? ""),
+      enabled: !!range,
+    })),
+    combine: (results) =>
+      new Map(
+        cities.map((city, i) => [
+          city,
+          new Map((results[i]?.data ?? []).map((d) => [d.date, d] as const)),
+        ]),
+      ),
+  });
 }

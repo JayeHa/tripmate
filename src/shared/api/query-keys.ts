@@ -13,6 +13,7 @@ export const queryKeys = {
   weather: {
     forecast: (city: string) => ["weather", "forecast", city] as const,
     normals: (city: string, month: number) => ["weather", "normals", city, month] as const,
+    days: (city: string, from: string, to: string) => ["weather", "days", city, from, to] as const,
   },
   trips: {
     all: ["trips"] as const,
