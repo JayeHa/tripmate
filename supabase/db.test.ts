@@ -4370,3 +4370,72 @@ describe("택스 리펀 (0077)", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("택스 리펀 누구 것 · 바코드 (0078)", () => {
+  it("환급 받는 사람은 그 여행 멤버만, 바코드 번호를 적는다. 남의 사람 · 긴 번호는 거부", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-08", "2027-11-09");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    const solo = await newTrip("2027-11-10", "2027-11-10");
+    await as(A);
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method, owner_id, barcode)
+       values ('${trip}', 'ASICS', 'JPY', 'card', '${B}', '31248121703003980985') returning id`,
+    );
+    const saved = await db.query(
+      `select owner_id, barcode from public.tax_refunds where id = '${rows[0].id}'`,
+    );
+    expect(saved.rows).toEqual([{ owner_id: B, barcode: "31248121703003980985" }]);
+    // B 가 멤버가 아닌 여행에는 B 를 받는 사람으로 적지 못한다
+    expect(
+      await rejects(
+        `insert into public.tax_refunds (trip_id, store, currency, method, owner_id)
+         values ('${solo}', 'x', 'JPY', 'card', '${B}')`,
+      ),
+    ).toMatch(/refund owner is not a trip member/);
+    expect(
+      await rejects(
+        `update public.tax_refunds set barcode = repeat('1', 61) where id = '${rows[0].id}'`,
+      ),
+    ).toMatch(/check constraint/);
+  });
+});
+
+describe("택스 리펀 누구 것 검사는 바꿀 때만 (0079)", () => {
+  it("받는 사람이 나간 뒤에도 일행이 단계를 바꾸고, 나간 사람을 새로 고르지는 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-11", "2027-11-12");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const mine = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method, owner_id)
+       values ('${trip}', 'ASICS', 'JPY', 'card', '${B}') returning id`,
+    );
+    const other = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method)
+       values ('${trip}', 'x', 'JPY', 'card') returning id`,
+    );
+    await db.exec(
+      `reset role; delete from public.trip_members where trip_id = '${trip}' and user_id = '${B}';`,
+    );
+    await as(A);
+    await db.query(
+      `update public.tax_refunds set customs_at = now(), memo = '공항' where id = '${mine.rows[0].id}'`,
+    );
+    const { rows } = await db.query(
+      `select owner_id, customs_at is not null as customs from public.tax_refunds where id = '${mine.rows[0].id}'`,
+    );
+    expect(rows).toEqual([{ owner_id: B, customs: true }]);
+    expect(
+      await rejects(
+        `update public.tax_refunds set owner_id = '${B}' where id = '${other.rows[0].id}'`,
+      ),
+    ).toMatch(/refund owner is not a trip member/);
+    // 정하지 않음으로 바꾸는 것은 된다
+    await db.query(`update public.tax_refunds set owner_id = null where id = '${mine.rows[0].id}'`);
+  });
+});

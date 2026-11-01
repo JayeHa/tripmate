@@ -4,14 +4,19 @@ import { boughtLabel, type TaxRefund } from "@/entities/tax-refund";
 import { methodText } from "@/features/expense/refund";
 import { formatMoney } from "@/shared/lib/money";
 
-type RefundRowProps = { refund: TaxRefund; onOpen: () => void };
+type RefundRowProps = {
+  refund: TaxRefund;
+  /** 누구 것 — 일행이 있을 때만(혼자면 undefined), 정하지 않았으면 null */
+  owner?: string | null;
+  onOpen: () => void;
+};
 
 /**
- * 환급 한 줄 — 매장(15/700) · 아래 「11.1 (일) 17:01 · JPrefund · 공항 현금」, 오른쪽 환급 예정액(15/800)과 구매 금액(12 회색).
+ * 환급 한 줄 — 매장(15/700) · 아래 「김동규 · 11.1 (일) 17:01 · JPrefund · 공항 현금」(사람은 일행이 있을 때), 오른쪽 환급 예정액(15/800)과 구매 금액(12 회색).
  * 누르면 상세
  */
-export function RefundRow({ refund: r, onOpen }: RefundRowProps) {
-  const sub = [boughtLabel(r), r.provider, methodText(r)].filter(Boolean).join(" · ");
+export function RefundRow({ refund: r, owner, onOpen }: RefundRowProps) {
+  const sub = [owner, boughtLabel(r), r.provider, methodText(r)].filter(Boolean).join(" · ");
   return (
     <li>
       <button

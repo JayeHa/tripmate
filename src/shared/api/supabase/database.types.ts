@@ -569,6 +569,8 @@ export type Database = {
           customs_at: string | null;
           received_at: string | null;
           memo: string | null;
+          owner_id: string | null;
+          barcode: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -590,6 +592,8 @@ export type Database = {
           customs_at?: string | null;
           received_at?: string | null;
           memo?: string | null;
+          owner_id?: string | null;
+          barcode?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -611,6 +615,8 @@ export type Database = {
           customs_at?: string | null;
           received_at?: string | null;
           memo?: string | null;
+          owner_id?: string | null;
+          barcode?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

@@ -2,9 +2,8 @@
 
 import { Copy } from "lucide-react";
 
+import { useCopied } from "@/shared/lib/use-copied";
 import { cn } from "@/shared/lib/utils";
-
-import { useCopied } from "../model/use-copied";
 
 type NumberCopyRowProps = {
   /** 「예약번호 · 정원 (나)」 */

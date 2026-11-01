@@ -4,9 +4,10 @@ import { CloudOff, Plus, ReceiptText } from "lucide-react";
 
 import { REFUND_STATUS_LABEL, refundGroups } from "@/entities/tax-refund";
 import type { Trip } from "@/entities/trip";
-import { RefundDetailSheet, RefundFormDialog } from "@/features/expense/refund";
+import { memberName, RefundDetailSheet, RefundFormDialog } from "@/features/expense/refund";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
+import { FilterChip } from "@/shared/ui/filter-chip";
 import { Skeleton } from "@/shared/ui/skeleton";
 
 import { refundSummary } from "../../lib/refund-summary";
@@ -16,7 +17,7 @@ import { RefundRow } from "./refund-row";
 type RefundListProps = { tripId: string; trip: Trip; onToast: (text: string) => void };
 
 /**
- * 「환급」 의 내용(모바일 탭 · PC 창 공통) — 머리(건수 · 받을 돈 · 받은 돈, 「+ 환급 추가」) · 단계별 묶음(세관 확인 전 → 받을 것 → 받았어요).
+ * 「환급」 의 내용(모바일 탭 · PC 창 공통) — 머리(건수 · 받을 돈 · 받은 돈, 「+ 환급 추가」) · 일행이 있으면 사람 칩(전체 · 나 · 일행) · 단계별 묶음(세관 확인 전 → 받을 것 → 받았어요).
  * 비면 안내, 읽지 못했으면 「다시 시도」. 상세 창 · 추가 · 수정 폼도 여기서 연다
  */
 export function RefundList({ tripId, trip, onToast }: RefundListProps) {
@@ -70,7 +71,7 @@ function RefundBody({ screen }: RefundBodyProps) {
       />
     );
   }
-  if (screen.refunds.length === 0) {
+  if (screen.all.length === 0) {
     return (
       <EmptyState
         icon={ReceiptText}
@@ -110,6 +111,32 @@ function RefundBody({ screen }: RefundBodyProps) {
           환급 추가
         </Button>
       </div>
+      {screen.members && (
+        <div className="flex gap-1.5 overflow-x-auto px-5 pb-3" role="group" aria-label="누구 것">
+          <FilterChip
+            size="sm"
+            selected={screen.owner === null}
+            onClick={() => screen.setOwner(null)}
+          >
+            전체
+          </FilterChip>
+          {screen.members.map((m) => (
+            <FilterChip
+              key={m.id}
+              size="sm"
+              selected={screen.owner === m.id}
+              onClick={() => screen.setOwner(m.id)}
+            >
+              {m.name}
+            </FilterChip>
+          ))}
+        </div>
+      )}
+      {screen.refunds.length === 0 && (
+        <p className="border-t-8 border-surface-sunken px-5 py-8 text-center text-[13px] text-ink-400">
+          이 사람의 환급 기록이 없어요
+        </p>
+      )}
       {refundGroups(screen.refunds).map((g) => (
         <div key={g.status} className="border-t-8 border-surface-sunken">
           <h3 className="px-5 pt-3 pb-1 text-[13px] font-semibold text-ink-450">
@@ -117,7 +144,12 @@ function RefundBody({ screen }: RefundBodyProps) {
           </h3>
           <ul className="divide-y divide-surface-muted">
             {g.items.map((r) => (
-              <RefundRow key={r.id} refund={r} onOpen={() => screen.openDetail(r)} />
+              <RefundRow
+                key={r.id}
+                refund={r}
+                owner={screen.members ? memberName(screen.members, r.owner_id) : undefined}
+                onOpen={() => screen.openDetail(r)}
+              />
             ))}
           </ul>
         </div>

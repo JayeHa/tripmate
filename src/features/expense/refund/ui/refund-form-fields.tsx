@@ -6,7 +6,13 @@ import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
 import { TimeField } from "@/shared/ui/time-field";
 
-import { PROVIDER_MAX, SITE_URL_MAX, STORE_MAX, TRANSACTION_MAX } from "../lib/refund-form";
+import {
+  BARCODE_MAX,
+  PROVIDER_MAX,
+  SITE_URL_MAX,
+  STORE_MAX,
+  TRANSACTION_MAX,
+} from "../lib/refund-form";
 import type { RefundFormState } from "../model/use-refund-form";
 
 type FieldProps = { form: RefundFormState };
@@ -38,6 +44,29 @@ export function StoreField({ form, autoFocus }: StoreFieldProps) {
         autoFocus={autoFocus}
       />
     </label>
+  );
+}
+
+/** 누구 것 — 일행이 둘 이상일 때만. 환급이 그 사람의 카드 · 여권으로 들어온다. 고른 칩을 다시 누르면 정하지 않음 */
+export function OwnerField({ form }: FieldProps) {
+  if (!form.members) return null;
+  const { owner } = form.draft;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel>누구 것</FieldLabel>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="누구 것">
+        {form.members.map((m) => (
+          <FilterChip
+            key={m.id}
+            size="sm"
+            selected={m.id === owner}
+            onClick={() => form.set("owner", m.id === owner ? "" : m.id)}
+          >
+            {m.name}
+          </FilterChip>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -99,7 +128,7 @@ export function WhenFields({ form }: FieldProps) {
   );
 }
 
-/** 거래번호 · 신청 사이트 주소 — 나중에 환급이 안 들어왔을 때 찾아볼 것 */
+/** 거래번호 · 면세 양식 번호(바코드 숫자) · 신청 사이트 주소 — 나중에 환급이 안 들어왔을 때 찾아볼 것 */
 export function ReferenceFields({ form }: FieldProps) {
   return (
     <>
@@ -110,6 +139,17 @@ export function ReferenceFields({ form }: FieldProps) {
           onChange={(e) => form.set("transactionId", e.target.value)}
           maxLength={TRANSACTION_MAX}
           placeholder="Transaction ID"
+          autoComplete="off"
+        />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <FieldLabel optional>바코드 번호</FieldLabel>
+        <Input
+          value={form.draft.barcode}
+          onChange={(e) => form.set("barcode", e.target.value)}
+          maxLength={BARCODE_MAX}
+          inputMode="numeric"
+          placeholder="면세 양식 바코드 아래 숫자"
           autoComplete="off"
         />
       </label>

@@ -7,9 +7,10 @@ import { saveErrorText } from "@/shared/api/sync";
 import { todayISO } from "@/shared/lib/days";
 
 import { canSaveDraft, draftOf, fieldsOf, type RefundDraft } from "../lib/refund-form";
+import { useRefundMembers } from "./use-refund-members";
 
 /**
- * 택스 리펀 한 건 편집 상태 — 칸 값 · 저장 · 삭제.
+ * 택스 리펀 한 건 편집 상태 — 칸 값 · 「누구 것」 멤버(혼자면 null) · 저장 · 삭제.
  * 저장이 끝나면 닫고(새 건은 「기록했어요」 토스트), 실패하면 창에 남아 오류를 보인다
  */
 export function useRefundForm(
@@ -19,7 +20,10 @@ export function useRefundForm(
   onClose: () => void,
   onToast: (text: string) => void,
 ) {
-  const [draft, setDraft] = useState<RefundDraft>(() => draftOf(refund, startCurrency, todayISO()));
+  const { members, meId } = useRefundMembers(tripId);
+  const [draft, setDraft] = useState<RefundDraft>(() =>
+    draftOf(refund, startCurrency, todayISO(), members ? meId : null),
+  );
   const save = useSaveTaxRefund(tripId);
   const remove = useDeleteTaxRefund(tripId);
   const pending = save.isPending || remove.isPending;
@@ -50,6 +54,7 @@ export function useRefundForm(
   return {
     draft,
     set,
+    members,
     canSave: canSaveDraft(draft),
     canDelete: refund !== null,
     pending,

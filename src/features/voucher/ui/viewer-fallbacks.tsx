@@ -3,9 +3,9 @@
 import { Copy, ExternalLink, FileText, QrCode } from "lucide-react";
 
 import { isPdf, type Voucher } from "@/entities/voucher";
+import { useCopied } from "@/shared/lib/use-copied";
 
 import type { ViewerNumber } from "../lib/voucher-view";
-import { useCopied } from "../model/use-copied";
 
 type NumberCardProps = { first: ViewerNumber; dateText: string | null };
 
