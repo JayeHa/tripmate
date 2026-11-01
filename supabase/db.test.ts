@@ -4439,3 +4439,63 @@ describe("택스 리펀 누구 것 검사는 바꿀 때만 (0079)", () => {
     await db.query(`update public.tax_refunds set owner_id = null where id = '${mine.rows[0].id}'`);
   });
 });
+
+describe("택스 리펀 사진 (0080)", () => {
+  /** 사진 줄을 넣는다 — 키는 그 여행 폴더 */
+  async function addPhoto(trip: string, refund: string, n: number, kind = "receipt") {
+    await db.query(
+      `insert into public.tax_refund_photos (trip_id, refund_id, kind, photo_key, thumb_key)
+       values ($1, $2, $3, $4, $5)`,
+      [trip, refund, kind, `${trip}/p${n}.jpg`, `${trip}/t${n}.jpg`],
+    );
+  }
+
+  it("한 건에 6장까지, 다른 여행 기록 · 폴더 밖 키 · 모르는 종류는 거부, 기록을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-13", "2027-11-14");
+    const other = await newTrip("2027-11-15", "2027-11-15");
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method)
+       values ('${trip}', 'AlpenTOKYO', 'JPY', 'cash') returning id`,
+    );
+    const refund = rows[0].id;
+    for (let n = 0; n < 6; n++) await addPhoto(trip, refund, n, n === 0 ? "capture" : "receipt");
+    await expect(addPhoto(trip, refund, 6)).rejects.toThrow(/refund photo limit/);
+    await expect(addPhoto(other, refund, 7)).rejects.toThrow(/refund not found/);
+    await db.query(`delete from public.tax_refund_photos where photo_key = '${trip}/p5.jpg'`);
+    await expect(
+      db.query(
+        `insert into public.tax_refund_photos (trip_id, refund_id, kind, photo_key, thumb_key)
+         values ('${trip}', '${refund}', 'qr', '${trip}/a.jpg', '${trip}/b.jpg')`,
+      ),
+    ).rejects.toThrow(/check constraint/);
+    await expect(
+      db.query(
+        `insert into public.tax_refund_photos (trip_id, refund_id, kind, photo_key, thumb_key)
+         values ('${trip}', '${refund}', 'item', '${other}/a.jpg', '${trip}/b.jpg')`,
+      ),
+    ).rejects.toThrow(/tax_refund_photos_keys_chk/);
+    await db.query(`delete from public.tax_refunds where id = '${refund}'`);
+    expect(
+      (await db.query(`select 1 from public.tax_refund_photos where refund_id = '${refund}'`)).rows,
+    ).toHaveLength(0);
+  });
+
+  it("멤버가 아니면 읽지도 넣지도 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-16", "2027-11-16");
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, store, currency, method)
+       values ('${trip}', 'x', 'JPY', 'card') returning id`,
+    );
+    await addPhoto(trip, rows[0].id, 0);
+    await as(B);
+    expect(
+      (await db.query(`select 1 from public.tax_refund_photos where trip_id = '${trip}'`)).rows,
+    ).toHaveLength(0);
+    // 트리거가 먼저 돌아 남의 기록은 보이지 않는다 — 어느 쪽이든 거부
+    await expect(addPhoto(trip, rows[0].id, 1)).rejects.toThrow(
+      /refund not found|row-level security/,
+    );
+  });
+});
