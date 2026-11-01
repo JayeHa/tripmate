@@ -4283,3 +4283,90 @@ describe("비용 장소 (0076)", () => {
     expect(after.rows).toEqual([{ place_id: null }]);
   });
 });
+
+describe("택스 리펀 (0077)", () => {
+  /** 환급 건을 넣고 id 를 돌려준다 */
+  async function addRefund(trip: string, fields: Record<string, unknown>) {
+    const cols = { store: "キデイランド新宿店", currency: "JPY", method: "card", ...fields };
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.tax_refunds (trip_id, ${Object.keys(cols).join(", ")})
+       values ($1, ${Object.keys(cols)
+         .map((_, i) => `$${i + 2}`)
+         .join(", ")}) returning id`,
+      [trip, ...Object.values(cols)],
+    );
+    return rows[0].id;
+  }
+
+  it("매장 · 금액 · 방법을 적고, 일행이 세관 확인 → 받았어요 로 단계를 올린다. 만든 사람은 넣은 사람", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-01", "2027-11-05");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const id = await addRefund(trip, {
+      provider: "J-TaxRefund",
+      bought_on: "2027-11-01",
+      bought_time: "20:03",
+      amount: 10128,
+      refund_amount: 1012,
+      method_note: "쿠팡 와우카드",
+    });
+    await as(B);
+    await db.query(`update public.tax_refunds set customs_at = now() where id = '${id}'`);
+    await db.query(`update public.tax_refunds set received_at = now() where id = '${id}'`);
+    const { rows } = await db.query(
+      `select store, provider, amount::text, refund_amount::text, method, method_note, created_by,
+              customs_at is not null as customs, received_at is not null as received
+       from public.tax_refunds where id = '${id}'`,
+    );
+    expect(rows).toEqual([
+      {
+        store: "キデイランド新宿店",
+        provider: "J-TaxRefund",
+        amount: "10128.00",
+        refund_amount: "1012.00",
+        method: "card",
+        method_note: "쿠팡 와우카드",
+        created_by: A,
+        customs: true,
+        received: true,
+      },
+    ]);
+  });
+
+  it("거부: 세관 확인 없이 받았어요 · 날짜 없는 시각 · 빈 매장 · 모르는 방법 · 음수 · 모르는 통화 · 멤버 아님", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-06", "2027-11-07");
+    const id = await addRefund(trip, {});
+    expect(
+      await rejects(`update public.tax_refunds set received_at = now() where id = '${id}'`),
+    ).toMatch(/tax_refunds_steps_chk/);
+    // 되돌리기 — 세관 확인을 비우려면 받았어요도 함께 비운다
+    await db.query(
+      `update public.tax_refunds set customs_at = now(), received_at = now() where id = '${id}'`,
+    );
+    expect(
+      await rejects(`update public.tax_refunds set customs_at = null where id = '${id}'`),
+    ).toMatch(/tax_refunds_steps_chk/);
+    await db.query(
+      `update public.tax_refunds set customs_at = null, received_at = null where id = '${id}'`,
+    );
+    expect(
+      await rejects(`update public.tax_refunds set bought_time = '10:00' where id = '${id}'`),
+    ).toMatch(/tax_refunds_time_chk/);
+    await expect(addRefund(trip, { store: "  " })).rejects.toThrow(/check constraint/);
+    await expect(addRefund(trip, { method: "coupon" })).rejects.toThrow(/check constraint/);
+    await expect(addRefund(trip, { refund_amount: -1 })).rejects.toThrow(/check constraint/);
+    await expect(addRefund(trip, { currency: "yen" })).rejects.toThrow(/check constraint/);
+    await as(B);
+    await expect(addRefund(trip, {})).rejects.toThrow(/row-level security/);
+    // RLS 는 오류 없이 0줄 — 그대로인지로 확인한다
+    await db.query(`delete from public.tax_refunds where trip_id = '${trip}'`);
+    await as(A);
+    expect(
+      (await db.query(`select 1 from public.tax_refunds where trip_id = '${trip}'`)).rows,
+    ).toHaveLength(1);
+  });
+});
