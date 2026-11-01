@@ -1,4 +1,4 @@
-import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Shirt } from "lucide-react";
 
 import { dateTone, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
@@ -21,14 +21,14 @@ type DayHeaderProps = {
   summary?: string | null;
   /** 여행지 공휴일 이름 — 날짜 옆에 빨갛게(길면 말줄임) */
   holiday?: string | null;
-  /** 그날 날씨 — 제목 아래 한 줄. 없으면 그리지 않는다 */
+  /** 그날 날씨 — 제목 아래 날씨 한 줄 + 옷차림 한 줄. 없으면 그리지 않는다 */
   weather?: SourcedWeatherDay | null;
   /** 제목 오른쪽 「편집」. 일정을 다 읽기 전에는 없다 */
   onEdit?: () => void;
 };
 
 /**
- * 「day 1  10.31/토」(토 파랑 · 일 · 공휴일 빨강, 공휴일이면 옆에 빨간 이름) · 오른쪽 「편집」(일정 편집을 연다) · 아래 날씨 한 줄 · 하루 요약.
+ * 「day 1  10.31/토」(토 파랑 · 일 · 공휴일 빨강, 공휴일이면 옆에 빨간 이름) · 오른쪽 「편집」(일정 편집을 연다) · 아래 날씨 · 옷차림 · 하루 요약.
  * 아래 줄에 메모를 한꺼번에 펼치고 접는 버튼(PC 는 왼쪽에 메모 · 장소 개수).
  */
 export function DayHeader({
@@ -93,18 +93,27 @@ export function DayHeader({
 
 type WeatherLineProps = { weather: SourcedWeatherDay };
 
-/** 날씨 한 줄 「☁ 18° / 11° · 비 40% · 예보」 — 지난 날은 기록이라 출처 표시가 없다. 평년은 하늘 아이콘이 없다 */
+/**
+ * 날씨 두 줄 — 「☁ 18° / 11° · 비 40% · 예보」(지난 날은 기록이라 출처 표시가 없고, 평년은 하늘 아이콘이 없다)과
+ * 그 아래 추천 옷차림 「👕 맨투맨 · 가디건 · 긴바지」
+ */
 function WeatherLine({ weather }: WeatherLineProps) {
   const line = dayWeatherLine(weather);
   const Icon = line.sky ? SKY_ICON[line.sky] : null;
   return (
-    <p className="flex items-center gap-1.5 px-5 pb-2 text-[13px] text-ink-500">
-      {Icon && (
-        <Icon role="img" aria-label={line.skyLabel ?? undefined} className="size-4 shrink-0" />
-      )}
-      <span className="font-semibold text-ink-700">{line.temps}</span>
-      {line.rain && <span>· {line.rain}</span>}
-      {line.source && <span className="text-ink-350">· {line.source}</span>}
-    </p>
+    <div className="flex flex-col gap-1 px-5 pb-2 text-[13px] text-ink-500">
+      <p className="flex items-center gap-1.5">
+        {Icon && (
+          <Icon role="img" aria-label={line.skyLabel ?? undefined} className="size-4 shrink-0" />
+        )}
+        <span className="font-semibold text-ink-700">{line.temps}</span>
+        {line.rain && <span>· {line.rain}</span>}
+        {line.source && <span className="text-ink-350">· {line.source}</span>}
+      </p>
+      <p className="flex items-center gap-1.5">
+        <Shirt role="img" aria-label="추천 옷차림" className="size-4 shrink-0" />
+        <span className="min-w-0 truncate">{line.outfit}</span>
+      </p>
+    </div>
   );
 }

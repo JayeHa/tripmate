@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { localToday, tripMonth, weatherPlan, weatherTile } from "./weather-tile";
+import { localToday, tripMonth, weatherOutfit, weatherPlan, weatherTile } from "./weather-tile";
 
 describe("tripMonth", () => {
   it("여행 날이 가장 많은 달, 같으면 앞 달", () => {
@@ -82,5 +82,31 @@ describe("weatherTile", () => {
       weatherTile({ kind: "forecast", date: "2026-11-30", first: false }, [day], undefined),
     ).toBeNull();
     expect(weatherTile(null, [day], { min: 1, max: 2 })).toBeNull();
+  });
+});
+
+describe("weatherOutfit", () => {
+  const day = { date: "2026-11-02", code: 61, max: 22, min: 13, rain: 95 };
+
+  it("예보 — 오늘 · 첫날 라벨과 비 오면 우산까지", () => {
+    expect(
+      weatherOutfit({ kind: "forecast", date: day.date, first: false }, [day], undefined),
+    ).toEqual({ label: "오늘", text: "맨투맨 · 가디건 · 긴바지 · 우산" });
+    expect(
+      weatherOutfit({ kind: "forecast", date: day.date, first: true }, [day], undefined)?.label,
+    ).toBe("첫날");
+  });
+
+  it("평년 — 그 달 라벨, 기온만", () => {
+    expect(
+      weatherOutfit({ kind: "normals", month: 11 }, undefined, { min: 11.6, max: 18.5 }),
+    ).toEqual({ label: "11월", text: "니트 · 자켓 · 청바지" });
+  });
+
+  it("받기 전 · 그 날 예보가 없으면 null", () => {
+    expect(
+      weatherOutfit({ kind: "forecast", date: "2026-11-03", first: false }, [day], undefined),
+    ).toBeNull();
+    expect(weatherOutfit(null, [day], undefined)).toBeNull();
   });
 });

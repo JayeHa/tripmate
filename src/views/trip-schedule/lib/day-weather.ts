@@ -1,4 +1,5 @@
 import type { TimelineRow } from "@/entities/schedule-item";
+import { outfitFor } from "@/shared/lib/outfit";
 import { type Sky, SKY_LABEL, skyOf } from "@/shared/lib/weather";
 import type { SourcedWeatherDay, WeatherSource } from "@/shared/lib/weather-days";
 
@@ -47,9 +48,11 @@ export type DayWeatherLine = {
   rain: string | null;
   /** 「예보」 · 「작년」 · 「평년」. 지난 날이면 null */
   source: string | null;
+  /** 추천 옷차림 「맨투맨 · 가디건 · 긴바지 · 우산」 — 하루 평균 기온 · 일교차 · 비 올 확률로 */
+  outfit: string;
 };
 
-/** 그날 날씨 → 날짜 머리 한 줄 「☁ 18° / 11° · 비 40% · 예보」 */
+/** 그날 날씨 → 날짜 머리 날씨 줄 「☁ 18° / 11° · 비 40% · 예보」 과 그 아래 옷차림 줄 */
 export function dayWeatherLine(day: SourcedWeatherDay): DayWeatherLine {
   const sky = skyOf(day.code);
   return {
@@ -58,5 +61,6 @@ export function dayWeatherLine(day: SourcedWeatherDay): DayWeatherLine {
     temps: `${degree(day.max)} / ${degree(day.min)}`,
     rain: day.rain ? `비 ${day.rain}%` : null,
     source: SOURCE_LABEL[day.source],
+    outfit: outfitFor(day).join(" · "),
   };
 }

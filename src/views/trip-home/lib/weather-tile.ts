@@ -1,4 +1,5 @@
 import { dayCount, dayIndexToDate } from "@/shared/lib/days";
+import { outfitFor } from "@/shared/lib/outfit";
 import { SKY_LABEL, skyOf, type WeatherDay, type WeatherNormals } from "@/shared/lib/weather";
 
 import type { WidgetTile } from "./widgets";
@@ -81,4 +82,26 @@ export function weatherTile(
       .join(" · "),
     ...(sky && { sky }),
   };
+}
+
+/** 날씨 타일 아래 옷차림 한 줄 — 「오늘」 · 「첫날」 · 「11월」 과 「맨투맨 · 가디건 · 긴바지」 */
+export type WeatherOutfit = { label: string; text: string };
+
+/**
+ * 날씨 타일과 같은 날(평년이면 그 달)의 추천 옷차림. 예보면 비 올 확률로 「우산」 까지, 평년은 기온만 본다.
+ * 타일이 없을 때(받는 중 · 그 날 예보 없음 · 여행이 끝남)는 null
+ */
+export function weatherOutfit(
+  plan: WeatherPlan,
+  days: readonly WeatherDay[] | undefined,
+  normals: WeatherNormals | undefined,
+): WeatherOutfit | null {
+  if (!plan) return null;
+  if (plan.kind === "normals") {
+    if (!normals) return null;
+    return { label: `${plan.month}월`, text: outfitFor({ ...normals, rain: null }).join(" · ") };
+  }
+  const day = days?.find((d) => d.date === plan.date);
+  if (!day) return null;
+  return { label: plan.first ? "첫날" : "오늘", text: outfitFor(day).join(" · ") };
 }
