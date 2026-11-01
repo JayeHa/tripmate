@@ -1,7 +1,9 @@
 "use client";
 
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
+import { dayIndexToDate } from "@/shared/lib/days";
 import type { WeatherDay, WeatherNormals } from "@/shared/lib/weather";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
@@ -63,24 +65,45 @@ export const weatherDaysQuery = (city: string, from: string, to: string) =>
   });
 
 /**
- * 도시들(id)의 기간 날마다 날씨 — 도시 → 날짜 → 그날 날씨. 기간을 모르면(null) 부르지 않는다.
- * 받는 중 · 실패한 도시는 빠진다(그 도시의 날은 날씨 줄이 없다)
+ * 도시들(id)의 기간 날마다 날씨 — 도시 → 날짜 → 그날 날씨(byCity)와, 아직 처음 받는 중인 도시가 있는지(loading).
+ * 기간을 모르면(null) 부르지 않는다. 실패한 도시는 빠진다(그 도시의 날은 날씨가 없다)
  */
-export function useWeatherDays(
-  cities: readonly string[],
-  range: { from: string; to: string } | null,
-) {
+function useWeatherDays(cities: readonly string[], range: { from: string; to: string } | null) {
   return useQueries({
     queries: cities.map((city) => ({
       ...weatherDaysQuery(city, range?.from ?? "", range?.to ?? ""),
       enabled: !!range,
     })),
-    combine: (results) =>
-      new Map(
+    combine: (results) => ({
+      byCity: new Map(
         cities.map((city, i) => [
           city,
           new Map((results[i]?.data ?? []).map((d) => [d.date, d] as const)),
         ]),
       ),
+      loading: results.some((r) => r.data === undefined && r.fetchStatus === "fetching"),
+    }),
   });
+}
+
+/**
+ * 여행의 날마다 날씨 — perDay[i] 는 i번째 날(0-base)의 도시 id(`dayCities`). 도시마다 여행 기간을 한 번에 받는다.
+ * weatherOf(day) 는 그 날 날씨 — 여행 · 도시를 모르거나 받는 중 · 실패면 null. loading 은 처음 받는 중인지
+ * (오프라인이라 멈춘 요청은 받는 중이 아니다 — 기기에 남은 값만 보인다)
+ */
+export function useTripDayWeather(
+  perDay: readonly (string | null)[],
+  trip: { start_date: string; end_date: string } | undefined,
+) {
+  const ids = useMemo(() => [...new Set(perDay.filter((c): c is string => c !== null))], [perDay]);
+  const { byCity, loading } = useWeatherDays(
+    ids,
+    trip ? { from: trip.start_date, to: trip.end_date } : null,
+  );
+  const weatherOf = (day: number): SourcedWeatherDay | null => {
+    const city = perDay[day];
+    if (!trip || !city) return null;
+    return byCity.get(city)?.get(dayIndexToDate(trip.start_date, day)) ?? null;
+  };
+  return { weatherOf, loading };
 }

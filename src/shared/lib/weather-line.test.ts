@@ -1,28 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { TimelineRow } from "@/entities/schedule-item";
-
-import { dayCities, dayWeatherLine } from "./day-weather";
-
-/** 그 도시 장소의 일정 줄(도시가 null 이면 장소 없는 줄) — 쓰는 칸만 채운다 */
-const row = (city: string | null) =>
-  ({ item: { place: city ? { city_id: city } : null } }) as unknown as TimelineRow;
-
-describe("dayCities", () => {
-  it("그날 장소가 가장 많은 도시, 같으면 먼저 나온 도시", () => {
-    const sections = [
-      { rows: [row("osaka"), row("kyoto"), row("kyoto")] },
-      { rows: [row("kyoto"), row("osaka")] },
-    ];
-    expect(dayCities(sections, "osaka")).toEqual(["kyoto", "kyoto"]);
-  });
-
-  it("장소가 없는 날은 전날 도시, 첫날이면 여행의 첫 도시", () => {
-    const sections = [{ rows: [row(null)] }, { rows: [row("kyoto")] }, { rows: [] }];
-    expect(dayCities(sections, "osaka")).toEqual(["osaka", "kyoto", "kyoto"]);
-    expect(dayCities([{ rows: [] }], null)).toEqual([null]);
-  });
-});
+import { dayWeatherLine } from "./weather-line";
 
 describe("dayWeatherLine", () => {
   it("예보 — 하늘 · 기온(반올림) · 비 올 확률 · 「예보」", () => {

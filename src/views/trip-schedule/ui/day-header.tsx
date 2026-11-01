@@ -1,11 +1,10 @@
-import { ChevronsDownUp, ChevronsUpDown, Shirt } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 
 import { dateTone, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
-import { SKY_ICON } from "@/shared/ui/weather";
+import { DayWeatherLines } from "@/shared/ui/weather";
 
-import { dayWeatherLine } from "../lib/day-weather";
 import { DATE_TONE } from "./date-tone";
 
 type DayHeaderProps = {
@@ -64,7 +63,7 @@ export function DayHeader({
           </button>
         )}
       </div>
-      {weather && <WeatherLine weather={weather} />}
+      {weather && <DayWeatherLines weather={weather} className="px-5 pb-2" />}
       {summary && (
         <p className="px-5 pb-3.5 text-[13px]/relaxed text-pretty text-ink-450">{summary}</p>
       )}
@@ -88,32 +87,5 @@ export function DayHeader({
         </div>
       )}
     </>
-  );
-}
-
-type WeatherLineProps = { weather: SourcedWeatherDay };
-
-/**
- * 날씨 두 줄 — 「☁ 18° / 11° · 비 40% · 예보」(지난 날은 기록이라 출처 표시가 없고, 평년은 하늘 아이콘이 없다)과
- * 그 아래 추천 옷차림 「👕 맨투맨 · 가디건 · 긴바지」
- */
-function WeatherLine({ weather }: WeatherLineProps) {
-  const line = dayWeatherLine(weather);
-  const Icon = line.sky ? SKY_ICON[line.sky] : null;
-  return (
-    <div className="flex flex-col gap-1 px-5 pb-2 text-[13px] text-ink-500">
-      <p className="flex items-center gap-1.5">
-        {Icon && (
-          <Icon role="img" aria-label={line.skyLabel ?? undefined} className="size-4 shrink-0" />
-        )}
-        <span className="font-semibold text-ink-700">{line.temps}</span>
-        {line.rain && <span>· {line.rain}</span>}
-        {line.source && <span className="text-ink-350">· {line.source}</span>}
-      </p>
-      <p className="flex items-center gap-1.5">
-        <Shirt role="img" aria-label="추천 옷차림" className="size-4 shrink-0" />
-        <span className="min-w-0 truncate">{line.outfit}</span>
-      </p>
-    </div>
   );
 }
