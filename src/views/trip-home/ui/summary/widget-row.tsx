@@ -1,9 +1,18 @@
-import { CalendarDays, ChevronRight, Clock, CloudSun, Coins, type LucideIcon } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronRight,
+  Clock,
+  CloudSun,
+  Coins,
+  type LucideIcon,
+  Shirt,
+} from "lucide-react";
 import type * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { SKY_ICON, WeatherCredit } from "@/shared/ui/weather";
 
+import type { WeatherOutfit } from "../../lib/weather-tile";
 import type { WidgetTile } from "../../lib/widgets";
 import { HolidayCredit } from "./holiday-credit";
 import { RateCredit } from "./rate-credit";
@@ -46,15 +55,17 @@ type WidgetRowProps = {
   layout: "mobile" | "pc";
   /** 환율 타일을 누르면 — 계산기 */
   onOpenRate: () => void;
+  /** 날씨 타일과 같은 날의 추천 옷차림 — 타일 아래 한 줄. 없으면 그리지 않는다 */
+  outfit: WeatherOutfit | null;
   /** 바깥 데이터를 보이고 있다(날씨 · 실시간 환율 · 공휴일) — 줄 아래 오른쪽에 출처 링크 */
   credits: { weather: boolean; rate: boolean; holiday: boolean };
 };
 
 /**
  * 현지 정보 위젯 줄. 모바일은 회색 타일(76 · r12)을 나란히, PC 는 흰 카드 한 장을 세로선으로 나눈 칸(아이콘 칸 36 · 값 옆 보조).
- * 환율 타일만 누를 수 있다(계산기)
+ * 환율 타일만 누를 수 있다(계산기). 날씨가 있으면 타일 아래 추천 옷차림 한 줄
  */
-export function WidgetRow({ tiles, layout, onOpenRate, credits }: WidgetRowProps) {
+export function WidgetRow({ tiles, layout, onOpenRate, outfit, credits }: WidgetRowProps) {
   return (
     <div
       className={cn(
@@ -63,6 +74,13 @@ export function WidgetRow({ tiles, layout, onOpenRate, credits }: WidgetRowProps
       )}
     >
       <Tiles tiles={tiles} layout={layout} onOpenRate={onOpenRate} />
+      {outfit && (
+        <p className="flex min-w-0 items-center gap-1.5 pt-1 text-[13px] text-ink-500">
+          <Shirt role="img" aria-label="추천 옷차림" className="size-4 shrink-0" />
+          <span className="shrink-0 font-semibold text-ink-700">{outfit.label}</span>
+          <span className="truncate">{outfit.text}</span>
+        </p>
+      )}
       {(credits.weather || credits.rate || credits.holiday) && (
         <span className="flex flex-wrap justify-end gap-x-2 self-end">
           {credits.weather && <WeatherCredit />}
@@ -108,7 +126,7 @@ export function MobileTiles({ tiles, onOpenRate }: MobileTilesProps) {
   );
 }
 
-type TilesProps = Omit<WidgetRowProps, "credits">;
+type TilesProps = Omit<WidgetRowProps, "credits" | "outfit">;
 
 /** 타일들 — 모바일 회색 타일 나란히, PC 흰 카드 한 장 */
 function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
