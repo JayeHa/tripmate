@@ -9,6 +9,9 @@ describe("shouldPersistQuery", () => {
     expect(shouldPersistQuery(queryKeys.cities)).toBe(true);
     expect(shouldPersistQuery(queryKeys.holidays("JP", 2026))).toBe(true);
     expect(shouldPersistQuery(queryKeys.weather.forecast("tokyo"))).toBe(true);
+    expect(shouldPersistQuery(queryKeys.weather.days("tokyo", "2026-10-31", "2026-11-04"))).toBe(
+      true,
+    );
   });
 
   it("내 프로필은 남긴다 — 오프라인 첫 화면의 계정 버튼", () => {

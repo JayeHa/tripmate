@@ -7,6 +7,7 @@ import {
   type TimelineRow,
   useOpenMemos,
 } from "@/entities/schedule-item";
+import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 import { Button } from "@/shared/ui/button";
 
 import { DayHeader } from "./day-header";
@@ -18,6 +19,8 @@ type DaySectionProps = {
   summary?: string | null;
   /** 그날의 여행지 공휴일 이름 */
   holiday?: string | null;
+  /** 그날 날씨 */
+  weather?: SourcedWeatherDay | null;
   rows: TimelineRow[];
   /** PC 는 day 헤더 아래에 「메모 N개 · 장소 N곳」 을 함께 보인다 */
   showCounts?: boolean;
@@ -46,6 +49,7 @@ export function DaySection({
   day,
   summary,
   holiday,
+  weather,
   rows,
   showCounts,
   focusId,
@@ -71,6 +75,7 @@ export function DaySection({
         counts={showCounts ? countsOf(rows) : undefined}
         summary={summary}
         holiday={holiday}
+        weather={weather}
         onEdit={onStartEdit}
       />
       {rows.length === 0 && (

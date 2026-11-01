@@ -17,6 +17,7 @@ import { dayCount, dayIndexToDate } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { useChecklistChips } from "../model/use-checklist-chips";
+import { useDayWeather } from "../model/use-day-weather";
 import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
@@ -83,6 +84,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     onInterrupted: overlays.showToast,
   });
   const moveDialog = useMoveDialog(movesReady);
+  const weatherOf = useDayWeather(tripId, trip, sections);
 
   // 열린 일정의 줄. 다른 멤버가 지워 줄이 없어지면 id 도 지운다 — 남겨 두면 나중에
   // 같은 줄이 다시 그려지는 순간 상세가 저절로 열린다(언마운트된 뒤 끝난 이동 · 삭제는 onDone 을 부르지 못한다)
@@ -110,6 +112,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     trip,
     holidayOf: (d) =>
       trip && holidays ? holidayName(holidays, dayIndexToDate(trip.start_date, d)) : null,
+    weatherOf,
     totalDays,
     day,
     onDayChange: setDay,

@@ -1,6 +1,7 @@
 import type { MemoAuthor, PastKind, TimelineRow } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { ScheduleEditState } from "@/features/schedule/edit-mode";
+import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
 import type { ScheduleEntry } from "../model/use-entry-scroll";
 import type { DaySectionData } from "../model/use-schedule-sections";
@@ -23,6 +24,8 @@ export type ScheduleLayoutProps = {
   sections: DaySectionData[];
   /** 그 날(0-base)의 여행지 공휴일 이름 — day 머리 · PC 레일에 빨갛게. 공휴일이 아니거나 모르면 null */
   holidayOf: (day: number) => string | null;
+  /** 그 날(0-base)의 날씨 — day 머리 아래 한 줄. 모르면 null */
+  weatherOf: (day: number) => SourcedWeatherDay | null;
   isPending: boolean;
   /** 뷰가 보내는 「그 날로 스크롤」 요청 */
   jump: DayJump | null;
