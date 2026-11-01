@@ -15,6 +15,8 @@ import { Button } from "@/shared/ui/button";
 import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { type DetailRow, detailRows, stepTimeLabel } from "../lib/refund-form";
+import { memberName, useRefundMembers } from "../model/use-refund-members";
+import { BarcodeCopyRow } from "./barcode-copy-row";
 
 type RefundDetailSheetProps = {
   tripId: string;
@@ -28,7 +30,7 @@ type RefundDetailSheetProps = {
 
 /**
  * 택스 리펀 상세 — 모바일 바텀시트 · PC 가운데 480. 제목은 매장, 아래 단계 줄(세관 확인 · 받음 시각),
- * 다음 단계 버튼(「세관 확인했어요」 → 「환급 받았어요」)과 되돌리기, 정보 표, 「수정」
+ * 다음 단계 버튼(「세관 확인했어요」 → 「환급 받았어요」)과 되돌리기, 바코드 번호(누르면 복사), 정보 표(일행이 있으면 「누구 것」 부터), 「수정」
  */
 export function RefundDetailSheet({
   tripId,
@@ -40,6 +42,7 @@ export function RefundDetailSheet({
   const open = refund !== null;
   const shown = useHeldWhileClosing(open, refund);
   const steps = useSetRefundSteps(tripId);
+  const { members } = useRefundMembers(tripId);
   /** 단계를 바꾼다 — 실패하면 토스트(화면은 되돌아간다) */
   const go = (r: TaxRefund, to: RefundStatus) =>
     steps.mutate(
@@ -52,10 +55,13 @@ export function RefundDetailSheet({
         <div className="flex flex-col gap-4">
           <StepLine refund={shown} />
           <StepButtons refund={shown} pending={steps.isPending} onGo={(to) => go(shown, to)} />
+          {shown.barcode && <BarcodeCopyRow value={shown.barcode} />}
           <dl>
-            {detailRows(shown).map((row) => (
-              <InfoRow key={row.label} row={row} />
-            ))}
+            {detailRows(shown, members ? memberName(members, shown.owner_id) : undefined).map(
+              (row) => (
+                <InfoRow key={row.label} row={row} />
+              ),
+            )}
           </dl>
           <Button
             variant="chip"

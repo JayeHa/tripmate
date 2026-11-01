@@ -9,7 +9,13 @@ import { SheetDialog } from "@/shared/ui/sheet-dialog";
 
 import { useRefundForm } from "../model/use-refund-form";
 import { DeleteRefundButton } from "./delete-refund-button";
-import { ProviderField, ReferenceFields, StoreField, WhenFields } from "./refund-form-fields";
+import {
+  OwnerField,
+  ProviderField,
+  ReferenceFields,
+  StoreField,
+  WhenFields,
+} from "./refund-form-fields";
 import { AmountFields, MemoField, MethodFields } from "./refund-money-fields";
 
 /** 열린 폼 — 고치는 건(새 건이면 null) */
@@ -28,8 +34,8 @@ type RefundFormDialogProps = {
 };
 
 /**
- * 택스 리펀 추가 · 수정 — 모바일 바텀시트 · PC 가운데 480. 매장 → 사업자 → 구매 날짜 · 시각 → 금액 · 환급 예정액 → 환급 방법 →
- * 거래번호 · 신청 사이트 → 메모. 닫히는 동안 내용을 유지하고, 열 때마다 새로 그린다
+ * 택스 리펀 추가 · 수정 — 모바일 바텀시트 · PC 가운데 480. 매장 → (누구 것) → 사업자 → 구매 날짜 · 시각 → 금액 · 환급 예정액 → 환급 방법 →
+ * 거래번호 · 바코드 번호 · 신청 사이트 → 메모. 닫히는 동안 내용을 유지하고, 열 때마다 새로 그린다
  */
 export function RefundFormDialog({ target, onClose, ...rest }: RefundFormDialogProps) {
   const open = target !== null;
@@ -76,6 +82,7 @@ function RefundFormBody({
   return (
     <div className="flex flex-col gap-4">
       <StoreField form={form} autoFocus={refund === null} />
+      <OwnerField form={form} />
       <ProviderField form={form} />
       <WhenFields form={form} />
       <AmountFields form={form} currencies={currencies} />

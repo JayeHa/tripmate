@@ -36,6 +36,8 @@ export type TaxRefundFields = Pick<
   | "method"
   | "method_note"
   | "memo"
+  | "owner_id"
+  | "barcode"
 >;
 
 /** 단계 칸 — 「받았어요」 는 세관 확인도 함께, 세관 확인을 되돌리면 받았어요도 함께 비운다(DB check) */

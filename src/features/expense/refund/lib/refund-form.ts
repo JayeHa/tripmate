@@ -11,13 +11,14 @@ import {
 } from "@/entities/tax-refund";
 import { amountDraft, formatMoney, parseAmount } from "@/shared/lib/money";
 
-/** 칸 길이 — DB check 와 같다(0077) */
+/** 칸 길이 — DB check 와 같다(0077 · 0078) */
 export const STORE_MAX = 60;
 export const PROVIDER_MAX = 40;
 export const SITE_URL_MAX = 500;
 export const TRANSACTION_MAX = 60;
 export const METHOD_NOTE_MAX = 60;
 export const MEMO_MAX = 500;
+export const BARCODE_MAX = 60;
 
 /** 폼의 입력 상태 — 금액은 친 글자 그대로 */
 export type RefundDraft = {
@@ -33,6 +34,9 @@ export type RefundDraft = {
   method: RefundMethod;
   methodNote: string;
   memo: string;
+  /** 환급 받는 멤버 id, 빈 글자 = 정하지 않음 */
+  owner: string;
+  barcode: string;
 };
 
 /** 저장된 방법 → 폼 값. 모르는 값이면 카드 */
@@ -40,11 +44,12 @@ function methodOf(value: string): RefundMethod {
   return REFUND_METHODS.find((m) => m === value) ?? "card";
 }
 
-/** 폼의 처음 값 — 고치는 건이면 그 값, 새 건이면 오늘 · 시작 통화 · 카드 */
+/** 폼의 처음 값 — 고치는 건이면 그 값, 새 건이면 오늘 · 시작 통화 · 카드 · 받는 사람 = 나(혼자인 여행이면 비움) */
 export function draftOf(
   refund: TaxRefund | null,
   startCurrency: string,
   today: string,
+  me: string | null,
 ): RefundDraft {
   if (!refund) {
     return {
@@ -60,6 +65,8 @@ export function draftOf(
       method: "card",
       methodNote: "",
       memo: "",
+      owner: me ?? "",
+      barcode: "",
     };
   }
   return {
@@ -75,6 +82,8 @@ export function draftOf(
     method: methodOf(refund.method),
     methodNote: refund.method_note ?? "",
     memo: refund.memo ?? "",
+    owner: refund.owner_id ?? "",
+    barcode: refund.barcode ?? "",
   };
 }
 
@@ -96,6 +105,8 @@ export function fieldsOf(d: RefundDraft): TaxRefundFields {
     method: d.method,
     method_note: text(d.methodNote),
     memo: text(d.memo),
+    owner_id: d.owner || null,
+    barcode: text(d.barcode),
   };
 }
 
@@ -117,10 +128,15 @@ export function stepTimeLabel(iso: string): string {
 
 export type DetailRow = { label: string; value: string | null; href?: string };
 
-/** 상세의 정보 표 — 사업자 · 환급 방법 · 구매 · 금액 · 환급 예정 · 거래번호 · 신청 사이트 · 메모(비면 「없음」) */
-export function detailRows(r: TaxRefund): DetailRow[] {
+/**
+ * 상세의 정보 표 — (누구 것) · 사업자 · 환급 방법 · 구매 · 금액 · 환급 예정 · 거래번호 · 신청 사이트 · 메모(비면 「없음」).
+ * owner 가 undefined 면(혼자인 여행) 「누구 것」 줄을 뺀다. 바코드 번호는 표가 아니라 복사 줄로 따로 보인다
+ */
+export function detailRows(r: TaxRefund, owner?: string | null): DetailRow[] {
   const site = r.site_url?.trim() || null;
+  const ownerRow: DetailRow[] = owner === undefined ? [] : [{ label: "누구 것", value: owner }];
   return [
+    ...ownerRow,
     { label: "사업자", value: r.provider },
     { label: "환급 방법", value: methodText(r) },
     { label: "구매", value: boughtLabel(r) },

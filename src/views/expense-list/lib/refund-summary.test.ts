@@ -23,6 +23,8 @@ function refund(over: Partial<TaxRefund>): TaxRefund {
     customs_at: null,
     received_at: null,
     memo: null,
+    owner_id: null,
+    barcode: null,
     created_by: null,
     created_at: "1",
     updated_at: "1",
