@@ -17,12 +17,13 @@ import { MobileDashboard } from "./mobile/mobile-dashboard";
 import { MobileExpenseList, TOAST_ABOVE_FAB } from "./mobile/mobile-expense-list";
 import { MobileSettle } from "./mobile/mobile-settle";
 import { PcExpenseList } from "./pc/pc-expense-list";
+import { MobileRefunds } from "./refund/mobile-refunds";
 
 type ExpenseListViewProps = {
   tripId: string;
   /**
-   * 모바일 화면 — 내역(목록) · 지출 · 정산(대시보드) · 카테고리 상세 · 정산. PC 는 한 화면(오른쪽 패널이 대시보드,
-   * 카테고리 상세 · 정산은 창)이라 쓰지 않는다
+   * 모바일 화면 — 내역(목록) · 지출 · 정산(대시보드) · 카테고리 상세 · 정산 · 환급. PC 는 한 화면(오른쪽 패널이 대시보드,
+   * 카테고리 상세 · 정산 · 환급은 창)이라 쓰지 않는다
    */
   tab?: MobileScreen;
   /** 카테고리 상세의 처음 카테고리(주소의 c) */
@@ -31,7 +32,7 @@ type ExpenseListViewProps = {
   person?: string;
 };
 
-type MobileScreen = "list" | "stats" | "category" | "settle";
+type MobileScreen = "list" | "stats" | "category" | "settle" | "refund";
 
 /**
  * 가계부. 데이터는 useExpenseList 가 쥐고, 배치는 모바일(요약 · 달력 띠 · 날짜 묶음) · PC(표 + 합계 칸)가 그린다.
@@ -86,18 +87,19 @@ type MobileTabProps = {
   person: string | undefined;
 };
 
-/** 모바일 화면 하나 — 내역 · 지출 · 정산 · 카테고리 상세 · 정산(사람 상세) */
+/** 모바일 화면 하나 — 내역 · 지출 · 정산 · 카테고리 상세 · 정산(사람 상세) · 환급 */
 function MobileTab({ tab, tripId, list, category, person }: MobileTabProps) {
   if (tab === "settle")
     return <MobileSettle tripId={tripId} list={list} initial={person ?? null} />;
   if (tab === "stats") return <MobileDashboard tripId={tripId} list={list} />;
+  if (tab === "refund") return <MobileRefunds tripId={tripId} list={list} />;
   if (tab === "category") {
     return <MobileCategory tripId={tripId} list={list} initial={parseCategoryPick(category)} />;
   }
   return <MobileExpenseList tripId={tripId} list={list} />;
 }
 
-/** PC 에서 주소로 열어 둘 창 — 카테고리 상세 · 정산 주소면 그 창, 아니면 없음 */
+/** PC 에서 주소로 열어 둘 창 — 카테고리 상세 · 정산 · 환급 주소면 그 창, 아니면 없음 */
 function pcInitial(
   tab: MobileScreen,
   category: string | undefined,
@@ -105,5 +107,6 @@ function pcInitial(
 ): PcScreensInitial {
   if (tab === "category") return { category: parseCategoryPick(category) };
   if (tab === "settle") return { settle: person ?? null };
+  if (tab === "refund") return { refund: true };
   return {};
 }

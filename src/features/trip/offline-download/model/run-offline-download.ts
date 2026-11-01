@@ -18,6 +18,7 @@ import {
   scheduleItemsQuery,
 } from "@/entities/schedule-item";
 import { staysQuery } from "@/entities/stay";
+import { taxRefundsQuery } from "@/entities/tax-refund";
 import { transportFaresQuery } from "@/entities/transport-fare";
 import { type Trip, tripQuery } from "@/entities/trip";
 import { tripMembersQuery } from "@/entities/trip-member";
@@ -65,6 +66,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...vouchersQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...packListsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...transportFaresQuery(tripId), ...fresh }),
+    qc.fetchQuery({ ...taxRefundsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...expensesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...tripReceiptsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...tripGuestsQuery(tripId), ...fresh }),

@@ -14,6 +14,7 @@ import type { ExpenseList } from "../../model/use-expense-list";
 import { CategoryCard } from "../dashboard/category-card";
 import { SettleCard } from "../dashboard/settle-card";
 import { SettleLoadError } from "../dashboard/settle-load-error";
+import { RefundCard } from "../refund/refund-card";
 import { ListTabs } from "./list-tabs";
 
 type MobileDashboardProps = { tripId: string; list: ExpenseList };
@@ -43,7 +44,12 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
   return (
     <>
       <AppHeader title="가계부" subtitle={trip.title} back="/trips" />
-      <ListTabs active="stats" listHref={base} statsHref={`${base}/stats`} />
+      <ListTabs
+        active="stats"
+        listHref={base}
+        statsHref={`${base}/stats`}
+        refundHref={`${base}/refunds`}
+      />
       <main className="flex flex-col pb-10">
         <div className="flex flex-col gap-3 px-5 pt-5.5 pb-4.5">
           {/* 금액이 길면 글자를 줄이고, 그래도 넘치면 「내가 결제한 돈」 이 아래 줄로 내려간다(겹치지 않게) */}
@@ -103,6 +109,12 @@ export function MobileDashboard({ tripId, list }: MobileDashboardProps) {
             />
           </section>
         )}
+        <section className={SECTION}>
+          <RefundCard
+            tripId={tripId}
+            onOpen={() => router.push(`${base}/refunds`, { transitionTypes: NAV.tab })}
+          />
+        </section>
       </main>
     </>
   );

@@ -551,6 +551,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      tax_refunds: {
+        Row: {
+          id: string;
+          trip_id: string;
+          store: string;
+          provider: string | null;
+          site_url: string | null;
+          transaction_id: string | null;
+          bought_on: string | null;
+          bought_time: string | null;
+          currency: string;
+          amount: number | null;
+          refund_amount: number | null;
+          method: string;
+          method_note: string | null;
+          customs_at: string | null;
+          received_at: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          store: string;
+          provider?: string | null;
+          site_url?: string | null;
+          transaction_id?: string | null;
+          bought_on?: string | null;
+          bought_time?: string | null;
+          currency: string;
+          amount?: number | null;
+          refund_amount?: number | null;
+          method: string;
+          method_note?: string | null;
+          customs_at?: string | null;
+          received_at?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          store?: string;
+          provider?: string | null;
+          site_url?: string | null;
+          transaction_id?: string | null;
+          bought_on?: string | null;
+          bought_time?: string | null;
+          currency?: string;
+          amount?: number | null;
+          refund_amount?: number | null;
+          method?: string;
+          method_note?: string | null;
+          customs_at?: string | null;
+          received_at?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       transport_fares: {
         Row: {
           id: string;
