@@ -18,7 +18,7 @@ import {
   scheduleItemsQuery,
 } from "@/entities/schedule-item";
 import { staysQuery } from "@/entities/stay";
-import { taxRefundsQuery } from "@/entities/tax-refund";
+import { fetchRefundPhotoUrls, refundPhotosQuery, taxRefundsQuery } from "@/entities/tax-refund";
 import { transportFaresQuery } from "@/entities/transport-fare";
 import { type Trip, tripQuery } from "@/entities/trip";
 import { tripMembersQuery } from "@/entities/trip-member";
@@ -67,6 +67,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...packListsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...transportFaresQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...taxRefundsQuery(tripId), ...fresh }),
+    qc.fetchQuery({ ...refundPhotosQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...expensesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...tripReceiptsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...tripGuestsQuery(tripId), ...fresh }),
@@ -76,7 +77,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
   return results.every((r) => r.status === "fulfilled");
 }
 
-/** 받을 화면 · 사진 전부 — 캐시에 들어온 데이터(비용 · 바우처 · 쇼핑)로 정한다 */
+/** 받을 화면 · 사진 전부 — 캐시에 들어온 데이터(비용 · 바우처 · 쇼핑 · 환급)로 정한다 */
 function planAll(qc: QueryClient, tripId: string): FailedItem[] {
   const expenses = qc.getQueryData(expensesQuery(tripId).queryKey) ?? [];
   const vouchers = qc.getQueryData(vouchersQuery(tripId).queryKey) ?? [];
@@ -85,7 +86,16 @@ function planAll(qc: QueryClient, tripId: string): FailedItem[] {
     tripId,
     expenses.map((e) => e.id),
   ).map((path): FailedItem => ({ kind: "page", path }));
-  const photos = photoTargets(vouchers, items).map((t): FailedItem => ({ kind: "photo", ...t }));
+  const refunds = qc.getQueryData(taxRefundsQuery(tripId).queryKey) ?? [];
+  const storeOf = (id: string) => refunds.find((r) => r.id === id)?.store ?? "";
+  const refundPhotos = (qc.getQueryData(refundPhotosQuery(tripId).queryKey) ?? []).map((p) => ({
+    ...p,
+    store: storeOf(p.refund_id),
+  }));
+  const photos = photoTargets(vouchers, items, refundPhotos).map((t): FailedItem => ({
+    kind: "photo",
+    ...t,
+  }));
   return [...pages, ...photos];
 }
 
@@ -93,11 +103,12 @@ function planAll(qc: QueryClient, tripId: string): FailedItem[] {
 async function signedUrls(tripId: string, photos: PhotoTarget[]): Promise<Record<string, string>> {
   const keysOf = (bucket: PhotoTarget["bucket"]) =>
     photos.filter((p) => p.bucket === bucket).flatMap((p) => p.keys);
-  const [vouchers, pack] = await Promise.all([
+  const [vouchers, pack, refund] = await Promise.all([
     fetchVoucherUrls(tripId, keysOf("vouchers")).catch(() => ({})),
     fetchPackPhotoUrls(tripId, keysOf("pack-photos")).catch(() => ({})),
+    fetchRefundPhotoUrls(tripId, keysOf("refund-photos")).catch(() => ({})),
   ]);
-  return { ...vouchers, ...pack };
+  return { ...vouchers, ...pack, ...refund };
 }
 
 /** 받을 것들을 서비스 워커에 맡길 일로 바꾼다 */

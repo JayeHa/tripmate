@@ -17,6 +17,7 @@ import { SheetDialog } from "@/shared/ui/sheet-dialog";
 import { type DetailRow, detailRows, stepTimeLabel } from "../lib/refund-form";
 import { memberName, useRefundMembers } from "../model/use-refund-members";
 import { BarcodeCopyRow } from "./barcode-copy-row";
+import { RefundPhotos } from "./refund-photos";
 
 type RefundDetailSheetProps = {
   tripId: string;
@@ -30,7 +31,7 @@ type RefundDetailSheetProps = {
 
 /**
  * 택스 리펀 상세 — 모바일 바텀시트 · PC 가운데 480. 제목은 매장, 아래 단계 줄(세관 확인 · 받음 시각),
- * 다음 단계 버튼(「세관 확인했어요」 → 「환급 받았어요」)과 되돌리기, 바코드 번호(누르면 복사), 정보 표(일행이 있으면 「누구 것」 부터), 「수정」
+ * 다음 단계 버튼(「세관 확인했어요」 → 「환급 받았어요」)과 되돌리기, 바코드 번호(누르면 복사), 사진(영수증 · 물품 · 캡처), 정보 표(일행이 있으면 「누구 것」 부터), 「수정」
  */
 export function RefundDetailSheet({
   tripId,
@@ -56,6 +57,7 @@ export function RefundDetailSheet({
           <StepLine refund={shown} />
           <StepButtons refund={shown} pending={steps.isPending} onGo={(to) => go(shown, to)} />
           {shown.barcode && <BarcodeCopyRow value={shown.barcode} />}
+          <RefundPhotos tripId={tripId} refund={shown} onToast={onToast} />
           <dl>
             {detailRows(shown, members ? memberName(members, shown.owner_id) : undefined).map(
               (row) => (

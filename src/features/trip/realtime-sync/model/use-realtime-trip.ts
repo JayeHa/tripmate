@@ -97,6 +97,12 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "tax_refunds", filter },
         () => void qc.invalidateQueries({ queryKey: queryKeys.taxRefunds(tripId) }),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tax_refund_photos", filter },
+        // 줄만 다시 읽는다 — 읽기 주소(urls)는 키가 그대로면 다시 받지 않는다
+        () => void qc.invalidateQueries({ queryKey: queryKeys.refundPhotos(tripId), exact: true }),
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter }, () =>
         refreshAfterSync(queryKeys.expenses(tripId)),
       )

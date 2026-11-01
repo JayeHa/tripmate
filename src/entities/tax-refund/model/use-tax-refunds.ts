@@ -4,6 +4,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 
 import { queryKeys } from "@/shared/api/query-keys";
 
+import { refundPhotoKeys, removeRefundPhotoFiles } from "../api/photos";
 import {
   addTaxRefund,
   deleteTaxRefund,
@@ -37,12 +38,19 @@ export function useSaveTaxRefund(tripId: string) {
   });
 }
 
-/** 한 건 지우기 */
+/** 한 건 지우기 — 사진 키를 먼저 읽어 두고, 기록을 지운 뒤(사진 줄은 cascade) 파일을 지운다 */
 export function useDeleteTaxRefund(tripId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: deleteTaxRefund,
-    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.taxRefunds(tripId) }),
+    mutationFn: async (id: string) => {
+      const keys = await refundPhotoKeys(id);
+      await deleteTaxRefund(id);
+      await removeRefundPhotoFiles(tripId, keys);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.taxRefunds(tripId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.refundPhotos(tripId), exact: true });
+    },
   });
 }
 

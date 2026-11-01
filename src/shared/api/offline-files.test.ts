@@ -22,9 +22,10 @@ describe("기기에 남기는 사진 주소", () => {
 
   const base = "https://abc.supabase.co/storage/v1/object/sign";
 
-  it("두 버킷의 서명 주소만 저장한다 — 다른 버킷 · 공개 주소 · 다른 도메인은 아니다", () => {
+  it("사진 버킷의 서명 주소만 저장한다 — 다른 버킷 · 공개 주소 · 다른 도메인은 아니다", () => {
     expect(isOfflineFileUrl(new URL(`${base}/vouchers/t/a.png?token=x`))).toBe(true);
     expect(isOfflineFileUrl(new URL(`${base}/pack-photos/t/a.jpg?token=x`))).toBe(true);
+    expect(isOfflineFileUrl(new URL(`${base}/refund-photos/t/a.jpg?token=x`))).toBe(true);
     expect(isOfflineFileUrl(new URL(`${base}/receipts/t/a.jpg?token=x`))).toBe(false);
     expect(
       isOfflineFileUrl(new URL("https://abc.supabase.co/storage/v1/object/public/avatars/u/a.jpg")),
