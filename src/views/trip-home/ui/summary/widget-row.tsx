@@ -35,14 +35,20 @@ type TileProps = {
   children: React.ReactNode;
 };
 
-/** 타일 껍데기 — 누를 수 있으면(환율 → 계산기) 버튼, 아니면 칸 */
+/** 눌렀을 때 열리는 것 — 읽기 프로그램용 이름 뒤에 붙인다 */
+const OPEN_LABEL: Partial<Record<WidgetTile["key"], string>> = {
+  rate: "계산기 열기",
+  weather: "여행 기간 날씨 열기",
+};
+
+/** 타일 껍데기 — 누를 수 있으면(환율 → 계산기 · 날씨 → 여행 기간 날씨) 버튼, 아니면 칸 */
 function Tile({ tile, onOpen, className, children }: TileProps) {
   if (!onOpen) return <div className={className}>{children}</div>;
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`${tile.label} 계산기 열기`}
+      aria-label={`${tile.label} ${OPEN_LABEL[tile.key] ?? "열기"}`}
       className={cn(className, "cursor-pointer text-left")}
     >
       {children}
@@ -55,6 +61,8 @@ type WidgetRowProps = {
   layout: "mobile" | "pc";
   /** 환율 타일을 누르면 — 계산기 */
   onOpenRate: () => void;
+  /** 날씨 타일을 누르면 — 여행 기간 날씨 */
+  onOpenWeather: () => void;
   /** 날씨 타일과 같은 날의 추천 옷차림 — 타일 아래 한 줄. 없으면 그리지 않는다 */
   outfit: WeatherOutfit | null;
   /** 바깥 데이터를 보이고 있다(날씨 · 실시간 환율 · 공휴일) — 줄 아래 오른쪽에 출처 링크 */
@@ -63,9 +71,16 @@ type WidgetRowProps = {
 
 /**
  * 현지 정보 위젯 줄. 모바일은 회색 타일(76 · r12)을 나란히, PC 는 흰 카드 한 장을 세로선으로 나눈 칸(아이콘 칸 36 · 값 옆 보조).
- * 환율 타일만 누를 수 있다(계산기). 날씨가 있으면 타일 아래 추천 옷차림 한 줄
+ * 환율(계산기) · 날씨(여행 기간 날씨) 타일을 누를 수 있다. 날씨가 있으면 타일 아래 추천 옷차림 한 줄
  */
-export function WidgetRow({ tiles, layout, onOpenRate, outfit, credits }: WidgetRowProps) {
+export function WidgetRow({
+  tiles,
+  layout,
+  onOpenRate,
+  onOpenWeather,
+  outfit,
+  credits,
+}: WidgetRowProps) {
   return (
     <div
       className={cn(
@@ -73,7 +88,7 @@ export function WidgetRow({ tiles, layout, onOpenRate, outfit, credits }: Widget
         layout === "pc" ? "mx-10 mt-3.5 mb-4 gap-1.5" : "gap-1.5 px-5 pt-3 pb-3.5",
       )}
     >
-      <Tiles tiles={tiles} layout={layout} onOpenRate={onOpenRate} />
+      <Tiles tiles={tiles} layout={layout} onOpenRate={onOpenRate} onOpenWeather={onOpenWeather} />
       {outfit && (
         <p className="flex min-w-0 items-center gap-1.5 pt-1 text-[13px] text-ink-500">
           <Shirt role="img" aria-label="추천 옷차림" className="size-4 shrink-0" />
@@ -94,12 +109,23 @@ export function WidgetRow({ tiles, layout, onOpenRate, outfit, credits }: Widget
 
 type MobileTilesProps = {
   tiles: WidgetTile[];
-  /** 환율 타일을 누르면 — 없으면 누를 수 없는 미리보기 */
+  /** 환율 · 날씨 타일을 누르면 — 없으면 누를 수 없는 미리보기 */
   onOpenRate?: () => void;
+  onOpenWeather?: () => void;
 };
 
+/** 타일을 누르면 할 일 — 환율 · 날씨만, 나머지는 누를 수 없다 */
+function openerOf(
+  t: WidgetTile,
+  { onOpenRate, onOpenWeather }: Pick<MobileTilesProps, "onOpenRate" | "onOpenWeather">,
+) {
+  if (t.key === "rate") return onOpenRate;
+  if (t.key === "weather") return onOpenWeather;
+  return undefined;
+}
+
 /** 모바일 타일 — 회색 타일(76 · r12)을 나란히. 「홈 위젯 편집」 의 미리보기도 이것을 쓴다 */
-export function MobileTiles({ tiles, onOpenRate }: MobileTilesProps) {
+export function MobileTiles({ tiles, onOpenRate, onOpenWeather }: MobileTilesProps) {
   return (
     <div className="flex gap-2">
       {tiles.map((t) => {
@@ -108,7 +134,7 @@ export function MobileTiles({ tiles, onOpenRate }: MobileTilesProps) {
           <Tile
             key={t.key}
             tile={t}
-            onOpen={t.key === "rate" ? onOpenRate : undefined}
+            onOpen={openerOf(t, { onOpenRate, onOpenWeather })}
             className="flex h-19 min-w-0 flex-1 flex-col gap-0.5 rounded-card bg-surface-sunken px-3 py-2.5"
           >
             <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold whitespace-nowrap text-ink-400">
@@ -129,9 +155,11 @@ export function MobileTiles({ tiles, onOpenRate }: MobileTilesProps) {
 type TilesProps = Omit<WidgetRowProps, "credits" | "outfit">;
 
 /** 타일들 — 모바일 회색 타일 나란히, PC 흰 카드 한 장 */
-function Tiles({ tiles, layout, onOpenRate }: TilesProps) {
-  if (layout === "mobile") return <MobileTiles tiles={tiles} onOpenRate={onOpenRate} />;
-  const openOf = (t: WidgetTile) => (t.key === "rate" ? onOpenRate : undefined);
+function Tiles({ tiles, layout, onOpenRate, onOpenWeather }: TilesProps) {
+  if (layout === "mobile") {
+    return <MobileTiles tiles={tiles} onOpenRate={onOpenRate} onOpenWeather={onOpenWeather} />;
+  }
+  const openOf = (t: WidgetTile) => openerOf(t, { onOpenRate, onOpenWeather });
   return (
     <div className="flex overflow-hidden rounded-card border border-line-card bg-white shadow-[0_1px_6px_rgba(0,0,0,.05)]">
       {tiles.map((t, i) => {
