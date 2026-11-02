@@ -121,13 +121,27 @@ export function todaySpend(
   };
 }
 
-/** 그날 밤 묵는 숙소(체크인 ≤ 그날 < 체크아웃) — 「숙박 2/4박 · 주소」 */
-export function tonightStay(stays: Stay[], date: string): { stay: Stay; sub: string } | null {
+/** 메모의 첫 줄 — 앞뒤 공백을 뗀 첫 비지 않은 줄, 없으면 null(넘치면 화면이 「…」 로 자른다) */
+export function memoFirstLine(memo: string | null | undefined): string | null {
+  return (
+    memo
+      ?.split("\n")
+      .map((l) => l.trim())
+      .find(Boolean) ?? null
+  );
+}
+
+/** 그날 밤 묵는 숙소(체크인 ≤ 그날 < 체크아웃) — 「숙박 2/4박 · 주소」 · 메모 첫 줄 */
+export function tonightStay(
+  stays: Stay[],
+  date: string,
+): { stay: Stay; sub: string; note: string | null } | null {
   const stay = stays.find((s) => s.check_in_date <= date && date < s.check_out_date);
   if (!stay) return null;
   const night = -daysUntil(stay.check_in_date, date) + 1;
   return {
     stay,
     sub: [`숙박 ${night}/${nightsOf(stay)}박`, stay.place.address].filter(Boolean).join(" · "),
+    note: memoFirstLine(stay.memo),
   };
 }
