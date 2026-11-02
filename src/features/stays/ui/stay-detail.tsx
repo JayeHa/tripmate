@@ -57,7 +57,8 @@ export function StayDetail({ tripId, stay, onPayment, onToast, vouchers }: StayD
         />
         {status.error && <p className="text-[13px] text-destructive">{status.error.message}</p>}
       </div>
-      <dl className="flex flex-col overflow-hidden rounded-card border border-line [&>*+*]:border-t [&>*+*]:border-line-card">
+      {/* shrink-0 — 스크롤 칸의 flex 자식 중 overflow-hidden 인 표만 최소 높이가 0 이 되어, 내용이 길면 표가 줄어 메모 · 링크가 잘렸다(#302) */}
+      <dl className="flex shrink-0 flex-col overflow-hidden rounded-card border border-line [&>*+*]:border-t [&>*+*]:border-line-card">
         <Row label="주소">
           {p.gmap_url ? (
             <a
