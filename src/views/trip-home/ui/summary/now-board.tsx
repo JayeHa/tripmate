@@ -9,8 +9,10 @@ import { directionsUrl } from "@/shared/lib/google-places";
 import { NAV } from "@/shared/lib/nav-transition";
 import { OPEN_PARAM } from "@/shared/lib/use-open-param";
 
+import type { DepartureRefunds } from "../../lib/departure-refunds";
 import type { NowBoard } from "../../model/use-now-board";
 import { BoardCard, BoardRow } from "./board-card";
+import { DepartureRefundCard } from "./departure-refund-card";
 import { TodayCard } from "./today-card";
 
 type Layout = "mobile" | "pc";
@@ -137,10 +139,14 @@ type NowBoardCardsProps = {
   layout: Layout;
   onMark: (mark: VisitMark) => void;
   onOpenVoucher: (id: string) => void;
+  /** 환급 받는 사람 이름(일행이 없으면 null) · 출국 날 카드의 단계 버튼 */
+  refundOwnerOf: (ownerId: string | null) => string | null;
+  onRefundStep: (row: DepartureRefunds["rows"][number]) => void;
 };
 
 /**
- * 여행 중 상태판의 카드들(순서대로) — 오늘 · 오늘 지출은 늘, 바우처 · 숙소는 그날 있을 때만
+ * 여행 중 상태판의 카드들(순서대로) — (출국 날 면세 환급) · 오늘 · 오늘 지출은 늘, 바우처 · 숙소는 그날 있을 때만.
+ * 면세 환급은 짐 부치기 전에 봐야 해서 맨 위
  */
 export function nowBoardCards({
   tripId,
@@ -150,9 +156,23 @@ export function nowBoardCards({
   layout,
   onMark,
   onOpenVoucher,
+  refundOwnerOf,
+  onRefundStep,
 }: NowBoardCardsProps) {
   const { dayIndex } = board;
   return [
+    board.refunds && {
+      key: "refund",
+      node: (
+        <DepartureRefundCard
+          tripId={tripId}
+          view={board.refunds}
+          ownerOf={refundOwnerOf}
+          layout={layout}
+          onStep={onRefundStep}
+        />
+      ),
+    },
     {
       key: "today",
       node: (
