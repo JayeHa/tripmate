@@ -1,6 +1,7 @@
 "use client";
 
 import { CloudOff, Pencil, X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { useDeleteExpense } from "@/entities/expense";
 import { DeleteExpenseConfirm } from "@/features/expense/form";
@@ -38,6 +39,8 @@ type ExpenseDetailScreenProps = {
   onEdit: () => void;
   /** 지운 뒤 — 가계부로(페이지) · 창 닫기 */
   onDeleted: () => void;
+  /** 그 비용이 없다(수정 창에서 지웠거나 일행이 지움) — 창이면 닫는다. 없으면 「찾을 수 없어요」 를 보인다 */
+  onMissing?: () => void;
 };
 
 /**
@@ -51,10 +54,19 @@ export function ExpenseDetailScreen({
   onClose,
   onEdit,
   onDeleted,
+  onMissing,
 }: ExpenseDetailScreenProps) {
   const detail = useExpenseDetail(tripId, expenseId);
   const remove = useDeleteExpense(tripId);
   const f = FRAME[frame];
+  const missing = detail.state === "missing";
+  // 한 번만 알린다 — 닫는 함수가 렌더마다 새로 만들어져도 두 번 닫지 않게
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!missing || reported.current) return;
+    reported.current = true;
+    onMissing?.();
+  }, [missing, onMissing]);
   // 삭제는 다시 읽기(invalidate)가 끝나야 성공이 되므로, 그 전에 다시 읽은 목록 · 실시간 갱신에서 지출이 먼저 빠질 수 있다 — 요청 중에 사라진 것도 지운 것으로 본다
   if (remove.isSuccess || (remove.isPending && detail.state === "missing")) return null;
   return (

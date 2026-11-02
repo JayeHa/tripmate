@@ -1,5 +1,4 @@
 import { Link2 } from "lucide-react";
-import Link from "next/link";
 
 import {
   ExpenseBadge,
@@ -9,12 +8,12 @@ import {
   type PersonRef,
   whoOf,
 } from "@/entities/expense";
-import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 type ExpenseRowProps = {
   row: ExpenseRowView;
-  href: string;
+  /** 줄을 눌렀다 — 목록 위에 그 비용의 상세 */
+  onOpen: () => void;
   onMarkPaid: () => void;
   /** 결제 완료로 바꾸는 중 */
   paying: boolean;
@@ -29,11 +28,11 @@ type ExpenseRowProps = {
 /**
  * 모바일 가계부 한 줄 — 카테고리 타일 38 · 이름 14/500(앞 「결제 예정」 · 뒤 「합계 제외」 배지) ·
  * 아래 아바타 16(사진, 없으면 첫 글자) + 「정원 결제 · 2명」(예정일이 지났으면 「예정일 지남 · 결제 완료로」), 오른쪽 금액 16/800 · 외화면 ≈ 원화.
- * 합계에서 뺀 비용은 금액을 흐리게 긋는다. 줄 전체가 그 비용으로 가는 링크라 「결제 완료로」 는 그 위에 올린다
+ * 합계에서 뺀 비용은 금액을 흐리게 긋는다. 줄 전체가 그 비용의 상세를 여는 버튼이라 「결제 완료로」 는 그 위에 올린다
  */
 export function ExpenseRow({
   row,
-  href,
+  onOpen,
   onMarkPaid,
   paying,
   displayNameOf,
@@ -48,13 +47,13 @@ export function ExpenseRow({
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-1.25">
           {row.planned && <ExpenseBadge>결제 예정</ExpenseBadge>}
-          <Link
-            href={href}
-            transitionTypes={NAV.forward}
-            className="min-w-0 truncate text-sm font-medium text-ink-600 after:absolute after:inset-0"
+          <button
+            type="button"
+            onClick={onOpen}
+            className="min-w-0 cursor-pointer truncate text-left text-sm font-medium text-ink-600 after:absolute after:inset-0"
           >
             {row.name}
-          </Link>
+          </button>
           {row.ownerLink && (
             <Link2
               className="size-3.5 shrink-0 text-ink-350"
