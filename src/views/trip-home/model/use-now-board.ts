@@ -5,11 +5,13 @@ import { useFlights } from "@/entities/flight";
 import { useScheduleItems, useVisitMarks } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { useStays } from "@/entities/stay";
+import { useTaxRefunds } from "@/entities/tax-refund";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { useVouchers } from "@/entities/voucher";
 import { dayIndexToDate, nowHHmm, todayISO } from "@/shared/lib/days";
 
+import { departureRefunds } from "../lib/departure-refunds";
 import { todaySpend, todayVouchers, tonightStay } from "../lib/now-board";
 import { boardDayIndex, todayPlan } from "../lib/today-plan";
 
@@ -29,6 +31,8 @@ export function useNowBoard(tripId: string, trip: Trip) {
   const expenses = useExpenses(tripId).data;
   const members = useTripMembers(tripId).data;
   const guests = useTripGuests(tripId).data;
+  // 환급은 기다리지 않는다 — 읽지 못해도 상태판은 그린다(카드만 없다)
+  const refunds = useTaxRefunds(tripId).data ?? [];
   const userId = useUser().data?.id ?? null;
   if (!items || !vouchers || !flights || !stays || !expenses || !members || !guests) return null;
   const me: PersonRef | null = userId ? { kind: "member", id: userId } : null;
@@ -48,6 +52,8 @@ export function useNowBoard(tripId: string, trip: Trip) {
       me,
     }),
     stay: tonightStay(stays, date),
+    /** 출국 날(정말 오늘이 마지막 날) 공항에서 할 환급 일 */
+    refunds: departureRefunds(refunds, date === today && date === trip.end_date),
   };
 }
 

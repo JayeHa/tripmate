@@ -8,6 +8,7 @@ import type { ToastMessage } from "@/shared/ui/toast";
 
 import type { Peek } from "../../lib/peek";
 import type { Phase } from "../../lib/phase";
+import { useDepartureActions } from "../../model/use-departure-actions";
 import { useNowBoard } from "../../model/use-now-board";
 import { usePinned } from "../../model/use-pinned";
 import { usePostBoard } from "../../model/use-post-board";
@@ -53,6 +54,7 @@ type NowBoardViewProps = {
 function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: NowBoardViewProps) {
   const board = useNowBoard(tripId, trip);
   const memberOf = useMemberLookup(tripId);
+  const refundStep = useDepartureActions(tripId, onToast);
   if (!board) return <BoardSkeleton layout={layout} />;
   const { plan, setMark } = board;
   /** 바우처 주인 — 비면 「모두」, 아니면 멤버 이름(나간 사람은 뺀다) */
@@ -84,6 +86,8 @@ function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: No
           layout,
           onMark: mark,
           onOpenVoucher,
+          refundOwnerOf: (id) => (id ? (memberOf(id)?.name ?? null) : null),
+          onRefundStep: (row) => refundStep(row.refund, row.step),
         }),
         ...tail,
       ]}
