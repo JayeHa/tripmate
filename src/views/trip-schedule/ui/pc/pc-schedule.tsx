@@ -20,6 +20,7 @@ import { useVisibleDay } from "../../model/use-visible-day";
 import { DayList } from "../day-list";
 import { PcFloatingAdd } from "../floating-add/pc-floating-add";
 import type { ScheduleLayoutProps } from "../schedule-layout";
+import { ScrollTopButton } from "../scroll-top-button";
 import { DayPager } from "./day-pager";
 import { DayRail } from "./day-rail";
 import { DayViewToggle } from "./day-view-toggle";
@@ -185,6 +186,8 @@ export function PcSchedule({
             <div aria-hidden="true" className="h-[max(420px,60%)]" />
           )}
         </div>
+        {/* 「+ 추가」(아래 20 · 높이 48) 위로 12 */}
+        <ScrollTopButton target={listRef} className="absolute right-5 bottom-20 z-10" />
         <PcFloatingAdd
           onAddPlace={() => body.onAddPlace(day)}
           onStartEdit={startEditAt(day)}

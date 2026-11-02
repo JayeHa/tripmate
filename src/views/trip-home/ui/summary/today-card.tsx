@@ -1,8 +1,8 @@
-import { CalendarDays, Check, CircleCheck, Plus } from "lucide-react";
+import { Ban, CalendarDays, Check, CircleCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import type * as React from "react";
 
-import { NumberMarker, ReservationBadge } from "@/entities/schedule-item";
+import { NumberMarker, ReservationBadge, type VisitMark } from "@/entities/schedule-item";
 import { dayLabel } from "@/shared/lib/days";
 import { directionsUrl } from "@/shared/lib/google-places";
 import { NAV } from "@/shared/lib/nav-transition";
@@ -12,10 +12,13 @@ import { buttonVariants } from "@/shared/ui/button";
 import type { PlaceLine, TodayPlan } from "../../lib/today-plan";
 import { BoardCard, BoardRow } from "./board-card";
 
-type NextBoxProps = { plan: Extract<TodayPlan, { kind: "next" }>; onVisit: () => void };
+type NextBoxProps = {
+  plan: Extract<TodayPlan, { kind: "next" }>;
+  onMark: (mark: VisitMark) => void;
+};
 
-/** 다음 장소 — 옅은 파랑 칸에 파란 안내 · 번호 원 · 이름 17/800, 아래 「구글맵 경로 | ✓ 들렀어요」 */
-function NextBox({ plan, onVisit }: NextBoxProps) {
+/** 다음 장소 — 옅은 파랑 칸에 파란 안내 · 번호 원 · 이름 17/800, 아래 「구글맵 경로 | ✓ 들렀어요 | ⊘ 패스」 */
+function NextBox({ plan, onMark }: NextBoxProps) {
   const { place } = plan;
   return (
     <div className="flex flex-col gap-2.5 rounded-card bg-row-focus p-3.5">
@@ -40,11 +43,20 @@ function NextBox({ plan, onVisit }: NextBoxProps) {
         )}
         <button
           type="button"
-          onClick={onVisit}
+          onClick={() => onMark("visited")}
           className="flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-button border border-line-strong bg-white text-[15px] font-semibold text-ink-900 hover:bg-surface-sunken"
         >
           <Check className="size-4.25" strokeWidth={2.4} aria-hidden="true" />
           들렀어요
+        </button>
+        {/* 일정엔 넣었지만 가지 않았다 — 일정 상세의 「패스」 와 같은 표시 */}
+        <button
+          type="button"
+          onClick={() => onMark("skipped")}
+          className="flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-button border border-line-strong bg-white px-3 text-[15px] font-semibold text-ink-500 hover:bg-surface-sunken"
+        >
+          <Ban className="size-3.75" strokeWidth={2.2} aria-hidden="true" />
+          패스
         </button>
       </div>
     </div>
@@ -99,23 +111,32 @@ type TodayCardProps = {
   startDate: string;
   dayIndex: number;
   plan: TodayPlan;
+  /** 상태판의 날이 정말 오늘인가(여행 전 · 후 미리 보기가 아님) */
+  isToday: boolean;
   layout: "mobile" | "pc";
-  onVisit: () => void;
+  /** 다음 장소를 들렀어요 · 패스로 표시 */
+  onMark: (mark: VisitMark) => void;
   /** 다 마친 뒤 「되돌리기」 — 마지막 장소로 돌아간다 */
   onReopen: () => void;
 };
 
-/** 오늘 · day N — 다음 장소와 「들렀어요」, 이후 두 곳. 다 마쳤으면 내일 첫 일정, 장소가 없으면 자유 일정 */
+/**
+ * 오늘 · day N — 다음 장소와 「들렀어요」 · 「패스」, 이후 두 곳. 다 마쳤으면 내일 첫 일정, 장소가 없으면 자유 일정.
+ * 머리의 「일정 ›」 은 그날이 오늘이면 `?day` 없이 연다 — 일정 화면이 오늘의 다음 장소로 스크롤해 들어간다(`useScheduleEntry`).
+ * 여행 전 · 후에 미리 보는 날이면 그 날짜로
+ */
 export function TodayCard({
   tripId,
   startDate,
   dayIndex,
   plan,
+  isToday,
   layout,
-  onVisit,
+  onMark,
   onReopen,
 }: TodayCardProps) {
-  const schedule = `/trips/${tripId}/schedule?day=${dayIndex}`;
+  const base = `/trips/${tripId}/schedule`;
+  const schedule = isToday ? base : `${base}?day=${dayIndex}`;
   return (
     <BoardCard
       title={`오늘 · day ${dayIndex + 1}`}
@@ -123,7 +144,7 @@ export function TodayCard({
       link={{ label: "일정", href: schedule }}
       layout={layout}
     >
-      {plan.kind === "next" && <NextBox plan={plan} onVisit={onVisit} />}
+      {plan.kind === "next" && <NextBox plan={plan} onMark={onMark} />}
       {plan.kind === "done" && (
         <QuietBox
           icon="done"

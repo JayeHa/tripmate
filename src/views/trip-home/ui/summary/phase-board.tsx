@@ -1,5 +1,6 @@
 "use client";
 
+import type { VisitMark } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
 import type { Voucher } from "@/entities/voucher";
@@ -62,12 +63,13 @@ function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: No
           .map((id) => memberOf(id)?.name)
           .filter(Boolean)
           .join(" · ");
-  const visit = () => {
+  /** 다음 장소에 다녀감 표시 — 되돌리기 토스트와 함께 */
+  const mark = (to: VisitMark) => {
     if (plan.kind !== "next") return;
     const { id, name } = plan.place;
-    setMark(id, "visited");
+    setMark(id, to);
     onToast({
-      text: `${name} 들렀어요`,
+      text: to === "visited" ? `${name} 들렀어요` : `${name} 패스했어요`,
       action: { label: "되돌리기", onClick: () => setMark(id, null) },
     });
   };
@@ -80,7 +82,7 @@ function NowBoardView({ tripId, trip, layout, onToast, onOpenVoucher, tail }: No
           board,
           ownersOf,
           layout,
-          onVisit: visit,
+          onMark: mark,
           onOpenVoucher,
         }),
         ...tail,
