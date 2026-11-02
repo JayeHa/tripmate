@@ -53,6 +53,11 @@ describe("startValues", () => {
     });
   });
 
+  it("새 지출의 결제한 사람 — 마지막에 저장한 사람이 있으면 그 사람, 저장된 지출은 저장된 값", () => {
+    expect(startValues({ ...base, defaultPayer: "m:kim" }).payer).toBe("m:kim");
+    expect(startValues({ ...base, defaultPayer: null }).payer).toBe("m:a");
+  });
+
   it("저장된 지출 — 금액은 문자열로, 날짜 없음(여행준비 · 예정일 없음)은 빈 글로", () => {
     expect(startValues({ ...base, initial: saved })).toEqual({
       name: "숙소",

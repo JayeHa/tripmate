@@ -27,11 +27,13 @@ type StartOptions = {
   defaultAmount?: string;
   /** 숙소 · 항공편 결제로 연 새 지출 — 그 이름 · 카테고리(숙소 · 항공)로 시작한다(DB 도 그쪽에 맞춘다) */
   payFor?: PayFor;
+  /** 새 지출의 처음 결제한 사람(사람 키) — 이 여행에서 마지막에 저장한 사람. 없으면 나 */
+  defaultPayer?: string | null;
 };
 
 /**
  * 폼의 처음 값. 수정이면 저장된 값, 새로 추가면 기본값 —
- * 처음 통화(없으면 첫 외화) · 현금 · 결제 완료 · 합계 포함 · 내가 결제 · 모두와 나눔 · 고른 날 또는 여행 첫날.
+ * 처음 통화(없으면 첫 외화) · 카드 · 결제 완료 · 합계 포함 · 마지막에 저장한 결제자(없으면 나) · 모두와 나눔 · 고른 날 또는 여행 첫날.
  * 함께한 사람의 null 은 「모두」 — 사람 목록을 따라간다(기기에 저장된 옛 목록으로 먼저 열려도 새로 읽은 사람이 빠지지 않게).
  * 카테고리는 비워 두고 고르게 한다(필수 칸). 금액은 입력 칸이 다루는 문자열로, 날짜 없음(여행준비 · 예정일)은 빈 글로 바꾼다.
  * 환율은 칸이 없어 처음 값을 들고만 있다
@@ -46,11 +48,13 @@ export function startValues({
   defaultCurrency,
   defaultAmount,
   payFor,
+  defaultPayer,
 }: StartOptions) {
   if (initial) return savedValues(initial);
   const blank = {
     ...newValues(trip, defaultCurrency ?? currencies[1] ?? currencies[0], me, defaultSpentOn),
     amount: defaultAmount ?? "",
+    payer: defaultPayer ?? me,
   };
   if (payFor) return { ...blank, name: payFor.name, category: PAYMENT_OWNER[payFor.kind].category };
   if (!presetItem) return blank;

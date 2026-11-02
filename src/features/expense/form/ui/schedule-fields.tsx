@@ -25,8 +25,8 @@ type ScheduleFieldsProps = {
  */
 export function ScheduleFields({ form, trip, items, alternatives, quick }: ScheduleFieldsProps) {
   const [categoryKnown] = useState(form.category !== null);
-  // 직접 고른 날짜의 day 순번(0 부터) — 고르기 창이 그날로 걸러 연다. 고르지 않았거나 여행준비면 null(전체 날짜에서 「연결 안 함」 부터)
-  const dayIndex = form.link.dayTouched
+  // 고른 · 미리 골라 연 날짜의 day 순번(0 부터) — 고르기 창이 그날로 걸러 연다. 고르지 않았거나 여행준비면 null(전체 날짜에서 「연결 안 함」 부터)
+  const dayIndex = form.link.dayFilter
     ? form.link.days.findIndex((o) => o.value === form.spentOn) - 1
     : -1;
   if (quick)

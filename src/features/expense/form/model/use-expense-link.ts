@@ -31,8 +31,12 @@ type ExpenseLinkOptions = {
   startItemId: string;
   /** 수정이면 true — 저장된 날짜 · 카테고리를 연결이 덮지 않고, 연결이 없으면 「연결 안 함」 으로 보인다 */
   editing: boolean;
-  /** 날짜를 미리 골라 열었다(가계부의 날짜 묶음에서 「비용 추가」 — 여행준비 포함). 연결이 덮지 않는다 */
-  dayPreset: boolean;
+  /**
+   * 미리 골라 연 날짜 — ""(여행준비) · yyyy-MM-dd(가계부 날짜 묶음 · 홈 「비용 추가」 의 그날), 없으면 undefined.
+   * 여행준비는 일부러 고른 것이라 연결이 덮지 않는다. 날짜는 기본값일 뿐이라 일정을 고르면 그 일정의 날로 바뀐다(2026-11-02 사용자 요청 —
+   * day 3 에 어제 일정을 고르면 day 2 로). 어느 쪽이든 고르기 창은 그날로 걸러 연다
+   */
+  dayPreset: string | undefined;
   fields: LinkedFields;
 };
 
@@ -54,7 +58,7 @@ export function useExpenseLink({
 }: ExpenseLinkOptions) {
   const [itemId, setItemId] = useState(startItemId);
   const [noneChosen, setNoneChosen] = useState(editing && !startItemId);
-  const [dayTouched, setDayTouched] = useState(editing || dayPreset);
+  const [dayTouched, setDayTouched] = useState(editing || dayPreset === "");
   const [categoryTouched, setCategoryTouched] = useState(editing);
   const [pending, setPending] = useState<ScheduleItem | null>(null);
   const findItem = (id: string) =>
@@ -162,8 +166,8 @@ export function useExpenseLink({
     status: state.status,
     /** 연결했던 일정이 사라졌다 — 칸 아래에 알린다 */
     gone: state.gone,
-    /** 날짜를 직접 골랐다(수정 · 날짜를 미리 골라 연 비용 포함) — 고르기 창이 그날로 걸러 연다 */
-    dayTouched,
+    /** 고르기 창이 지금 날짜로 걸러 열지 — 날짜를 직접 골랐거나(수정 포함) 날짜를 미리 골라 연 비용 */
+    dayFilter: dayTouched || dayPreset !== undefined,
     dayMismatch,
     pending,
     pendingRows,

@@ -14,6 +14,7 @@ import type { Trip } from "@/entities/trip";
 import { missingText } from "../lib/missing";
 import { splitPreview } from "../lib/split-preview";
 import { startValues } from "../lib/start-values";
+import { readLastPayer, rememberPayer } from "./last-payer";
 import { useExpenseLink } from "./use-expense-link";
 import { useExpensePlace } from "./use-expense-place";
 import { useMoney } from "./use-money";
@@ -78,6 +79,10 @@ export function useExpenseForm({
       defaultCurrency,
       defaultAmount,
       payFor,
+      defaultPayer: readLastPayer(
+        trip.id,
+        people.map((p) => p.key),
+      ),
     }),
   );
   // 연 때의 값. 열려 있는 동안 지출이 다시 읽혀도(일행이 고침) 바뀌지 않는다
@@ -105,7 +110,7 @@ export function useExpenseForm({
     startItemId: start.itemId,
     editing: !!initial,
     // 일정에서 연 비용(presetItem)의 날짜는 그 일정에서 채운 값이라 고른 날짜로 보지 않는다 — 연결을 바꾸면 따라간다
-    dayPreset: defaultSpentOn !== undefined,
+    dayPreset: defaultSpentOn,
     fields: {
       spentOn,
       setSpentOn,
@@ -136,6 +141,11 @@ export function useExpenseForm({
   });
   const missing = missingText({ amount: numAmount, name: link.effectiveName(), category });
 
+  /** 새 비용이면 결제한 사람을 기억한다 — 다음 새 비용이 그 사람으로 시작한다 */
+  function rememberNewPayer() {
+    if (!opened) rememberPayer(trip.id, picker.payer);
+  }
+
   /** 검증을 통과하면 onSubmit, 아니면 첫 오류를 보인다 */
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -165,6 +175,7 @@ export function useExpenseForm({
       return;
     }
     setError(null);
+    rememberNewPayer();
     onSubmit(parsed.data, opened);
   }
 
