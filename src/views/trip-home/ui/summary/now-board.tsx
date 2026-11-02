@@ -97,7 +97,7 @@ function SpendCard({ tripId, spend, dayIndex, layout }: SpendCardProps) {
 
 type StayCardProps = { stay: NonNullable<NowBoard["stay"]>; layout: Layout };
 
-/** 오늘 밤 숙소 — 숙소 이름 · 「숙박 2/4박 · 주소」, 오른쪽 「길찾기」 */
+/** 오늘 밤 숙소 — 숙소 이름 · 「숙박 2/4박 · 주소」 · 메모 첫 줄(넘치면 「…」), 오른쪽 「길찾기」 */
 function StayCard({ stay, layout }: StayCardProps) {
   const { place } = stay.stay;
   return (
@@ -107,6 +107,7 @@ function StayCard({ stay, layout }: StayCardProps) {
           lead={<ExpenseCategoryTile category="lodging" />}
           title={place.name}
           sub={stay.sub}
+          note={stay.note}
           trail={
             place.lat != null &&
             place.lng != null && (
