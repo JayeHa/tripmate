@@ -19,6 +19,7 @@ import { DayList } from "./day-list";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
 import { MapPanel } from "./map-panel";
 import type { ScheduleLayoutProps } from "./schedule-layout";
+import { ScrollTopButton } from "./scroll-top-button";
 import { TripHeader } from "./trip-header";
 
 /**
@@ -160,6 +161,13 @@ export function MobileSchedule({
           }}
         />
       </main>
+      {!edit.editing && (
+        // 「+ 추가」(아래 99 · 높이 48) 위로 12
+        <ScrollTopButton
+          target="window"
+          className="fixed right-4 bottom-[calc(159px+env(safe-area-inset-bottom))] z-20"
+        />
+      )}
       {!edit.editing && (
         <MobileFloatingAdd
           onAddPlace={() => body.onAddPlace(day)}
