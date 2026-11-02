@@ -2,7 +2,9 @@ import { ChevronRight, Plus, QrCode, Receipt } from "lucide-react";
 import Link from "next/link";
 
 import { ExpenseCategoryTile } from "@/entities/expense";
+import type { VisitMark } from "@/entities/schedule-item";
 import type { Voucher } from "@/entities/voucher";
+import { todayISO } from "@/shared/lib/days";
 import { directionsUrl } from "@/shared/lib/google-places";
 import { NAV } from "@/shared/lib/nav-transition";
 import { OPEN_PARAM } from "@/shared/lib/use-open-param";
@@ -133,7 +135,7 @@ type NowBoardCardsProps = {
   board: NowBoard;
   ownersOf: (v: Voucher) => string;
   layout: Layout;
-  onVisit: () => void;
+  onMark: (mark: VisitMark) => void;
   onOpenVoucher: (id: string) => void;
 };
 
@@ -146,7 +148,7 @@ export function nowBoardCards({
   board,
   ownersOf,
   layout,
-  onVisit,
+  onMark,
   onOpenVoucher,
 }: NowBoardCardsProps) {
   const { dayIndex } = board;
@@ -160,7 +162,8 @@ export function nowBoardCards({
           dayIndex={dayIndex}
           plan={board.plan}
           layout={layout}
-          onVisit={onVisit}
+          isToday={board.date === todayISO()}
+          onMark={onMark}
           onReopen={() => {
             if (board.plan.kind === "done" && board.plan.reopenId)
               board.setMark(board.plan.reopenId, null);
