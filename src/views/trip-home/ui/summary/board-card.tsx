@@ -56,6 +56,8 @@ type BoardRowProps = {
   lead: React.ReactNode;
   title: string;
   sub: string;
+  /** 보조 아래 한 줄 더(숙소 메모 첫 줄) — 넘치면 「…」 */
+  note?: string | null;
   /** 오른쪽 끝(배지 · 날짜 · 버튼) */
   trail?: React.ReactNode;
   /** 있으면 줄 전체가 그 화면으로 가는 링크 */
@@ -67,14 +69,15 @@ type BoardRowProps = {
 /** 줄 전체를 누르는 영역 */
 const HIT = "flex min-w-0 flex-1 items-center gap-3";
 
-/** 상태판 카드 안의 한 줄 — 왼쪽 표식 · 제목 15/700 · 보조 12, 오른쪽 끝 */
-export function BoardRow({ lead, title, sub, trail, href, onClick }: BoardRowProps) {
+/** 상태판 카드 안의 한 줄 — 왼쪽 표식 · 제목 15/700 · 보조 12 · (메모 13 한 줄), 오른쪽 끝 */
+export function BoardRow({ lead, title, sub, note, trail, href, onClick }: BoardRowProps) {
   const body = (
     <>
       {lead}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-[15px] font-bold text-ink-900">{title}</span>
         {sub && <span className="truncate text-xs text-ink-400">{sub}</span>}
+        {note && <span className="truncate text-[13px] text-ink-700">{note}</span>}
       </div>
       {trail}
     </>

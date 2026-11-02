@@ -6,7 +6,7 @@ import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Stay } from "@/entities/stay";
 import type { Voucher } from "@/entities/voucher";
 
-import { todaySpend, todayVouchers, tonightStay } from "./now-board";
+import { memoFirstLine, todaySpend, todayVouchers, tonightStay } from "./now-board";
 
 /** 테스트용 바우처 — 연결 칸 하나와 주인 */
 function voucher(id: string, owners: string[], link: Partial<Voucher>): Voucher {
@@ -141,5 +141,13 @@ describe("tonightStay", () => {
       sub: "숙박 2/4박 · 다이토구 아사쿠사",
     });
     expect(tonightStay(stays, "2026-11-04")).toBeNull();
+  });
+
+  it("메모 첫 줄 — 빈 줄 · 앞뒤 공백을 건너뛰고, 메모가 없으면 null", () => {
+    expect(memoFirstLine("\n  확인번호 HMN8NMF28M  \n호스트 ...")).toBe("확인번호 HMN8NMF28M");
+    expect(memoFirstLine("  \n ")).toBeNull();
+    expect(memoFirstLine(null)).toBeNull();
+    const stays = [{ ...stay("s", "2026-10-31", "2026-11-04"), memo: "셀프 체크인\n둘째 줄" }];
+    expect(tonightStay(stays as Stay[], "2026-11-01")?.note).toBe("셀프 체크인");
   });
 });
