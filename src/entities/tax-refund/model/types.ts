@@ -3,6 +3,9 @@ import type { Tables } from "@/shared/api/supabase/database.types";
 /** 택스 리펀 한 건(0077) — 매장 · 사업자 · 금액 · 환급 방법 · 세관 확인 · 받음 */
 export type TaxRefund = Tables<"tax_refunds">;
 
+/** 택스 리펀 사진 한 장(0080) — 종류 · 줄인 사진 · 썸네일 키 */
+export type TaxRefundPhoto = Tables<"tax_refund_photos">;
+
 /** 환급 방법 — 이 순서로 고르기 칸에 보인다. 매장(사업자)마다 달라 건마다 적는다 */
 export const REFUND_METHODS = ["card", "cash", "app", "bank"] as const;
 export type RefundMethod = (typeof REFUND_METHODS)[number];

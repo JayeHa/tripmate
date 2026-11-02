@@ -551,6 +551,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      tax_refund_photos: {
+        Row: {
+          id: string;
+          trip_id: string;
+          refund_id: string;
+          kind: string;
+          photo_key: string;
+          thumb_key: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          refund_id: string;
+          kind: string;
+          photo_key: string;
+          thumb_key: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          refund_id?: string;
+          kind?: string;
+          photo_key?: string;
+          thumb_key?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       tax_refunds: {
         Row: {
           id: string;

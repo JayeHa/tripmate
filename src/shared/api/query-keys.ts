@@ -52,6 +52,8 @@ export const queryKeys = {
   transportFares: (tripId: string) => ["trips", tripId, "transport-fares"] as const,
   /** 가계부 「환급」 의 택스 리펀(0077) */
   taxRefunds: (tripId: string) => ["trips", tripId, "tax-refunds"] as const,
+  /** 택스 리펀 사진 줄(0080) — 읽기 주소는 그 아래 "urls" */
+  refundPhotos: (tripId: string) => ["trips", tripId, "refund-photos"] as const,
   expenses: (tripId: string) => ["trips", tripId, "expenses"] as const,
   tripGuests: (tripId: string) => ["trips", tripId, "guests"] as const,
   settlements: (tripId: string) => ["trips", tripId, "settlements"] as const,
@@ -71,8 +73,8 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (["cities", "holidays", "weather"].includes(String(queryKey[0]))) return true;
   // 내 프로필(이름 · 사진) — 오프라인 첫 화면의 계정 버튼이 「?」 로 보이지 않게. 로그인 정보(["user"])는 남기지 않는다
   if (queryKey[0] === "user" && queryKey[1] === "profile") return true;
-  // 영수증 · 바우처 · 쇼핑 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
-  const files = ["receipts", "vouchers", "pack-photos"];
+  // 영수증 · 바우처 · 쇼핑 · 환급 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
+  const files = ["receipts", "vouchers", "pack-photos", "refund-photos"];
   if (files.includes(String(queryKey[2])) && queryKey[3] === "urls") {
     return false;
   }

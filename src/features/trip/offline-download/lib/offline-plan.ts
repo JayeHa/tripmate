@@ -1,6 +1,7 @@
 import { addDays, format, max, min, parseISO } from "date-fns";
 
 import { type PackItem, photoOf } from "@/entities/pack";
+import { photoKindLabel, type TaxRefundPhoto } from "@/entities/tax-refund";
 import { viewerKeys, type Voucher } from "@/entities/voucher";
 
 /**
@@ -16,6 +17,7 @@ const TRIP_PAGES = [
   "expenses/stats",
   "expenses/settlement",
   "expenses/categories",
+  "expenses/refunds",
   "settings",
 ] as const;
 
@@ -23,9 +25,9 @@ const TRIP_PAGES = [
 const KEEP_MIN_DAYS = 7;
 export const KEEP_MAX_DAYS = 60;
 
-/** 받을 사진 하나 — 사용자에게 보이는 그림 한 장(바우처 쪽 · 사진, 쇼핑 사진). 썸네일은 같은 묶음에 붙인다 */
+/** 받을 사진 하나 — 사용자에게 보이는 그림 한 장(바우처 쪽 · 사진, 쇼핑 사진, 환급 사진). 썸네일은 같은 묶음에 붙인다 */
 export type PhotoTarget = {
-  bucket: "vouchers" | "pack-photos";
+  bucket: "vouchers" | "pack-photos" | "refund-photos";
   keys: string[];
   /** 받지 못했을 때 보일 이름 — 「쇼핑 · 돈키호테 영수증」 */
   label: string;
@@ -71,10 +73,16 @@ function voucherTargets(v: Voucher): PhotoTarget[] {
   }));
 }
 
-/** 받을 사진 — 바우처 그림(PDF 원본은 빼고) · 썸네일, 쇼핑 사진 · 썸네일 */
+/** 환급 사진 한 장과 그 기록의 매장 — 받지 못했을 때 「환급 · AlpenTOKYO 캡처」 로 보인다 */
+export type RefundPhotoTarget = Pick<TaxRefundPhoto, "kind" | "photo_key" | "thumb_key"> & {
+  store: string;
+};
+
+/** 받을 사진 — 바우처 그림(PDF 원본은 빼고) · 썸네일, 쇼핑 사진 · 썸네일, 환급 사진 · 썸네일 */
 export function photoTargets(
   vouchers: readonly Voucher[],
   items: readonly Pick<PackItem, "name" | "photo_key" | "thumb_key">[],
+  refunds: readonly RefundPhotoTarget[] = [],
 ): PhotoTarget[] {
   const shopping = items.flatMap((item): PhotoTarget[] => {
     const photo = photoOf(item);
@@ -82,7 +90,12 @@ export function photoTargets(
     const keys = [photo.photo_key, photo.thumb_key];
     return [{ bucket: "pack-photos", keys, label: `쇼핑 · ${item.name}` }];
   });
-  return [...vouchers.flatMap(voucherTargets), ...shopping];
+  const refund = refunds.map((p): PhotoTarget => ({
+    bucket: "refund-photos",
+    keys: [p.photo_key, p.thumb_key],
+    label: `환급 · ${p.store} ${photoKindLabel(p.kind)}`,
+  }));
+  return [...vouchers.flatMap(voucherTargets), ...shopping, ...refund];
 }
 
 /**

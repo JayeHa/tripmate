@@ -80,6 +80,16 @@ describe("받을 사진", () => {
     ]);
   });
 
+  it("환급 사진은 사진 · 썸네일 한 묶음, 이름은 「환급 · 매장 종류」", () => {
+    expect(
+      photoTargets(
+        [],
+        [],
+        [{ kind: "capture", photo_key: "r", thumb_key: "rt", store: "AlpenTOKYO" }],
+      ),
+    ).toEqual([{ bucket: "refund-photos", keys: ["r", "rt"], label: "환급 · AlpenTOKYO 캡처" }]);
+  });
+
   it("쇼핑 사진은 사진 · 썸네일 한 묶음, 이름은 「쇼핑 · 항목」", () => {
     const items = [
       { name: "영수증", photo_key: "p", thumb_key: "pt" },
