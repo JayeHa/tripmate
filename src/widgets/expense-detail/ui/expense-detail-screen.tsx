@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { useDeleteExpense } from "@/entities/expense";
 import { DeleteExpenseConfirm } from "@/features/expense/form";
 import { saveErrorText } from "@/shared/api/sync";
+import { useReportLock } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -41,6 +42,8 @@ type ExpenseDetailScreenProps = {
   onDeleted: () => void;
   /** 그 비용이 없다(수정 창에서 지웠거나 일행이 지움) — 창이면 닫는다. 없으면 「찾을 수 없어요」 를 보인다 */
   onMissing?: () => void;
+  /** 삭제 요청 중(잠김)을 창을 쥔 쪽에 알린다 — 그동안 창이 ✕ 밖의 방법(Esc · 바깥 누르기)으로도 닫히지 않게 */
+  onLockChange?: (locked: boolean) => void;
 };
 
 /**
@@ -55,11 +58,13 @@ export function ExpenseDetailScreen({
   onEdit,
   onDeleted,
   onMissing,
+  onLockChange,
 }: ExpenseDetailScreenProps) {
   const detail = useExpenseDetail(tripId, expenseId);
   const remove = useDeleteExpense(tripId);
   const f = FRAME[frame];
   const missing = detail.state === "missing";
+  useReportLock(remove.isPending, onLockChange);
   // 한 번만 알린다 — 닫는 함수가 렌더마다 새로 만들어져도 두 번 닫지 않게
   const reported = useRef(false);
   useEffect(() => {
@@ -72,7 +77,13 @@ export function ExpenseDetailScreen({
   return (
     <div className={f.root}>
       <header className="flex h-14 shrink-0 items-center gap-3.5 px-4.5">
-        <button type="button" onClick={onClose} aria-label="닫기" className="flex text-ink-900">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={remove.isPending}
+          aria-label="닫기"
+          className="flex text-ink-900 disabled:opacity-40"
+        >
           <X className="size-6.5" />
         </button>
         <h1 className="flex-1 text-[17px] font-bold text-ink-900">비용 상세</h1>

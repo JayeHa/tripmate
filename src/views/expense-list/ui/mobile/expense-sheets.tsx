@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { ExpenseDialog, type ExpenseDialogTarget } from "@/features/expense/form";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
@@ -31,6 +33,8 @@ export function ExpenseSheets({ tripId, sheets, onToast }: ExpenseSheetsProps) {
   const viewing = sheet?.kind === "view" ? sheet.id : null;
   // 닫히는 동안에도 상세를 그린다
   const shownId = useHeldWhileClosing(viewing !== null, viewing);
+  // 상세에서 지우는 동안은 Esc · 바깥 누르기로 닫지 않는다 — 실패 문구를 볼 곳이 남게
+  const [locked, setLocked] = useState(false);
   /** 입력 창을 닫았다 — 수정이었으면 그 상세로, 추가였으면 목록으로 */
   const closeForm = () => {
     if (sheet?.kind === "edit") sheets.swap({ kind: "view", id: sheet.id });
@@ -44,7 +48,11 @@ export function ExpenseSheets({ tripId, sheets, onToast }: ExpenseSheetsProps) {
         onClose={closeForm}
         onToast={onToast}
       />
-      <Dialog open={viewing !== null} onOpenChange={(open) => !open && sheets.close()}>
+      <Dialog
+        open={viewing !== null}
+        locked={locked}
+        onOpenChange={(open) => !open && sheets.close()}
+      >
         <DialogContent
           showCloseButton={false}
           className="flex h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:max-w-none"
@@ -59,6 +67,7 @@ export function ExpenseSheets({ tripId, sheets, onToast }: ExpenseSheetsProps) {
               onEdit={() => sheets.swap({ kind: "edit", id: shownId })}
               onDeleted={sheets.close}
               onMissing={viewing ? sheets.close : undefined}
+              onLockChange={setLocked}
             />
           )}
         </DialogContent>
