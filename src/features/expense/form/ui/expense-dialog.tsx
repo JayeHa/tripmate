@@ -15,7 +15,13 @@ import { CreateExpense, EditExpense } from "./expense-editors";
  * quick: 일정 상세에서 열었다 — 빠른 입력(일정 연결 · 카테고리 · 날짜 칸을 숨기고 요약)
  */
 export type ExpenseDialogTarget = { quick?: boolean } & (
-  | { kind: "new"; itemId?: string; payFor?: PaymentOwner & { name: string } }
+  | {
+      kind: "new";
+      itemId?: string;
+      payFor?: PaymentOwner & { name: string };
+      /** 처음 날짜(주소의 period 와 같은 값 — prep · 0-base 날). 모바일 가계부 목록의 「비용 추가」 */
+      period?: string | null;
+    }
   | { kind: "edit"; expenseId: string }
   | {
       kind: "draft";
@@ -65,6 +71,7 @@ export function ExpenseDialog({ tripId, target, onClose, onToast }: ExpenseDialo
             tripId={tripId}
             itemId={shown.itemId}
             payFor={shown.payFor}
+            period={shown.period}
             quick={shown.quick}
             onToast={onToast}
             layout="modal"
