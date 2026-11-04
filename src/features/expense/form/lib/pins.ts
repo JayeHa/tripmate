@@ -1,12 +1,13 @@
 import { eulReul } from "@/shared/lib/josa";
 
 /** 「추가 정보 입력」 안에서 위로 고정할 수 있는 칸 — 이 순서로 그린다. 필수 칸(금액 · 항목명 · 카테고리)은 대상이 아니다 */
-export const PIN_FIELDS = ["paid", "memo", "receipts", "excluded"] as const;
+export const PIN_FIELDS = ["paid", "memo", "tags", "receipts", "excluded"] as const;
 export type PinField = (typeof PIN_FIELDS)[number];
 
 export const PIN_LABEL: Record<PinField, string> = {
   paid: "결제 상태",
   memo: "메모",
+  tags: "태그",
   receipts: "영수증",
   excluded: "합계 제외",
 };

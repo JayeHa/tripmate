@@ -78,6 +78,11 @@ describe("detailFields", () => {
     expect(f.메모).toBe("카드 할인");
   });
 
+  it("태그는 단 비용만 줄이 있다 — 「런닝 · 치이카와」", () => {
+    expect(fieldsOf(base).태그).toBeUndefined();
+    expect(fieldsOf({ ...base, tags: ["런닝", "치이카와"] }).태그).toBe("런닝 · 치이카와");
+  });
+
   it("각자 냄", () => {
     expect(fieldsOf({ ...base, split_each: true, payer_id: null }).결제).toBe("각자 냄");
   });

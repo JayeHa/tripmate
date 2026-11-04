@@ -94,13 +94,14 @@ export function useExpenseForm({
   const [paymentMethod, setPaymentMethod] = useState(start.paymentMethod);
   const [category, setCategory] = useState<ExpenseCategory | null>(start.category);
   const [memo, setMemo] = useState(start.memo);
+  const [tags, setTags] = useState(start.tags);
   const [spentOn, setSpentOn] = useState(start.spentOn);
   const [paid, setPaid] = useState(start.paid);
   const [dueDate, setDueDate] = useState(start.dueDate);
   const [counted, setCounted] = useState(start.counted);
   // 접힌 칸에 값이 있으면 펼친 채 연다 — 숨은 값을 모르고 저장하지 않게
   const [moreOpen, setMoreOpen] = useState(
-    !!start.memo || !start.paid || !start.counted || hasReceipts,
+    !!start.memo || start.tags.length > 0 || !start.paid || !start.counted || hasReceipts,
   );
   const [error, setError] = useState<string | null>(null);
   const link = useExpenseLink({
@@ -162,6 +163,7 @@ export function useExpenseForm({
       split_mode: "equal",
       category,
       memo: memo || undefined,
+      tags,
       spent_on: spentOn || null,
       spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
@@ -193,6 +195,9 @@ export function useExpenseForm({
     setCategory: link.pickCategory,
     memo,
     setMemo,
+    /** 붙인 태그 — 붙인 순서대로 */
+    tags,
+    setTags,
     spentOn,
     setSpentOn: link.pickDay,
     /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */
