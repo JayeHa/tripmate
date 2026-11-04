@@ -17,6 +17,7 @@ export * from "./lib/sections";
 export * from "./lib/settle";
 export * from "./lib/settle-band";
 export * from "./lib/shares";
+export * from "./lib/tags";
 export * from "./lib/totals";
 export * from "./model/expense-sync";
 export * from "./model/schema";

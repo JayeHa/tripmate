@@ -1,5 +1,6 @@
 import type { ExpenseFormValues } from "../model/schema";
 import { personKey, type PersonRef } from "./person";
+import { sameTags } from "./tags";
 
 /** 결제자 두 칸 — 멤버면 payer_id, 정산 인원이면 payer_guest_id, 「각자 냄」 이면 둘 다 null */
 function payerColumns(payer: PersonRef | null) {
@@ -24,6 +25,7 @@ function formColumns(values: ExpenseFormValues) {
     payment_method: values.payment_method,
     category: values.category,
     memo: values.memo || null,
+    tags: values.tags ?? [],
     spent_on: values.spent_on,
     // 여행준비(쓴 날 없음)에는 시각이 없다
     spent_time: values.spent_on ? (values.spent_time ?? null) : null,
@@ -79,8 +81,12 @@ export function updateColumns(values: ExpenseFormValues, opened: ExpenseFormValu
   const next = formColumns(values);
   const before = formColumns(opened);
   const changed: Partial<typeof next> = Object.fromEntries(
-    Object.entries(next).filter(([key, value]) => before[key as keyof typeof before] !== value),
+    Object.entries(next).filter(
+      ([key, value]) => !sameColumn(before[key as keyof typeof before], value),
+    ),
   );
+  // 예전 대기열 값처럼 태그를 모르는 수정이면 태그는 건드리지 않는다
+  if (values.tags === undefined) delete changed.tags;
   for (const group of COLUMN_GROUPS) {
     if (!group.some((key) => key in changed)) continue;
     for (const key of group) Object.assign(changed, { [key]: next[key] });
@@ -91,4 +97,10 @@ export function updateColumns(values: ExpenseFormValues, opened: ExpenseFormValu
   }
   const { amount, currency, rate, split_mode } = next;
   return { ...changed, amount, currency, rate, split_mode };
+}
+
+/** 칸 값이 같은가 — 태그(목록)는 내용으로, 나머지는 값으로 */
+function sameColumn(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return sameTags(a, b);
+  return a === b;
 }

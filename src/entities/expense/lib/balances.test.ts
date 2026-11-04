@@ -27,6 +27,7 @@ function expense(
     category: "other",
     name: id,
     memo: null,
+    tags: [],
     payer_guest_id: null,
     split_each: false,
     payment_method: "cash",

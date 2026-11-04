@@ -1054,6 +1054,7 @@ export type Database = {
           spent_on: string | null;
           spent_time: string | null;
           place_id: string | null;
+          tags: string[];
           payment_method: string;
           rate: number | null;
           counted: boolean;
@@ -1081,6 +1082,7 @@ export type Database = {
           spent_on?: string | null;
           spent_time?: string | null;
           place_id?: string | null;
+          tags?: string[];
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;
@@ -1108,6 +1110,7 @@ export type Database = {
           spent_on?: string | null;
           spent_time?: string | null;
           place_id?: string | null;
+          tags?: string[];
           payment_method?: string;
           rate?: number | null;
           counted?: boolean;
@@ -1404,6 +1407,10 @@ export type Database = {
       };
       is_trip_member: {
         Args: { p_trip_id: string };
+        Returns: boolean;
+      };
+      expense_tags_valid: {
+        Args: { tags: string[] };
         Returns: boolean;
       };
       keys_in_trip: {

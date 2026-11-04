@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { TAG_LIMIT, TAG_MAX_LENGTH } from "../lib/tags";
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "./types";
 
 /** 가계부에 나오는 사람 — 멤버이거나 초대 없이 넣은 정산 인원 */
@@ -30,6 +31,8 @@ export const expenseFormSchema = z
     custom_shares: z.record(z.string(), z.number().nonnegative()).optional(),
     category: z.enum(EXPENSE_CATEGORIES),
     memo: z.string().trim().max(200).optional(),
+    /** 태그 — 붙인 순서대로. 기기에 남은 예전 대기열 값에는 없다(새 비용이면 빈 목록, 수정이면 그대로 둔다) */
+    tags: z.array(z.string().trim().min(1).max(TAG_MAX_LENGTH)).max(TAG_LIMIT).optional(),
     /** 쓴 날. null 이면 여행준비 */
     spent_on: z.string().regex(DATE, "날짜를 선택하세요").nullable(),
     /** 쓴 시각 「HH:MM」(선택). 여행준비면 저장하지 않는다. 기기에 남은 예전 대기열 값에는 없다 */
