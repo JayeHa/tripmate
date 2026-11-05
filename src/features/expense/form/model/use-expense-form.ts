@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import {
+  addTag,
   type ExpenseCategory,
   expenseFormSchema,
   type ExpenseFormValues,
@@ -95,6 +96,8 @@ export function useExpenseForm({
   const [category, setCategory] = useState<ExpenseCategory | null>(start.category);
   const [memo, setMemo] = useState(start.memo);
   const [tags, setTags] = useState(start.tags);
+  // 태그 칸에 쳐 두고 아직 붙이지 않은 글 — 저장할 때 함께 붙인다
+  const [tagDraft, setTagDraft] = useState("");
   const [spentOn, setSpentOn] = useState(start.spentOn);
   const [paid, setPaid] = useState(start.paid);
   const [dueDate, setDueDate] = useState(start.dueDate);
@@ -163,7 +166,7 @@ export function useExpenseForm({
       split_mode: "equal",
       category,
       memo: memo || undefined,
-      tags,
+      tags: addTag(tags, tagDraft),
       spent_on: spentOn || null,
       spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
@@ -198,6 +201,9 @@ export function useExpenseForm({
     /** 붙인 태그 — 붙인 순서대로 */
     tags,
     setTags,
+    /** 태그 칸에 쳐 둔 글 — 「추가」 전이어도 저장하면 붙는다 */
+    tagDraft,
+    setTagDraft,
     spentOn,
     setSpentOn: link.pickDay,
     /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */

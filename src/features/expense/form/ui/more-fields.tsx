@@ -38,7 +38,7 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
   const filled: Record<PinField, boolean> = {
     paid: !form.paid,
     memo: form.memo.trim() !== "",
-    tags: form.tags.length > 0,
+    tags: form.tags.length > 0 || form.tagDraft.trim() !== "",
     receipts: drafts.items.length > 0,
     excluded: !form.counted,
   };
@@ -60,7 +60,14 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
     if (field === "memo") return <MemoField form={form} pin={pin("memo")} />;
     if (field === "tags")
       return (
-        <TagsField tripId={tripId} tags={form.tags} onChange={form.setTags} pin={pin("tags")} />
+        <TagsField
+          tripId={tripId}
+          tags={form.tags}
+          onChange={form.setTags}
+          draft={form.tagDraft}
+          onDraftChange={form.setTagDraft}
+          pin={pin("tags")}
+        />
       );
     if (field === "receipts")
       return <ReceiptsField tripId={tripId} drafts={drafts} titleRight={pin("receipts")} />;

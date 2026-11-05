@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useState } from "react";
 
 import { addTag, TAG_LIMIT, TAG_MAX_LENGTH, tripTags, useExpenses } from "@/entities/expense";
 import { Button } from "@/shared/ui/button";
@@ -10,6 +9,9 @@ type TagsFieldProps = {
   tripId: string;
   tags: string[];
   onChange: (tags: string[]) => void;
+  /** 쳐 두고 아직 붙이지 않은 글 — 폼이 쥐고 저장할 때 함께 붙인다 */
+  draft: string;
+  onDraftChange: (draft: string) => void;
   /** 이름 오른쪽 — 「📌 고정」 */
   pin: React.ReactNode;
 };
@@ -17,11 +19,10 @@ type TagsFieldProps = {
 /**
  * 태그(선택) — 이 여행에서 쓴 태그 칩(많이 쓴 순)을 눌러 붙이고 뗀다. 없는 태그는 쳐서 Enter · 「추가」.
  * 붙인 태그는 잉크 칩이고 ✕ 가 붙는다. 5개가 차면 붙이지 않은 칩 · 입력 칸을 막는다.
- * 태그 목록은 따로 없다 — 일행이 단 태그도 같은 칩 줄에 보인다
+ * 태그 목록은 따로 없다 — 일행이 단 태그도 같은 칩 줄에 보인다. 쳐 두고 「추가」 를 누르지 않아도 저장하면 붙는다
  */
-export function TagsField({ tripId, tags, onChange, pin }: TagsFieldProps) {
+export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }: TagsFieldProps) {
   const { data: expenses = [] } = useExpenses(tripId);
-  const [draft, setDraft] = useState("");
   const full = tags.length >= TAG_LIMIT;
   // 이 비용에만 새로 붙인 태그도 칩 줄에 — 여행의 태그 뒤에
   const known = tripTags(expenses);
@@ -31,7 +32,7 @@ export function TagsField({ tripId, tags, onChange, pin }: TagsFieldProps) {
   const commit = () => {
     if (!draft.trim()) return;
     onChange(addTag(tags, draft));
-    setDraft("");
+    onDraftChange("");
   };
   /** 칩 하나 — 붙였으면 떼고, 아니면 붙인다 */
   const toggle = (tag: string) =>
@@ -67,7 +68,7 @@ export function TagsField({ tripId, tags, onChange, pin }: TagsFieldProps) {
       <div className="flex gap-2">
         <Input
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => onDraftChange(e.target.value)}
           onKeyDown={(e) => {
             // 한글 조합 중의 Enter 는 글자를 끝내는 것이라 붙이지 않는다. 폼 저장으로 넘어가지 않게 막는다
             if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
