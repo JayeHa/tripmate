@@ -4520,7 +4520,16 @@ describe("비용 태그 (0081)", () => {
     expect(rows.map((r) => r.tags)).toEqual([[], ["런닝", "치이카와", "a", "b", "c"]]);
   });
 
-  it("6개 · 빈 태그 · 앞뒤 공백 · 21자 · 겹친 태그 · null 은 거부한다", async () => {
+  it("이모지도 한 글자로 센다 — 이모지 20개는 받는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-19", "2027-11-19");
+    await db.query(insertTagged(trip, `array['${"🏃".repeat(20)}']`));
+    expect(await rejects(insertTagged(trip, `array['${"🏃".repeat(21)}']`))).toMatch(
+      /expenses_tags_chk/,
+    );
+  });
+
+  it("6개 · 빈 태그 · 앞뒤 공백 · 21자 · 겹친 태그 · null · 2차원 · 대소문자만 다른 태그는 거부한다", async () => {
     await as(A);
     const trip = await newTrip("2027-11-18", "2027-11-18");
     for (const tags of [
@@ -4530,6 +4539,9 @@ describe("비용 태그 (0081)", () => {
       `array['${"가".repeat(21)}']`,
       `array['런닝', '런닝']`,
       `array[null]::text[]`,
+      // 0082 — 2차원 · 대소문자만 다른 태그
+      `'{{a},{b}}'::text[]`,
+      `array['Asics', 'asics']`,
     ]) {
       expect(await rejects(insertTagged(trip, tags))).toMatch(/expenses_tags_chk|null value/);
     }
