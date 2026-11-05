@@ -1,6 +1,14 @@
 import { X } from "lucide-react";
 
-import { addTag, TAG_LIMIT, TAG_MAX_LENGTH, tripTags, useExpenses } from "@/entities/expense";
+import {
+  addTag,
+  hasTag,
+  removeTag,
+  TAG_LIMIT,
+  TAG_MAX_LENGTH,
+  tripTags,
+  useExpenses,
+} from "@/entities/expense";
 import { Button } from "@/shared/ui/button";
 import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
@@ -26,17 +34,17 @@ export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }:
   const full = tags.length >= TAG_LIMIT;
   // 이 비용에만 새로 붙인 태그도 칩 줄에 — 여행의 태그 뒤에
   const known = tripTags(expenses);
-  const chips = [...known, ...tags.filter((t) => !known.includes(t))];
+  const chips = [...known, ...tags.filter((t) => !hasTag(known, t))];
 
   /** 입력한 태그를 붙이고 칸을 비운다 */
   const commit = () => {
     if (!draft.trim()) return;
-    onChange(addTag(tags, draft));
+    onChange(addTag(tags, draft, known));
     onDraftChange("");
   };
   /** 칩 하나 — 붙였으면 떼고, 아니면 붙인다 */
   const toggle = (tag: string) =>
-    onChange(tags.includes(tag) ? tags.filter((t) => t !== tag) : addTag(tags, tag));
+    onChange(hasTag(tags, tag) ? removeTag(tags, tag) : addTag(tags, tag, known));
 
   return (
     <div role="group" aria-labelledby="expense-tags" className="flex flex-col gap-2">
@@ -49,7 +57,7 @@ export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }:
       {chips.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {chips.map((tag) => {
-            const on = tags.includes(tag);
+            const on = hasTag(tags, tag);
             return (
               <FilterChip
                 key={tag}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addTag, normalizeTag, sameTags, tripTags } from "./tags";
+import { addTag, hasTag, normalizeTag, removeTag, sameTags, tripTags } from "./tags";
 
 describe("normalizeTag", () => {
   it("앞의 # 과 앞뒤 공백을 떼고 20자로 자른다", () => {
@@ -25,6 +25,18 @@ describe("addTag", () => {
     expect(addTag(["Asics"], "asics")).toEqual(["Asics"]);
     expect(addTag(["a", "b", "c", "d", "e"], "f")).toEqual(["a", "b", "c", "d", "e"]);
   });
+
+  it("여행에 대소문자만 다른 태그가 있으면 그 표기로 붙인다", () => {
+    expect(addTag([], "asics", ["Asics", "런닝"])).toEqual(["Asics"]);
+    expect(addTag([], "nike", ["Asics"])).toEqual(["nike"]);
+  });
+});
+
+describe("hasTag · removeTag", () => {
+  it("대소문자를 보지 않는다", () => {
+    expect(hasTag(["asics"], "Asics")).toBe(true);
+    expect(removeTag(["asics", "런닝"], "ASICS")).toEqual(["런닝"]);
+  });
 });
 
 describe("tripTags", () => {
@@ -37,6 +49,13 @@ describe("tripTags", () => {
       {} as { tags: string[] },
     ];
     expect(tripTags(rows)).toEqual(["치이카와", "기념품", "런닝"]);
+  });
+
+  it("대소문자만 다른 태그는 하나로 세고 먼저 나온 표기를 쓴다", () => {
+    expect(tripTags([{ tags: ["Asics"] }, { tags: ["asics"] }, { tags: ["런닝"] }])).toEqual([
+      "Asics",
+      "런닝",
+    ]);
   });
 });
 
