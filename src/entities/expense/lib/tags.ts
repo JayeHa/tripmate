@@ -11,9 +11,13 @@ export function tagLength(tag: string): number {
   return [...tag].length;
 }
 
-/** 입력한 태그를 다듬는다 — 앞의 「#」 과 앞뒤 공백을 떼고 20자로 자른다. 남는 게 없으면 "" */
+/**
+ * 입력한 태그를 다듬는다 — 앞의 「#」 과 앞뒤 공백을 떼고 20자(코드 포인트)로 자른다. 남는 게 없으면 "".
+ * UTF-16 으로 자르면 이모지가 반으로 갈려 저장이 거부된다
+ */
 export function normalizeTag(raw: string): string {
-  return raw.trim().replace(/^#+/, "").trim().slice(0, TAG_MAX_LENGTH).trim();
+  const tag = raw.trim().replace(/^#+/, "").trim();
+  return [...tag].slice(0, TAG_MAX_LENGTH).join("").trim();
 }
 
 /** 같은 태그인가 — 대소문자는 보지 않는다(「Asics」 = 「asics」) */

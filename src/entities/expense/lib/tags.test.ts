@@ -11,6 +11,11 @@ describe("normalizeTag", () => {
     expect(normalizeTag("  # ")).toBe("");
   });
 
+  it("이모지를 반으로 자르지 않는다", () => {
+    expect(normalizeTag(`${"가".repeat(19)}🏃🏃`)).toBe(`${"가".repeat(19)}🏃`);
+    expect(normalizeTag("🏃".repeat(25))).toBe("🏃".repeat(20));
+  });
+
   it("자른 끝에 공백이 남지 않는다", () => {
     expect(normalizeTag(`${"가".repeat(19)} 나`)).toBe("가".repeat(19));
   });
