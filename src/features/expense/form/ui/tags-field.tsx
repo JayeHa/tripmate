@@ -78,8 +78,9 @@ export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }:
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
           onKeyDown={(e) => {
-            // 한글 조합 중의 Enter 는 글자를 끝내는 것이라 붙이지 않는다. 폼 저장으로 넘어가지 않게 막는다
-            if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+            // 한글 조합 중의 Enter 는 글자를 끝내는 것이라 붙이지 않는다 — Safari 는 조합을 끝내는 Enter 를
+            // isComposing 없이 keyCode 229 로 보낸다. 폼 저장으로 넘어가지 않게 막는다
+            if (e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return;
             e.preventDefault();
             commit();
           }}
