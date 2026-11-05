@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { addTag, hasTag, normalizeTag, removeTag, sameTags, tripTags } from "./tags";
+import { expenseFormSchema } from "../model/schema";
+import { addTag, hasTag, normalizeTag, removeTag, sameTags, tagLength, tripTags } from "./tags";
 
 describe("normalizeTag", () => {
   it("앞의 # 과 앞뒤 공백을 떼고 20자로 자른다", () => {
@@ -64,5 +65,33 @@ describe("sameTags", () => {
     expect(sameTags(["a", "b"], ["a", "b"])).toBe(true);
     expect(sameTags(["a", "b"], ["b", "a"])).toBe(false);
     expect(sameTags([], [])).toBe(true);
+  });
+});
+
+describe("tagLength · 폼 검사", () => {
+  it("이모지도 한 글자로 센다 — DB 의 char_length 와 같다", () => {
+    expect(tagLength("🏃런닝")).toBe(3);
+  });
+
+  it("이모지 20개 태그는 폼 검사를 통과하고, 21개는 한국어 문구로 막는다", () => {
+    const base = {
+      name: "x",
+      amount: 1,
+      currency: "JPY",
+      rate: null,
+      payment_method: "card",
+      payer: { kind: "member", id: "a" },
+      split_each: false,
+      participants: [{ kind: "member", id: "a" }],
+      split_mode: "equal",
+      category: "shopping",
+      spent_on: null,
+      counted: true,
+      paid: true,
+      due_date: null,
+    };
+    expect(expenseFormSchema.safeParse({ ...base, tags: ["🏃".repeat(20)] }).success).toBe(true);
+    const bad = expenseFormSchema.safeParse({ ...base, tags: ["🏃".repeat(21)] });
+    expect(bad.success ? "" : bad.error.issues[0]?.message).toBe("태그는 20자까지예요");
   });
 });

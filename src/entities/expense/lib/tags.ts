@@ -3,8 +3,13 @@ import type { Expense } from "../model/types";
 /** 비용 하나에 다는 태그 수 — `expenses_tags_chk`(0081)와 같다 */
 export const TAG_LIMIT = 5;
 
-/** 태그 하나의 글자 수 — `expenses_tags_chk`(0081)와 같다 */
+/** 태그 하나의 글자 수 — `expenses_tags_chk`(0081)와 같다. 코드 포인트로 센다(이모지도 한 글자, DB 의 char_length 와 같다) */
 export const TAG_MAX_LENGTH = 20;
+
+/** 태그의 글자 수 — 코드 포인트. JS 의 length(UTF-16)는 이모지를 두 글자로 센다 */
+export function tagLength(tag: string): number {
+  return [...tag].length;
+}
 
 /** 입력한 태그를 다듬는다 — 앞의 「#」 과 앞뒤 공백을 떼고 20자로 자른다. 남는 게 없으면 "" */
 export function normalizeTag(raw: string): string {

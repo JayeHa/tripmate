@@ -84,7 +84,8 @@ export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }:
             e.preventDefault();
             commit();
           }}
-          maxLength={TAG_MAX_LENGTH}
+          // maxLength 는 UTF-16 으로 센다 — 이모지 20개도 칠 수 있게 두 배로 두고, 붙일 때 20자로 자른다
+          maxLength={TAG_MAX_LENGTH * 2}
           enterKeyHint="done"
           disabled={full}
           placeholder={full ? `태그는 ${TAG_LIMIT}개까지 붙여요` : "새 태그 — 예: 런닝"}
