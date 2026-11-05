@@ -1,21 +1,13 @@
 import { X } from "lucide-react";
-import { useMemo } from "react";
 
-import {
-  addTag,
-  hasTag,
-  removeTag,
-  TAG_LIMIT,
-  TAG_MAX_LENGTH,
-  tripTags,
-  useExpenses,
-} from "@/entities/expense";
+import { addTag, hasTag, removeTag, TAG_LIMIT, TAG_MAX_LENGTH } from "@/entities/expense";
 import { Button } from "@/shared/ui/button";
 import { FilterChip } from "@/shared/ui/filter-chip";
 import { Input } from "@/shared/ui/input";
 
 type TagsFieldProps = {
-  tripId: string;
+  /** 이 여행에서 쓴 태그(많이 쓴 순) — 폼이 세어 준다. 저장할 때 쳐 둔 글도 같은 목록의 표기를 따른다 */
+  known: string[];
   tags: string[];
   onChange: (tags: string[]) => void;
   /** 쳐 두고 아직 붙이지 않은 글 — 폼이 쥐고 저장할 때 함께 붙인다 */
@@ -30,12 +22,9 @@ type TagsFieldProps = {
  * 붙인 태그는 잉크 칩이고 ✕ 가 붙는다. 5개가 차면 붙이지 않은 칩 · 입력 칸을 막는다.
  * 태그 목록은 따로 없다 — 일행이 단 태그도 같은 칩 줄에 보인다. 쳐 두고 「추가」 를 누르지 않아도 저장하면 붙는다
  */
-export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }: TagsFieldProps) {
-  const { data: expenses } = useExpenses(tripId);
+export function TagsField({ known, tags, onChange, draft, onDraftChange, pin }: TagsFieldProps) {
   const full = tags.length >= TAG_LIMIT;
   // 이 비용에만 새로 붙인 태그도 칩 줄에 — 여행의 태그 뒤에
-  // 칸에 칠 때마다 다시 세지 않게 — 비용 목록이 바뀔 때만
-  const known = useMemo(() => tripTags(expenses ?? []), [expenses]);
   const chips = [...known, ...tags.filter((t) => !hasTag(known, t))];
 
   /** 입력한 태그를 붙이고 칸을 비운다 */

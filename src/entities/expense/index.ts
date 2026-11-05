@@ -28,6 +28,7 @@ export * from "./model/use-payer-name";
 export * from "./model/use-payment-draft";
 export * from "./model/use-settlements";
 export * from "./model/use-trip-guests";
+export * from "./model/use-trip-tags";
 export * from "./ui/category-icon";
 export * from "./ui/expense-badge";
 export * from "./ui/expense-line";

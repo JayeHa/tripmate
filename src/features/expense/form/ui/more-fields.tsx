@@ -61,7 +61,7 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
     if (field === "tags")
       return (
         <TagsField
-          tripId={tripId}
+          known={form.knownTags}
           tags={form.tags}
           onChange={form.setTags}
           draft={form.tagDraft}

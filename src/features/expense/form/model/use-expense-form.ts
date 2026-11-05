@@ -8,6 +8,7 @@ import {
   type ExpensePlace,
   type PayFor,
   personOfKey,
+  useTripTags,
 } from "@/entities/expense";
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
@@ -98,6 +99,8 @@ export function useExpenseForm({
   const [tags, setTags] = useState(start.tags);
   // 태그 칸에 쳐 두고 아직 붙이지 않은 글 — 저장할 때 함께 붙인다
   const [tagDraft, setTagDraft] = useState("");
+  // 이 여행에서 쓴 태그 — 칩 줄과, 쳐 둔 글을 저장할 때도 여행의 표기(「Asics」)를 따르는 데 쓴다
+  const knownTags = useTripTags(trip.id);
   const [spentOn, setSpentOn] = useState(start.spentOn);
   const [paid, setPaid] = useState(start.paid);
   const [dueDate, setDueDate] = useState(start.dueDate);
@@ -166,7 +169,7 @@ export function useExpenseForm({
       split_mode: "equal",
       category,
       memo: memo || undefined,
-      tags: addTag(tags, tagDraft),
+      tags: addTag(tags, tagDraft, knownTags),
       spent_on: spentOn || null,
       spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
@@ -204,6 +207,8 @@ export function useExpenseForm({
     /** 태그 칸에 쳐 둔 글 — 「추가」 전이어도 저장하면 붙는다 */
     tagDraft,
     setTagDraft,
+    /** 이 여행에서 쓴 태그 — 많이 쓴 순, 대소문자만 다른 것은 하나로 */
+    knownTags,
     spentOn,
     setSpentOn: link.pickDay,
     /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */
