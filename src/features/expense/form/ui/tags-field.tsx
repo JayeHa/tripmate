@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useMemo } from "react";
 
 import {
   addTag,
@@ -30,10 +31,11 @@ type TagsFieldProps = {
  * 태그 목록은 따로 없다 — 일행이 단 태그도 같은 칩 줄에 보인다. 쳐 두고 「추가」 를 누르지 않아도 저장하면 붙는다
  */
 export function TagsField({ tripId, tags, onChange, draft, onDraftChange, pin }: TagsFieldProps) {
-  const { data: expenses = [] } = useExpenses(tripId);
+  const { data: expenses } = useExpenses(tripId);
   const full = tags.length >= TAG_LIMIT;
   // 이 비용에만 새로 붙인 태그도 칩 줄에 — 여행의 태그 뒤에
-  const known = tripTags(expenses);
+  // 칸에 칠 때마다 다시 세지 않게 — 비용 목록이 바뀔 때만
+  const known = useMemo(() => tripTags(expenses ?? []), [expenses]);
   const chips = [...known, ...tags.filter((t) => !hasTag(known, t))];
 
   /** 입력한 태그를 붙이고 칸을 비운다 */
