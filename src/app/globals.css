@@ -175,6 +175,37 @@
   --color-important-line: #f8dfa0;
   --color-important-text: #b45309;
 
+  /* 노선도(일정 목록) — 이동 칩 · 연결선 · 옆 글자 · 역 표식. 선 색은 지도에도 넘겨 entities/schedule-item/lib/route.ts 에 hex 로 둔다 */
+  --color-route-transit-soft: #eaf3ff;
+  --color-route-transit-text: #1f6feb;
+  --color-route-walk-soft: #f2f3f5;
+  --color-route-walk-text: #6b7280;
+  --color-route-branch: #d0d4d9;
+  --color-route-meta: #a0a6ad;
+  /* 역 둘째 줄(카테고리 · 설명 · 메모 수) */
+  --color-route-sub: #8a9099;
+  --color-route-meta-dim: #c9cdd2;
+  --color-route-chip-dim: #b8bec6;
+  --color-route-stop: #3a8bff;
+  --color-route-stop-opt: #8b929b;
+  --color-route-stop-todo: #d7dce2;
+  --color-route-row-open: #f5f9ff;
+  --color-route-row-hover: #f7f8fa;
+  /* 노선도의 노트(날짜 메모) — 앞 역 아래 경고 상자 */
+  --color-route-note: #9a3412;
+  --color-route-note-bg: #fff4e5;
+
+  /* 기록 모드 — 다녀온 곳 · 진행 */
+  --color-visited: #10b981;
+  --color-visited-text: #059669;
+  --color-visited-strong: #047857;
+  --color-visited-soft: #e7f8f1;
+  --color-visited-line: #a7e3cb;
+  --color-visited-rail: #eef9f3;
+  --color-visited-row: #f3fbf7;
+  --color-progress-track: #ecede8;
+  --color-visit-note-bg: #f7f7f2;
+
   /* 초대 안 한 정산 인원(guest) 아바타 — 멤버(블루)와 구분한다. soft 는 고르지 않은 결제자 칩의 아바타 */
   --color-guest: #f59e9e;
   --color-guest-soft: #f5b5b5;
