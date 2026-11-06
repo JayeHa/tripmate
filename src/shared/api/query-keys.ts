@@ -35,6 +35,8 @@ export const queryKeys = {
   /** 장소 쌍 사이의 이동 방법 (0011 moves) */
   moves: (tripId: string) => ["trips", tripId, "moves"] as const,
   memos: (tripId: string) => ["trips", tripId, "memos"] as const,
+  /** 일정마다의 다녀감 표시(0083 schedule_visits) — 일행이 함께 쓴다 */
+  visits: (tripId: string) => ["trips", tripId, "visits"] as const,
   /** 숙소(장소 포함) — 체크인 순 */
   stays: (tripId: string) => ["trips", tripId, "stays"] as const,
   /** 항공편 — 출발 순 */

@@ -4547,3 +4547,47 @@ describe("비용 태그 (0081)", () => {
     }
   });
 });
+
+describe("다녀감 표시 (0083)", () => {
+  /** 표시를 넣거나 바꾼다(화면의 저장과 같은 upsert) */
+  function upsertVisit(trip: string, item: string, mark: string) {
+    return `insert into public.schedule_visits (item_id, trip_id, mark, marked_at)
+            values ('${item}', '${trip}', '${mark}', '2027-12-01T10:00:00Z')
+            on conflict (item_id) do update set mark = excluded.mark, marked_at = excluded.marked_at`;
+  }
+
+  it("일행이 함께 쓴다 — 바꾸면 덮고 누른 사람은 그 사람으로 바뀐다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-01", "2027-12-01");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    await db.query(upsertVisit(trip, place, "visited"));
+    await as(B);
+    await db.query(upsertVisit(trip, place, "skipped"));
+    const { rows } = await db.query<{ mark: string; marked_by: string }>(
+      `select mark, marked_by from public.schedule_visits where item_id = '${place}'`,
+    );
+    expect(rows).toEqual([{ mark: "skipped", marked_by: B }]);
+  });
+
+  it("멤버가 아니면 · 다른 여행의 일정에 · 모르는 표시는 거부하고, 일정을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-02", "2027-12-02");
+    const other = await newTrip("2027-12-03", "2027-12-03");
+    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    expect(await rejects(upsertVisit(other, place, "visited"))).toMatch(/foreign key/);
+    expect(await rejects(upsertVisit(trip, place, "maybe"))).toMatch(/check constraint/);
+    await as(B);
+    expect(await rejects(upsertVisit(trip, place, "visited"))).toMatch(/row-level security/);
+    await as(A);
+    await db.query(upsertVisit(trip, place, "visited"));
+    await db.query(`delete from public.schedule_items where id = '${place}'`);
+    const { rows } = await db.query(
+      `select 1 from public.schedule_visits where trip_id = '${trip}'`,
+    );
+    expect(rows).toHaveLength(0);
+  });
+});

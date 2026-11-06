@@ -1188,6 +1188,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      schedule_visits: {
+        Row: {
+          item_id: string;
+          trip_id: string;
+          mark: string;
+          marked_by: string | null;
+          marked_at: string;
+        };
+        Insert: {
+          item_id: string;
+          trip_id: string;
+          mark: string;
+          marked_by?: string | null;
+          marked_at?: string;
+        };
+        Update: {
+          item_id?: string;
+          trip_id?: string;
+          mark?: string;
+          marked_by?: string | null;
+          marked_at?: string;
+        };
+        Relationships: [];
+      };
       settlements: {
         Row: {
           id: string;

@@ -79,18 +79,12 @@ function tomorrowText(items: ScheduleItem[], dayIndex: number): string | null {
 }
 
 /**
- * 오늘 카드. 다음 장소 = 다녀감 표시(marks)를 한 마지막 장소 다음 일정이되, 시각이 지난 일정이 있으면 적어도 그 자리부터(nextPlaceIndex —
- * 일정 화면의 「다녀온 일정」 과 같은 기준). 「이후」 는 그다음 두 곳
+ * 오늘 카드. 다음 장소 = 다녀감 표시(marks)가 없는 첫 장소(nextPlaceIndex — 일정 화면의 「다녀온 일정」 과 같은 기준). 「이후」 는 그다음 두 곳
  */
-export function todayPlan(
-  items: ScheduleItem[],
-  dayIndex: number,
-  marks: VisitMarks,
-  now: string | null,
-): TodayPlan {
+export function todayPlan(items: ScheduleItem[], dayIndex: number, marks: VisitMarks): TodayPlan {
   const places = dayPlaces(items, dayIndex);
   if (places.length === 0) return { kind: "free" };
-  const index = nextPlaceIndex(items, dayIndex, marks, now);
+  const index = nextPlaceIndex(items, dayIndex, marks);
   if (index >= places.length) {
     const reopenId = places.findLast((p) => marks[p.id])?.id ?? null;
     return { kind: "done", tomorrow: tomorrowText(items, dayIndex), reopenId };
