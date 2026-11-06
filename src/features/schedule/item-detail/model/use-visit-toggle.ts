@@ -8,12 +8,12 @@ import { todayISO } from "@/shared/lib/days";
 /** 상세 「방문」 줄 — 지금 표시와 누르기 */
 export type VisitToggle = {
   mark: VisitMark | null;
-  /** 그 표시를 켠다. 이미 켜져 있으면 끈다(표시 없음 = 순서 · 시각으로 자동) */
+  /** 그 표시를 켠다. 이미 켜져 있으면 끈다(표시 없음 = 아직 남은 곳) */
   toggle: (mark: VisitMark) => void;
 };
 
 /**
- * 상세 「방문」 줄(다녀왔어요 · 패스) — 일정 화면의 회색과 홈 「다음 장소」 가 같은 표시를 본다(기기별).
+ * 상세 「방문」 줄(다녀왔어요 · 패스) — 일정 화면의 회색과 홈 「다음 장소」 가 같은 표시를 본다(일행 공유).
  * 여행 중에 오늘까지의 장소 일정만 — 항공편 · 메모 · 대체 장소, 오늘 뒤의 날, 여행 전 · 후에는 null(줄을 그리지 않는다)
  */
 export function useVisitToggle(

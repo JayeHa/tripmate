@@ -10,7 +10,7 @@ import { type ReactNode, useState } from "react";
 import { registerChecklistSync } from "@/entities/checklist";
 import { registerExpenseSync } from "@/entities/expense";
 import { registerPackSync } from "@/entities/pack";
-import { registerMemoSync } from "@/entities/schedule-item";
+import { registerMemoSync, registerVisitSync } from "@/entities/schedule-item";
 import { startSavedTrips } from "@/features/trip/offline-download";
 import { QUERY_CACHE_BUSTER, QUERY_PERSIST_KEY, shouldPersistQuery } from "@/shared/api/query-keys";
 import { blockOfflineMutation, dropDeadEndFailures } from "@/shared/api/sync";
@@ -57,6 +57,7 @@ function makeQueryClient() {
   registerChecklistSync(client);
   registerPackSync(client);
   registerMemoSync(client);
+  registerVisitSync(client);
   registerExpenseSync(client);
   dropDeadEndFailures(client);
   return client;

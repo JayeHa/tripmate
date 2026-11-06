@@ -9,7 +9,7 @@ import { useTaxRefunds } from "@/entities/tax-refund";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { useVouchers } from "@/entities/voucher";
-import { dayIndexToDate, nowHHmm, todayISO } from "@/shared/lib/days";
+import { dayIndexToDate, todayISO } from "@/shared/lib/days";
 
 import { departureRefunds } from "../lib/departure-refunds";
 import { todaySpend, todayVouchers, tonightStay } from "../lib/now-board";
@@ -17,7 +17,7 @@ import { boardDayIndex, todayPlan } from "../lib/today-plan";
 
 /**
  * 여행 중 상태판 — 오늘(여행 전 · 후에 미리 보면 첫날 · 마지막 날)의 다음 장소 · 다녀감 표시 · 바우처 · 지출 · 숙소.
- * 읽을 것이 하나라도 아직 오지 않았으면 null. 시각으로 지난 일정을 건너뛰는 건 그날이 정말 오늘일 때만
+ * 읽을 것이 하나라도 아직 오지 않았으면 null. 다녀감 표시는 그날이 정말 오늘일 때만 올린다(미리 보기는 이 화면에서만)
  */
 export function useNowBoard(tripId: string, trip: Trip) {
   const today = todayISO();
@@ -40,7 +40,7 @@ export function useNowBoard(tripId: string, trip: Trip) {
     dayIndex,
     date,
     setMark,
-    plan: todayPlan(items, dayIndex, marks, date === today ? nowHHmm() : null),
+    plan: todayPlan(items, dayIndex, marks),
     vouchers: todayVouchers(vouchers, { items, flights, stays, dayIndex, date }, userId),
     spend: todaySpend(expenses, date, {
       home: trip.home_currency,

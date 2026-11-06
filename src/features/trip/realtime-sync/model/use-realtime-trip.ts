@@ -17,7 +17,7 @@ export function useRealtimeTrip(tripId: string) {
   useEffect(() => {
     const supabase = createClient();
     const filter = `trip_id=eq.${tripId}`;
-    // 오프라인 대기열이 있는 데이터(메모 · 체크리스트 · 준비물 · 비용)는 대기열이 올라가는 동안 미뤘다가, 빌 때 한 번에 다시 읽는다
+    // 오프라인 대기열이 있는 데이터(메모 · 다녀감 표시 · 체크리스트 · 준비물 · 비용)는 대기열이 올라가는 동안 미뤘다가, 빌 때 한 번에 다시 읽는다
     const deferral = createSyncDeferral(qc);
     const refreshAfterSync = deferral.refresh;
     const channel = supabase
@@ -43,6 +43,12 @@ export function useRealtimeTrip(tripId: string) {
       )
       .on("postgres_changes", { event: "*", schema: "public", table: "memos", filter }, () =>
         refreshAfterSync(queryKeys.memos(tripId)),
+      )
+      // 다녀감 표시 — 일행이 「다녀왔어요」 · 「패스」 를 누른 것(일정을 지워 함께 지워진 것도)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "schedule_visits", filter },
+        () => refreshAfterSync(queryKeys.visits(tripId)),
       )
       // 숙소 자체만 — 연결 카드의 변경은 schedule_items 이벤트로 온다
       .on(

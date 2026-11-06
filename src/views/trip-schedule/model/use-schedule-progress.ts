@@ -11,7 +11,7 @@ import {
   useVisitMarks,
 } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
-import { dayCount, nowHHmm, todayISO } from "@/shared/lib/days";
+import { dayCount, todayISO } from "@/shared/lib/days";
 
 import type { ScheduleEntry } from "./use-entry-scroll";
 
@@ -24,9 +24,8 @@ export type ScheduleProgress = {
 };
 
 /**
- * 일정 화면의 「다녀온 일정」 — 홈 「오늘」 카드와 같은 기준(dayProgress · 기기별 다녀감 표시 · 지금 시각).
- * 여행 중일 때만 — 여행 전 · 후, 여행 · 일정을 읽기 전에는 null(아무것도 흐리게 하지 않는다).
- * 시각은 그릴 때마다 다시 본다(화면을 띄워 둔 채로 시간이 지나도 다시 그려질 때 따라간다)
+ * 일정 화면의 「다녀온 일정」 — 홈 「오늘」 카드와 같은 기준(dayProgress · 일행이 함께 쓰는 다녀감 표시).
+ * 여행 중일 때만 — 여행 전 · 후, 여행 · 일정을 읽기 전에는 null(아무것도 흐리게 하지 않는다)
  */
 export function useScheduleProgress(
   tripId: string,
@@ -38,7 +37,7 @@ export function useScheduleProgress(
   if (!trip || !items) return null;
   const todayIndex = differenceInCalendarDays(parseISO(today), parseISO(trip.start_date));
   if (todayIndex < 0 || todayIndex >= dayCount(trip.start_date, trip.end_date)) return null;
-  return { ...dayProgress(items, todayIndex, marks, nowHHmm()), todayIndex };
+  return { ...dayProgress(items, todayIndex, marks), todayIndex };
 }
 
 /** 여행 중이 아닐 때의 다녀온 줄 — 렌더마다 새 Set 을 만들지 않게 */
