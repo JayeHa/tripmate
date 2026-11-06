@@ -25,6 +25,8 @@ export function formValuesOf(expense: ExpenseWithSplits): ExpenseFormValues {
       : undefined,
     category: expense.category as ExpenseCategory,
     memo: expense.memo ?? undefined,
+    // 예전에 기기에 남은 목록에는 칸이 없다
+    tags: expense.tags ?? [],
     spent_on: expense.spent_on,
     spent_time: timeText(expense.spent_time),
     schedule_item_id: expense.schedule_item_id,

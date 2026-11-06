@@ -89,6 +89,26 @@ describe("updateColumns", () => {
   });
 });
 
+describe("태그 칸", () => {
+  it("새 비용은 태그가 없으면 빈 목록으로 넣는다", () => {
+    expect(insertColumns(values).tags).toEqual([]);
+    expect(insertColumns({ ...values, tags: ["런닝"] }).tags).toEqual(["런닝"]);
+  });
+
+  it("같은 태그면 보내지 않고, 바뀌면 목록 전체를 보낸다", () => {
+    const opened = { ...values, tags: ["런닝"] };
+    expect(updateColumns({ ...opened, tags: ["런닝"] }, opened)).toEqual({});
+    expect(updateColumns({ ...opened, tags: ["런닝", "치이카와"] }, opened)).toEqual({
+      tags: ["런닝", "치이카와"],
+    });
+  });
+
+  it("태그를 모르는 예전 대기열 값이면 태그를 건드리지 않는다", () => {
+    const opened = { ...values, tags: ["런닝"] };
+    expect(updateColumns({ ...values, name: "아식스" }, opened)).toEqual({ name: "아식스" });
+  });
+});
+
 describe("sharesChanged", () => {
   const custom: ExpenseFormValues = {
     ...values,

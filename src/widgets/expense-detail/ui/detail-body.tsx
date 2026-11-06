@@ -13,6 +13,7 @@ import {
   PersonAvatar,
   type PersonRef,
   ReceiptThumbs,
+  tagsText,
 } from "@/entities/expense";
 import { isHttpUrl } from "@/entities/schedule-item";
 
@@ -28,10 +29,11 @@ type DetailBodyProps = {
 
 /**
  * 비용 상세의 내용 — 카테고리(타일 28 + 이름 · 「합계 제외」) · 항목명 17/700 · 금액 28/800(외화면 옆에 ≈ 원화),
- * 표(날짜 · 일정 · 결제수단 · 결제한 사람 · 함께한 사람 · 결제 상태) · 메모 · 영수증(있을 때만, 누르면 새 창에서 원본). 일정은 연결했을 때만 줄이 있다
+ * 표(날짜 · 일정 · 결제수단 · 결제한 사람 · 함께한 사람 · 결제 상태 · 태그) · 메모 · 영수증(있을 때만, 누르면 새 창에서 원본). 일정 · 태그는 있을 때만 줄이 있다
  */
 export function DetailBody({ expense, row, trip, receipts, avatarUrlOf }: DetailBodyProps) {
   const memo = expense.memo?.trim();
+  const tags = tagsText(expense.tags);
   return (
     <div className="flex flex-col gap-5 px-5 pt-2 pb-8">
       <div className="flex flex-col gap-1.5">
@@ -70,6 +72,7 @@ export function DetailBody({ expense, row, trip, receipts, avatarUrlOf }: Detail
           <People people={row.togetherPeople} avatarUrlOf={avatarUrlOf} />
         </Field>
         <Field label="결제 상태">{paymentStatusText(expense.paid, expense.due_date)}</Field>
+        {tags && <Field label="태그">{tags}</Field>}
       </dl>
       {memo && (
         <section className="flex flex-col gap-2">

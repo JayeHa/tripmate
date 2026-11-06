@@ -4499,3 +4499,51 @@ describe("택스 리펀 사진 (0080)", () => {
     );
   });
 });
+
+describe("비용 태그 (0081)", () => {
+  /** 태그를 단 비용을 넣는다 */
+  function insertTagged(trip: string, tags: string) {
+    return `insert into public.expenses (trip_id, payer_id, amount, currency, name, tags)
+            values ('${trip}', '${A}', 1, 'JPY', '굿즈', ${tags})`;
+  }
+
+  it("기본은 빈 목록, 5개까지 받는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-17", "2027-11-17");
+    await db.query(
+      `insert into public.expenses (trip_id, payer_id, amount, currency, name) values ('${trip}', '${A}', 1, 'JPY', '라멘')`,
+    );
+    await db.query(insertTagged(trip, `array['런닝', '치이카와', 'a', 'b', 'c']`));
+    const { rows } = await db.query<{ tags: string[] }>(
+      `select tags from public.expenses where trip_id = '${trip}' order by name desc`,
+    );
+    expect(rows.map((r) => r.tags)).toEqual([[], ["런닝", "치이카와", "a", "b", "c"]]);
+  });
+
+  it("이모지도 한 글자로 센다 — 이모지 20개는 받는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-19", "2027-11-19");
+    await db.query(insertTagged(trip, `array['${"🏃".repeat(20)}']`));
+    expect(await rejects(insertTagged(trip, `array['${"🏃".repeat(21)}']`))).toMatch(
+      /expenses_tags_chk/,
+    );
+  });
+
+  it("6개 · 빈 태그 · 앞뒤 공백 · 21자 · 겹친 태그 · null · 2차원 · 대소문자만 다른 태그는 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-11-18", "2027-11-18");
+    for (const tags of [
+      `array['a', 'b', 'c', 'd', 'e', 'f']`,
+      `array['']`,
+      `array[' 런닝']`,
+      `array['${"가".repeat(21)}']`,
+      `array['런닝', '런닝']`,
+      `array[null]::text[]`,
+      // 0082 — 2차원 · 대소문자만 다른 태그
+      `'{{a},{b}}'::text[]`,
+      `array['Asics', 'asics']`,
+    ]) {
+      expect(await rejects(insertTagged(trip, tags))).toMatch(/expenses_tags_chk|null value/);
+    }
+  });
+});

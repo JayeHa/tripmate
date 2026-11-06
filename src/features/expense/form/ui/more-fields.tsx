@@ -14,6 +14,7 @@ import type { ExpenseFormState } from "../model/use-expense-form";
 import type { FormPrefs } from "../model/use-form-prefs";
 import type { ReceiptDrafts } from "../model/use-receipt-drafts";
 import { ReceiptsField } from "./receipts-field";
+import { TagsField } from "./tags-field";
 
 type MoreFieldsProps = {
   form: ExpenseFormState;
@@ -26,9 +27,9 @@ type MoreFieldsProps = {
 };
 
 /**
- * 「추가 정보 입력」 — 자주 안 쓰는 칸을 접어 둔다: 결제 상태(+ 예정일) · 메모 · 영수증 · 합계에서 제외.
+ * 「추가 정보 입력」 — 자주 안 쓰는 칸을 접어 둔다: 결제 상태(+ 예정일) · 메모 · 태그 · 영수증 · 합계에서 제외.
  * 칸마다 이름 오른쪽 「📌 고정」 을 켜면 그 칸이 아코디언 위(밖)로 올라가 늘 보이고 접힌 안내에서 빠진다(기기별 기억).
- * 넷 다 고정하면 아코디언이 없다. 예정일 달력은 맨 아래 칸이라 위로 연다. 지난 날은 고르지 않는다
+ * 모두 고정하면 아코디언이 없다. 예정일 달력은 맨 아래 칸이라 위로 연다. 지난 날은 고르지 않는다
  */
 export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsProps) {
   const pinned = PIN_FIELDS.filter((f) => prefs.pins.includes(f));
@@ -37,6 +38,7 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
   const filled: Record<PinField, boolean> = {
     paid: !form.paid,
     memo: form.memo.trim() !== "",
+    tags: form.tags.length > 0 || form.tagDraft.trim() !== "",
     receipts: drafts.items.length > 0,
     excluded: !form.counted,
   };
@@ -56,6 +58,17 @@ export function MoreFields({ form, prefs, tripId, drafts, onToast }: MoreFieldsP
   const block = (field: PinField) => {
     if (field === "paid") return <PaidField form={form} pin={pin("paid")} />;
     if (field === "memo") return <MemoField form={form} pin={pin("memo")} />;
+    if (field === "tags")
+      return (
+        <TagsField
+          known={form.knownTags}
+          tags={form.tags}
+          onChange={form.setTags}
+          draft={form.tagDraft}
+          onDraftChange={form.setTagDraft}
+          pin={pin("tags")}
+        />
+      );
     if (field === "receipts")
       return <ReceiptsField tripId={tripId} drafts={drafts} titleRight={pin("receipts")} />;
     return <ExcludedField form={form} pin={pin("excluded")} />;

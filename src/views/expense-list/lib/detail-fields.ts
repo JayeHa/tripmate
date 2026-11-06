@@ -3,6 +3,7 @@ import {
   type ExpenseRowView,
   type ExpenseWithSplits,
   type PersonRef,
+  tagsText,
   toHomeFor,
   withLine,
 } from "@/entities/expense";
@@ -57,7 +58,7 @@ function payerText(row: ExpenseRowView, ctx: FieldContext): string {
   return `${ctx.displayNameOf(person)}${me ? " (나)" : ""}`;
 }
 
-/** PC 비용 상세 패널의 표 — 날짜 · 카테고리 · 결제수단 · 결제 · 함께 · 일정 · 메모. 빈 일정 · 메모도 줄은 둔다 */
+/** PC 비용 상세 패널의 표 — 날짜 · 카테고리 · 결제수단 · 결제 · 함께 · 일정 · 태그 · 메모. 빈 일정 · 메모도 줄은 두고, 태그는 있을 때만 */
 export function detailFields(
   e: ExpenseWithSplits,
   row: ExpenseRowView,
@@ -80,6 +81,7 @@ export function detailFields(
       ? { label: "연결", value: row.ownerLink }
       : { label: "일정", value: row.linkName ?? "연결 안 함", muted: !row.linkName },
     ...placeField(row),
+    ...tagField(e),
     { label: "메모", value: memo || "없음", muted: !memo },
   ];
 }
@@ -89,4 +91,10 @@ function placeField(row: ExpenseRowView): DetailField[] {
   if (!row.place) return [];
   const url = row.place.gmap_url;
   return [{ label: "장소", value: row.place.name, href: isHttpUrl(url) ? url : undefined }];
+}
+
+/** 태그 줄 — 태그를 단 비용만 */
+function tagField(e: ExpenseWithSplits): DetailField[] {
+  const text = tagsText(e.tags);
+  return text ? [{ label: "태그", value: text }] : [];
 }

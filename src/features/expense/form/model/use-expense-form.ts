@@ -1,12 +1,14 @@
 import { useState } from "react";
 
 import {
+  addTag,
   type ExpenseCategory,
   expenseFormSchema,
   type ExpenseFormValues,
   type ExpensePlace,
   type PayFor,
   personOfKey,
+  useTripTags,
 } from "@/entities/expense";
 import type { ScheduleItem } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
@@ -94,13 +96,18 @@ export function useExpenseForm({
   const [paymentMethod, setPaymentMethod] = useState(start.paymentMethod);
   const [category, setCategory] = useState<ExpenseCategory | null>(start.category);
   const [memo, setMemo] = useState(start.memo);
+  const [tags, setTags] = useState(start.tags);
+  // 태그 칸에 쳐 두고 아직 붙이지 않은 글 — 저장할 때 함께 붙인다
+  const [tagDraft, setTagDraft] = useState("");
+  // 이 여행에서 쓴 태그 — 칩 줄과, 쳐 둔 글을 저장할 때도 여행의 표기(「Asics」)를 따르는 데 쓴다
+  const knownTags = useTripTags(trip.id);
   const [spentOn, setSpentOn] = useState(start.spentOn);
   const [paid, setPaid] = useState(start.paid);
   const [dueDate, setDueDate] = useState(start.dueDate);
   const [counted, setCounted] = useState(start.counted);
   // 접힌 칸에 값이 있으면 펼친 채 연다 — 숨은 값을 모르고 저장하지 않게
   const [moreOpen, setMoreOpen] = useState(
-    !!start.memo || !start.paid || !start.counted || hasReceipts,
+    !!start.memo || start.tags.length > 0 || !start.paid || !start.counted || hasReceipts,
   );
   const [error, setError] = useState<string | null>(null);
   const link = useExpenseLink({
@@ -162,6 +169,7 @@ export function useExpenseForm({
       split_mode: "equal",
       category,
       memo: memo || undefined,
+      tags: addTag(tags, tagDraft, knownTags),
       spent_on: spentOn || null,
       spent_time: spent.time || null,
       schedule_item_id: link.itemId || null,
@@ -193,6 +201,14 @@ export function useExpenseForm({
     setCategory: link.pickCategory,
     memo,
     setMemo,
+    /** 붙인 태그 — 붙인 순서대로 */
+    tags,
+    setTags,
+    /** 태그 칸에 쳐 둔 글 — 「추가」 전이어도 저장하면 붙는다 */
+    tagDraft,
+    setTagDraft,
+    /** 이 여행에서 쓴 태그 — 많이 쓴 순, 대소문자만 다른 것은 하나로 */
+    knownTags,
     spentOn,
     setSpentOn: link.pickDay,
     /** 시간 「HH:MM」 · ""(없음). 여행준비면 늘 "" */
