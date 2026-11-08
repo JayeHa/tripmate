@@ -91,6 +91,7 @@ export function RouteStopItem({
           outLine={seg && routeLineStyle(seg.mode, "plan")}
           selected={open}
           onClick={onToggle}
+          expandable
         >
           {hasDetail && (
             <StopDetail

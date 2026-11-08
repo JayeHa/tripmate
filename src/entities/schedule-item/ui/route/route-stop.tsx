@@ -34,6 +34,8 @@ type RouteStopProps = {
   /** PC — 1줄 오른쪽 끝 「📍5」(지도 핀 번호) */
   pinNo?: number | null;
   onClick?: () => void;
+  /** 누르면 아래 칸을 펼친다 — 접혀서 칸이 없을 때도 화면 읽기에 「접힘」 을 알린다 */
+  expandable?: boolean;
   /** PC — 행에 올리면 그 핀을 키운다 */
   onHover?: (hovering: boolean) => void;
   /** 역 아래 칸(메모 · 버튼 · 노트 · 기록). 선은 이 칸을 지나 이어진다 */
@@ -57,6 +59,7 @@ export function RouteStop({
   selected = false,
   pinNo = null,
   onClick,
+  expandable = false,
   onHover,
   children,
 }: RouteStopProps) {
@@ -73,7 +76,7 @@ export function RouteStop({
       <button
         type="button"
         onClick={onClick}
-        aria-expanded={children ? selected : undefined}
+        aria-expanded={expandable ? selected : undefined}
         className="grid min-h-15 w-full grid-cols-[48px_40px_1fr] text-left"
       >
         <span className="pt-5 pr-1 text-right text-[13px]/5 font-extrabold text-ink-900 tabular-nums">
