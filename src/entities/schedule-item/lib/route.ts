@@ -105,7 +105,7 @@ function estimated(km: number, arrive: string | null, detail: string | null): Ro
 /**
  * 두 장소 사이 구간. from · to 는 좌표(없으면 null), arrive 는 다음 역 시각(「HH:mm」).
  * move 는 그 쌍에 적은 이동 기록 — 수단이 있으면 그 수단의 선 · 아이콘이고 시간도 그 수단 식으로 센다(도보 = 13분/km, 그 밖 = 대중교통 식).
- * 수단이 없으면 추정이다. 50m 이하(같은 자리)는 시간 없이 선만 잇는다
+ * 수단이 없으면 추정이다. 50m 이하(같은 자리) · 항공으로 적은 구간은 시간 없이 선만 잇는다
  */
 export function placeSegment(
   from: LatLng | null,
@@ -121,7 +121,8 @@ export function placeSegment(
     return km <= SAME_PLACE_KM ? { ...SAME_PLACE, detail } : estimated(km, arrive, detail);
   }
   const base = { mode: picked.mode, icon: picked.icon, modeName: picked.name, detail };
-  if (km <= SAME_PLACE_KM) return { ...NONE, ...base };
+  // 항공은 편명이 없으면 시간을 모른다 — 대중교통 식으로 세면 880km 가 「17시간 30분」이 된다. 칩 없이 파선만
+  if (km <= SAME_PLACE_KM || picked.mode === "flight") return { ...NONE, ...base };
   const minutes = picked.mode === "walk" ? walkMinutes(km) : transitMinutes(km);
   return { ...base, minutes, estimated: false, depTime: departure(arrive, minutes) };
 }

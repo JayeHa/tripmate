@@ -57,6 +57,15 @@ describe("placeSegment", () => {
     expect(segmentMeta(seg)).toBe("");
   });
 
+  it("장소 사이에 항공을 적으면 시간을 모른다 — 파선만, 칩 · 옆 글자 없음", () => {
+    const fukuoka = { lat: 33.5902, lng: 130.4017 };
+    const seg = placeSegment(TOKYO_STATION, fukuoka, "12:00", { mode: "flight", detail: null });
+    expect(seg).toMatchObject({ mode: "flight", minutes: null, depTime: null });
+    expect(segmentChip(seg)).toBeNull();
+    expect(segmentMeta(seg)).toBe("");
+    expect(routeLineStyle(seg.mode, "plan").style).toBe("dashed");
+  });
+
   it("좌표가 없으면 칩 없는 구간, 같은 자리(50m 이하)는 선만", () => {
     expect(placeSegment(null, SKYTREE, "10:00").mode).toBe("none");
     expect(segmentChip(placeSegment(null, SKYTREE, "10:00"))).toBeNull();
