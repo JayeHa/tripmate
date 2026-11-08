@@ -63,12 +63,15 @@ export function walkLabel(straightKm: number): string {
   return `도보 ${Math.max(1, Math.round(m / 80))}분`;
 }
 
-/** 구글맵 대중교통 길찾기 URL. 앱이 깔려 있으면 앱으로 열린다 */
-export function transitRouteUrl(from: LatLng, to: LatLng): string {
+/**
+ * 구글맵 대중교통 길찾기 URL. 앱이 깔려 있으면 앱으로 열린다.
+ * 출발지가 null 이면(그날 첫 장소) 넣지 않는다 — 구글맵이 지금 위치에서 찾는다
+ */
+export function transitRouteUrl(from: LatLng | null, to: LatLng): string {
   const params = new URLSearchParams({
     api: "1",
     travelmode: "transit",
-    origin: `${from.lat},${from.lng}`,
+    ...(from && { origin: `${from.lat},${from.lng}` }),
     destination: `${to.lat},${to.lng}`,
   });
   return `https://www.google.com/maps/dir/?${params.toString()}`;

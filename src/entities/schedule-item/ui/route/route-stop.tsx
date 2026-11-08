@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 
 import type { RouteLine } from "../../lib/route";
+import type { StopKind } from "../../lib/route-day";
 import { RouteLineBar } from "./route-line";
-import { type StopKind, StopMarker, type StopTone } from "./stop-marker";
+import { StopMarker, type StopTone } from "./stop-marker";
 
 /** 역 행 바탕 — 고른(펼친) 역. 기록 모드는 초록 기운 */
 const SELECTED_BG: Record<StopTone, string> = {
