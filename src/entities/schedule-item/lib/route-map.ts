@@ -162,3 +162,13 @@ export function clampToView(at: LatLng, view: MapView, inset: MapInset): LatLng 
     lng: clamp(at.lng, view.west + inset.side * lngPerPx, view.east - inset.side * lngPerPx),
   };
 }
+
+/**
+ * 고른 장소가 없을 때 고를 장소 — 범위 안의 첫 장소. 공항이 그날 첫 장소인 날에 그 공항을 고르면
+ * 범위 밖까지 맞추느라 지도가 멀리 축소되어 도심 핀이 겹친다. 모두 범위 밖이 아니면 생기지 않고, 장소가 없으면 null
+ */
+export function defaultStopId(data: RouteMapData): string | null {
+  const off = new Set(data.pins.filter((p) => p.offKm !== null).flatMap((p) => p.ids));
+  const stop = data.stops.find((s) => !off.has(s.row.item.id)) ?? data.stops[0];
+  return stop?.row.item.id ?? null;
+}

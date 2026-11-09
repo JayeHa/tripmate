@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ScheduleItem } from "../model/types";
 import { buildRouteDay } from "./route-day";
-import { clampToView, routeMapOf } from "./route-map";
+import { clampToView, defaultStopId, routeMapOf } from "./route-map";
 import type { TimelineRow } from "./timeline";
 
 type LatLng = { lat: number; lng: number };
@@ -111,17 +111,21 @@ describe("routeMapOf", () => {
       row({ id: "c", num: 4, at: GINZA }),
     ]);
     expect(tokyo.pins.map((p) => p.offKm && Math.round(p.offKm))).toEqual([55, null, null, null]);
+    // 고른 장소가 없으면 범위 밖 공항이 아니라 범위 안 첫 장소
+    expect(defaultStopId(tokyo)).toBe("a");
 
     const apart = mapOf([
       row({ id: "o", num: 1, at: OSAKA }),
       row({ id: "n", num: 2, at: NARITA }),
     ]);
     expect(apart.pins.map((p) => p.offKm)).toEqual([null, null]);
+    expect(defaultStopId(apart)).toBe("o");
   });
 
   it("번호가 없거나 좌표가 없는 줄은 지도에 오르지 않는다", () => {
     const map = mapOf([row({ id: "a", num: 1 }), row({ id: "b", at: TOKYO_STATION })]);
     expect(map).toEqual({ stops: [], pins: [], lines: [] });
+    expect(defaultStopId(map)).toBeNull();
   });
 });
 

@@ -2,7 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 
-import { buildRouteDay, RouteMap, routeMapOf, type TimelineRow } from "@/entities/schedule-item";
+import {
+  buildRouteDay,
+  defaultStopId,
+  RouteMap,
+  routeMapOf,
+  type TimelineRow,
+} from "@/entities/schedule-item";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
@@ -74,7 +80,7 @@ type RouteMapBodyProps = Omit<RouteMapSheetProps, "target" | "onClose"> & {
   target: RouteMapTarget;
 };
 
-/** 창 안 — 보는 날과 고른 장소를 쥔다. 날을 바꾸면 그날 첫 장소를 고른다 */
+/** 창 안 — 보는 날과 고른 장소를 쥔다. 고른 장소가 없으면(날을 바꾸면) 그날 범위 안의 첫 장소 */
 function RouteMapBody({
   target,
   startDate,
@@ -91,7 +97,7 @@ function RouteMapBody({
   const [picked, setPicked] = useState<string | null>(target.focusId);
   const selectedId = data.stops.some((s) => s.row.item.id === picked)
     ? picked
-    : (data.stops[0]?.row.item.id ?? null);
+    : defaultStopId(data);
   return (
     <>
       <RouteMap data={data} selectedId={selectedId} onSelect={setPicked} inset={INSET} />
