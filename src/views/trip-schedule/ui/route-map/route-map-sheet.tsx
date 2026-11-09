@@ -10,6 +10,7 @@ import {
   type TimelineRow,
 } from "@/entities/schedule-item";
 import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
+import { useElementHeight } from "@/shared/lib/use-element-height";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
 import { useFlightTimes } from "../../model/use-flight-times";
@@ -19,8 +20,14 @@ import { MapTopBar } from "./map-top-bar";
 /** 지도로 볼 날과 고른 장소 */
 export type RouteMapTarget = { day: number; focusId: string | null };
 
-/** 지도를 덮는 칸 — 위 ‹ · 제목 · 칩 줄 · 범례(약 140), 아래 카드 시트(300), 양옆 16 */
-const INSET = { top: 150, bottom: 300, side: 16 };
+/** 아래 카드 시트 높이 */
+const SHEET_HEIGHT = 300;
+/** 지도 양옆 여백 */
+const SIDE = 16;
+/** 위 칸(‹ · 제목 · 칩 줄 · 범례)을 재기 전의 높이 — 안전 영역이 없는 화면의 값 */
+const TOP_BAR_FALLBACK = 140;
+/** 위 칸 아래에 더 비우는 거리 — 범위 밖 핀 · 이름표가 범례에 붙지 않게 */
+const TOP_GAP = 8;
 
 type RouteMapSheetProps = {
   /** 열린 날. null 이면 닫혀 있다 */
@@ -95,13 +102,21 @@ function RouteMapBody({
   const route = useMemo(() => buildRouteDay(rows, flightOf), [rows, flightOf]);
   const data = useMemo(() => routeMapOf(route), [route]);
   const [picked, setPicked] = useState<string | null>(target.focusId);
+  // 위 칸은 안전 영역(노치)만큼 기기마다 높이가 달라 실제 높이를 잰다
+  const barRef = useRef<HTMLDivElement>(null);
+  const barHeight = useElementHeight(barRef);
+  const inset = useMemo(
+    () => ({ top: (barHeight || TOP_BAR_FALLBACK) + TOP_GAP, bottom: SHEET_HEIGHT, side: SIDE }),
+    [barHeight],
+  );
   const selectedId = data.stops.some((s) => s.row.item.id === picked)
     ? picked
     : defaultStopId(data);
   return (
     <>
-      <RouteMap data={data} selectedId={selectedId} onSelect={setPicked} inset={INSET} />
+      <RouteMap data={data} selectedId={selectedId} onSelect={setPicked} inset={inset} />
       <MapTopBar
+        ref={barRef}
         startDate={startDate}
         totalDays={totalDays}
         day={day}
