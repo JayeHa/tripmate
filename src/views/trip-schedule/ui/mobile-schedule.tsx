@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { ScheduleMap } from "@/entities/schedule-item";
 import { DayChips } from "@/features/schedule/day-selector";
@@ -15,7 +16,7 @@ import { useVisibleDay } from "../model/use-visible-day";
 import { useWindowScrolled } from "../model/use-window-scrolled";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
 import { RouteDayList } from "./route/route-day-list";
-import { RouteMapDialog, type RouteMapTarget } from "./route-map-dialog";
+import { RouteMapSheet, type RouteMapTarget } from "./route-map/route-map-sheet";
 import type { ScheduleLayoutProps } from "./schedule-layout";
 import { ScrollTopButton } from "./scroll-top-button";
 import { TripHeader } from "./trip-header";
@@ -29,7 +30,7 @@ const ITEM_SCROLL_GAP = 12;
  * 모바일 일정 — 상단바 아래에 여행 머리(제목 · 날짜 · 일행 · 숙소 칩)가 지나가고, 날짜 칩이 붙고(sticky) 그 아래 모든 날짜를 노선도로 이어서 그린다.
  * 상단바의 작은 제목은 여행 머리가 올라간 뒤에만 보이고, 오른쪽 「🗺 동선 보기」 는 보고 있는 날의 동선 지도를 연다.
  * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · `?day`)이고, 칩을 누르면 그 날짜로 스크롤한다.
- * 역을 누르면 펼친다(화면에 하나)
+ * 역을 누르면 펼친다(화면에 하나). 동선 지도의 「일정에서 보기」 는 그 역을 펼친 채 날짜 칩 줄 아래로 옮긴다
  */
 export function MobileSchedule({
   trip,
@@ -170,11 +171,18 @@ export function MobileSchedule({
         />
       )}
       {trip && (
-        <RouteMapDialog
+        <RouteMapSheet
           target={map}
           onClose={() => setMap(null)}
           startDate={trip.start_date}
+          totalDays={totalDays}
+          tripId={trip.id}
           rowsOf={(d) => sections[d]?.rows ?? []}
+          onShowInList={(id) => {
+            // 펼친 뒤의 자리로 옮긴다 — 위에서 접히는 역이 있으면 그만큼 올라온다
+            flushSync(() => setOpenId(id));
+            scrollToItem(id);
+          }}
         />
       )}
       {/* 편집은 화면 전체를 덮는다. 아래 일정 화면은 그대로 두어 닫으면 보던 자리로 돌아온다 */}
