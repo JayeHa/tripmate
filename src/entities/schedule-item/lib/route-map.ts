@@ -19,7 +19,7 @@ export type RouteMapStop = {
   inSeg: RouteSegment | null;
   /** 그날 첫 역 — 카드에 「🏁 출발」 */
   first: boolean;
-  /** 바로 앞 장소의 좌표 — 「길찾기」 출발지. 첫 장소는 null */
+  /** 바로 앞 장소의 좌표 — 「길찾기」 출발지. 첫 장소 · 항공편 바로 뒤 장소는 null(지금 위치에서) */
   prevAt: LatLng | null;
 };
 
@@ -92,7 +92,8 @@ export function routeMapOf(route: RouteDay): RouteMapData {
       num: stop.row.num,
       inSeg: route.stops[i - 1]?.seg ?? null,
       first: i === 0,
-      prevAt: stops.at(-1)?.at ?? null,
+      // 바로 앞 역이 항공편이면 출발지 없이(지금 위치) — 노선도 역 펼침의 「길찾기」 와 같다
+      prevAt: route.stops[i - 1]?.row.kind === "flight" ? null : (stops.at(-1)?.at ?? null),
     });
     indexes.push(i);
   });

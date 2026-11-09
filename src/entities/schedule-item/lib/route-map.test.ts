@@ -98,6 +98,9 @@ describe("routeMapOf", () => {
     // 항공편 바로 뒤 장소의 들어오는 구간은 항공편의 구간
     expect(map.stops[1].inSeg?.mode).toBe("none");
     expect(map.stops[1].first).toBe(false);
+    // 착륙 뒤 첫 장소의 길찾기는 출발 도시가 아니라 지금 위치에서
+    expect(map.stops[1].prevAt).toBeNull();
+    expect(map.stops[2].prevAt).toEqual(NARITA);
   });
 
   it("좌표 중앙값에서 12km 넘는 곳은 범위 밖(km), 모두 멀면 아무것도 빼지 않는다", () => {
