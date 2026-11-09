@@ -68,6 +68,8 @@ export function RouteSegmentRow({
           <button
             type="button"
             onClick={onClick}
+            // 이동 방법을 적을 수 없는 구간(항공편 · 같은 자리 앞뒤)은 누를 것이 없다
+            disabled={!onClick}
             onPointerEnter={onHover && (() => onHover(true))}
             onPointerLeave={onHover && (() => onHover(false))}
             aria-label={label ? `${label} · ${chip}` : undefined}

@@ -1,7 +1,5 @@
-import { CircleAlert, ListTodo, Pin, Ticket } from "lucide-react";
-import Link from "next/link";
+import { CircleAlert, Pin } from "lucide-react";
 
-import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 
 import type { PastKind } from "../../lib/day-progress";
@@ -12,6 +10,7 @@ import { ReservationBadge } from "../reservation-badge";
 import { AlternativesLine } from "./alternatives-line";
 import { LinkChips } from "./link-chips";
 import { MemoSection } from "./memo-section";
+import { NoteChips } from "./note-chips";
 import { SkippedBadge } from "./skipped-badge";
 
 const TITLE_SIZE = {
@@ -172,39 +171,6 @@ function StayTimes({ inText, outText }: StayTimesProps) {
         <span className="text-xs text-ink-350">체크아웃</span>
         <span className="text-[15px] font-extrabold text-ink-900">{outText}</span>
       </span>
-    </div>
-  );
-}
-
-type NoteChipsProps = Pick<ItemCardProps, "checklist" | "vouchers">;
-
-/** 노트 칩 줄(24 · r12 · 12/700) — 「체크리스트 N」(주황, 노트로) · 「바우처 N」(파랑). 둘 다 없으면 그리지 않는다 */
-function NoteChips({ checklist, vouchers }: NoteChipsProps) {
-  const showChecklist = !!checklist && checklist.count > 0;
-  const showVouchers = !!vouchers && vouchers.count > 0;
-  if (!showChecklist && !showVouchers) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {showChecklist && (
-        <Link
-          href={checklist.href}
-          transitionTypes={NAV.tab}
-          className="relative inline-flex h-6 items-center gap-1 rounded-full bg-checklist-due-bg px-2 text-xs font-bold text-checklist-due"
-        >
-          <ListTodo className="size-3.25" aria-hidden="true" />
-          체크리스트 {checklist.count}
-        </Link>
-      )}
-      {showVouchers && (
-        <button
-          type="button"
-          onClick={vouchers.onOpen}
-          className="relative inline-flex h-6 items-center gap-1 rounded-full bg-surface-selected px-2 text-xs font-bold text-brand-text"
-        >
-          <Ticket className="size-3.25" strokeWidth={2.2} aria-hidden="true" />
-          바우처 {vouchers.count}
-        </button>
-      )}
     </div>
   );
 }

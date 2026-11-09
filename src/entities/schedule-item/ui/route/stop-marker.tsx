@@ -2,8 +2,7 @@ import { Check } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 
-/** 역 종류 — 일반 장소 · 숙소 · 공항 · 항공편(환승역처럼 굵게) · 임시(점선) */
-export type StopKind = "place" | "hub" | "opt";
+import type { StopKind } from "../../lib/route-day";
 
 /** 역의 상태 — 계획 모드 · 기록 모드의 다녀옴 · 지금 여기 · 남음 */
 export type StopTone = "plan" | "done" | "current" | "todo";

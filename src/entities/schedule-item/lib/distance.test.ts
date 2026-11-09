@@ -51,6 +51,12 @@ describe("transitRouteUrl", () => {
       "https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=1.5%2C2&destination=3%2C4.25",
     );
   });
+
+  it("출발지가 없으면 도착지만(구글맵이 지금 위치에서 찾는다)", () => {
+    expect(transitRouteUrl(null, { lat: 3, lng: 4.25 })).toBe(
+      "https://www.google.com/maps/dir/?api=1&travelmode=transit&destination=3%2C4.25",
+    );
+  });
 });
 
 describe("walkLabel", () => {
