@@ -125,6 +125,9 @@ export function PcSchedule({
           onChange={pickDay}
           holidayOf={body.holidayOf}
           view={view}
+          sections={sections}
+          mode={mode}
+          record={body.record}
           onOpenStays={onOpenStays}
           stayCount={stayCount}
           onOpenFlights={onOpenFlights}
@@ -195,6 +198,8 @@ export function PcSchedule({
         sections={sections}
         day={day}
         onOpen={body.onOpen}
+        mode={mode}
+        record={body.record}
         selectedId={pinned}
         hover={hover}
         focusId={focus.focusId}

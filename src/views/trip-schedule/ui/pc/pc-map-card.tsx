@@ -4,11 +4,14 @@ import {
   CATEGORY_LABEL,
   itemName,
   MapPin,
+  type MapRecordTone,
   ReservationBadge,
   type RouteMapStop,
   type TimelineRow,
   transitRouteUrl,
 } from "@/entities/schedule-item";
+import { cn } from "@/shared/lib/utils";
+
 type PcMapCardProps = {
   /** 지도에 그린 날의 장소(핀 순서) */
   stops: RouteMapStop[];
@@ -18,7 +21,18 @@ type PcMapCardProps = {
   onPick: (id: string) => void;
   /** 「상세 ›」 */
   onOpenDetail: (row: TimelineRow) => void;
+  /** 기록 모드의 모양 — 번호를 다녀감 색으로. 계획 모드 · 항공편은 null */
+  tone?: MapRecordTone | null;
+  /** 기록 모드에서 「✓ 다녀왔어요」 를 둘 장소면 — 「상세 ›」 자리에 */
+  onVisited?: () => void;
 };
+
+/** 기록 모드 번호 36 — 다녀옴 초록 · 지금 여기 진한 초록 · 남음 회색, 모두 흰 숫자 */
+const RECORD_NUM = {
+  done: "bg-visited",
+  current: "bg-visited-text",
+  todo: "bg-[#C9CDD2]",
+} satisfies Record<MapRecordTone, string>;
 
 /** ‹ › 버튼 — 36×34 · r8 · 1px 회색 테두리, 끝이면 흐리게 */
 const STEP =
@@ -26,9 +40,17 @@ const STEP =
 
 /**
  * PC 지도 왼쪽 아래 카드(400 · r16). 번호 36(핀 색) · 「day 1 · 2번째 · 12:10」 + 예약 상태 · 이름 · 「카테고리 · 설명」 ·
- * 오른쪽 길찾기(직전 장소 → 이 장소 대중교통). 아래 줄 ‹ 「2 / 8」 › 로 그날 앞뒤 장소를 고르고, 「상세 ›」 로 일정 상세
+ * 오른쪽 길찾기(직전 장소 → 이 장소 대중교통). 아래 줄 ‹ 「2 / 8」 › 로 그날 앞뒤 장소를 고르고, 「상세 ›」 로 일정 상세.
+ * 기록 모드는 번호를 다녀감 색으로 칠하고, 「✓ 다녀왔어요」 를 둘 장소면 「상세 ›」 대신 그 버튼
  */
-export function PcMapCard({ stops, stopId, onPick, onOpenDetail }: PcMapCardProps) {
+export function PcMapCard({
+  stops,
+  stopId,
+  onPick,
+  onOpenDetail,
+  tone = null,
+  onVisited,
+}: PcMapCardProps) {
   const index = stops.findIndex((s) => s.row.item.id === stopId);
   const stop = stops[index];
   if (!stop) return null;
@@ -38,7 +60,18 @@ export function PcMapCard({ stops, stopId, onPick, onOpenDetail }: PcMapCardProp
     <div className="absolute bottom-5 left-5 z-10 flex w-100 max-w-[calc(100%-40px)] flex-col gap-3 rounded-[16px] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,.16)]">
       <div className="flex items-start gap-3">
         <span className="shrink-0">
-          <MapPin num={stop.num} size="xl" status={row.status} category={null} />
+          {tone ? (
+            <span
+              className={cn(
+                "flex size-9 items-center justify-center rounded-full text-[15px] font-extrabold text-white",
+                RECORD_NUM[tone],
+              )}
+            >
+              {stop.num}
+            </span>
+          ) : (
+            <MapPin num={stop.num} size="xl" status={row.status} category={null} />
+          )}
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.75">
           <span className="flex items-center gap-1.5">
@@ -83,13 +116,23 @@ export function PcMapCard({ stops, stopId, onPick, onOpenDetail }: PcMapCardProp
         >
           <ChevronRight className="size-4" aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          onClick={() => onOpenDetail(row)}
-          className="ml-auto flex h-8.5 items-center rounded-button border border-line px-3 text-[13px] font-bold text-ink-900"
-        >
-          상세 ›
-        </button>
+        {onVisited ? (
+          <button
+            type="button"
+            onClick={onVisited}
+            className="ml-auto flex h-8.5 items-center rounded-button bg-visited px-3 text-[13px] font-extrabold text-white"
+          >
+            ✓ 다녀왔어요
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onOpenDetail(row)}
+            className="ml-auto flex h-8.5 items-center rounded-button border border-line px-3 text-[13px] font-bold text-ink-900"
+          >
+            상세 ›
+          </button>
+        )}
       </div>
     </div>
   );

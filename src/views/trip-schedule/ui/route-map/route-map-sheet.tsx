@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 
 import {
   buildRouteDay,
+  type DayMode,
   defaultStopId,
   RouteMap,
   routeMapOf,
@@ -13,7 +14,9 @@ import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 
+import { nextStopId, recordOfRoute, routeMapRecord } from "../../lib/record";
 import { useFlightTimes } from "../../model/use-flight-times";
+import type { ScheduleRecord } from "../../model/use-schedule-record";
 import { MapCards } from "./map-cards";
 import { MapTopBar } from "./map-top-bar";
 
@@ -41,6 +44,9 @@ type RouteMapSheetProps = {
   tripId: string;
   /** 「일정에서 보기」 — 창이 다 닫힌 뒤에 부른다(닫히며 포커스가 돌아가 스크롤이 움직인 뒤에 옮기게) */
   onShowInList: (id: string) => void;
+  /** 기록 모드로 열면 핀 · 선 · 카드 번호를 다녀감으로 칠한다 */
+  mode: DayMode;
+  record: ScheduleRecord;
 };
 
 /**
@@ -87,7 +93,10 @@ type RouteMapBodyProps = Omit<RouteMapSheetProps, "target" | "onClose"> & {
   target: RouteMapTarget;
 };
 
-/** 창 안 — 보는 날과 고른 장소를 쥔다. 고른 장소가 없으면(날을 바꾸면) 그날 범위 안의 첫 장소 */
+/**
+ * 창 안 — 보는 날과 고른 장소를 쥔다. 고른 장소가 없으면(날을 바꾸면) 기록 모드는 「✓ 다녀왔어요」 를 둘 장소,
+ * 그것도 없으면 그날 범위 안의 첫 장소
+ */
 function RouteMapBody({
   target,
   startDate,
@@ -95,6 +104,8 @@ function RouteMapBody({
   rowsOf,
   tripId,
   onShowInList,
+  mode,
+  record,
 }: RouteMapBodyProps) {
   const flightOf = useFlightTimes(tripId);
   const [day, setDay] = useState(target.day);
@@ -109,17 +120,26 @@ function RouteMapBody({
     () => ({ top: (barHeight || TOP_BAR_FALLBACK) + TOP_GAP, bottom: SHEET_HEIGHT, side: SIDE }),
     [barHeight],
   );
-  const selectedId = data.stops.some((s) => s.row.item.id === picked)
-    ? picked
-    : defaultStopId(data);
+  const tones = mode === "record" ? recordOfRoute(route, record.marks, record.dayOf(day)) : null;
+  const mapRecord = tones ? routeMapRecord(route, tones) : undefined;
+  const onMap = (id: string | null) => data.stops.some((s) => s.row.item.id === id);
+  const selectedId =
+    [picked, tones ? nextStopId(route, tones) : null].find(onMap) ?? defaultStopId(data);
   return (
     <>
-      <RouteMap data={data} selectedId={selectedId} onSelect={setPicked} inset={inset} />
+      <RouteMap
+        data={data}
+        selectedId={selectedId}
+        onSelect={setPicked}
+        inset={inset}
+        record={mapRecord}
+      />
       <MapTopBar
         ref={barRef}
         startDate={startDate}
         totalDays={totalDays}
         day={day}
+        record={mode === "record"}
         onDayChange={(d) => {
           setDay(d);
           setPicked(null);
@@ -131,6 +151,7 @@ function RouteMapBody({
         onSelect={setPicked}
         totals={route.totals}
         onShowInList={onShowInList}
+        record={mapRecord}
       />
     </>
   );

@@ -1,6 +1,6 @@
 import { itemCoords } from "../model/place";
 import { haversineKm } from "./distance";
-import type { RouteMode, RouteSegment } from "./route";
+import type { RouteMode, RouteSegment, RouteTone } from "./route";
 import type { RouteDay } from "./route-day";
 import type { TimelineRow } from "./timeline";
 
@@ -133,6 +133,35 @@ export function routeMapOf(route: RouteDay): RouteMapData {
     });
   });
   return { stops, pins: [...pins.values()], lines };
+}
+
+/** 기록 모드 핀 모양 — 다녀옴 · 지금 여기 · 남음 */
+export type MapRecordTone = "done" | "current" | "todo";
+
+/**
+ * 기록 모드의 지도 — 장소 id 마다 모양(없으면 계획 모양 — 항공편)과 그 장소까지 왔는지(들어오는 선을 초록으로).
+ * 기록 모드가 아니면 지도에 넘기지 않는다
+ */
+export type RouteMapRecord = ReadonlyMap<string, { tone: MapRecordTone | null; reached: boolean }>;
+
+/**
+ * 핀 하나의 기록 모양. 같은 자리를 두 번 가는 핀(숙소에서 나와 숙소로)은 지금 여기 > 남음 > 다녀옴 —
+ * 아침에 나온 숙소도 밤에 다시 갈 곳이면 남은 곳이다. 기록 모양이 없는 핀은 null(계획 모양)
+ */
+export function pinRecordTone(
+  ids: readonly string[],
+  record: RouteMapRecord,
+): MapRecordTone | null {
+  const tones = ids.map((id) => record.get(id)?.tone ?? null);
+  if (tones.includes("current")) return "current";
+  if (tones.includes("todo")) return "todo";
+  return tones.includes("done") ? "done" : null;
+}
+
+/** 선의 색 — 기록 모드면 도착 장소까지 왔을 때 지나온 구간(초록), 아니면 남은 구간. 계획 모드는 수단 색 */
+export function lineRecordTone(toId: string, record: RouteMapRecord | undefined): RouteTone {
+  if (!record) return "plan";
+  return record.get(toId)?.reached ? "done" : "todo";
 }
 
 /** 지도가 지금 보이는 범위와 지도 칸의 크기(px) */

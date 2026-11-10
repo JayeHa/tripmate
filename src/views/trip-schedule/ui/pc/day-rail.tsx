@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { VisitProgress } from "@/entities/schedule-item";
 import { dateRangeLabel, dateTone, dayCount, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 
@@ -19,11 +20,14 @@ type DayRailProps = {
   children?: ReactNode;
   /** 레일 아래 고정 도구(항공편 · 숙소) */
   footer?: ReactNode;
+  /** 기록 모드 — 날마다 다녀온 곳 수 · 장소 수. 있으면 하루 요약 대신 진행 줄, 켜진 날은 초록 */
+  progressOf?: (day: number) => { done: number; total: number };
 };
 
 /**
  * PC 왼쪽 232px 날짜 레일. 여행명은 고정, day 목록만 스크롤한다.
- * 날마다 「day 2 11.1/일」(토 파랑 · 일 · 공휴일 빨강) 아래 공휴일 이름(있으면 빨갛게) · 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소)
+ * 날마다 「day 2 11.1/일」(토 파랑 · 일 · 공휴일 빨강) 아래 공휴일 이름(있으면 빨갛게) · 하루 요약 2줄. 아래는 고정 도구(footer — 항공편 · 숙소).
+ * 기록 모드(progressOf)는 하루 요약 대신 진행 줄(막대 4 + 「4/13」, 장소가 없는 날은 없음)이고 켜진 날 바탕 · 글자가 초록이다
  */
 export function DayRail({
   title,
@@ -35,6 +39,7 @@ export function DayRail({
   holidayOf,
   children,
   footer,
+  progressOf,
 }: DayRailProps) {
   const total = dayCount(startDate, endDate);
   return (
@@ -57,6 +62,7 @@ export function DayRail({
           const summary = summaries[i];
           const holiday = holidayOf(i);
           const tone = dateTone(startDate, i, !!holiday);
+          const progress = progressOf?.(i);
           return (
             <button
               key={date}
@@ -65,14 +71,14 @@ export function DayRail({
               onClick={() => onChange(i)}
               className={cn(
                 "flex flex-col gap-0.5 rounded-card px-3 py-2.5 text-left",
-                i === day ? "bg-surface-muted" : "hover:bg-surface-sunken",
+                i === day ? activeBg(!!progressOf) : "hover:bg-surface-sunken",
               )}
             >
               <span className="flex items-baseline gap-1.5 whitespace-nowrap">
                 <span
                   className={cn(
                     "text-[15px] font-extrabold",
-                    i === day ? "text-ink-900" : "text-ink-600",
+                    i === day ? activeTitle(!!progressOf) : "text-ink-600",
                   )}
                 >
                   day {i + 1}
@@ -84,9 +90,13 @@ export function DayRail({
               {holiday && (
                 <span className="truncate text-xs font-semibold text-holiday">{holiday}</span>
               )}
-              {summary && (
-                <span className="line-clamp-2 text-[13px]/[1.45] text-ink-500">{summary}</span>
-              )}
+              {progress
+                ? progress.total > 0 && (
+                    <VisitProgress compact done={progress.done} total={progress.total} />
+                  )
+                : summary && (
+                    <span className="line-clamp-2 text-[13px]/[1.45] text-ink-500">{summary}</span>
+                  )}
             </button>
           );
         })}
@@ -94,4 +104,14 @@ export function DayRail({
       {footer}
     </aside>
   );
+}
+
+/** 켜진 날의 바탕 — 기록 모드는 옅은 초록 */
+function activeBg(record: boolean): string {
+  return record ? "bg-visited-rail" : "bg-surface-muted";
+}
+
+/** 켜진 날의 「day 2」 글자 — 기록 모드는 진한 초록 */
+function activeTitle(record: boolean): string {
+  return record ? "text-visited-strong" : "text-ink-900";
 }

@@ -4,6 +4,9 @@ import {
   durationText,
   itemName,
   MapPin,
+  type MapRecordTone,
+  pinRecordTone,
+  type RouteMapRecord,
   type RouteMapStop,
   segmentChip,
   transitRouteUrl,
@@ -20,13 +23,22 @@ type MapCardsProps = {
   totals: { transit: number; walk: number };
   /** 「일정에서 보기」 — 지도를 닫고 노선도에서 그 역을 펼친다 */
   onShowInList: (id: string) => void;
+  /** 기록 모드 — 카드 번호를 지도 핀과 같은 다녀감 모양으로 */
+  record?: RouteMapRecord;
 };
 
 /**
  * 동선 지도 아래 시트 — 머리 「13곳 · 대중교통 0분 · 도보 46분」 + 「5 / 13」, 그 아래 장소 카드를 가로로 넘긴다.
  * 고른 카드가 바뀌면(핀 누르기) 그 카드를 왼쪽 20 에 맞추고, 손으로 넘겨 멈추면 그 카드를 고른다
  */
-export function MapCards({ stops, selectedId, onSelect, totals, onShowInList }: MapCardsProps) {
+export function MapCards({
+  stops,
+  selectedId,
+  onSelect,
+  totals,
+  onShowInList,
+  record,
+}: MapCardsProps) {
   const rowRef = useCardRow(selectedId, onSelect);
   const index = stops.findIndex((s) => s.row.item.id === selectedId);
 
@@ -61,6 +73,7 @@ export function MapCards({ stops, selectedId, onSelect, totals, onShowInList }: 
             selected={stop.row.item.id === selectedId}
             onSelect={() => onSelect(stop.row.item.id)}
             onShowInList={() => onShowInList(stop.row.item.id)}
+            tone={record ? pinRecordTone([stop.row.item.id], record) : null}
           />
         ))}
       </div>
@@ -73,10 +86,12 @@ type MapCardProps = {
   selected: boolean;
   onSelect: () => void;
   onShowInList: () => void;
+  /** 기록 모드 번호 모양(없으면 예약 상태색) */
+  tone: MapRecordTone | null;
 };
 
 /** 카드 한 장 — 번호 · 시각 · 들어오는 이동 「← 🚶 도보 3분」(첫 역은 「🏁 출발」) · 이름 2줄 · 설명 · 버튼 둘 */
-function MapCard({ stop, selected, onSelect, onShowInList }: MapCardProps) {
+function MapCard({ stop, selected, onSelect, onShowInList, tone }: MapCardProps) {
   const { row } = stop;
   return (
     <div
@@ -93,7 +108,7 @@ function MapCard({ stop, selected, onSelect, onShowInList }: MapCardProps) {
         className="flex min-w-0 flex-col gap-2 text-left"
       >
         <span className="flex items-center gap-2">
-          <MapPin num={stop.num} size="sm" status={row.status} category={null} />
+          <MapPin num={stop.num} size="sm" status={row.status} category={null} record={tone} />
           <span className="text-[13px] font-extrabold text-ink-900 tabular-nums">{row.time}</span>
           <span className="ml-auto truncate text-[11px] font-semibold text-ink-350">
             {incomingText(stop)}

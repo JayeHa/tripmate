@@ -12,7 +12,7 @@ import {
 } from "@/entities/schedule-item";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
-import { type RecordStop, recordStops } from "../../lib/record";
+import { recordOfRoute, type RecordStop } from "../../lib/record";
 import type { ScheduleRecord } from "../../model/use-schedule-record";
 import { RouteDayHeader } from "./route-day-header";
 import { RouteStopItem, type StopRecord } from "./route-stop-item";
@@ -89,14 +89,7 @@ export function RouteDaySection({
   record,
 }: RouteDaySectionProps) {
   const route = useMemo(() => buildRouteDay(rows, flightOf), [rows, flightOf]);
-  const tones =
-    mode === "record"
-      ? recordStops(
-          route.stops.map((s) => ({ id: s.row.item.id, place: s.row.kind === "place" })),
-          record.marks,
-          record.dayOf(day),
-        )
-      : null;
+  const tones = mode === "record" ? recordOfRoute(route, record.marks, record.dayOf(day)) : null;
   return (
     <section data-day-section={day} aria-label={`day ${day + 1}`} className="flex flex-col pb-6">
       <RouteDayHeader

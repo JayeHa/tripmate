@@ -19,13 +19,22 @@ type MapTopBarProps = {
   totalDays: number;
   day: number;
   onDayChange: (day: number) => void;
+  /** 기록 모드 — 범례를 지나온 · 남은 구간으로 */
+  record?: boolean;
 };
 
 /**
  * 동선 지도 위에 뜨는 칸 — ‹(닫기) · 「day 3 · 11.2 (월) 동선」 제목, 그 아래 날짜 칩 줄, 그 아래 범례.
  * 높이는 안전 영역(노치)만큼 기기마다 달라 화면이 ref 로 재서 지도 맞추기에서 가린다
  */
-export function MapTopBar({ ref, startDate, totalDays, day, onDayChange }: MapTopBarProps) {
+export function MapTopBar({
+  ref,
+  startDate,
+  totalDays,
+  day,
+  onDayChange,
+  record = false,
+}: MapTopBarProps) {
   const { date, dow } = dayParts(startDate, day);
   return (
     <div
@@ -55,7 +64,7 @@ export function MapTopBar({ ref, startDate, totalDays, day, onDayChange }: MapTo
         </DialogTitle>
       </div>
       <MapDayChips totalDays={totalDays} day={day} onDayChange={onDayChange} />
-      <RouteLegend className="mx-4 bg-white/92 px-2.5 py-1.75 text-[11px]" />
+      <RouteLegend record={record} className="mx-4 bg-white/92 px-2.5 py-1.75 text-[11px]" />
     </div>
   );
 }

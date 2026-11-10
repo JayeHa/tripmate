@@ -1,4 +1,10 @@
-import type { StopTone, VisitMarks } from "@/entities/schedule-item";
+import type {
+  RouteDay,
+  RouteMapRecord,
+  StopTone,
+  TimelineRow,
+  VisitMarks,
+} from "@/entities/schedule-item";
 
 /** 기록 모드의 역 하나 — 표식 · 카드 모양과 지나왔는지 */
 export type RecordStop = {
@@ -55,4 +61,41 @@ function toneOf(s: RecordInput, current: boolean, marks: VisitMarks): StopTone {
 export function recordDay(day: number, todayIndex: number | null): RecordDay {
   if (todayIndex === null || day > todayIndex) return "other";
   return day === todayIndex ? "today" : "past";
+}
+
+/** 하루 노선도의 역마다 기록 모드 상태(역 순서 그대로) — 장소만 진행에 센다 */
+export function recordOfRoute(route: RouteDay, marks: VisitMarks, when: RecordDay): RecordStop[] {
+  return recordStops(
+    route.stops.map((s) => ({ id: s.row.item.id, place: s.row.kind === "place" })),
+    marks,
+    when,
+  );
+}
+
+/** 기록 모드 지도에 넘길 장소별 모양 · 지나왔는지. 계획 모양(항공편)은 null */
+export function routeMapRecord(route: RouteDay, tones: readonly RecordStop[]): RouteMapRecord {
+  return new Map(
+    route.stops.map((s, i) => {
+      const { tone, reached } = tones[i];
+      return [s.row.item.id, { tone: tone === "plan" ? null : tone, reached }];
+    }),
+  );
+}
+
+/** 「✓ 다녀왔어요」 를 둘 장소(그날 표시 없는 첫 장소, 누를 수 있는 날만). 없으면 null */
+export function nextStopId(route: RouteDay, tones: readonly RecordStop[]): string | null {
+  const i = tones.findIndex((t) => t.next);
+  return i === -1 ? null : route.stops[i].row.item.id;
+}
+
+/** 그날 장소 수와 다녀온 곳 수 — PC 날짜 레일의 진행 줄(항공편 · 노트는 세지 않는다) */
+export function placeProgress(
+  rows: readonly TimelineRow[],
+  marks: VisitMarks,
+): { done: number; total: number } {
+  const places = rows.filter((r) => r.kind === "place");
+  return {
+    done: places.filter((r) => marks[r.item.id] === "visited").length,
+    total: places.length,
+  };
 }
