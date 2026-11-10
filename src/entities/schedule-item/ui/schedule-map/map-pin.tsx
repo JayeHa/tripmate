@@ -32,8 +32,11 @@ const FOCUS_TONE = {
 
 const NO_STATUS_FOCUS = "border-2 border-status-opt bg-white text-ink-700";
 
-/** 보통 핀 지름. 모바일 지도는 작아서 24, PC 3단 지도는 28 */
-const PIN_SIZE = { md: "size-6", lg: "size-7" } as const;
+/**
+ * 보통 핀 지름. 동선 지도 카드 번호는 22, 모바일 지도는 24, PC 3단 지도 · 동선 지도는 28.
+ * 같은 자리를 두 번 가면 「4·13」 처럼 길어져서, 지름은 최소 너비로 두고 옆으로 늘어난다
+ */
+const PIN_SIZE = { sm: "h-5.5 min-w-5.5", md: "h-6 min-w-6", lg: "h-7 min-w-7" } as const;
 export type MapPinSize = keyof typeof PIN_SIZE;
 
 /**
@@ -47,7 +50,7 @@ export function pinAnchor(focus: boolean) {
 }
 
 type MapPinProps = {
-  /** 순서 번호. 대체 장소 지도는 A · B · C 글자 */
+  /** 순서 번호. 대체 장소 지도는 A · B · C 글자, 같은 자리를 두 번 가면 「4·13」 */
   num: number | string;
   size?: MapPinSize;
   status: ReservationStatus | null;
@@ -69,7 +72,7 @@ export function MapPin({ num, size = "md", status, category, focus }: MapPinProp
         <span className="absolute top-0 left-0 size-11 -rotate-45 rounded-[50%_50%_50%_0] bg-white shadow-[0_3px_10px_rgba(0,0,0,.28)]" />
         <span
           className={cn(
-            "absolute top-1.25 left-1.25 flex size-8.5 items-center justify-center rounded-full text-[15px] font-extrabold",
+            "absolute top-1.25 left-1.25 flex h-8.5 min-w-8.5 items-center justify-center rounded-full px-1 text-[15px] font-extrabold",
             status ? FOCUS_TONE[status] : NO_STATUS_FOCUS,
           )}
         >
@@ -83,7 +86,7 @@ export function MapPin({ num, size = "md", status, category, focus }: MapPinProp
     <span className="relative inline-flex">
       <span
         className={cn(
-          "flex items-center justify-center rounded-full border-2 text-xs font-extrabold shadow-[0_1px_4px_rgba(0,0,0,.28)]",
+          "flex items-center justify-center rounded-full border-2 px-1 text-xs font-extrabold shadow-[0_1px_4px_rgba(0,0,0,.28)]",
           status ? PIN_TONE[status] : NO_STATUS_PIN,
           PIN_SIZE[size],
         )}
