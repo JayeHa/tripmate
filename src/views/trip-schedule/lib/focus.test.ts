@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { mapDayOf, pickFocus, pickVisibleDay, pinScrollTarget, shownOpenId } from "./focus";
+import {
+  mapDayOf,
+  pcFocusLine,
+  pickFocus,
+  pickVisibleDay,
+  pinScrollTarget,
+  shownOpenId,
+} from "./focus";
 
 const rows = [
   { id: "a", top: 100 },
@@ -95,5 +102,22 @@ describe("shownOpenId", () => {
 
   it("고른 것이 없으면 null", () => {
     expect(shownOpenId(null, shown)).toBeNull();
+  });
+});
+
+describe("pcFocusLine", () => {
+  const list = { top: 64, height: 800 };
+
+  it("맨 위에서는 120 에서 시작해 스크롤한 만큼 내려간다", () => {
+    expect(pcFocusLine(list, 0)).toBe(64 + 120);
+    expect(pcFocusLine(list, 100)).toBe(64 + 220);
+  });
+
+  it("칸 높이의 40% 에서 멈춘다", () => {
+    expect(pcFocusLine(list, 1000)).toBe(64 + 320);
+  });
+
+  it("목록 칸이 없으면 0", () => {
+    expect(pcFocusLine(undefined, 0)).toBe(0);
   });
 });

@@ -14,6 +14,16 @@ import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 import { RouteDayHeader } from "./route-day-header";
 import { RouteStopItem } from "./route-stop-item";
 
+/** PC — 목록 ↔ 지도 올림(hover). 모바일은 없다 */
+export type RouteHover = {
+  /** 올린 장소(목록 카드 · 지도 핀) */
+  stopId: string | null;
+  /** 올린 구간 글자의 도착 장소 */
+  segTo: string | null;
+  onStop: (id: string | null) => void;
+  onSeg: (toId: string | null) => void;
+};
+
 export type RouteDaySectionProps = {
   startDate: string;
   day: number;
@@ -30,6 +40,8 @@ export type RouteDaySectionProps = {
   focusId?: string | null;
   /** PC — 카드에 지도 핀 번호 「📍5」 */
   showPins?: boolean;
+  /** PC — 지도와 맞추는 올림 */
+  hover?: RouteHover;
   past: ReadonlyMap<string, PastKind>;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
@@ -57,6 +69,7 @@ export function RouteDaySection({
   onToggle,
   focusId = null,
   showPins = false,
+  hover,
   past,
   onOpen,
   onEditMove,
@@ -84,6 +97,8 @@ export function RouteDaySection({
         {route.stops.map((stop, i) => {
           const prev = route.stops[i - 1];
           const { row } = stop;
+          const id = row.item.id;
+          const { hovered, ...hoverHandlers } = stopHover(hover, id, stop.next?.item.id);
           return (
             <RouteStopItem
               key={row.item.id}
@@ -92,7 +107,8 @@ export function RouteDaySection({
               prevAt={prev ? itemCoords(prev.row.item) : null}
               open={openId === row.item.id}
               onToggle={() => onToggle(row.item.id)}
-              focused={openId !== row.item.id && focusId === row.item.id}
+              focused={openId !== id && (focusId === id || hovered)}
+              {...hoverHandlers}
               showPin={showPins}
               past={past.get(row.item.id) ?? null}
               nextPast={!!stop.next && past.has(stop.next.item.id)}
@@ -109,4 +125,18 @@ export function RouteDaySection({
       </ol>
     </section>
   );
+}
+
+/**
+ * 역 하나의 올림 prop(PC 만) — 지도 핀에 올린 장소인지, 카드 · 다음 구간 글자에 올리고 내릴 때 알릴 곳,
+ * 다음 구간 글자에 밑줄을 칠지(지도의 그 구간을 진하게 그리는 중). 마지막 역은 다음 구간이 없다
+ */
+function stopHover(hover: RouteHover | undefined, id: string, nextId: string | undefined) {
+  if (!hover) return { hovered: false };
+  return {
+    hovered: hover.stopId === id,
+    onHover: (on: boolean) => hover.onStop(on ? id : null),
+    segHighlight: !!nextId && hover.segTo === nextId,
+    onSegHover: nextId ? (on: boolean) => hover.onSeg(on ? nextId : null) : undefined,
+  };
 }

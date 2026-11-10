@@ -32,6 +32,12 @@ type RouteMapProps = {
   inset: MapInset;
   /** 바뀌면 핀을 다시 맞춘다(PC 목록 칸 너비) */
   fitKey?: unknown;
+  /** PC — 목록 카드 · 핀에 올린 장소. 그 핀을 키운다(28 → 32) */
+  hoverId?: string | null;
+  /** PC — 목록의 구간 글자에 올린 구간(도착 장소 id). 그 선을 잉크색으로 */
+  hoverLineTo?: string | null;
+  /** PC — 핀에 올렸다 · 내렸다(null) */
+  onHover?: (id: string | null) => void;
   className?: string;
 };
 
@@ -39,9 +45,20 @@ type RouteMapProps = {
  * 동선 지도 — 번호 핀(예약 상태색) + 수단별 선(대중교통 실선 · 도보 점선 · 항공 파선, 노선도와 같은 언어).
  * 고른 장소는 강조 핀, 그리로 들어오는 구간은 잉크색. 범위 밖 장소(공항 · 근교)는 맞추기에서 빼고
  * 보이는 칸 가장자리에 핀을 붙여 「나리타 · 58km 밖」 을 단다. 누르면 고르고 그곳까지 보이게 넓힌다.
+ * PC 는 목록과 올림을 맞춘다 — 올린 장소의 핀을 키우고, 올린 구간을 잉크색으로, 핀에 올리면 onHover 로 알린다.
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다
  */
-export function RouteMap({ data, selectedId, onSelect, inset, fitKey, className }: RouteMapProps) {
+export function RouteMap({
+  data,
+  selectedId,
+  onSelect,
+  inset,
+  fitKey,
+  hoverId = null,
+  hoverLineTo = null,
+  onHover,
+  className,
+}: RouteMapProps) {
   const [view, setView] = useState<MapView | null>(null);
   const selectedPin = data.pins.find((p) => selectedId !== null && p.ids.includes(selectedId));
   const points = data.pins.filter((p) => p.offKm === null || p === selectedPin).map((p) => p.at);
@@ -62,15 +79,15 @@ export function RouteMap({ data, selectedId, onSelect, inset, fitKey, className 
           }}
         >
           {data.lines.map((line) => {
-            const selected = line.toId === selectedId;
+            const strong = line.toId === selectedId || line.toId === hoverLineTo;
             const style = routeLineStyle(line.mode, "plan", { onMap: true });
             return (
               <RoutePolyline
                 key={line.key}
                 from={line.from}
                 to={line.to}
-                line={selected ? { ...style, color: SELECTED_LINE } : style}
-                zIndex={selected ? 2 : 1}
+                line={strong ? { ...style, color: SELECTED_LINE } : style}
+                zIndex={strong ? 2 : 1}
               />
             );
           })}
@@ -79,6 +96,8 @@ export function RouteMap({ data, selectedId, onSelect, inset, fitKey, className 
               key={pin.key}
               pin={pin}
               selected={pin === selectedPin}
+              hovered={hoverId !== null && pin.ids.includes(hoverId)}
+              onHover={onHover && ((on) => onHover(on ? pin.ids[0] : null))}
               at={pin.offKm !== null && view ? clampToView(pin.at, view, inset) : pin.at}
               onSelect={() => onSelect(pin.ids[0])}
             />
@@ -96,26 +115,43 @@ export function RouteMap({ data, selectedId, onSelect, inset, fitKey, className 
   );
 }
 
+/** 핀 겹침 순서 — 고른 핀 > 올린 핀 > 나머지 */
+function markerZ(selected: boolean, hovered: boolean): number {
+  if (selected) return 10;
+  return hovered ? 5 : 1;
+}
+
 type RouteMapMarkerProps = {
   pin: RouteMapPin;
   selected: boolean;
+  /** 목록에서 올린 장소 — 32 로 키운다(강조 핀이면 그대로) */
+  hovered: boolean;
+  onHover?: (hovering: boolean) => void;
   /** 핀을 그릴 자리 — 범위 밖이면 보이는 칸 가장자리로 끌어온 좌표 */
   at: { lat: number; lng: number };
   onSelect: () => void;
 };
 
 /** 핀 하나. 범위 밖이면 아래에 「나리타 · 58km 밖」(이름 첫 낱말) */
-function RouteMapMarker({ pin, selected, at, onSelect }: RouteMapMarkerProps) {
+function RouteMapMarker({ pin, selected, hovered, onHover, at, onSelect }: RouteMapMarkerProps) {
   const name = itemName(pin.row.item);
   return (
     <AdvancedMarker
       position={at}
       title={name}
       onClick={onSelect}
-      zIndex={selected ? 10 : 1}
+      onMouseEnter={onHover && (() => onHover(true))}
+      onMouseLeave={onHover && (() => onHover(false))}
+      zIndex={markerZ(selected, hovered)}
       {...pinAnchor(selected)}
     >
-      <span className="relative block w-max">
+      {/* 32 / 28 — 크기를 바꾸면 기준점(가운데)이 흔들려 확대로 키운다 */}
+      <span
+        className={cn(
+          "relative block w-max transition-transform duration-150",
+          hovered && !selected && "scale-[1.143]",
+        )}
+      >
         <MapPin
           num={pin.label}
           size="lg"

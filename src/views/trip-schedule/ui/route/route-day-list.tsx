@@ -21,7 +21,7 @@ type RouteDaysProps = Pick<
 > &
   Pick<
     RouteDaySectionProps,
-    "openId" | "onToggle" | "onShowMap" | "onAddMemo" | "focusId" | "showPins"
+    "openId" | "onToggle" | "onShowMap" | "onAddMemo" | "focusId" | "showPins" | "hover"
   > & {
     trip: Trip;
   };
