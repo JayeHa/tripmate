@@ -77,3 +77,14 @@ export function mapDayOf(sections: DayRowIds[], focusId: string | null, day: num
 export function shownOpenId(openId: string | null, shown: DayRowIds[]): string | null {
   return shown.some((s) => s.rows.some((r) => r.item.id === openId)) ? openId : null;
 }
+
+/**
+ * PC 스크롤 강조 기준선(화면 y) = 목록 칸 높이의 40% 지점(가운데보다 조금 위).
+ * PC 는 목록이 길게 보여서, 맨 위보다 눈이 머무는 가운데 근처의 장소를 지도에 보인다.
+ * 다만 맨 위에서는 120px 에서 시작해 스크롤한 만큼 내려간다 — 처음부터 40% 면 그 위의 첫 행들은
+ * 기준선을 지나지 않은 적이 없어서 강조될 수 없다. 목록 칸이 아직 없으면 0
+ */
+export function pcFocusLine(list: { top: number; height: number } | undefined, scrollTop: number) {
+  if (!list) return 0;
+  return list.top + Math.min(list.height * 0.4, scrollTop + 120);
+}

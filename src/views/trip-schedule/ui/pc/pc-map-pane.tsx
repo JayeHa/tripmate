@@ -13,6 +13,7 @@ import {
 
 import { mapDayOf } from "../../lib/focus";
 import { useFlightTimes } from "../../model/use-flight-times";
+import type { RouteHover } from "../route/route-day-section";
 import { RouteLegend } from "../route-map/route-legend";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { PcMapCard } from "./pc-map-card";
@@ -28,6 +29,8 @@ type PcMapPaneProps = Pick<ScheduleLayoutProps, "trip" | "edit" | "sections" | "
   selectedId: string | null;
   /** 스크롤 기준선을 지난 장소 */
   focusId: string | null;
+  /** 목록과 맞추는 올림(hover) */
+  hover: RouteHover;
   /** 날짜로 스크롤해 붙잡아 둔 동안 — 강조된 장소 대신 보고 있는 날을 그린다 */
   holding: boolean;
   /** 핀 · 지도 카드 ‹ › 로 장소를 골랐다 */
@@ -52,6 +55,7 @@ export function PcMapPane({
   onOpen,
   selectedId,
   focusId,
+  hover,
   holding,
   onPick,
   fitKey,
@@ -68,6 +72,7 @@ export function PcMapPane({
           selectedId={selectedId ?? focusId}
           onSelect={onPick}
           onOpenDetail={onOpen}
+          hover={hover}
           fitKey={fitKey}
         />
       )}
@@ -87,11 +92,20 @@ type PcRouteMapProps = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onOpenDetail: (row: TimelineRow) => void;
+  hover: RouteHover;
   fitKey: number;
 };
 
 /** 하루 동선 지도 + 지도 카드 — 그날 줄로 노선 · 핀을 만든다 */
-function PcRouteMap({ tripId, rows, selectedId, onSelect, onOpenDetail, fitKey }: PcRouteMapProps) {
+function PcRouteMap({
+  tripId,
+  rows,
+  selectedId,
+  onSelect,
+  onOpenDetail,
+  hover,
+  fitKey,
+}: PcRouteMapProps) {
   const flightOf = useFlightTimes(tripId);
   const data = useMemo(() => routeMapOf(buildRouteDay(rows, flightOf)), [rows, flightOf]);
   const shownId = data.stops.some((s) => s.row.item.id === selectedId)
@@ -105,6 +119,9 @@ function PcRouteMap({ tripId, rows, selectedId, onSelect, onOpenDetail, fitKey }
         onSelect={onSelect}
         inset={INSET}
         fitKey={fitKey}
+        hoverId={hover.stopId}
+        hoverLineTo={hover.segTo}
+        onHover={hover.onStop}
       />
       {shownId && (
         <PcMapCard

@@ -10,12 +10,13 @@ import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { cn } from "@/shared/lib/utils";
 import { SplitHandle } from "@/shared/ui/split-handle";
 
-import { mapDayOf, shownOpenId } from "../../lib/focus";
+import { mapDayOf, pcFocusLine, shownOpenId } from "../../lib/focus";
 import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
 import { useEntryScroll } from "../../model/use-entry-scroll";
 import { usePcDayView } from "../../model/use-pc-day-view";
+import { useRouteHover } from "../../model/use-route-hover";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useVisibleDay } from "../../model/use-visible-day";
 import { PcFloatingAdd } from "../floating-add/pc-floating-add";
@@ -28,15 +29,6 @@ import { DayViewToggle } from "./day-view-toggle";
 import { PcMapPane } from "./pc-map-pane";
 import { RailTools } from "./rail-tools";
 import { SplitPresets } from "./split-presets";
-
-/**
- * 스크롤 강조 기준선 = 목록 칸 높이의 40% 지점(가운데보다 조금 위).
- * PC 는 목록이 길게 보여서, 맨 위보다 눈이 머무는 가운데 근처의 장소를 지도에 보인다.
- * 다만 맨 위에서는 120px 에서 시작해 스크롤한 만큼 내려간다 — 처음부터 40% 면 그 위의 첫 행들은
- * 기준선을 지나지 않은 적이 없어서 강조될 수 없다
- */
-const FOCUS_LINE_RATIO = 0.4;
-const FOCUS_LINE_TOP = 120;
 
 type PcScheduleProps = ScheduleLayoutProps & {
   /** 「이어서 / 하루씩」 을 바꾼 직후의 안내 — 화면의 토스트로 띄운다 */
@@ -81,6 +73,7 @@ export function PcSchedule({
   const one = view.mode === "one";
   const shown = one ? sections.slice(day, day + 1) : sections;
   const [openId, setOpenId] = useState<string | null>(null);
+  const hover = useRouteHover();
   const selected = shownOpenId(openId, shown);
   // 고른 장소는 보고 있는 날 안에 있을 때만 지도를 이끈다 — 레일 · 스크롤로 다른 날에 가면 지도는 그 날(강조)을 따르고 카드는 펼친 채 둔다
   const pinned = selected && mapDayOf(sections, selected, -1) === day ? selected : null;
@@ -89,11 +82,7 @@ export function PcSchedule({
   const focus = useScrollFocus({
     scroller: listRef,
     list: contentRef,
-    line: (scrollTop) => {
-      const rect = listRef.current?.getBoundingClientRect();
-      if (!rect) return 0;
-      return rect.top + Math.min(rect.height * FOCUS_LINE_RATIO, scrollTop + FOCUS_LINE_TOP);
-    },
+    line: (scrollTop) => pcFocusLine(listRef.current?.getBoundingClientRect(), scrollTop),
     enabled: !edit.editing,
     // 하루씩은 날짜마다 목록이 바뀌어 강조를 지운다.
     // 이어서는 모든 날짜가 한 목록이라 날짜가 바뀌어도 강조를 지우지 않는다(지도는 강조된 장소의 날, 강조가 없거나 날짜로 이동해 붙잡아 둔 동안은 보고 있는 날의 핀을 그린다)
@@ -178,6 +167,7 @@ export function PcSchedule({
               onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
               focusId={pinned ? null : focus.focusId}
               showPins
+              hover={hover}
               onAddMemo={onAddMemo}
               {...body}
             />
@@ -214,6 +204,7 @@ export function PcSchedule({
         day={day}
         onOpen={body.onOpen}
         selectedId={pinned}
+        hover={hover}
         focusId={focus.focusId}
         holding={holding}
         onPick={(id) => {

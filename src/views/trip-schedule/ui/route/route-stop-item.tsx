@@ -44,6 +44,11 @@ type RouteStopItemProps = {
   focused?: boolean;
   /** PC — 첫 줄 오른쪽 「📍5」 */
   showPin?: boolean;
+  /** PC — 카드에 올렸다 · 내렸다(지도 핀을 키운다) */
+  onHover?: (hovering: boolean) => void;
+  /** PC — 다음 구간을 지도에서 진하게 그리는 중(구간 글자에 올렸다) — 글자에 밑줄 */
+  segHighlight?: boolean;
+  onSegHover?: (hovering: boolean) => void;
   /** 다녀온 일정 — 흐리게, 패스면 상태 칩 자리에 「패스」 */
   past: PastKind | null;
   /** 다음 역을 다녀왔다 — 그리로 가는 구간도 흐리게(들어오는 이동 줄을 함께 흐리던 타임라인과 같다) */
@@ -73,6 +78,9 @@ export function RouteStopItem({
   onToggle,
   focused = false,
   showPin = false,
+  onHover,
+  segHighlight = false,
+  onSegHover,
   past,
   nextPast,
   checklist,
@@ -102,6 +110,7 @@ export function RouteStopItem({
           hovered={focused}
           pinNo={showPin ? row.num : null}
           onClick={onToggle}
+          onHover={onHover}
           expandable
         >
           {hasDetail && (
@@ -119,7 +128,13 @@ export function RouteStopItem({
           )}
         </RouteStop>
       </div>
-      <NextSegment stop={stop} dim={nextPast} onEditMove={onEditMove} />
+      <NextSegment
+        stop={stop}
+        dim={nextPast}
+        onEditMove={onEditMove}
+        highlight={segHighlight}
+        onHover={onSegHover}
+      />
     </li>
   );
 }
@@ -127,10 +142,12 @@ export function RouteStopItem({
 type NextSegmentProps = Pick<RouteStopItemProps, "stop" | "onEditMove"> & {
   /** 다음 역을 다녀왔다 — 흐리게 */
   dim: boolean;
+  highlight: boolean;
+  onHover?: (hovering: boolean) => void;
 };
 
 /** 다음 역까지의 구간 한 줄. 마지막 역은 없다. 글자를 누르면 이동 방법 창(적을 수 있는 쌍만) */
-function NextSegment({ stop, dim, onEditMove }: NextSegmentProps) {
+function NextSegment({ stop, dim, onEditMove, highlight, onHover }: NextSegmentProps) {
   const { row, seg, next } = stop;
   if (!seg || !next) return null;
   const editMove = stop.editable && onEditMove ? () => onEditMove(next) : undefined;
@@ -142,6 +159,8 @@ function NextSegment({ stop, dim, onEditMove }: NextSegmentProps) {
         icon={seg.icon}
         label={segmentLabel(seg)}
         meta={segmentMeta(seg)}
+        highlight={highlight}
+        onHover={onHover}
         onClick={editMove}
         ariaLabel={`${itemName(row.item)} → ${itemName(next.item)} 이동 방법`}
       />
