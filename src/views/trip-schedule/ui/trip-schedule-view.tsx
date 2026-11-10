@@ -21,7 +21,7 @@ import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
 import { useHolidayOf } from "../model/use-holiday-of";
 import { useOpenRequest } from "../model/use-open-request";
-import { useScheduleEntry } from "../model/use-schedule-progress";
+import { useScheduleRecord } from "../model/use-schedule-record";
 import { useScheduleSections } from "../model/use-schedule-sections";
 import { useScheduleVouchers } from "../model/use-schedule-vouchers";
 import { useStaysOverlay } from "../model/use-stays-overlay";
@@ -117,8 +117,8 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     sections,
     isPending,
     jump,
-    // 여행 중이면 다녀온 일정(회색)과 들어갈 때 보여 줄 오늘의 다음 장소
-    ...useScheduleEntry(tripId, trip, items, { items: itemsReady, settled }),
+    // 여행 중이면 다녀온 일정(회색) · 들어갈 때 보여 줄 오늘의 다음 장소 · 「계획 | 기록」(여행 중이면 기록으로 시작)
+    ...useScheduleRecord(tripId, trip, items, { items: itemsReady, settled }),
     onOpen: openCard,
     onEditMove: moveDialog.openFor,
     onAddPlace: add.open,

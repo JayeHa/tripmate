@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { flushSync } from "react-dom";
 
 import type { TimelineRow } from "@/entities/schedule-item";
@@ -15,6 +15,7 @@ import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
 import { useEntryScroll } from "../../model/use-entry-scroll";
+import { useOpenStop } from "../../model/use-open-stop";
 import { usePcDayView } from "../../model/use-pc-day-view";
 import { useRouteHover } from "../../model/use-route-hover";
 import { useScrollFocus } from "../../model/use-scroll-focus";
@@ -24,10 +25,8 @@ import { RouteDayList } from "../route/route-day-list";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { ScrollTopButton } from "../scroll-top-button";
 import { DayPager } from "./day-pager";
-import { DayRail } from "./day-rail";
-import { DayViewToggle } from "./day-view-toggle";
 import { PcMapPane } from "./pc-map-pane";
-import { RailTools } from "./rail-tools";
+import { PcRail } from "./pc-rail";
 import { SplitPresets } from "./split-presets";
 
 type PcScheduleProps = ScheduleLayoutProps & {
@@ -64,6 +63,8 @@ export function PcSchedule({
   stayCount,
   onOpenFlights,
   flightCount,
+  mode,
+  onModeChange,
   ...body
 }: PcScheduleProps) {
   const split = useSplitWidth(SCHEDULE_SPLIT);
@@ -72,9 +73,9 @@ export function PcSchedule({
   const view = usePcDayView(onGuide);
   const one = view.mode === "one";
   const shown = one ? sections.slice(day, day + 1) : sections;
-  const [openId, setOpenId] = useState<string | null>(null);
+  const open = useOpenStop(mode, onModeChange, true);
   const hover = useRouteHover();
-  const selected = shownOpenId(openId, shown);
+  const selected = shownOpenId(open.openId, shown);
   // 고른 장소는 보고 있는 날 안에 있을 때만 지도를 이끈다 — 레일 · 스크롤로 다른 날에 가면 지도는 그 날(강조)을 따르고 카드는 펼친 채 둔다
   const pinned = selected && mapDayOf(sections, selected, -1) === day ? selected : null;
   const listRef = useRef<HTMLDivElement>(null);
@@ -117,31 +118,18 @@ export function PcSchedule({
   return (
     <div className="flex h-[calc(100dvh-var(--shell-top))]">
       {trip && (
-        <DayRail
-          title={trip.title}
-          startDate={trip.start_date}
-          endDate={trip.end_date}
-          // 편집 중에는 레일도 편집할 날을 고른다
-          day={edit.editing ? edit.day : day}
+        <PcRail
+          trip={trip}
+          day={day}
+          edit={edit}
           onChange={pickDay}
-          summaries={trip.day_summaries}
           holidayOf={body.holidayOf}
-          footer={
-            <RailTools
-              stayCount={stayCount}
-              onOpenStays={onOpenStays}
-              flightCount={flightCount}
-              onOpenFlights={onOpenFlights}
-            />
-          }
-        >
-          <DayViewToggle
-            mode={view.mode}
-            onChange={view.setMode}
-            tip={view.tip}
-            onTipDismiss={view.dismissTip}
-          />
-        </DayRail>
+          view={view}
+          onOpenStays={onOpenStays}
+          stayCount={stayCount}
+          onOpenFlights={onOpenFlights}
+          flightCount={flightCount}
+        />
       )}
       {trip && edit.editing && (
         <div className="shrink-0 overflow-y-auto" style={{ width: split.width }}>
@@ -164,7 +152,9 @@ export function PcSchedule({
               sections={shown}
               isPending={isPending}
               openId={selected}
-              onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
+              onToggle={open.toggle}
+              mode={mode}
+              onModeChange={open.changeMode}
               focusId={pinned ? null : focus.focusId}
               showPins
               hover={hover}
@@ -181,11 +171,13 @@ export function PcSchedule({
         </div>
         {/* 「+ 추가」(아래 20 · 높이 48) 위로 12 */}
         <ScrollTopButton target={listRef} className="absolute right-5 bottom-20 z-10" />
-        <PcFloatingAdd
-          onAddPlace={() => body.onAddPlace(day)}
-          onStartEdit={startEditAt(day)}
-          onAddDayMemo={() => body.onAddDayMemo(day)}
-        />
+        {mode === "plan" && (
+          <PcFloatingAdd
+            onAddPlace={() => body.onAddPlace(day)}
+            onStartEdit={startEditAt(day)}
+            onAddDayMemo={() => body.onAddDayMemo(day)}
+          />
+        )}
       </div>
       <SplitHandle
         label="일정 목록 너비 (←/→ 로 조절, Enter 는 기본 너비)"
@@ -209,7 +201,7 @@ export function PcSchedule({
         holding={holding}
         onPick={(id) => {
           // 펼친 뒤의 자리로 옮긴다
-          flushSync(() => setOpenId(id));
+          flushSync(() => open.setOpenId(id));
           focus.focusOn(id);
         }}
         fitKey={fitKey}

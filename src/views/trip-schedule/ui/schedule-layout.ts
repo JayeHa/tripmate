@@ -1,9 +1,10 @@
-import type { MemoAuthor, PastKind, TimelineRow } from "@/entities/schedule-item";
+import type { DayMode, MemoAuthor, PastKind, TimelineRow } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { ScheduleEditState } from "@/features/schedule/edit-mode";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
 import type { ScheduleEntry } from "../model/use-entry-scroll";
+import type { ScheduleRecord } from "../model/use-schedule-record";
 import type { DaySectionData } from "../model/use-schedule-sections";
 
 /** 뷰가 「그 날을 보여 줘」 할 때 레이아웃에 보내는 스크롤 요청. at 이 바뀌면 같은 날이라도 다시 간다 */
@@ -34,6 +35,13 @@ export type ScheduleLayoutProps = {
   /** 들어갈 때 보여 줄 곳(여행 중 · `?day` 없이 들어왔을 때). 처리하면 onEntryDone */
   entry: ScheduleEntry | null;
   onEntryDone: () => void;
+  /** 여행 중 오늘(0-base). 여행 전 · 후는 null */
+  todayIndex: number | null;
+  /** 「계획 | 기록」 — 화면 전체에 하나. 바꾸면 레이아웃이 펼친 카드를 닫는다 */
+  mode: DayMode;
+  onModeChange: (mode: DayMode) => void;
+  /** 기록 모드의 다녀감 */
+  record: ScheduleRecord;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   /** 그 날짜의 「일정 추가」 · 플로팅 — 그 날로 일정 추가 창을 연다 */

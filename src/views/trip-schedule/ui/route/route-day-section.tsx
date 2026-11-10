@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import {
   buildRouteDay,
+  type DayMode,
   type FlightTimes,
   itemCoords,
   type PastKind,
@@ -11,8 +12,10 @@ import {
 } from "@/entities/schedule-item";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
+import { type RecordStop, recordStops } from "../../lib/record";
+import type { ScheduleRecord } from "../../model/use-schedule-record";
 import { RouteDayHeader } from "./route-day-header";
-import { RouteStopItem } from "./route-stop-item";
+import { RouteStopItem, type StopRecord } from "./route-stop-item";
 
 /** PC — 목록 ↔ 지도 올림(hover). 모바일은 없다 */
 export type RouteHover = {
@@ -51,6 +54,10 @@ export type RouteDaySectionProps = {
   onShowMap?: (day: number, id: string) => void;
   checklistOf: (row: TimelineRow) => { count: number; href: string };
   voucherOf: (row: TimelineRow) => { count: number; onOpen: () => void };
+  /** 「계획 | 기록」 — 기록이면 다녀감으로 역 · 선을 칠하고 펼치지 않는다 */
+  mode: DayMode;
+  onModeChange: (mode: DayMode) => void;
+  record: ScheduleRecord;
 };
 
 /**
@@ -77,8 +84,19 @@ export function RouteDaySection({
   onShowMap,
   checklistOf,
   voucherOf,
+  mode,
+  onModeChange,
+  record,
 }: RouteDaySectionProps) {
   const route = useMemo(() => buildRouteDay(rows, flightOf), [rows, flightOf]);
+  const tones =
+    mode === "record"
+      ? recordStops(
+          route.stops.map((s) => ({ id: s.row.item.id, place: s.row.kind === "place" })),
+          record.marks,
+          record.markable(day),
+        )
+      : null;
   return (
     <section data-day-section={day} aria-label={`day ${day + 1}`} className="flex flex-col pb-6">
       <RouteDayHeader
@@ -89,6 +107,9 @@ export function RouteDaySection({
         holiday={holiday}
         weather={weather}
         onOpenNote={onOpen}
+        mode={mode}
+        onModeChange={onModeChange}
+        done={tones?.filter((t) => t.tone === "done").length ?? 0}
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
@@ -119,6 +140,7 @@ export function RouteDaySection({
               onShowMap={onShowMap && (() => onShowMap(day, row.item.id))}
               onOpenNote={onOpen}
               onEditMove={onEditMove}
+              record={tones ? stopRecord(tones, i, record, id) : undefined}
             />
           );
         })}
@@ -138,5 +160,23 @@ function stopHover(hover: RouteHover | undefined, id: string, nextId: string | u
     onHover: (on: boolean) => hover.onStop(on ? id : null),
     segHighlight: !!nextId && hover.segTo === nextId,
     onSegHover: nextId ? (on: boolean) => hover.onSeg(on ? nextId : null) : undefined,
+  };
+}
+
+/** 기록 모드의 역 하나 — 모양 · 앞뒤 구간을 지나왔는지 · 도착 시각 · 패스 · 지금 여기면 「✓ 다녀왔어요」 */
+function stopRecord(
+  tones: RecordStop[],
+  i: number,
+  record: ScheduleRecord,
+  id: string,
+): StopRecord {
+  const { tone, reached } = tones[i];
+  return {
+    tone,
+    inPassed: reached,
+    outPassed: tones[i + 1]?.reached ?? false,
+    markedAt: record.markedAt(id),
+    skipped: record.marks[id] === "skipped",
+    onVisited: tone === "current" ? () => record.markVisited(id) : undefined,
   };
 }

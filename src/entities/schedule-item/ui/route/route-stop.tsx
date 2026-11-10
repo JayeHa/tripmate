@@ -119,7 +119,10 @@ export function RouteStop({
             <StopTitle emoji={emoji} name={name} aside={aside} pinNo={pinNo} selected={selected} />
             {sub && <span className="flex min-w-0 items-center gap-1.5 empty:hidden">{sub}</span>}
           </button>
-          {children && <div className="flex min-w-0 flex-col gap-2 pt-2.25">{children}</div>}
+          {/* 자식 컴포넌트가 아무것도 그리지 않으면 빈 칸도 숨긴다 */}
+          {children && (
+            <div className="flex min-w-0 flex-col gap-2 pt-2.25 empty:hidden">{children}</div>
+          )}
         </div>
       </div>
     </div>

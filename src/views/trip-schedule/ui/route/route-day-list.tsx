@@ -18,6 +18,9 @@ type RouteDaysProps = Pick<
   | "onEditMove"
   | "checklistOf"
   | "voucherOf"
+  | "mode"
+  | "onModeChange"
+  | "record"
 > &
   Pick<
     RouteDaySectionProps,

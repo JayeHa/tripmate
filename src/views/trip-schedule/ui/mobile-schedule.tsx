@@ -12,6 +12,7 @@ import { AppHeader } from "@/shared/ui/app-header";
 
 import { useDayJumps } from "../model/use-day-jumps";
 import { useEntryScroll } from "../model/use-entry-scroll";
+import { useOpenStop } from "../model/use-open-stop";
 import { useVisibleDay } from "../model/use-visible-day";
 import { useWindowScrolled } from "../model/use-window-scrolled";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
@@ -48,13 +49,15 @@ export function MobileSchedule({
   stayCount,
   onOpenFlights,
   flightCount,
+  mode,
+  onModeChange,
   ...body
 }: ScheduleLayoutProps) {
   const scrolled = useWindowScrolled(TITLE_AFTER);
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stickyHeight = useElementHeight(stickyRef);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const open = useOpenStop(mode, onModeChange, false);
   const [map, setMap] = useState<RouteMapTarget | null>(null);
   /** sticky 영역(상단바 + 날짜 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
@@ -139,8 +142,10 @@ export function MobileSchedule({
             trip={trip}
             sections={sections}
             isPending={isPending}
-            openId={openId}
-            onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
+            openId={open.openId}
+            onToggle={open.toggle}
+            mode={mode}
+            onModeChange={open.changeMode}
             onShowMap={(d, id) => setMap({ day: d, focusId: id })}
             {...body}
           />
@@ -163,7 +168,8 @@ export function MobileSchedule({
           className="fixed right-4 bottom-[calc(159px+env(safe-area-inset-bottom))] z-20"
         />
       )}
-      {!edit.editing && (
+      {/* 「+ 추가」 는 계획 모드에서만 */}
+      {!edit.editing && mode === "plan" && (
         <MobileFloatingAdd
           onAddPlace={() => body.onAddPlace(day)}
           onStartEdit={startEditAt(day)}
@@ -180,7 +186,7 @@ export function MobileSchedule({
           rowsOf={(d) => sections[d]?.rows ?? []}
           onShowInList={(id) => {
             // 펼친 뒤의 자리로 옮긴다 — 위에서 접히는 역이 있으면 그만큼 올라온다
-            flushSync(() => setOpenId(id));
+            flushSync(() => open.setOpenId(id));
             scrollToItem(id);
           }}
         />
