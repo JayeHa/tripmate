@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 import {
   durationText,
   itemName,
@@ -12,8 +10,7 @@ import {
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
-/** 고른 카드를 맞추는 왼쪽 자리(카드 줄의 왼쪽 여백과 같다) */
-const CARD_LEFT = 20;
+import { useCardRow } from "../../model/use-card-row";
 
 type MapCardsProps = {
   stops: RouteMapStop[];
@@ -27,17 +24,11 @@ type MapCardsProps = {
 
 /**
  * 동선 지도 아래 시트 — 머리 「13곳 · 대중교통 0분 · 도보 46분」 + 「5 / 13」, 그 아래 장소 카드를 가로로 넘긴다.
- * 고른 카드가 바뀌면(핀 누르기) 그 카드를 왼쪽 20 에 맞춘다
+ * 고른 카드가 바뀌면(핀 누르기) 그 카드를 왼쪽 20 에 맞추고, 손으로 넘겨 멈추면 그 카드를 고른다
  */
 export function MapCards({ stops, selectedId, onSelect, totals, onShowInList }: MapCardsProps) {
-  const rowRef = useRef<HTMLDivElement>(null);
+  const rowRef = useCardRow(selectedId, onSelect);
   const index = stops.findIndex((s) => s.row.item.id === selectedId);
-  useEffect(() => {
-    const row = rowRef.current;
-    const card = row?.querySelector<HTMLElement>(`[data-card="${selectedId}"]`);
-    if (!row || !card) return;
-    row.scrollTo({ left: card.offsetLeft - CARD_LEFT, behavior: "smooth" });
-  }, [selectedId]);
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-10 flex h-75 flex-col rounded-t-[24px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,.12)]">
