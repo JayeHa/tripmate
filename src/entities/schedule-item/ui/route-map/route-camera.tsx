@@ -51,16 +51,18 @@ type RouteCameraProps = {
   inset: MapInset;
   /** 지금 보이는 범위. 지도가 아직 범위를 알리지 않았으면 null */
   view: MapView | null;
+  /** 바뀌면 다시 맞춘다(PC 목록 칸 너비) */
+  fitKey?: unknown;
 };
 
 /**
- * 동선 지도의 카메라. 맞출 점이 바뀌면(날 바꾸기 · 범위 밖 장소 고르기) 다시 맞추고,
+ * 동선 지도의 카메라. 맞출 점이 바뀌면(날 바꾸기 · 범위 밖 장소 고르기) · fitKey 가 바뀌면 다시 맞추고,
  * 그 밖에 고른 장소만 바뀌면 가려진 칸 밖일 때만 줌은 그대로 두고 그쪽으로 옮긴다 — 손으로 옮긴 지도를 함부로 되돌리지 않게
  */
-export function RouteCamera({ points, selected, inset, view }: RouteCameraProps) {
+export function RouteCamera({ points, selected, inset, view, fitKey }: RouteCameraProps) {
   const map = useMap();
   const fitted = useRef<string | null>(null);
-  const pointsKey = keyOf(points);
+  const pointsKey = `${keyOf(points)}#${String(fitKey)}`;
   const selectedKey = selected ? keyOf([selected]) : null;
   useEffect(() => {
     if (!map || points.length === 0) return;

@@ -8,8 +8,8 @@ import type { PlaceCategory } from "../../model/place";
 import { RouteLineBar } from "./route-line";
 import { StopMarker, type StopTone } from "./stop-marker";
 
-/** 카드 테두리 — 지금 여기(초록) · 고른 카드(계획 파랑 · 기록 초록) · 보통 */
-function cardClass(tone: StopTone, selected: boolean): string {
+/** 카드 테두리 — 지금 여기(초록) · 고른 카드(계획 파랑 · 기록 초록) · 올림(PC) · 보통 */
+function cardClass(tone: StopTone, selected: boolean, hovered: boolean): string {
   if (tone === "current") {
     return "border-[1.5px] border-visited shadow-[0_0_0_4px_rgba(16,185,129,.12)]";
   }
@@ -17,6 +17,7 @@ function cardClass(tone: StopTone, selected: boolean): string {
     return "border-route-card-open shadow-[0_0_0_3px_rgba(58,139,255,.12)]";
   }
   if (selected) return "border-visited-line shadow-[0_0_0_3px_rgba(16,185,129,.1)]";
+  if (hovered) return "border-route-card-hover shadow-[0_2px_8px_rgba(0,0,0,.07)]";
   return "border-route-card-line shadow-[0_1px_4px_rgba(0,0,0,.05)]";
 }
 
@@ -40,6 +41,8 @@ type RouteStopProps = {
   outLine: RouteLine | null;
   /** 펼쳤거나 고른 역 — 카드 테두리 */
   selected?: boolean;
+  /** PC — 올린 것처럼 그린다(지도와 맞춘 스크롤 강조) */
+  hovered?: boolean;
   /** PC — 첫 줄 오른쪽 끝 「📍5」(지도 핀 번호) */
   pinNo?: number | null;
   onClick?: () => void;
@@ -68,6 +71,7 @@ export function RouteStop({
   inLine,
   outLine,
   selected = false,
+  hovered = false,
   pinNo = null,
   onClick,
   expandable = false,
@@ -100,7 +104,7 @@ export function RouteStop({
         <div
           className={cn(
             "flex flex-col rounded-card border bg-white px-3.5 py-2.75 transition-[border-color,box-shadow] duration-150",
-            cardClass(tone, selected),
+            cardClass(tone, selected, hovered),
             onHover &&
               !selected &&
               "hover:border-route-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,.07)]",
