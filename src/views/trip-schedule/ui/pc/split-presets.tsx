@@ -15,12 +15,12 @@ type SplitPresetsProps = {
   onSelect: (width: number) => void;
 };
 
-/** 지도 왼쪽 위 「일정 크게 · 반반 · 지도 크게」. 지금 너비에 맞는 것이 잉크색 */
+/** 지도 왼쪽 위 「일정 크게 · 반반 · 지도 크게」(자리는 부른 쪽이 정한다). 지금 너비에 맞는 것이 잉크색 */
 export function SplitPresets({ presets, width, onSelect }: SplitPresetsProps) {
   // 좁은 창에서 두 프리셋이 같은 너비가 돼도 하나만 켜지게, 판정은 한 번만 한다
   const active = activePreset(presets, width);
   return (
-    <div className="absolute top-3 left-3 z-10 flex gap-0.5 rounded-memo bg-white p-0.75 shadow-card">
+    <div className="flex gap-0.5 rounded-memo bg-white p-0.75 shadow-card">
       {presets.map((p) => {
         const Icon = PRESET_ICON[p.key];
         const on = p.key === active;

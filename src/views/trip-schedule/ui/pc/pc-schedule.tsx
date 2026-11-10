@@ -1,15 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
-import { ScheduleMap } from "@/entities/schedule-item";
 import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { cn } from "@/shared/lib/utils";
 import { SplitHandle } from "@/shared/ui/split-handle";
 
-import { mapDayOf } from "../../lib/focus";
 import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
@@ -17,13 +16,14 @@ import { useEntryScroll } from "../../model/use-entry-scroll";
 import { usePcDayView } from "../../model/use-pc-day-view";
 import { useScrollFocus } from "../../model/use-scroll-focus";
 import { useVisibleDay } from "../../model/use-visible-day";
-import { DayList } from "../day-list";
 import { PcFloatingAdd } from "../floating-add/pc-floating-add";
+import { RouteDayList } from "../route/route-day-list";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { ScrollTopButton } from "../scroll-top-button";
 import { DayPager } from "./day-pager";
 import { DayRail } from "./day-rail";
 import { DayViewToggle } from "./day-view-toggle";
+import { PcMapPane } from "./pc-map-pane";
 import { RailTools } from "./rail-tools";
 import { SplitPresets } from "./split-presets";
 
@@ -41,21 +41,17 @@ type PcScheduleProps = ScheduleLayoutProps & {
   onGuide: (text: string, detail: string) => void;
 };
 
-type MapRowsInput = Pick<ScheduleLayoutProps, "edit" | "sections" | "day"> & {
-  focusId: string | null;
-};
-
-/** 지도에 그릴 줄 — 편집 중이면 편집하는 날, 아니면 강조된 장소의 날(없으면 보고 있는 날) */
-function mapRowsOf({ edit, sections, day, focusId }: MapRowsInput) {
-  if (edit.editing) return edit.rows;
-  return sections[mapDayOf(sections, focusId, day)]?.rows ?? [];
+/** 고른 장소가 지금 그린 날짜 안에 있을 때만 그 id(하루씩 보기로 다른 날에 가면 고른 것이 없다) */
+function shownOpenId(openId: string | null, shown: ScheduleLayoutProps["sections"]) {
+  return shown.some((s) => s.rows.some((r) => r.item.id === openId)) ? openId : null;
 }
 
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
  * PC 헤더 아래 화면 높이를 채우고 칸마다 따로 스크롤한다. 모바일 상단바는 그리지 않는다.
- * 목록은 모든 날짜를 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · `?day`)이고,
- * 레일에서 날짜를 누르면 그 날짜로 스크롤한다. 기준선을 지난 장소가 지도에 강조된다.
+ * 목록은 모든 날짜를 노선도(장소 카드)로 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · `?day`)이고,
+ * 레일에서 날짜를 누르면 그 날짜로 스크롤한다. 카드를 누르면 고르고 펼친다(다시 누르면 접고 고른 것이 없다).
+ * 지도는 고른 장소를, 고른 것이 없으면 기준선을 지난 장소를 강조한다. 핀을 누르면 그 카드를 고르고 그리로 스크롤한다.
  * 레일 제목 아래에서 「하루씩」 으로 바꾸면 고른 날짜만 그리고, 목록 끝에 이전 · 다음 날 버튼을 둔다(끝 여백 없음).
  * 편집은 보기와 상관없이 한 날짜다
  */
@@ -83,6 +79,9 @@ export function PcSchedule({
   const fitKey = useDebouncedValue(split.settledWidth, 200);
   const view = usePcDayView(onGuide);
   const one = view.mode === "one";
+  const shown = one ? sections.slice(day, day + 1) : sections;
+  const [openId, setOpenId] = useState<string | null>(null);
+  const selected = shownOpenId(openId, shown);
   const listRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const focus = useScrollFocus({
@@ -169,13 +168,14 @@ export function PcSchedule({
         <div ref={listRef} className="h-full overflow-y-auto">
           {/* 내용 높이를 따라 변하는 감싸개. 끝 여백은 칸 높이의 %라 밖에 둔다 */}
           <div ref={contentRef}>
-            <DayList
+            <RouteDayList
               trip={trip}
-              sections={one ? sections.slice(day, day + 1) : sections}
+              sections={shown}
               isPending={isPending}
-              startEditAt={startEditAt}
-              showCounts
+              openId={selected}
+              onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
               focusId={focus.focusId}
+              showPins
               {...body}
             />
           </div>
@@ -204,20 +204,28 @@ export function PcSchedule({
         onKeyDown={split.onKeyDown}
         onReset={split.reset}
       />
-      <div className="relative min-w-80 flex-1">
-        <ScheduleMap
-          rows={mapRowsOf({ edit, sections, day, focusId: holding ? null : focus.focusId })}
-          focusId={edit.editing ? null : focus.focusId}
-          onSelect={edit.editing ? undefined : (row) => focus.focusOn(row.item.id)}
-          pinSize="lg"
-          fitKey={fitKey}
-        />
-        <SplitPresets
-          presets={splitPresets(split.viewport)}
-          width={split.width}
-          onSelect={split.setWidth}
-        />
-      </div>
+      <PcMapPane
+        trip={trip}
+        edit={edit}
+        sections={sections}
+        day={day}
+        selectedId={selected}
+        focusId={focus.focusId}
+        holding={holding}
+        onPick={(id) => {
+          // 펼친 뒤의 자리로 옮긴다
+          flushSync(() => setOpenId(id));
+          focus.focusOn(id);
+        }}
+        fitKey={fitKey}
+        presets={
+          <SplitPresets
+            presets={splitPresets(split.viewport)}
+            width={split.width}
+            onSelect={split.setWidth}
+          />
+        }
+      />
     </div>
   );
 }

@@ -30,6 +30,8 @@ type RouteMapProps = {
   onSelect: (id: string) => void;
   /** 지도 위를 덮는 칸 — 맞추기 · 범위 밖 핀을 이 칸 밖(보이는 곳)에 둔다 */
   inset: MapInset;
+  /** 바뀌면 핀을 다시 맞춘다(PC 목록 칸 너비) */
+  fitKey?: unknown;
   className?: string;
 };
 
@@ -39,7 +41,7 @@ type RouteMapProps = {
  * 보이는 칸 가장자리에 핀을 붙여 「나리타 · 58km 밖」 을 단다. 누르면 고르고 그곳까지 보이게 넓힌다.
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다
  */
-export function RouteMap({ data, selectedId, onSelect, inset, className }: RouteMapProps) {
+export function RouteMap({ data, selectedId, onSelect, inset, fitKey, className }: RouteMapProps) {
   const [view, setView] = useState<MapView | null>(null);
   const selectedPin = data.pins.find((p) => selectedId !== null && p.ids.includes(selectedId));
   const points = data.pins.filter((p) => p.offKm === null || p === selectedPin).map((p) => p.at);
@@ -86,6 +88,7 @@ export function RouteMap({ data, selectedId, onSelect, inset, className }: Route
             selected={selectedPin?.at ?? null}
             inset={inset}
             view={view}
+            fitKey={fitKey}
           />
         </Map>
       </MapGuard>

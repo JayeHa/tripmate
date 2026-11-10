@@ -19,12 +19,14 @@ type RouteDaysProps = Pick<
   | "checklistOf"
   | "voucherOf"
 > &
-  Pick<RouteDaySectionProps, "openId" | "onToggle" | "onShowMap"> & { trip: Trip };
+  Pick<RouteDaySectionProps, "openId" | "onToggle" | "onShowMap" | "focusId" | "showPins"> & {
+    trip: Trip;
+  };
 
 type RouteDayListProps = Omit<RouteDaysProps, "trip"> &
   Pick<ScheduleLayoutProps, "trip" | "isPending">;
 
-/** 모바일 노선도 — 일정 · 여행을 읽는 동안은 자리 표시만 */
+/** 노선도 목록(모바일 · PC) — 일정 · 여행을 읽는 동안은 자리 표시만 */
 export function RouteDayList({ trip, isPending, ...rest }: RouteDayListProps) {
   if (isPending || !trip) {
     return (

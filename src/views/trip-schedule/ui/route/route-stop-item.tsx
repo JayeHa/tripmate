@@ -40,6 +40,10 @@ type RouteStopItemProps = {
   prevAt: LatLng | null;
   open: boolean;
   onToggle: () => void;
+  /** PC — 스크롤 기준선을 지나 지도에 강조된 장소(고른 것이 없을 때). 카드를 올린 모양으로 */
+  focused?: boolean;
+  /** PC — 첫 줄 오른쪽 「📍5」 */
+  showPin?: boolean;
   /** 다녀온 일정 — 흐리게, 패스면 상태 칩 자리에 「패스」 */
   past: PastKind | null;
   /** 다음 역을 다녀왔다 — 그리로 가는 구간도 흐리게(들어오는 이동 줄을 함께 흐리던 타임라인과 같다) */
@@ -47,7 +51,8 @@ type RouteStopItemProps = {
   checklist?: { count: number; href: string };
   vouchers?: { count: number; onOpen: () => void };
   onOpenDetail: () => void;
-  onShowMap: () => void;
+  /** 「🗺 지도에서」. PC 는 없다 */
+  onShowMap?: () => void;
   onOpenNote: (note: TimelineRow) => void;
   /** 구간 글자 — 다음 줄로 이동 방법 창. 없으면 눌러도 아무 일 없다 */
   onEditMove?: (next: TimelineRow) => void;
@@ -55,7 +60,8 @@ type RouteStopItemProps = {
 
 /**
  * 노선도의 역(장소 카드) 하나와 다음 역까지의 구간. 카드를 누르면 카드 안을 펼치고(메모 · 상세 · 길찾기 · 지도에서),
- * 구간 글자를 누르면 이동 방법 창. `id="item-…"` 로 화면이 그 줄을 찾아 스크롤한다
+ * 구간 글자를 누르면 이동 방법 창. `id="item-…"` 로 화면이 그 줄을 찾아 스크롤하고,
+ * 지도 핀이 있는 역에는 `data-focus-id` 를 단다(PC 스크롤 강조가 기준선을 지난 역을 찾는다)
  */
 export function RouteStopItem({
   stop,
@@ -63,6 +69,8 @@ export function RouteStopItem({
   prevAt,
   open,
   onToggle,
+  focused = false,
+  showPin = false,
   past,
   nextPast,
   checklist,
@@ -72,11 +80,10 @@ export function RouteStopItem({
   onOpenNote,
   onEditMove,
 }: RouteStopItemProps) {
-  const { row, seg, next } = stop;
+  const { row, seg } = stop;
   const hasDetail = open || stop.notes.length > 0 || row.hoursOff;
-  const editMove = stop.editable && next && onEditMove ? () => onEditMove(next) : undefined;
   return (
-    <li id={`item-${row.item.id}`}>
+    <li id={`item-${row.item.id}`} data-focus-id={row.num !== null ? row.item.id : undefined}>
       <div className={cn(past && PAST)}>
         <RouteStop
           time={row.time}
@@ -89,6 +96,8 @@ export function RouteStopItem({
           inLine={inSeg && routeLineStyle(inSeg.mode, "plan")}
           outLine={seg && routeLineStyle(seg.mode, "plan")}
           selected={open}
+          hovered={focused}
+          pinNo={showPin ? row.num : null}
           onClick={onToggle}
           expandable
         >
@@ -106,20 +115,33 @@ export function RouteStopItem({
           )}
         </RouteStop>
       </div>
-      {seg && next && (
-        <div className={cn(nextPast && PAST)}>
-          <RouteSegmentRow
-            tone="plan"
-            line={routeLineStyle(seg.mode, "plan")}
-            icon={seg.icon}
-            label={segmentLabel(seg)}
-            meta={segmentMeta(seg)}
-            onClick={editMove}
-            ariaLabel={`${itemName(row.item)} → ${itemName(next.item)} 이동 방법`}
-          />
-        </div>
-      )}
+      <NextSegment stop={stop} dim={nextPast} onEditMove={onEditMove} />
     </li>
+  );
+}
+
+type NextSegmentProps = Pick<RouteStopItemProps, "stop" | "onEditMove"> & {
+  /** 다음 역을 다녀왔다 — 흐리게 */
+  dim: boolean;
+};
+
+/** 다음 역까지의 구간 한 줄. 마지막 역은 없다. 글자를 누르면 이동 방법 창(적을 수 있는 쌍만) */
+function NextSegment({ stop, dim, onEditMove }: NextSegmentProps) {
+  const { row, seg, next } = stop;
+  if (!seg || !next) return null;
+  const editMove = stop.editable && onEditMove ? () => onEditMove(next) : undefined;
+  return (
+    <div className={cn(dim && PAST)}>
+      <RouteSegmentRow
+        tone="plan"
+        line={routeLineStyle(seg.mode, "plan")}
+        icon={seg.icon}
+        label={segmentLabel(seg)}
+        meta={segmentMeta(seg)}
+        onClick={editMove}
+        ariaLabel={`${itemName(row.item)} → ${itemName(next.item)} 이동 방법`}
+      />
+    </div>
   );
 }
 

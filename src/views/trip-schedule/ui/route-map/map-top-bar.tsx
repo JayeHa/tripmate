@@ -7,6 +7,8 @@ import { dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import { DialogClose, DialogTitle } from "@/shared/ui/dialog";
 
+import { RouteLegend } from "./route-legend";
+
 /** 위 칸의 그림자 — ‹ · 제목 */
 const FLOAT = "bg-white shadow-[0_2px_8px_rgba(0,0,0,.14)]";
 
@@ -53,16 +55,7 @@ export function MapTopBar({ ref, startDate, totalDays, day, onDayChange }: MapTo
         </DialogTitle>
       </div>
       <MapDayChips totalDays={totalDays} day={day} onDayChange={onDayChange} />
-      <div className="mx-4 flex w-max gap-3 rounded-memo bg-white/92 px-2.5 py-1.75 text-[11px] font-bold text-ink-700 shadow-[0_1px_4px_rgba(0,0,0,.1)]">
-        <span className="flex items-center gap-1.25">
-          <span aria-hidden="true" className="h-1 w-4.5 rounded-full bg-route-stop" />
-          전철·버스
-        </span>
-        <span className="flex items-center gap-1.25">
-          <span aria-hidden="true" className="w-4.5 border-t-3 border-dotted border-[#7D8590]" />
-          도보
-        </span>
-      </div>
+      <RouteLegend className="mx-4 bg-white/92 px-2.5 py-1.75 text-[11px]" />
     </div>
   );
 }

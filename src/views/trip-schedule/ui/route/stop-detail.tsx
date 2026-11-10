@@ -21,8 +21,8 @@ type StopDetailProps = {
   checklist?: { count: number; href: string };
   vouchers?: { count: number; onOpen: () => void };
   onOpenDetail: () => void;
-  /** 「🗺 지도에서」 — 좌표가 있는 장소만 */
-  onShowMap: () => void;
+  /** 「🗺 지도에서」 — 좌표가 있는 장소만. 없으면 버튼이 없다(PC 는 지도가 옆에 있다) */
+  onShowMap?: () => void;
   /** 날짜 메모를 눌렀다 — 시간 · 메모 창 */
   onOpenNote: (note: TimelineRow) => void;
 };
@@ -81,7 +81,7 @@ export function StopDetail({
                 길찾기
               </a>
             )}
-            {here && (
+            {here && onShowMap && (
               <button
                 type="button"
                 onClick={onShowMap}
