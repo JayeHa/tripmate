@@ -57,7 +57,11 @@ export function MobileSchedule({
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stickyHeight = useElementHeight(stickyRef);
-  const open = useOpenStop(mode, onModeChange, false);
+  // 기록 모드에서 카드를 누르면 일정 상세 — 펼치지 않는다
+  const open = useOpenStop(mode, onModeChange, (id) => {
+    const row = sections.flatMap((s) => s.rows).find((r) => r.item.id === id);
+    if (row) body.onOpen(row);
+  });
   const [map, setMap] = useState<RouteMapTarget | null>(null);
   /** sticky 영역(상단바 + 날짜 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;

@@ -73,7 +73,7 @@ export function PcSchedule({
   const view = usePcDayView(onGuide);
   const one = view.mode === "one";
   const shown = one ? sections.slice(day, day + 1) : sections;
-  const open = useOpenStop(mode, onModeChange, true);
+  const open = useOpenStop(mode, onModeChange);
   const hover = useRouteHover();
   const selected = shownOpenId(open.openId, shown);
   // 고른 장소는 보고 있는 날 안에 있을 때만 지도를 이끈다 — 레일 · 스크롤로 다른 날에 가면 지도는 그 날(강조)을 따르고 카드는 펼친 채 둔다
