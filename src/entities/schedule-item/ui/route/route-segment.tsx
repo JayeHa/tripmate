@@ -58,7 +58,8 @@ export function RouteSegmentRow({
           disabled={!onClick}
           onPointerEnter={onHover && (() => onHover(true))}
           onPointerLeave={onHover && (() => onHover(false))}
-          aria-label={ariaLabel ? `${ariaLabel} · ${label}` : undefined}
+          // 이름을 따로 주면 안의 글자 대신 읽히므로 출발 시각 · 상세까지 함께 넣는다
+          aria-label={ariaLabel ? [ariaLabel, label, meta].filter(Boolean).join(" · ") : undefined}
           className="flex min-w-0 items-center gap-1.25 pl-3 text-left text-xs whitespace-nowrap"
         >
           <span aria-hidden="true">{icon}</span>
