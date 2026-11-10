@@ -23,7 +23,7 @@ type PcMapCardProps = {
   onOpenDetail: (row: TimelineRow) => void;
   /** 기록 모드의 모양 — 번호를 다녀감 색으로. 계획 모드 · 항공편은 null */
   tone?: MapRecordTone | null;
-  /** 기록 모드에서 「✓ 다녀왔어요」 를 둘 장소면 — 「상세 ›」 자리에 */
+  /** 기록 모드에서 「✓ 다녀왔어요」 를 둘 장소면 — 「상세 ›」 오른쪽에 */
   onVisited?: () => void;
 };
 
@@ -41,7 +41,7 @@ const STEP =
 /**
  * PC 지도 왼쪽 아래 카드(400 · r16). 번호 36(핀 색) · 「day 1 · 2번째 · 12:10」 + 예약 상태 · 이름 · 「카테고리 · 설명」 ·
  * 오른쪽 길찾기(직전 장소 → 이 장소 대중교통). 아래 줄 ‹ 「2 / 8」 › 로 그날 앞뒤 장소를 고르고, 「상세 ›」 로 일정 상세.
- * 기록 모드는 번호를 다녀감 색으로 칠하고, 「✓ 다녀왔어요」 를 둘 장소면 「상세 ›」 대신 그 버튼
+ * 기록 모드는 번호를 다녀감 색으로 칠하고, 「✓ 다녀왔어요」 를 둘 장소면 「상세 ›」 오른쪽에 그 버튼(상세는 남긴다 — 기록 모드 PC 는 상세를 여기서만 연다)
  */
 export function PcMapCard({
   stops,
@@ -116,21 +116,20 @@ export function PcMapCard({
         >
           <ChevronRight className="size-4" aria-hidden="true" />
         </button>
-        {onVisited ? (
+        <button
+          type="button"
+          onClick={() => onOpenDetail(row)}
+          className="ml-auto flex h-8.5 items-center rounded-button border border-line px-3 text-[13px] font-bold text-ink-900"
+        >
+          상세 ›
+        </button>
+        {onVisited && (
           <button
             type="button"
             onClick={onVisited}
-            className="ml-auto flex h-8.5 items-center rounded-button bg-visited px-3 text-[13px] font-extrabold text-white"
+            className="flex h-8.5 items-center rounded-button bg-visited px-3 text-[13px] font-extrabold text-white"
           >
             ✓ 다녀왔어요
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onOpenDetail(row)}
-            className="ml-auto flex h-8.5 items-center rounded-button border border-line px-3 text-[13px] font-bold text-ink-900"
-          >
-            상세 ›
           </button>
         )}
       </div>
