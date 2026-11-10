@@ -110,14 +110,17 @@ export function RouteStop({
               "hover:border-route-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,.07)]",
           )}
         >
+          {/* 폭을 정해 둔다 — iOS Safari 는 세로 flex 안의 button 을 늘이지 않고 내용 폭으로 그려 긴 이름이 말줄임 없이 카드 밖으로 넘친다 */}
           <button
             type="button"
             onClick={onClick}
             aria-expanded={expandable ? selected : undefined}
-            className="flex min-w-0 flex-col gap-1.25 text-left"
+            className="flex w-full min-w-0 flex-col gap-1.25 text-left"
           >
             <StopTitle emoji={emoji} name={name} aside={aside} pinNo={pinNo} selected={selected} />
-            {sub && <span className="flex min-w-0 items-center gap-1.5 empty:hidden">{sub}</span>}
+            {sub && (
+              <span className="flex w-full min-w-0 items-center gap-1.5 empty:hidden">{sub}</span>
+            )}
           </button>
           {/* 자식 컴포넌트가 아무것도 그리지 않으면 빈 칸도 숨긴다 */}
           {children && (
@@ -134,7 +137,7 @@ type StopTitleProps = Pick<RouteStopProps, "emoji" | "name" | "aside" | "pinNo" 
 /** 카드 첫 줄 — 이모지 15 + 이름 15/800(말줄임), 오른쪽 끝에 「지금 여기」 · PC 「📍5」 */
 function StopTitle({ emoji, name, aside, pinNo = null, selected = false }: StopTitleProps) {
   return (
-    <span className="flex min-w-0 items-center gap-1.5">
+    <span className="flex w-full min-w-0 items-center gap-1.5">
       {emoji && <span className="shrink-0 text-[15px]">{emoji}</span>}
       <span className="truncate text-[15px] font-extrabold text-[#111]">{name}</span>
       {aside && <span className="ml-auto shrink-0">{aside}</span>}

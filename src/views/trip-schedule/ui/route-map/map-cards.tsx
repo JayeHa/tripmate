@@ -101,11 +101,12 @@ function MapCard({ stop, selected, onSelect, onShowInList, tone }: MapCardProps)
         selected ? "border-2 border-[#111]" : "border border-[#E8EAED]",
       )}
     >
+      {/* 폭을 정해 둔다 — iOS Safari 는 세로 flex 안의 button 을 내용 폭으로 그려 긴 설명이 말줄임 없이 카드 밖으로 넘친다 */}
       <button
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        className="flex min-w-0 flex-col gap-2 text-left"
+        className="flex w-full min-w-0 flex-col gap-2 text-left"
       >
         <span className="flex items-center gap-2">
           <MapPin num={stop.num} size="sm" status={row.status} category={null} record={tone} />
