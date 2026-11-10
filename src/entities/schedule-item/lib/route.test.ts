@@ -7,6 +7,7 @@ import {
   routeLineStyle,
   routeTotals,
   segmentChip,
+  segmentLabel,
   segmentMeta,
 } from "./route";
 
@@ -48,13 +49,22 @@ describe("placeSegment", () => {
     });
     expect(seg).toMatchObject({ mode: "transit", icon: "🚌", estimated: false, modeName: "버스" });
     expect(segmentChip(seg)).toBe("🚌 1시간 45분");
-    expect(segmentMeta(seg)).toBe("버스 · 10:25 출발 · TYO-NRT 긴자행 · 1,500엔");
+    expect(segmentLabel(seg)).toBe("버스 1시간 45분");
+    expect(segmentMeta(seg)).toBe("10:25 출발 · TYO-NRT 긴자행 · 1,500엔");
   });
 
-  it("도보로 적으면 먼 거리도 도보 식(13분/km)이고 옆 글자는 없다", () => {
+  it("도보로 적으면 먼 거리도 도보 식(13분/km), 10분 넘는 도보는 출발 시각을 적는다", () => {
     const seg = placeSegment(TOKYO_STATION, SKYTREE, "10:00", { mode: "walk", detail: null });
     expect(seg).toMatchObject({ mode: "walk", minutes: 66, estimated: false });
-    expect(segmentMeta(seg)).toBe("");
+    expect(segmentLabel(seg)).toBe("도보 1시간 6분");
+    expect(segmentMeta(seg)).toBe("08:54 출발");
+  });
+
+  it("10분 이하 도보는 출발 시각을 빼고 상세만, 추정이면 「약」", () => {
+    const seg = placeSegment(TOKYO_STATION, NEAR, "10:00", { mode: null, detail: "A3 출구" });
+    expect(seg).toMatchObject({ mode: "walk", estimated: true });
+    expect(segmentLabel(seg)).toMatch(/^도보 약 \d+분$/);
+    expect(segmentMeta(seg)).toBe("A3 출구");
   });
 
   it("장소 사이에 항공을 적으면 시간을 모른다 — 파선만, 칩 · 옆 글자 없음", () => {
@@ -62,6 +72,7 @@ describe("placeSegment", () => {
     const seg = placeSegment(TOKYO_STATION, fukuoka, "12:00", { mode: "flight", detail: null });
     expect(seg).toMatchObject({ mode: "flight", minutes: null, depTime: null });
     expect(segmentChip(seg)).toBeNull();
+    expect(segmentLabel(seg)).toBeNull();
     expect(segmentMeta(seg)).toBe("");
     expect(routeLineStyle(seg.mode, "plan").style).toBe("dashed");
   });
@@ -89,7 +100,8 @@ describe("flightSegment", () => {
     });
     expect(seg).toMatchObject({ mode: "flight", minutes: 145, depTime: "07:15" });
     expect(segmentChip(seg)).toBe("✈️ 2시간 25분");
-    expect(segmentMeta(seg)).toBe("비행 · 07:15 출발");
+    expect(segmentLabel(seg)).toBe("비행 2시간 25분");
+    expect(segmentMeta(seg)).toBe("07:15 출발");
     expect(
       flightSegment({
         dep_date: "2026-11-04",
@@ -114,11 +126,11 @@ describe("durationText", () => {
 describe("routeLineStyle", () => {
   it("계획은 수단 색 · 목록 굵기, 지도는 굵기와 도보 색이 다르다", () => {
     expect(routeLineStyle("transit", "plan")).toEqual({
-      width: 8,
+      width: 3,
       style: "solid",
       color: "#3A8BFF",
     });
-    expect(routeLineStyle("walk", "plan")).toEqual({ width: 4, style: "dotted", color: "#A0A7B1" });
+    expect(routeLineStyle("walk", "plan")).toEqual({ width: 2, style: "dotted", color: "#A0A7B1" });
     expect(routeLineStyle("walk", "plan", { onMap: true })).toEqual({
       width: 3,
       style: "dotted",
@@ -128,7 +140,7 @@ describe("routeLineStyle", () => {
   });
 
   it("기록 모드는 선 종류를 두고 색만 — 지나온 초록, 남은 연회색", () => {
-    expect(routeLineStyle("walk", "done")).toEqual({ width: 4, style: "dotted", color: "#10B981" });
+    expect(routeLineStyle("walk", "done")).toEqual({ width: 2, style: "dotted", color: "#10B981" });
     expect(routeLineStyle("transit", "todo").color).toBe("#DDE1E6");
     expect(routeLineStyle("walk", "todo").color).toBe("#D7DCE2");
     expect(routeLineStyle("transit", "todo", { onMap: true }).color).toBe("#C9CDD2");

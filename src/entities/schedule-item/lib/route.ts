@@ -163,16 +163,26 @@ export function durationText(minutes: number): string {
   return m ? `${h}시간 ${m}분` : `${h}시간`;
 }
 
-/** 이동 칩 글자 「🚌 1시간 15분」 · 추정이면 「🚇 약 15분」. 칩이 없는 구간(좌표 없음 · 같은 자리)은 null */
+/** 동선 지도 카드의 들어오는 이동 「🚌 1시간 15분」 · 추정이면 「🚇 약 15분」. 글자 없는 구간(좌표 없음 · 같은 자리)은 null */
 export function segmentChip(seg: RouteSegment): string | null {
   if (seg.mode === "none" || seg.minutes === null) return null;
   return `${seg.icon} ${seg.estimated ? "약 " : ""}${durationText(seg.minutes)}`;
 }
 
-/** 칩 옆 회색 글자 「버스 · 10:55 출발 · TYO-NRT 긴자행」. 도보 · 칩 없는 구간은 "" */
+/** 짧은 도보는 출발 시각을 적지 않는다(이 분 이하) */
+const SHORT_WALK = 10;
+
+/** 노선도 구간 글자의 진한 앞부분 「버스 1시간 15분」 · 추정이면 「대중교통 약 15분」. 글자 없는 구간(좌표 없음 · 같은 자리)은 null */
+export function segmentLabel(seg: RouteSegment): string | null {
+  if (seg.mode === "none" || seg.minutes === null) return null;
+  return `${seg.modeName} ${seg.estimated ? "약 " : ""}${durationText(seg.minutes)}`;
+}
+
+/** 구간 글자의 옅은 뒷부분 「10:55 출발 · TYO-NRT 긴자행」. 10분 이하 도보는 출발 시각을 빼고, 글자 없는 구간은 "" */
 export function segmentMeta(seg: RouteSegment): string {
-  if (seg.mode === "walk" || segmentChip(seg) === null) return "";
-  return [seg.modeName, seg.depTime && `${seg.depTime} 출발`, seg.detail]
+  if (segmentLabel(seg) === null) return "";
+  const shortWalk = seg.mode === "walk" && (seg.minutes ?? 0) <= SHORT_WALK;
+  return [!shortWalk && seg.depTime && `${seg.depTime} 출발`, seg.detail]
     .filter(Boolean)
     .join(" · ");
 }
@@ -185,9 +195,9 @@ const LINE: Record<
   RouteMode,
   { style: RouteLine["style"]; list: number; map: number; color: string; mapColor: string }
 > = {
-  transit: { style: "solid", list: 8, map: 4, color: "#3A8BFF", mapColor: "#3A8BFF" },
-  walk: { style: "dotted", list: 4, map: 3, color: "#A0A7B1", mapColor: "#7D8590" },
-  flight: { style: "dashed", list: 3, map: 3, color: "#222222", mapColor: "#222222" },
+  transit: { style: "solid", list: 3, map: 4, color: "#3A8BFF", mapColor: "#3A8BFF" },
+  walk: { style: "dotted", list: 2, map: 3, color: "#A0A7B1", mapColor: "#7D8590" },
+  flight: { style: "dashed", list: 2, map: 3, color: "#222222", mapColor: "#222222" },
   none: { style: "solid", list: 2, map: 2, color: "#E3E5E8", mapColor: "#E3E5E8" },
 };
 

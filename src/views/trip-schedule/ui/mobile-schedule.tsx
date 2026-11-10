@@ -132,7 +132,7 @@ export function MobileSchedule({
           />
         )}
       </div>
-      <main className="flex flex-1 flex-col">
+      <main className="flex flex-1 flex-col bg-surface-sunken">
         {/* 내용 높이를 따라 변하는 감싸개. main 은 flex-1 로 늘어나 내용이 짧으면 크기가 그대로다 */}
         <div ref={listRef} className="flex flex-col">
           <RouteDayList

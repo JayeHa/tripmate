@@ -51,7 +51,7 @@ export function StopDetail({
           type="button"
           key={note.item.id}
           onClick={() => onOpenNote(note)}
-          className="rounded-memo bg-route-note-bg px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-note"
+          className="rounded-button bg-route-note-bg px-2.5 py-1.75 text-left text-xs/[1.45] whitespace-pre-line text-route-note"
         >
           ⚠ {itemName(note.item)}
         </button>
@@ -85,7 +85,7 @@ export function StopDetail({
               <button
                 type="button"
                 onClick={onShowMap}
-                className="flex h-8 items-center rounded-full bg-ink-900 px-3 text-[13px] font-bold text-white"
+                className="flex h-7.5 items-center rounded-full bg-[#111] px-3 text-[13px] font-bold text-white"
               >
                 🗺 지도에서
               </button>
@@ -97,18 +97,18 @@ export function StopDetail({
   );
 }
 
-/** 펼침 버튼 — 32 · r16 · 1px 회색 테두리 · 13/700 */
+/** 펼침 버튼 — 30 · r15 · 1px 회색 테두리 · 13/700 */
 const OUTLINE =
-  "flex h-8 items-center rounded-full border border-line bg-white px-3 text-[13px] font-bold text-ink-900";
+  "flex h-7.5 items-center rounded-full border border-line bg-white px-3 text-[13px] font-bold text-ink-900";
 
 type MemoBoxProps = { row: RouteStopData["row"] };
 
-/** 메모 상자(#F7F8FA · r12) — 메모마다 한 줄, 영업하는 날은 운영시간. 아무것도 없으면 「메모가 없어요」 */
+/** 메모 상자(#F7F8FA · r10) — 메모마다 한 줄, 영업하는 날은 운영시간. 아무것도 없으면 「메모가 없어요」 */
 function MemoBox({ row }: MemoBoxProps) {
   const hours = row.hours && !row.hoursOff ? row.hours : null;
   const empty = row.memos.length === 0 && !hours;
   return (
-    <div className="flex flex-col gap-1.25 rounded-card bg-surface-sunken px-3 py-2.5">
+    <div className="flex flex-col gap-1.25 rounded-memo bg-surface-sunken px-3 py-2.5">
       {row.memos.map((memo) => (
         <p key={memo.id} className="text-[13px]/[1.45] whitespace-pre-line text-ink-700">
           {memo.starred ? "★ " : "· "}
