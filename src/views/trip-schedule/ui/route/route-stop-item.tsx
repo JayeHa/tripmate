@@ -51,6 +51,8 @@ type RouteStopItemProps = {
   checklist?: { count: number; href: string };
   vouchers?: { count: number; onOpen: () => void };
   onOpenDetail: () => void;
+  /** 「+ 메모」. 모바일은 없다 */
+  onAddMemo?: () => void;
   /** 「🗺 지도에서」. PC 는 없다 */
   onShowMap?: () => void;
   onOpenNote: (note: TimelineRow) => void;
@@ -76,6 +78,7 @@ export function RouteStopItem({
   checklist,
   vouchers,
   onOpenDetail,
+  onAddMemo,
   onShowMap,
   onOpenNote,
   onEditMove,
@@ -109,6 +112,7 @@ export function RouteStopItem({
               checklist={checklist}
               vouchers={vouchers}
               onOpenDetail={onOpenDetail}
+              onAddMemo={onAddMemo}
               onShowMap={onShowMap}
               onOpenNote={onOpenNote}
             />

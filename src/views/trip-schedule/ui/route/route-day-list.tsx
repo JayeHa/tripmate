@@ -19,7 +19,10 @@ type RouteDaysProps = Pick<
   | "checklistOf"
   | "voucherOf"
 > &
-  Pick<RouteDaySectionProps, "openId" | "onToggle" | "onShowMap" | "focusId" | "showPins"> & {
+  Pick<
+    RouteDaySectionProps,
+    "openId" | "onToggle" | "onShowMap" | "onAddMemo" | "focusId" | "showPins"
+  > & {
     trip: Trip;
   };
 

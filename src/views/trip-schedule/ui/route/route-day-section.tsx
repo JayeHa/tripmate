@@ -33,6 +33,8 @@ export type RouteDaySectionProps = {
   past: ReadonlyMap<string, PastKind>;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
+  /** PC — 펼친 카드의 「+ 메모」. 모바일은 상세에서 메모를 쓴다 */
+  onAddMemo?: (row: TimelineRow) => void;
   /** 「🗺 지도에서」 — 그날 지도에서 그 장소를 고른 채로. PC 는 없다(지도가 옆에 있다) */
   onShowMap?: (day: number, id: string) => void;
   checklistOf: (row: TimelineRow) => { count: number; href: string };
@@ -58,6 +60,7 @@ export function RouteDaySection({
   past,
   onOpen,
   onEditMove,
+  onAddMemo,
   onShowMap,
   checklistOf,
   voucherOf,
@@ -96,6 +99,7 @@ export function RouteDaySection({
               checklist={checklistOf(row)}
               vouchers={voucherOf(row)}
               onOpenDetail={() => onOpen(row)}
+              onAddMemo={onAddMemo && (() => onAddMemo(row))}
               onShowMap={onShowMap && (() => onShowMap(day, row.item.id))}
               onOpenNote={onOpen}
               onEditMove={onEditMove}

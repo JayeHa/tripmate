@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapDayOf, pickFocus, pickVisibleDay, pinScrollTarget } from "./focus";
+import { mapDayOf, pickFocus, pickVisibleDay, pinScrollTarget, shownOpenId } from "./focus";
 
 const rows = [
   { id: "a", top: 100 },
@@ -79,5 +79,21 @@ describe("mapDayOf", () => {
   it("강조가 없거나 어느 날에도 없으면 보고 있는 날", () => {
     expect(mapDayOf(sections, null, 0)).toBe(0);
     expect(mapDayOf(sections, "gone", 1)).toBe(1);
+  });
+});
+
+describe("shownOpenId", () => {
+  const shown = [{ day: 1, rows: [{ item: { id: "x" } }] }];
+
+  it("그린 날짜 안에 있으면 그 id", () => {
+    expect(shownOpenId("x", shown)).toBe("x");
+  });
+
+  it("그린 날짜에 없으면 null", () => {
+    expect(shownOpenId("y", shown)).toBeNull();
+  });
+
+  it("고른 것이 없으면 null", () => {
+    expect(shownOpenId(null, shown)).toBeNull();
   });
 });

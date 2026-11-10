@@ -35,6 +35,8 @@ export function useDetailOverlays() {
     openPlaceEdit: (place: Place, city: City | null) => setPlaceEdit({ place, city }),
     openAltAdd: (main: ScheduleItem, city: City | null) => setAltAdd({ main, city }),
     openMemo: (row: TimelineRow, target: Memo | null) => setMemo({ row, memo: target }),
+    /** 그 장소에 새 메모(PC 펼친 카드의 「+ 메모」) */
+    addMemo: (row: TimelineRow) => setMemo({ row, memo: null }),
     closePlaceEdit: () => setPlaceEdit(null),
     closeAltAdd: () => setAltAdd(null),
     closeMemo: () => setMemo(null),

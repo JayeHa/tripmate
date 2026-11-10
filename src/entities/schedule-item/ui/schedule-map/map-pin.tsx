@@ -33,10 +33,15 @@ const FOCUS_TONE = {
 const NO_STATUS_FOCUS = "border-2 border-status-opt bg-white text-ink-700";
 
 /**
- * 보통 핀 지름. 동선 지도 카드 번호는 22, 모바일 지도는 24, PC 3단 지도 · 동선 지도는 28.
+ * 보통 핀 지름. 동선 지도 카드 번호는 22, 모바일 지도는 24, PC 3단 지도 · 동선 지도는 28, PC 지도 카드 번호는 36(숫자 15).
  * 같은 자리를 두 번 가면 「4·13」 처럼 길어져서, 지름은 최소 너비로 두고 옆으로 늘어난다
  */
-const PIN_SIZE = { sm: "h-5.5 min-w-5.5", md: "h-6 min-w-6", lg: "h-7 min-w-7" } as const;
+const PIN_SIZE = {
+  sm: "h-5.5 min-w-5.5",
+  md: "h-6 min-w-6",
+  lg: "h-7 min-w-7",
+  xl: "h-9 min-w-9 text-[15px]",
+} as const;
 export type MapPinSize = keyof typeof PIN_SIZE;
 
 /**
