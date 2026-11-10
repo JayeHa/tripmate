@@ -9,6 +9,7 @@ import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { cn } from "@/shared/lib/utils";
 import { SplitHandle } from "@/shared/ui/split-handle";
 
+import { mapDayOf } from "../../lib/focus";
 import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
@@ -82,6 +83,8 @@ export function PcSchedule({
   const shown = one ? sections.slice(day, day + 1) : sections;
   const [openId, setOpenId] = useState<string | null>(null);
   const selected = shownOpenId(openId, shown);
+  // 고른 장소는 보고 있는 날 안에 있을 때만 지도를 이끈다 — 레일 · 스크롤로 다른 날에 가면 지도는 그 날(강조)을 따르고 카드는 펼친 채 둔다
+  const pinned = selected && mapDayOf(sections, selected, -1) === day ? selected : null;
   const listRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const focus = useScrollFocus({
@@ -174,7 +177,7 @@ export function PcSchedule({
               isPending={isPending}
               openId={selected}
               onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
-              focusId={focus.focusId}
+              focusId={pinned ? null : focus.focusId}
               showPins
               {...body}
             />
@@ -209,7 +212,7 @@ export function PcSchedule({
         edit={edit}
         sections={sections}
         day={day}
-        selectedId={selected}
+        selectedId={pinned}
         focusId={focus.focusId}
         holding={holding}
         onPick={(id) => {

@@ -26,7 +26,7 @@ export type RouteDaySectionProps = {
   /** 펼친 역(화면에 하나) */
   openId: string | null;
   onToggle: (id: string) => void;
-  /** PC — 지도에 강조된 장소(스크롤 기준선) */
+  /** PC — 지도에 강조된 장소(스크롤 기준선). 고른 장소가 지도를 이끄는 동안은 null */
   focusId?: string | null;
   /** PC — 카드에 지도 핀 번호 「📍5」 */
   showPins?: boolean;
@@ -89,7 +89,7 @@ export function RouteDaySection({
               prevAt={prev ? itemCoords(prev.row.item) : null}
               open={openId === row.item.id}
               onToggle={() => onToggle(row.item.id)}
-              focused={openId === null && focusId === row.item.id}
+              focused={openId !== row.item.id && focusId === row.item.id}
               showPin={showPins}
               past={past.get(row.item.id) ?? null}
               nextPast={!!stop.next && past.has(stop.next.item.id)}

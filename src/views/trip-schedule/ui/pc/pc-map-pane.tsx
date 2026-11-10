@@ -19,7 +19,7 @@ import type { ScheduleLayoutProps } from "../schedule-layout";
 const INSET = { top: 56, bottom: 16, side: 16 };
 
 type PcMapPaneProps = Pick<ScheduleLayoutProps, "trip" | "edit" | "sections" | "day"> & {
-  /** 카드를 눌러 고른 장소 */
+  /** 카드를 눌러 고른 장소 — 보고 있는 날 안에 있을 때만(다른 날로 가면 null) */
   selectedId: string | null;
   /** 스크롤 기준선을 지난 장소 */
   focusId: string | null;
