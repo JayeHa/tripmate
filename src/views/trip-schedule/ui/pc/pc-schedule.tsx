@@ -3,13 +3,14 @@
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import type { TimelineRow } from "@/entities/schedule-item";
 import { PcScheduleEditor } from "@/features/schedule/edit-mode";
 import { useDebouncedValue } from "@/shared/lib/use-debounced-value";
 import { useSplitWidth } from "@/shared/lib/use-split-width";
 import { cn } from "@/shared/lib/utils";
 import { SplitHandle } from "@/shared/ui/split-handle";
 
-import { mapDayOf } from "../../lib/focus";
+import { mapDayOf, shownOpenId } from "../../lib/focus";
 import { SCHEDULE_SPLIT, splitPresets } from "../../lib/split";
 import { useDayJumps } from "../../model/use-day-jumps";
 import { useDayViewScroll } from "../../model/use-day-view-scroll";
@@ -40,12 +41,9 @@ const FOCUS_LINE_TOP = 120;
 type PcScheduleProps = ScheduleLayoutProps & {
   /** 「이어서 / 하루씩」 을 바꾼 직후의 안내 — 화면의 토스트로 띄운다 */
   onGuide: (text: string, detail: string) => void;
+  /** 펼친 카드의 「+ 메모」 — 그 장소의 새 메모 창 */
+  onAddMemo: (row: TimelineRow) => void;
 };
-
-/** 고른 장소가 지금 그린 날짜 안에 있을 때만 그 id(하루씩 보기로 다른 날에 가면 고른 것이 없다) */
-function shownOpenId(openId: string | null, shown: ScheduleLayoutProps["sections"]) {
-  return shown.some((s) => s.rows.some((r) => r.item.id === openId)) ? openId : null;
-}
 
 /**
  * PC 일정 3단 — [날짜 레일 232 | 일정 목록(360~728, 경계선으로 조절) | 지도].
@@ -69,6 +67,7 @@ export function PcSchedule({
   onEntryDone,
   startEditAt,
   onGuide,
+  onAddMemo,
   onOpenStays,
   stayCount,
   onOpenFlights,
@@ -179,6 +178,7 @@ export function PcSchedule({
               onToggle={(id) => setOpenId((open) => (open === id ? null : id))}
               focusId={pinned ? null : focus.focusId}
               showPins
+              onAddMemo={onAddMemo}
               {...body}
             />
           </div>
@@ -212,6 +212,7 @@ export function PcSchedule({
         edit={edit}
         sections={sections}
         day={day}
+        onOpen={body.onOpen}
         selectedId={pinned}
         focusId={focus.focusId}
         holding={holding}

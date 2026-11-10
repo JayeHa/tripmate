@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import { useTripHolidays } from "@/entities/city";
 import type { Memo, TimelineRow } from "@/entities/schedule-item";
 import { useTrip } from "@/entities/trip";
 import { useMemberLookup } from "@/entities/trip-member";
@@ -12,8 +11,7 @@ import { useScheduleEdit } from "@/features/schedule/edit-mode";
 import { ItemDetailDialog } from "@/features/schedule/item-detail";
 import { MoveDialog, useMoveDialog } from "@/features/schedule/move-form";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
-import { holidayName } from "@/shared/lib/country-holidays";
-import { dayCount, dayIndexToDate } from "@/shared/lib/days";
+import { dayCount } from "@/shared/lib/days";
 import { useMediaQuery } from "@/shared/lib/use-media-query";
 
 import { useChecklistChips } from "../model/use-checklist-chips";
@@ -21,6 +19,7 @@ import { useDayWeather } from "../model/use-day-weather";
 import { useDetailOverlays } from "../model/use-detail-overlays";
 import { useDirectAdd } from "../model/use-direct-add";
 import { useFlightsOverlay } from "../model/use-flights-overlay";
+import { useHolidayOf } from "../model/use-holiday-of";
 import { useOpenRequest } from "../model/use-open-request";
 import { useScheduleEntry } from "../model/use-schedule-progress";
 import { useScheduleSections } from "../model/use-schedule-sections";
@@ -46,7 +45,7 @@ type TripScheduleViewProps = { tripId: string };
 export function TripScheduleView({ tripId }: TripScheduleViewProps) {
   const { data: trip } = useTrip(tripId);
   const totalDays = trip ? dayCount(trip.start_date, trip.end_date) : 1;
-  const holidays = useTripHolidays(tripId, trip);
+  const holidayOf = useHolidayOf(tripId, trip);
   const { items, isPending, itemsReady, movesReady, sections, sectionsReady, settled } =
     useScheduleSections(tripId, trip, totalDays);
   const [day, setDay] = useDayParam(totalDays);
@@ -110,8 +109,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   const layout: ScheduleLayoutProps = {
     trip,
-    holidayOf: (d) =>
-      trip && holidays ? holidayName(holidays, dayIndexToDate(trip.start_date, d)) : null,
+    holidayOf,
     weatherOf,
     totalDays,
     day,
@@ -138,7 +136,9 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
 
   return (
     <>
-      {isDesktop === true && <PcSchedule {...layout} onGuide={overlays.showToast} />}
+      {isDesktop === true && (
+        <PcSchedule {...layout} onGuide={overlays.showToast} onAddMemo={overlays.addMemo} />
+      )}
       {isDesktop === false && <MobileSchedule {...layout} />}
 
       <MoveDialog

@@ -21,6 +21,8 @@ type StopDetailProps = {
   checklist?: { count: number; href: string };
   vouchers?: { count: number; onOpen: () => void };
   onOpenDetail: () => void;
+  /** 「+ 메모」 — 이 장소에 새 메모. PC 만 있다(모바일은 상세에서 쓴다) */
+  onAddMemo?: () => void;
   /** 「🗺 지도에서」 — 좌표가 있는 장소만. 없으면 버튼이 없다(PC 는 지도가 옆에 있다) */
   onShowMap?: () => void;
   /** 날짜 메모를 눌렀다 — 시간 · 메모 창 */
@@ -30,7 +32,7 @@ type StopDetailProps = {
 /**
  * 역 아래 칸. 늘 보이는 것: 이 역 뒤에 둔 날짜 메모(⚠ 주황 상자, 누르면 시간 · 메모 창) · 그날 휴무.
  * 펼치면: 메모 상자(「· 」 줄, ★ 중요는 「★」, 영업하는 날은 「운영 …」) · 체크리스트 · 바우처 칩 · 대체 장소 ·
- * 「상세」 · 「길찾기」(직전 역 → 이 역 대중교통) · 「🗺 지도에서」
+ * 「상세」 · 「+ 메모」(PC) · 「길찾기」(직전 역 → 이 역 대중교통) · 「🗺 지도에서」(모바일)
  */
 export function StopDetail({
   stop,
@@ -39,6 +41,7 @@ export function StopDetail({
   checklist,
   vouchers,
   onOpenDetail,
+  onAddMemo,
   onShowMap,
   onOpenNote,
 }: StopDetailProps) {
@@ -71,6 +74,11 @@ export function StopDetail({
             <button type="button" onClick={onOpenDetail} className={OUTLINE}>
               상세
             </button>
+            {onAddMemo && (
+              <button type="button" onClick={onAddMemo} className={OUTLINE}>
+                + 메모
+              </button>
+            )}
             {here && (
               <a
                 href={transitRouteUrl(prevAt, here)}

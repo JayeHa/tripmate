@@ -72,3 +72,8 @@ export function mapDayOf(sections: DayRowIds[], focusId: string | null, day: num
   if (focusId === null) return day;
   return sections.find((s) => s.rows.some((r) => r.item.id === focusId))?.day ?? day;
 }
+
+/** 고른 장소가 지금 그린 날짜 안에 있을 때만 그 id(PC 하루씩 보기로 다른 날에 가면 고른 것이 없다) */
+export function shownOpenId(openId: string | null, shown: DayRowIds[]): string | null {
+  return shown.some((s) => s.rows.some((r) => r.item.id === openId)) ? openId : null;
+}
