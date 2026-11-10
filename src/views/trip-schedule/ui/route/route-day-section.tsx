@@ -94,7 +94,7 @@ export function RouteDaySection({
       ? recordStops(
           route.stops.map((s) => ({ id: s.row.item.id, place: s.row.kind === "place" })),
           record.marks,
-          record.markable(day),
+          record.dayOf(day),
         )
       : null;
   return (
@@ -163,20 +163,20 @@ function stopHover(hover: RouteHover | undefined, id: string, nextId: string | u
   };
 }
 
-/** 기록 모드의 역 하나 — 모양 · 앞뒤 구간을 지나왔는지 · 도착 시각 · 패스 · 지금 여기면 「✓ 다녀왔어요」 */
+/** 기록 모드의 역 하나 — 모양 · 앞뒤 구간을 지나왔는지 · 도착 시각 · 패스 · 표시 없는 첫 장소면 「✓ 다녀왔어요」 */
 function stopRecord(
   tones: RecordStop[],
   i: number,
   record: ScheduleRecord,
   id: string,
 ): StopRecord {
-  const { tone, reached } = tones[i];
+  const { tone, reached, next } = tones[i];
   return {
     tone,
     inPassed: reached,
     outPassed: tones[i + 1]?.reached ?? false,
     markedAt: record.markedAt(id),
     skipped: record.marks[id] === "skipped",
-    onVisited: tone === "current" ? () => record.markVisited(id) : undefined,
+    onVisited: next ? () => record.markVisited(id) : undefined,
   };
 }

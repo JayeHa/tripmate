@@ -10,7 +10,7 @@ export type StopRecord = {
   markedAt: string | null;
   /** 패스한 곳 */
   skipped: boolean;
-  /** 지금 여기 — 「✓ 다녀왔어요」. 누를 수 없는 날 · 다른 역은 없다 */
+  /** 그날 표시 없는 첫 장소 — 「✓ 다녀왔어요」. 누를 수 없는 날 · 다른 역은 없다 */
   onVisited?: () => void;
 };
 

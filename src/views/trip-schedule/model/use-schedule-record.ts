@@ -12,6 +12,7 @@ import {
 } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 
+import { type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 
 /** 기록 모드가 읽고 바꾸는 다녀감(일행 공유 표시) */
@@ -19,8 +20,11 @@ export type ScheduleRecord = {
   marks: VisitMarks;
   /** 표시를 남긴 시각(ISO) — 「10:52 도착」. 없으면 null */
   markedAt: (id: string) => string | null;
-  /** 그 날에 「✓ 다녀왔어요」 를 누를 수 있는지 — 여행 중 오늘까지의 날(상세 「방문」 과 같은 규칙) */
-  markable: (day: number) => boolean;
+  /**
+   * 그 날이 여행 중 오늘 · 오늘 앞 · 그 밖인지. 「✓ 다녀왔어요」 는 오늘까지(상세 「방문」 과 같은 규칙),
+   * 「지금 여기」 는 오늘만
+   */
+  dayOf: (day: number) => RecordDay;
   /** 「✓ 다녀왔어요」 — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   markVisited: (id: string) => void;
 };
@@ -44,7 +48,7 @@ export function useScheduleRecord(
   const record: ScheduleRecord = {
     marks,
     markedAt: (id) => at.get(id) ?? null,
-    markable: (day) => todayIndex !== null && day <= todayIndex,
+    dayOf: (day) => recordDay(day, todayIndex),
     markVisited: (id) => setMark(id, "visited"),
   };
   return {
