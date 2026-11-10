@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import {
   CATEGORY_LABEL,
   itemName,
@@ -9,7 +7,7 @@ import {
   RouteSegmentRow,
   RouteStop,
   type RouteStopData,
-  segmentChip,
+  segmentLabel,
   segmentMeta,
   SkippedBadge,
   type TimelineRow,
@@ -23,15 +21,15 @@ type LatLng = { lat: number; lng: number };
 /** 다녀온 일정의 모양 — 흐리게 · 색 빼기 */
 const PAST = "opacity-50 grayscale";
 
-/** 둘째 줄 앞 카테고리 글자 색 */
-const CATEGORY_TEXT: Record<NonNullable<TimelineRow["category"]>, string> = {
-  sight: "text-cat-sight",
-  food: "text-cat-food",
-  cafe: "text-cat-cafe",
-  shop: "text-cat-shop",
-  rest: "text-cat-rest",
-  stay: "text-cat-stay",
-  air: "text-cat-air",
+/** 카테고리 칩 색(연한 바탕 · 진한 글자) */
+const CATEGORY_CHIP: Record<NonNullable<TimelineRow["category"]>, string> = {
+  sight: "bg-cat-sight-soft text-cat-sight",
+  food: "bg-cat-food-soft text-cat-food",
+  cafe: "bg-cat-cafe-soft text-cat-cafe",
+  shop: "bg-cat-shop-soft text-cat-shop",
+  rest: "bg-cat-rest-soft text-cat-rest",
+  stay: "bg-cat-stay-soft text-cat-stay",
+  air: "bg-cat-air-soft text-cat-air",
 };
 
 type RouteStopItemProps = {
@@ -51,13 +49,13 @@ type RouteStopItemProps = {
   onOpenDetail: () => void;
   onShowMap: () => void;
   onOpenNote: (note: TimelineRow) => void;
-  /** 이동 칩 — 다음 줄로 이동 방법 창. 없으면 칩을 눌러도 아무 일 없다 */
+  /** 구간 글자 — 다음 줄로 이동 방법 창. 없으면 눌러도 아무 일 없다 */
   onEditMove?: (next: TimelineRow) => void;
 };
 
 /**
- * 노선도의 역 하나와 다음 역까지의 구간. 역을 누르면 펼치고(메모 · 상세 · 길찾기 · 지도에서), 이동 칩을 누르면 이동 방법 창.
- * `id="item-…"` 로 화면이 그 줄을 찾아 스크롤한다
+ * 노선도의 역(장소 카드) 하나와 다음 역까지의 구간. 카드를 누르면 카드 안을 펼치고(메모 · 상세 · 길찾기 · 지도에서),
+ * 구간 글자를 누르면 이동 방법 창. `id="item-…"` 로 화면이 그 줄을 찾아 스크롤한다
  */
 export function RouteStopItem({
   stop,
@@ -83,10 +81,11 @@ export function RouteStopItem({
         <RouteStop
           time={row.time}
           name={itemName(row.item)}
-          badge={<StatusBadge row={row} past={past} />}
-          sub={subLine(row)}
+          emoji={row.kind === "flight" ? "✈️" : row.emoji}
+          sub={<SubLine row={row} past={past} />}
           kind={stop.kind}
           tone="plan"
+          category={row.category}
           inLine={inSeg && routeLineStyle(inSeg.mode, "plan")}
           outLine={seg && routeLineStyle(seg.mode, "plan")}
           selected={open}
@@ -110,13 +109,13 @@ export function RouteStopItem({
       {seg && next && (
         <div className={cn(nextPast && PAST)}>
           <RouteSegmentRow
-            mode={seg.mode}
             tone="plan"
             line={routeLineStyle(seg.mode, "plan")}
-            chip={segmentChip(seg)}
+            icon={seg.icon}
+            label={segmentLabel(seg)}
             meta={segmentMeta(seg)}
             onClick={editMove}
-            label={`${itemName(row.item)} → ${itemName(next.item)} 이동 방법`}
+            ariaLabel={`${itemName(row.item)} → ${itemName(next.item)} 이동 방법`}
           />
         </div>
       )}
@@ -124,42 +123,39 @@ export function RouteStopItem({
   );
 }
 
-type StatusBadgeProps = { row: TimelineRow; past: PastKind | null };
+type SubLineProps = { row: TimelineRow; past: PastKind | null };
 
-/** 이름 옆 칩 — 패스한 곳은 「패스」, 그 밖은 예약 상태(없으면 없음) */
-function StatusBadge({ row, past }: StatusBadgeProps) {
-  if (past === "skipped") return <SkippedBadge />;
-  return row.status ? <ReservationBadge status={row.status} className="shrink-0" /> : null;
-}
-
-/** 둘째 줄 「관광(카테고리 색) 설명 · 메모 2」. 숙소 중간 날은 「숙박 2/3박 · 체크아웃 …」, 항공편은 「항공 제주항공 · 7C1181」. 없으면 null */
-function subLine(row: TimelineRow): ReactNode {
+/**
+ * 카드 둘째 줄 — 카테고리 칩(항공편은 「항공」) · 예약 상태 칩(패스한 곳은 「패스」) · 회색 글자.
+ * 회색 글자는 「메모 2」, 숙소 중간 날은 「숙박 2/3박 · 체크아웃 …」, 항공편은 「제주항공 · 7C1181」 을 앞에.
+ * 장소 설명은 넣지 않는다 — 카드마다 길이가 달라져 일정이 다시 구분되지 않는다(펼침 · 상세에서 본다)
+ */
+function SubLine({ row, past }: SubLineProps) {
   const label = row.kind === "flight" ? "항공" : row.category && CATEGORY_LABEL[row.category];
   const text = [
-    row.stay?.mode === "mid" ? row.stay.line : descriptionOf(row),
+    row.stay?.mode === "mid" && row.stay.line,
+    row.kind === "flight" && row.item.description,
     row.memos.length > 0 && `메모 ${row.memos.length}`,
   ]
     .filter(Boolean)
     .join(" · ");
-  if (!label && !text) return null;
   return (
     <>
       {label && (
         <span
           className={cn(
-            "mr-1.5 font-bold",
-            row.category ? CATEGORY_TEXT[row.category] : "text-ink-900",
+            "shrink-0 rounded-[5px] px-1.5 py-0.5 text-[11px] font-bold",
+            row.category ? CATEGORY_CHIP[row.category] : "bg-cat-move-soft text-ink-700",
           )}
         >
           {label}
         </span>
       )}
-      {text}
+      {past === "skipped" && <SkippedBadge />}
+      {past !== "skipped" && row.status && (
+        <ReservationBadge status={row.status} className="shrink-0" />
+      )}
+      {text && <span className="truncate text-xs text-route-card-meta">{text}</span>}
     </>
   );
-}
-
-/** 장소는 장소 설명, 항공편 · 그 밖은 일정 설명 */
-function descriptionOf(row: TimelineRow): string | null {
-  return (row.kind === "place" ? row.item.place?.description : row.item.description) || null;
 }

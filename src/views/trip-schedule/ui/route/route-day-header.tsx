@@ -57,12 +57,8 @@ export function RouteDayHeader({
               🚇 대중교통 {durationText(transit)}
             </span>
           )}
-          {walk > 0 && (
-            <span className={cn(CHIP, "bg-route-walk-soft text-route-walk-text")}>
-              🚶 도보 {durationText(walk)}
-            </span>
-          )}
-          <span className={cn(CHIP, "bg-route-walk-soft text-route-walk-text")}>{places}곳</span>
+          {walk > 0 && <span className={cn(CHIP, PLAIN)}>🚶 도보 {durationText(walk)}</span>}
+          <span className={cn(CHIP, PLAIN)}>{places}곳</span>
         </div>
       )}
       {route.preNotes.map((note) => (
@@ -70,7 +66,7 @@ export function RouteDayHeader({
           type="button"
           key={note.item.id}
           onClick={() => onOpenNote(note)}
-          className="rounded-memo bg-surface-sunken px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-walk-text"
+          className="rounded-memo bg-white px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-walk-text"
         >
           📌 {itemName(note.item)}
         </button>
@@ -81,3 +77,5 @@ export function RouteDayHeader({
 
 /** 요약 칩 — 12/700 · 안쪽 5 10 · r12 */
 const CHIP = "rounded-card px-2.5 py-1.25 text-xs font-bold";
+/** 도보 · 장소 수 칩 — 회색 목록 바탕 위라 흰 바탕 + 1px 안쪽 테두리 */
+const PLAIN = "bg-white text-route-walk-text shadow-[inset_0_0_0_1px_#E9EBEE]";
