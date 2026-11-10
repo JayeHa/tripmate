@@ -14,6 +14,7 @@ const SETTLE_MS = 150;
  * - 고른 카드가 바뀌면(핀 · 카드 누르기) 그 카드를 왼쪽 20 에 맞춘다
  * - 손으로 넘겨서 멈추면 멈춘 자리의 카드를 고른다. 손을 대고 있는 동안은 고르지 않는다
  *
+ * 누르기만 하고 줄이 움직이지 않았으면 고르지 않는다 — 끝에 멈춘 줄에서 고른 카드를 다시 누르면 「끝이면 마지막 카드」 로 넘어가지 않게.
  * 고른 카드에 맞추는 스크롤(코드가 움직인 것)로는 고르지 않는다 — 끝까지 가지 못하는 마지막 카드를 골랐을 때
  * 멈춘 자리가 앞 카드에 더 가까워 선택이 되돌아가지 않게
  */
@@ -22,6 +23,8 @@ export function useCardRow(selectedId: string | null, onSelect: (id: string) => 
   /** 사람이 움직인 스크롤인지 — 손 · 휠로 시작하면 켜고, 고르거나 선택이 바뀌면 끈다 */
   const swiping = useRef(false);
   const touching = useRef(false);
+  /** 손 · 휠을 댄 순간의 scrollLeft — 멈춘 자리가 같으면 넘긴 게 아니다 */
+  const startLeft = useRef(0);
 
   useEffect(() => {
     swiping.current = false;
@@ -34,6 +37,7 @@ export function useCardRow(selectedId: string | null, onSelect: (id: string) => 
   const pickSettled = useEffectEvent((row: HTMLElement) => {
     if (!swiping.current || touching.current) return;
     swiping.current = false;
+    if (Math.abs(row.scrollLeft - startLeft.current) < 1) return;
     const cards = [...row.querySelectorAll<HTMLElement>("[data-card]")];
     const snaps = cards.map((card) => card.offsetLeft - CARD_LEFT);
     const i = settledCardIndex(snaps, row.scrollLeft, row.scrollWidth - row.clientWidth);
@@ -49,8 +53,12 @@ export function useCardRow(selectedId: string | null, onSelect: (id: string) => 
       clearTimeout(timer);
       timer = setTimeout(() => pickSettled(row), SETTLE_MS);
     };
-    const onTouchStart = () => {
+    const start = () => {
+      if (!swiping.current) startLeft.current = row.scrollLeft;
       swiping.current = true;
+    };
+    const onTouchStart = () => {
+      start();
       touching.current = true;
     };
     const onTouchEnd = () => {
@@ -58,17 +66,14 @@ export function useCardRow(selectedId: string | null, onSelect: (id: string) => 
       schedule();
     };
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") swiping.current = true;
-    };
-    const onWheel = () => {
-      swiping.current = true;
+      if (e.pointerType === "mouse") start();
     };
     const opts = { passive: true };
     row.addEventListener("touchstart", onTouchStart, opts);
     row.addEventListener("touchend", onTouchEnd, opts);
     row.addEventListener("touchcancel", onTouchEnd, opts);
     row.addEventListener("pointerdown", onPointerDown, opts);
-    row.addEventListener("wheel", onWheel, opts);
+    row.addEventListener("wheel", start, opts);
     row.addEventListener("scroll", schedule, opts);
     return () => {
       clearTimeout(timer);
@@ -76,7 +81,7 @@ export function useCardRow(selectedId: string | null, onSelect: (id: string) => 
       row.removeEventListener("touchend", onTouchEnd);
       row.removeEventListener("touchcancel", onTouchEnd);
       row.removeEventListener("pointerdown", onPointerDown);
-      row.removeEventListener("wheel", onWheel);
+      row.removeEventListener("wheel", start);
       row.removeEventListener("scroll", schedule);
     };
   }, []);
