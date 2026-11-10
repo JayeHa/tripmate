@@ -67,5 +67,6 @@ export function useScheduleEntry(
     [fromTop, done, settled, day, id],
   );
   const onEntryDone = useCallback(() => setDone(true), []);
-  return { past: progress?.past ?? NO_PAST, entry, onEntryDone };
+  // 여행 중 오늘(0-base). 여행 전 · 후, 일정을 읽기 전에는 null
+  return { past: progress?.past ?? NO_PAST, entry, onEntryDone, todayIndex: day };
 }

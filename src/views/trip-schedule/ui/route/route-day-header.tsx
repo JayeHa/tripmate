@@ -1,4 +1,12 @@
-import { durationText, itemName, type RouteDay, type TimelineRow } from "@/entities/schedule-item";
+import {
+  type DayMode,
+  DayModeToggle,
+  durationText,
+  itemName,
+  type RouteDay,
+  type TimelineRow,
+  VisitProgress,
+} from "@/entities/schedule-item";
 import { dateTone, dayParts } from "@/shared/lib/days";
 import { cn } from "@/shared/lib/utils";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
@@ -17,11 +25,16 @@ type RouteDayHeaderProps = {
   weather?: SourcedWeatherDay | null;
   /** 날짜 메모를 눌렀다 — 시간 · 메모 창 */
   onOpenNote: (note: TimelineRow) => void;
+  /** 「계획 | 기록」(화면 전체에 하나) */
+  mode: DayMode;
+  onModeChange: (mode: DayMode) => void;
+  /** 기록 모드 — 그날 다녀온 장소 수 */
+  done: number;
 };
 
 /**
- * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800) · 날씨 · 하루 요약 ·
- * 요약 칩(「🚇 대중교통 2시간 5분」 · 「🚶 도보 25분」 · 「9곳」, 0 이면 그 칩은 뺀다) · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창)
+ * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800), 오른쪽에 「계획 | 기록」 · 날씨 ·
+ * 계획은 하루 요약 · 요약 칩, 기록은 진행 막대 「4 / 13곳 다녀왔어요」 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창)
  */
 export function RouteDayHeader({
   startDate,
@@ -31,35 +44,33 @@ export function RouteDayHeader({
   holiday,
   weather,
   onOpenNote,
+  mode,
+  onModeChange,
+  done,
 }: RouteDayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
   const tone = dateTone(startDate, day, !!holiday);
-  const { transit, walk, places } = route.totals;
   return (
     <div className="flex flex-col gap-2.5 px-5 pt-4 pb-1.5">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex min-w-0 items-baseline gap-1.5 text-xs font-bold text-ink-350">
-          <span className={cn("shrink-0", tone && DATE_TONE[tone])}>
-            {date} ({dow})
+      <div className="flex items-end justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex min-w-0 items-baseline gap-1.5 text-xs font-bold text-ink-350">
+            <span className={cn("shrink-0", tone && DATE_TONE[tone])}>
+              {date} ({dow})
+            </span>
+            {holiday && <span className="truncate text-holiday">{holiday}</span>}
           </span>
-          {holiday && <span className="truncate text-holiday">{holiday}</span>}
-        </span>
-        <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
-          day {day + 1}
-        </h2>
+          <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
+            day {day + 1}
+          </h2>
+        </div>
+        <DayModeToggle value={mode} onChange={onModeChange} />
       </div>
       {weather && <DayWeatherLines weather={weather} />}
-      {summary && <p className="text-[13px]/normal text-pretty text-route-walk-text">{summary}</p>}
-      {places > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {transit > 0 && (
-            <span className={cn(CHIP, "bg-route-transit-soft text-route-transit-text")}>
-              🚇 대중교통 {durationText(transit)}
-            </span>
-          )}
-          {walk > 0 && <span className={cn(CHIP, PLAIN)}>🚶 도보 {durationText(walk)}</span>}
-          <span className={cn(CHIP, PLAIN)}>{places}곳</span>
-        </div>
+      {mode === "record" ? (
+        route.totals.places > 0 && <VisitProgress done={done} total={route.totals.places} />
+      ) : (
+        <PlanSummary route={route} summary={summary} />
       )}
       {route.preNotes.map((note) => (
         <button
@@ -72,6 +83,29 @@ export function RouteDayHeader({
         </button>
       ))}
     </div>
+  );
+}
+
+type PlanSummaryProps = Pick<RouteDayHeaderProps, "route" | "summary">;
+
+/** 계획 모드 — 하루 요약 · 요약 칩(「🚇 대중교통 2시간 5분」 · 「🚶 도보 25분」 · 「9곳」, 0 이면 그 칩은 뺀다) */
+function PlanSummary({ route, summary }: PlanSummaryProps) {
+  const { transit, walk, places } = route.totals;
+  return (
+    <>
+      {summary && <p className="text-[13px]/normal text-pretty text-route-walk-text">{summary}</p>}
+      {places > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {transit > 0 && (
+            <span className={cn(CHIP, "bg-route-transit-soft text-route-transit-text")}>
+              🚇 대중교통 {durationText(transit)}
+            </span>
+          )}
+          {walk > 0 && <span className={cn(CHIP, PLAIN)}>🚶 도보 {durationText(walk)}</span>}
+          <span className={cn(CHIP, PLAIN)}>{places}곳</span>
+        </div>
+      )}
+    </>
   );
 }
 
