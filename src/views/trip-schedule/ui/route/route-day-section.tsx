@@ -103,11 +103,9 @@ export function RouteDaySection({
         mode={mode}
         onModeChange={onModeChange}
         done={tones?.filter((t) => t.tone === "done").length ?? 0}
-        // 보이는 별점만 — 다녀감을 되돌려도 별점은 남아 있지만 카드에 별점 줄이 없다
-        rated={
-          route.stops.filter((s, i) => tones?.[i].tone === "done" && record.stars[s.row.item.id])
-            .length
-        }
+        // 보이는 것만 — 다녀감을 되돌려도 별점 · 글은 남아 있지만 카드에 그 줄이 없다
+        rated={countDone(route.stops, tones, record.stars)}
+        notes={countDone(route.stops, tones, record.notes)}
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
@@ -179,5 +177,18 @@ function stopRecord(
     onVisited: next ? () => record.markVisited(id) : undefined,
     // 다녀온 장소만 — 항공편은 「done」 이 되지 않는다
     rating: tone === "done" ? { stars, onRate: (n) => record.rate(id, n) } : undefined,
+    note:
+      tone === "done"
+        ? { body: record.notes[id] ?? "", onWrite: () => record.openWrite(id) }
+        : undefined,
   };
+}
+
+/** 다녀온 장소 중 값(별점 · 기록 글)이 있는 곳의 수. 계획 모드는 0 */
+function countDone(
+  stops: readonly { row: TimelineRow }[],
+  tones: RecordStop[] | null,
+  values: Readonly<Record<string, unknown>>,
+): number {
+  return stops.filter((s, i) => tones?.[i].tone === "done" && values[s.row.item.id]).length;
 }

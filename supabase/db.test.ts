@@ -4657,3 +4657,59 @@ describe("내 별점 (0084)", () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+describe("기록 글 (0085)", () => {
+  /** 내 기록 글을 넣거나 바꾼다(화면의 저장과 같은 upsert — 쓴 사람은 기본값 나) */
+  function upsertNote(trip: string, item: string, body: string) {
+    return `insert into public.visit_notes (item_id, trip_id, body, updated_at)
+            values ('${item}', '${trip}', '${body}', '2027-12-08T10:00:00Z')
+            on conflict (item_id, user_id) do update set body = excluded.body, updated_at = excluded.updated_at`;
+  }
+
+  it("사람마다 하나 — 바꾸면 내 줄만 덮고, 일행은 읽기만 한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-08", "2027-12-08");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    await db.query(upsertNote(trip, place, "국물 진함"));
+    await db.query(upsertNote(trip, place, "마늘 추가 필수"));
+    await as(B);
+    await db.query(upsertNote(trip, place, "줄 40분"));
+    await db.query(`update public.visit_notes set body = '바꿈' where user_id = '${A}'`);
+    await db.query(`delete from public.visit_notes where user_id = '${A}'`);
+    expect(
+      await rejects(
+        `insert into public.visit_notes (item_id, trip_id, user_id, body) values ('${place}', '${trip}', '${A}', '남의 이름')`,
+      ),
+    ).toMatch(/row-level security/);
+    const { rows } = await db.query<{ user_id: string; body: string }>(
+      `select user_id, body from public.visit_notes where item_id = '${place}' order by body`,
+    );
+    expect(rows).toEqual([
+      { user_id: A, body: "마늘 추가 필수" },
+      { user_id: B, body: "줄 40분" },
+    ]);
+  });
+
+  it("빈 글 · 200자 넘는 글 · 장소가 아닌 일정 · 다른 여행은 거부하고, 일정을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-09", "2027-12-09");
+    const other = await newTrip("2027-12-10", "2027-12-10");
+    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    const { rows: notes } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name)
+       values ('${trip}', 0, 1, 'note', '집합') returning id`,
+    );
+    expect(await rejects(upsertNote(trip, place, "  "))).toMatch(/check constraint/);
+    expect(await rejects(upsertNote(trip, place, "가".repeat(201)))).toMatch(/check constraint/);
+    expect(await rejects(upsertNote(trip, notes[0].id, "메모"))).toMatch(/장소 일정에만/);
+    expect(await rejects(upsertNote(other, place, "다른 여행"))).toMatch(/foreign key/);
+    await db.query(upsertNote(trip, place, "가".repeat(200)));
+    await db.query(`delete from public.schedule_items where id = '${place}'`);
+    const { rows } = await db.query(`select 1 from public.visit_notes where trip_id = '${trip}'`);
+    expect(rows).toHaveLength(0);
+  });
+});

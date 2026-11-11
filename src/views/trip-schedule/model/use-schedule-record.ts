@@ -8,8 +8,10 @@ import {
   type RatingStars,
   type ScheduleItem,
   useMyRatings,
+  useMyVisitNotes,
   useVisitMarks,
   type VisitMarks,
+  type VisitNoteBodies,
   visitsQuery,
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
@@ -34,6 +36,14 @@ export type ScheduleRecord = {
   stars: RatingStars;
   /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   rate: (id: string, stars: number) => void;
+  /** 내 기록 글 — 일정 id → 글. 안 남긴 일정은 없다 */
+  notes: VisitNoteBodies;
+  /** 내 기록 글을 바꾼다(비우면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
+  saveNote: (id: string, body: string) => void;
+  /** 기록 창을 연 일정. 닫혀 있으면 null */
+  writing: string | null;
+  openWrite: (id: string) => void;
+  closeWrite: () => void;
 };
 
 /**
@@ -53,6 +63,8 @@ export function useScheduleRecord(
   const { data } = useQuery(visitsQuery(tripId));
   const userId = useUser().data?.id ?? null;
   const [stars, setStars] = useMyRatings(tripId, userId);
+  const [notes, setNote] = useMyVisitNotes(tripId, userId);
+  const [writing, setWriting] = useState<string | null>(null);
   const at = useMemo(() => new Map(data?.map((v) => [v.item_id, v.marked_at])), [data]);
   const record: ScheduleRecord = {
     marks,
@@ -61,6 +73,11 @@ export function useScheduleRecord(
     markVisited: (id) => setMark(id, "visited"),
     stars,
     rate: setStars,
+    notes,
+    saveNote: setNote,
+    writing,
+    openWrite: setWriting,
+    closeWrite: () => setWriting(null),
   };
   return {
     ...entry,

@@ -14,6 +14,8 @@ export type StopRecord = {
   onVisited?: () => void;
   /** 다녀온 장소 — 내 별점(0 = 안 매김)과 바꾸기. 그 밖의 역은 없다 */
   rating?: { stars: number; onRate: (stars: number) => void };
+  /** 다녀온 장소 — 내 기록 글(없으면 "")과 기록 창 열기. 그 밖의 역은 없다 */
+  note?: { body: string; onWrite: () => void };
 };
 
 /** 역 하나의 모양 — 표식 · 카드, 들어오는 · 나가는 구간, 패스 · 도착 시각, 흐리게 할지 */
@@ -102,5 +104,39 @@ export function RatingRow({ stars, onRate }: RatingRowProps) {
         label="내 별점"
       />
     </div>
+  );
+}
+
+type RecordNoteProps = { body: string; onWrite: () => void };
+
+/**
+ * 다녀온 장소 카드 안 기록 — 글이 있으면 글(따옴표 · 3줄 말줄임) + 「✎ 기록 수정」, 없으면 점선 「+ 기록 · 사진 남기기」.
+ * 둘 다 기록 창을 연다
+ */
+export function RecordNote({ body, onWrite }: RecordNoteProps) {
+  if (!body) {
+    return (
+      <button
+        type="button"
+        onClick={onWrite}
+        className="flex h-8.5 w-full items-center justify-center rounded-button border-[1.5px] border-dashed border-route-branch text-[13px] font-bold text-route-sub"
+      >
+        + 기록 · 사진 남기기
+      </button>
+    );
+  }
+  return (
+    <>
+      <p className="line-clamp-3 rounded-button bg-visit-note-bg px-2.5 py-2 text-[13px]/[1.45] wrap-break-word whitespace-pre-line text-ink-700">
+        “{body}”
+      </p>
+      <button
+        type="button"
+        onClick={onWrite}
+        className="self-start text-xs font-bold text-route-card-meta"
+      >
+        ✎ 기록 수정
+      </button>
+    </>
   );
 }
