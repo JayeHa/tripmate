@@ -3,10 +3,22 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 
-import { nextStars, RatingPicker, VISIT_NOTE_MAX } from "@/entities/schedule-item";
-import { useHeldWhileClosing, useOpenCount } from "@/shared/lib/use-dialog-state";
+import {
+  nextStars,
+  RatingPicker,
+  useVisitPhotoUrls,
+  VISIT_NOTE_MAX,
+  VISIT_PHOTO_LIMIT,
+  type VisitPhoto,
+} from "@/entities/schedule-item";
+import { useHeldWhileClosing, useOpenCount, useReportLock } from "@/shared/lib/use-dialog-state";
+import { useOnline } from "@/shared/lib/use-online";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+
+import { useRecordPhotos } from "../../model/use-record-photos";
+import { PhotoPicker } from "./photo-picker";
+import { RecordBlock } from "./record-block";
 
 /** 기록 창을 연 장소 — 머리 글과 지금 값 */
 export type RecordTarget = {
@@ -17,12 +29,15 @@ export type RecordTarget = {
   stars: number;
   /** 내 기록 글(없으면 "") */
   body: string;
+  /** 내 기록 사진(순서대로) */
+  photos: readonly VisitPhoto[];
 };
 
 /** 저장할 값 */
 export type RecordDraft = { stars: number; body: string };
 
 type RecordDialogProps = {
+  tripId: string;
   /** 연 장소. null 이면 닫힌다 */
   target: RecordTarget | null;
   onClose: () => void;
@@ -30,16 +45,17 @@ type RecordDialogProps = {
 };
 
 /**
- * 기록 창 — 모바일 바텀시트(최대 88%) · PC 가운데 480 모달. 본문은 별점 → 기록 글(200자) 순서이고 하단에 「취소」 · 「저장」.
- * 저장은 오프라인 대기열로 올라가 바로 닫힌다. 취소 · 바깥 누르기는 바꾼 것을 버린다(별점도 저장할 때만 반영).
- * 열 때마다 지금 값에서 다시 시작한다
+ * 기록 창 — 모바일 바텀시트(최대 88%) · PC 가운데 480 모달. 본문은 별점 → 기록 글(200자) → 사진(10장 · 사진별 설명) 순서이고
+ * 하단에 「취소」 · 「저장」. 취소 · 바깥 누르기는 바꾼 것을 버린다(별점도 저장할 때만 반영). 열 때마다 지금 값에서 다시 시작한다.
+ * 별점 · 글은 오프라인 대기열로 올라간다. 사진을 바꿨으면 먼저 올리고(그동안 창을 닫지 못한다), 실패하면 창에 문구를 두고 다시 저장하게 한다
  */
-export function RecordDialog({ target, onClose, onSave }: RecordDialogProps) {
+export function RecordDialog({ tripId, target, onClose, onSave }: RecordDialogProps) {
   const open = target !== null;
   const shown = useHeldWhileClosing(open, target);
   const openCount = useOpenCount(open);
+  const [locked, setLocked] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+    <Dialog open={open} locked={locked} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
         className="top-auto bottom-0 left-0 flex max-h-[88dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none lg:top-1/2 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100dvh-80px)] lg:w-120 lg:max-w-120 lg:-translate-1/2 lg:rounded-[16px] lg:shadow-[0_12px_40px_rgba(0,0,0,.2)]"
@@ -47,7 +63,9 @@ export function RecordDialog({ target, onClose, onSave }: RecordDialogProps) {
         {shown && (
           <RecordForm
             key={openCount}
+            tripId={tripId}
             target={shown}
+            onLockChange={setLocked}
             onClose={onClose}
             onSave={(draft) => {
               onSave(shown.itemId, draft);
@@ -61,21 +79,45 @@ export function RecordDialog({ target, onClose, onSave }: RecordDialogProps) {
 }
 
 type RecordFormProps = {
+  tripId: string;
   target: RecordTarget;
+  onLockChange: (locked: boolean) => void;
   onClose: () => void;
   onSave: (draft: RecordDraft) => void;
 };
 
-/** 창 안 — 머리 · 별점 · 기록 글 · 하단 버튼 */
-function RecordForm({ target, onClose, onSave }: RecordFormProps) {
+/** 창 안 — 머리 · 별점 · 기록 글 · 사진 · 하단 버튼 */
+function RecordForm({ tripId, target, onLockChange, onClose, onSave }: RecordFormProps) {
   const [stars, setStars] = useState(target.stars);
   const [body, setBody] = useState(target.body);
+  const [error, setError] = useState<string | null>(null);
+  const photos = useRecordPhotos(tripId, target.itemId, target.photos);
+  const { data: urls = {} } = useVisitPhotoUrls(
+    tripId,
+    target.photos.flatMap((p) => [p.photo_key, p.thumb_key]),
+  );
+  const online = useOnline();
+  const saving = photos.progress !== null;
+  useReportLock(saving, onLockChange);
+
+  /** 사진을 먼저 올리고(바꿨으면) 별점 · 글을 저장해 닫는다. 사진이 실패하면 별점 · 글도 저장하지 않고 창에 남는다 */
+  async function submit() {
+    if (photos.changed && !online) {
+      setError("오프라인이에요. 사진은 연결되면 저장해 주세요");
+      return;
+    }
+    setError(null);
+    const failed = await photos.save();
+    if (failed) setError(failed);
+    else onSave({ stars, body });
+  }
+
   return (
     <form
       className="flex min-h-0 flex-1 flex-col"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ stars, body });
+        if (!saving) void submit();
       }}
     >
       <span
@@ -93,13 +135,14 @@ function RecordForm({ target, onClose, onSave }: RecordFormProps) {
           type="button"
           aria-label="닫기"
           onClick={onClose}
+          disabled={saving}
           className="-mr-1.5 flex size-8 shrink-0 items-center justify-center text-ink-400"
         >
           <X className="size-5.5" strokeWidth={2} />
         </button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-5.5 overflow-y-auto px-5 pt-3.5 pb-4 lg:px-6">
-        <Block label="별점">
+        <RecordBlock label="별점">
           <RatingPicker
             value={stars}
             onPick={(n) => setStars(nextStars(stars, n))}
@@ -107,8 +150,8 @@ function RecordForm({ target, onClose, onSave }: RecordFormProps) {
             emptyText="눌러서 매겨요"
             label="별점"
           />
-        </Block>
-        <Block label="기록" htmlFor="record-body">
+        </RecordBlock>
+        <RecordBlock label="기록" htmlFor="record-body">
           <div className="flex flex-col gap-1">
             <textarea
               id="record-body"
@@ -123,8 +166,20 @@ function RecordForm({ target, onClose, onSave }: RecordFormProps) {
               {body.length} / {VISIT_NOTE_MAX}
             </span>
           </div>
-        </Block>
+        </RecordBlock>
+        <PhotoPicker
+          photos={photos}
+          urls={urls}
+          offline={!online}
+          saving={saving}
+          onOverflow={() => setError(`사진은 ${VISIT_PHOTO_LIMIT}장까지 붙일 수 있어요`)}
+        />
       </div>
+      {error && (
+        <p role="alert" className="shrink-0 px-5 pt-2 text-[13px] text-destructive lg:px-6">
+          {error}
+        </p>
+      )}
       <div className="flex shrink-0 gap-2 border-t border-divider px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:justify-end lg:border-t-0 lg:px-6 lg:pt-4 lg:pb-5">
         <Button
           type="button"
@@ -132,6 +187,7 @@ function RecordForm({ target, onClose, onSave }: RecordFormProps) {
           size="cta"
           className="lg:h-10.5 lg:min-w-22 lg:text-[15px]"
           onClick={onClose}
+          disabled={saving}
         >
           취소
         </Button>
@@ -139,30 +195,17 @@ function RecordForm({ target, onClose, onSave }: RecordFormProps) {
           type="submit"
           size="cta"
           className="flex-1 lg:h-10.5 lg:min-w-22 lg:flex-none lg:text-[15px]"
+          disabled={saving}
         >
-          저장
+          {saving ? savingText(photos.progress) : "저장"}
         </Button>
       </div>
     </form>
   );
 }
 
-const LABEL = "text-[13px] font-bold text-ink-700";
-
-type BlockProps = { label: string; htmlFor?: string; children: React.ReactNode };
-
-/** 본문 한 덩이 — 라벨 13/700 + 내용, 사이 8. 입력 칸이 하나면 라벨을 그 칸에 잇는다 */
-function Block({ label, htmlFor, children }: BlockProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      {htmlFor ? (
-        <label htmlFor={htmlFor} className={LABEL}>
-          {label}
-        </label>
-      ) : (
-        <span className={LABEL}>{label}</span>
-      )}
-      {children}
-    </div>
-  );
+/** 저장 버튼 글 — 새 사진을 올리는 중이면 「사진 올리는 중 2/5」 */
+function savingText(progress: { done: number; total: number } | null): string {
+  if (!progress || progress.total === 0) return "저장 중…";
+  return `사진 올리는 중 ${progress.done}/${progress.total}`;
 }

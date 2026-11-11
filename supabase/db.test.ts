@@ -4713,3 +4713,79 @@ describe("기록 글 (0085)", () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+describe("기록 사진 (0086)", () => {
+  /** 내 사진 줄을 넣는 SQL — 키는 그 여행 폴더 */
+  function photoSql(trip: string, item: string, n: number, caption = "null") {
+    return `insert into public.visit_photos (item_id, trip_id, photo_key, thumb_key, caption, position)
+            values ('${item}', '${trip}', '${trip}/p${n}.jpg', '${trip}/t${n}.jpg', ${caption}, ${n})`;
+  }
+
+  it("일정 × 사람에 10장까지, 설명은 1–40자, 장소가 아닌 일정 · 다른 여행 · 폴더 밖 키는 거부, 일정을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-11", "2027-12-11");
+    const other = await newTrip("2027-12-12", "2027-12-12");
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    const { rows: notes } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name)
+       values ('${trip}', 0, 1, 'note', '집합') returning id`,
+    );
+    for (let n = 0; n < 10; n++) await db.query(photoSql(trip, place, n));
+    expect(await rejects(photoSql(trip, place, 10))).toMatch(/visit photo limit/);
+    await db.query(`delete from public.visit_photos where photo_key = '${trip}/p9.jpg'`);
+    expect(await rejects(photoSql(trip, place, 11, "'  '"))).toMatch(/check constraint/);
+    expect(await rejects(photoSql(trip, place, 11, `'${"가".repeat(41)}'`))).toMatch(
+      /check constraint/,
+    );
+    expect(await rejects(photoSql(trip, notes[0].id, 12))).toMatch(/장소 일정에만/);
+    expect(await rejects(photoSql(other, place, 13))).toMatch(/foreign key|keys_chk/);
+    expect(
+      await rejects(`insert into public.visit_photos (item_id, trip_id, photo_key, thumb_key)
+        values ('${place}', '${trip}', '${other}/a.jpg', '${trip}/b.jpg')`),
+    ).toMatch(/visit_photos_keys_chk/);
+    await db.query(photoSql(trip, place, 9, `'${"가".repeat(40)}'`));
+    await db.query(`delete from public.schedule_items where id = '${place}'`);
+    const { rows } = await db.query(`select 1 from public.visit_photos where trip_id = '${trip}'`);
+    expect(rows).toHaveLength(0);
+  });
+
+  it("설명 · 순서만 바꾸고, 일행은 읽기만 하며, 파일은 붙은 줄이 없을 때만 지운다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-13", "2027-12-13");
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    await db.query(photoSql(trip, place, 0));
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('visit-photos', '${trip}/p0.jpg')`,
+    );
+    await db.query(`update public.visit_photos set caption = '입구', position = 3`);
+    expect(await rejects(`update public.visit_photos set photo_key = '${trip}/x.jpg'`)).toMatch(
+      /설명 · 순서만/,
+    );
+    await as(B);
+    // RLS 는 오류 없이 0줄 — 줄 · 파일이 그대로인지로 확인한다
+    await db.query(`update public.visit_photos set caption = 'B' where trip_id = '${trip}'`);
+    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    await db.query(`delete from storage.objects where name = '${trip}/p0.jpg'`);
+    expect(
+      await rejects(`insert into public.visit_photos (item_id, trip_id, user_id, photo_key, thumb_key)
+        values ('${place}', '${trip}', '${A}', '${trip}/p1.jpg', '${trip}/t1.jpg')`),
+    ).toMatch(/row-level security/);
+    const { rows } = await db.query<{ caption: string; position: number }>(
+      `select caption, position from public.visit_photos where trip_id = '${trip}'`,
+    );
+    expect(rows).toEqual([{ caption: "입구", position: 3 }]);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/p0.jpg'`)).rows,
+    ).toHaveLength(1);
+    await as(A);
+    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    await db.query(`delete from storage.objects where name = '${trip}/p0.jpg'`);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/p0.jpg'`)).rows,
+    ).toHaveLength(0);
+  });
+});

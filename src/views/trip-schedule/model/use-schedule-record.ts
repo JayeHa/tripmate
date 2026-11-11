@@ -9,9 +9,12 @@ import {
   type ScheduleItem,
   useMyRatings,
   useMyVisitNotes,
+  useMyVisitPhotos,
   useVisitMarks,
+  useVisitPhotoUrls,
   type VisitMarks,
   type VisitNoteBodies,
+  type VisitPhotosByItem,
   visitsQuery,
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
@@ -19,6 +22,8 @@ import type { Trip } from "@/entities/trip";
 
 import { type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
+
+const NO_URLS: Readonly<Record<string, string>> = {};
 
 /** 기록 모드가 읽고 바꾸는 다녀감(일행 공유 표시) */
 export type ScheduleRecord = {
@@ -40,6 +45,10 @@ export type ScheduleRecord = {
   notes: VisitNoteBodies;
   /** 내 기록 글을 바꾼다(비우면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   saveNote: (id: string, body: string) => void;
+  /** 내 기록 사진 — 일정 id → 순서대로. 붙이지 않은 일정은 없다(바꾸기는 기록 창이 한다) */
+  photos: VisitPhotosByItem;
+  /** 내 기록 사진 썸네일의 키 → 읽기 주소(카드 사진 줄) */
+  thumbUrls: Readonly<Record<string, string>>;
   /** 기록 창을 연 일정. 닫혀 있으면 null */
   writing: string | null;
   openWrite: (id: string) => void;
@@ -64,6 +73,12 @@ export function useScheduleRecord(
   const userId = useUser().data?.id ?? null;
   const [stars, setStars] = useMyRatings(tripId, userId);
   const [notes, setNote] = useMyVisitNotes(tripId, userId);
+  const photos = useMyVisitPhotos(tripId, userId);
+  const thumbKeys = useMemo(
+    () => Object.values(photos).flatMap((ps) => ps.map((p) => p.thumb_key)),
+    [photos],
+  );
+  const { data: thumbUrls = NO_URLS } = useVisitPhotoUrls(tripId, thumbKeys);
   const [writing, setWriting] = useState<string | null>(null);
   const at = useMemo(() => new Map(data?.map((v) => [v.item_id, v.marked_at])), [data]);
   const record: ScheduleRecord = {
@@ -75,6 +90,8 @@ export function useScheduleRecord(
     rate: setStars,
     notes,
     saveNote: setNote,
+    photos,
+    thumbUrls,
     writing,
     openWrite: setWriting,
     closeWrite: () => setWriting(null),

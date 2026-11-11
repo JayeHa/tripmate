@@ -34,6 +34,8 @@ type RouteDayHeaderProps = {
   rated: number;
   /** 기록 모드 — 그날 내가 기록 글을 남긴 장소 수 「📝 3」 */
   notes: number;
+  /** 기록 모드 — 그날 내가 붙인 사진 수 「📷 6」 */
+  photos: number;
 };
 
 /**
@@ -53,6 +55,7 @@ export function RouteDayHeader({
   done,
   rated,
   notes,
+  photos,
 }: RouteDayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
   const tone = dateTone(startDate, day, !!holiday);
@@ -75,7 +78,13 @@ export function RouteDayHeader({
       {weather && <DayWeatherLines weather={weather} />}
       {mode === "record" ? (
         route.totals.places > 0 && (
-          <VisitProgress done={done} total={route.totals.places} rated={rated} notes={notes} />
+          <VisitProgress
+            done={done}
+            total={route.totals.places}
+            photos={photos}
+            notes={notes}
+            rated={rated}
+          />
         )
       ) : (
         <PlanSummary route={route} summary={summary} />

@@ -41,6 +41,8 @@ export const queryKeys = {
   ratings: (tripId: string) => ["trips", tripId, "ratings"] as const,
   /** 다녀온 장소의 기록 글(0085 visit_notes) — 사람마다 하나, 일행이 함께 읽는다 */
   visitNotes: (tripId: string) => ["trips", tripId, "visit-notes"] as const,
+  /** 기록 사진 줄(일행 것까지). 읽기 주소는 뒤에 "urls" + 키 */
+  visitPhotos: (tripId: string) => ["trips", tripId, "visit-photos"] as const,
   /** 숙소(장소 포함) — 체크인 순 */
   stays: (tripId: string) => ["trips", tripId, "stays"] as const,
   /** 항공편 — 출발 순 */
@@ -79,8 +81,8 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
   if (["cities", "holidays", "weather"].includes(String(queryKey[0]))) return true;
   // 내 프로필(이름 · 사진) — 오프라인 첫 화면의 계정 버튼이 「?」 로 보이지 않게. 로그인 정보(["user"])는 남기지 않는다
   if (queryKey[0] === "user" && queryKey[1] === "profile") return true;
-  // 영수증 · 바우처 · 쇼핑 · 환급 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
-  const files = ["receipts", "vouchers", "pack-photos", "refund-photos"];
+  // 영수증 · 바우처 · 쇼핑 · 환급 · 기록 사진 읽기 주소는 1시간이면 만료돼 저장하지 않는다
+  const files = ["receipts", "vouchers", "pack-photos", "refund-photos", "visit-photos"];
   if (files.includes(String(queryKey[2])) && queryKey[3] === "urls") {
     return false;
   }

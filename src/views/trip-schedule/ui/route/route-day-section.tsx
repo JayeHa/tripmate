@@ -106,6 +106,7 @@ export function RouteDaySection({
         // 보이는 것만 — 다녀감을 되돌려도 별점 · 글은 남아 있지만 카드에 그 줄이 없다
         rated={countDone(route.stops, tones, record.stars)}
         notes={countDone(route.stops, tones, record.notes)}
+        photos={countPhotos(route.stops, tones, record.photos)}
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
@@ -177,11 +178,33 @@ function stopRecord(
     onVisited: next ? () => record.markVisited(id) : undefined,
     // 다녀온 장소만 — 항공편은 「done」 이 되지 않는다
     rating: tone === "done" ? { stars, onRate: (n) => record.rate(id, n) } : undefined,
-    note:
-      tone === "done"
-        ? { body: record.notes[id] ?? "", onWrite: () => record.openWrite(id) }
-        : undefined,
+    note: tone === "done" ? noteOf(record, id) : undefined,
   };
+}
+
+/** 다녀온 장소 카드의 기록 — 글 · 사진(썸네일 주소) · 기록 창 열기 */
+function noteOf(record: ScheduleRecord, id: string): NonNullable<StopRecord["note"]> {
+  return {
+    body: record.notes[id] ?? "",
+    photos: (record.photos[id] ?? []).map((p) => ({
+      id: p.id,
+      src: record.thumbUrls[p.thumb_key],
+      caption: p.caption,
+    })),
+    onWrite: () => record.openWrite(id),
+  };
+}
+
+/** 다녀온 장소에 붙인 사진 수. 계획 모드는 0 */
+function countPhotos(
+  stops: readonly { row: TimelineRow }[],
+  tones: RecordStop[] | null,
+  photos: ScheduleRecord["photos"],
+): number {
+  return stops.reduce(
+    (n, s, i) => n + (tones?.[i].tone === "done" ? (photos[s.row.item.id]?.length ?? 0) : 0),
+    0,
+  );
 }
 
 /** 다녀온 장소 중 값(별점 · 기록 글)이 있는 곳의 수. 계획 모드는 0 */

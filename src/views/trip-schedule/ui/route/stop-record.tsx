@@ -1,5 +1,7 @@
 import { nextStars, RatingPicker, type RouteTone, type StopTone } from "@/entities/schedule-item";
 
+import { type CardPhoto, RecordPhotoRow } from "./record-photo-row";
+
 /** 기록 모드의 역 하나 — 노선도 카드가 받는 값 */
 export type StopRecord = {
   tone: StopTone;
@@ -14,8 +16,8 @@ export type StopRecord = {
   onVisited?: () => void;
   /** 다녀온 장소 — 내 별점(0 = 안 매김)과 바꾸기. 그 밖의 역은 없다 */
   rating?: { stars: number; onRate: (stars: number) => void };
-  /** 다녀온 장소 — 내 기록 글(없으면 "")과 기록 창 열기. 그 밖의 역은 없다 */
-  note?: { body: string; onWrite: () => void };
+  /** 다녀온 장소 — 내 기록 글(없으면 "") · 사진과 기록 창 열기. 그 밖의 역은 없다 */
+  note?: RecordNoteProps;
 };
 
 /** 역 하나의 모양 — 표식 · 카드, 들어오는 · 나가는 구간, 패스 · 도착 시각, 흐리게 할지 */
@@ -107,14 +109,14 @@ export function RatingRow({ stars, onRate }: RatingRowProps) {
   );
 }
 
-type RecordNoteProps = { body: string; onWrite: () => void };
+type RecordNoteProps = { body: string; photos: readonly CardPhoto[]; onWrite: () => void };
 
 /**
- * 다녀온 장소 카드 안 기록 — 글이 있으면 글(따옴표 · 3줄 말줄임) + 「✎ 기록 수정」, 없으면 점선 「+ 기록 · 사진 남기기」.
- * 둘 다 기록 창을 연다
+ * 다녀온 장소 카드 안 기록 — 사진 줄 · 글(따옴표 · 3줄 말줄임) + 「✎ 기록 수정」, 둘 다 없으면 점선 「+ 기록 · 사진 남기기」.
+ * 모두 기록 창을 연다
  */
-export function RecordNote({ body, onWrite }: RecordNoteProps) {
-  if (!body) {
+export function RecordNote({ body, photos, onWrite }: RecordNoteProps) {
+  if (!body && photos.length === 0) {
     return (
       <button
         type="button"
@@ -127,9 +129,12 @@ export function RecordNote({ body, onWrite }: RecordNoteProps) {
   }
   return (
     <>
-      <p className="line-clamp-3 rounded-button bg-visit-note-bg px-2.5 py-2 text-[13px]/[1.45] wrap-break-word whitespace-pre-line text-ink-700">
-        “{body}”
-      </p>
+      {photos.length > 0 && <RecordPhotoRow photos={photos} onOpen={onWrite} />}
+      {body && (
+        <p className="line-clamp-3 rounded-button bg-visit-note-bg px-2.5 py-2 text-[13px]/[1.45] wrap-break-word whitespace-pre-line text-ink-700">
+          “{body}”
+        </p>
+      )}
       <button
         type="button"
         onClick={onWrite}

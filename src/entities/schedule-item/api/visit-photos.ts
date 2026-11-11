@@ -1,0 +1,130 @@
+import { postJson } from "@/shared/api/post-json";
+import { createClient } from "@/shared/api/supabase/client";
+import { compressImage } from "@/shared/lib/compress-image";
+
+import {
+  isVisitPhotoMime,
+  VISIT_PHOTO_MAX_BYTES,
+  VISIT_PHOTO_SIDE,
+  VISIT_THUMB_SIDE,
+} from "../lib/visit-photo-rules";
+import type { VisitPhoto } from "../model/visit-photo";
+
+/** 화면에 그대로 보여 줄 사진 오류 — 받지 않는 사진 · 너무 큰 사진 */
+export class VisitPhotoError extends Error {}
+
+/** 서명 주소 라우트를 부른다 — 저장소는 서버가 정한다(지금 Supabase Storage, 최종 R2) */
+function callPhotos<T>(body: Record<string, unknown>): Promise<T> {
+  return postJson<T>("/api/visit-photos", body, "사진을 처리하지 못했어요");
+}
+
+/** 여행의 기록 사진 줄 전부(일행 것까지) */
+export async function fetchVisitPhotos(tripId: string): Promise<VisitPhoto[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("visit_photos").select("*").eq("trip_id", tripId);
+  if (error) throw error;
+  return data;
+}
+
+/** 키마다 잠깐 볼 수 있는 주소 */
+export async function fetchVisitPhotoUrls(
+  tripId: string,
+  keys: string[],
+): Promise<Record<string, string>> {
+  if (keys.length === 0) return {};
+  return (await callPhotos<{ urls: Record<string, string> }>({ action: "read", tripId, keys }))
+    .urls;
+}
+
+/** 파일 하나를 저장소에 올린다 — 서명 주소를 받아 그 주소로 PUT. 키를 돌려준다 */
+async function uploadFile(tripId: string, file: Blob): Promise<string> {
+  const { key, url } = await callPhotos<{ key: string; url: string }>({
+    action: "upload",
+    tripId,
+    mime: file.type,
+    size: file.size,
+  });
+  const put = await fetch(url, {
+    method: "PUT",
+    headers: { "content-type": file.type },
+    body: file,
+  });
+  if (!put.ok) throw new Error(`upload ${put.status}`);
+  return key;
+}
+
+/** 저장소의 파일을 지운다 — 실패해도 던지지 않는다(남은 파일은 따로 정리한다, #155) */
+export async function removeVisitPhotoFiles(tripId: string, keys: string[]): Promise<void> {
+  if (keys.length === 0) return;
+  await callPhotos({ action: "remove", tripId, keys }).catch(() => undefined);
+}
+
+/**
+ * 고른 사진 → 줄인 사진(긴 변 1600) + 썸네일(긴 변 192)을 올리고 두 키를 돌려준다. 줄은 아직 없다.
+ * 줄인 결과가 받는 종류가 아니면(브라우저가 못 읽는 HEIC 등) 받지 않는다. 하나만 올라갔으면 그것을 지우고 던진다
+ */
+async function uploadVisitPhoto(tripId: string, file: File) {
+  const [photo, thumb] = await Promise.all([
+    compressImage(file, VISIT_PHOTO_SIDE),
+    compressImage(file, VISIT_THUMB_SIDE),
+  ]);
+  if (!isVisitPhotoMime(photo.type) || !isVisitPhotoMime(thumb.type)) {
+    throw new VisitPhotoError("이 형식은 올릴 수 없어요 (JPG · PNG · WebP)");
+  }
+  if (photo.size > VISIT_PHOTO_MAX_BYTES) throw new VisitPhotoError("사진이 너무 커요 (5MB 까지)");
+  const [p, t] = await Promise.allSettled([uploadFile(tripId, photo), uploadFile(tripId, thumb)]);
+  if (p.status === "fulfilled" && t.status === "fulfilled") {
+    return { photo_key: p.value, thumb_key: t.value };
+  }
+  await removeVisitPhotoFiles(
+    tripId,
+    [p, t].flatMap((r) => (r.status === "fulfilled" ? [r.value] : [])),
+  );
+  throw [p, t].find((r) => r.status === "rejected")?.reason;
+}
+
+/**
+ * 사진 하나를 올리고 내 줄로 붙인다 — 붙인 줄을 돌려준다. 줄을 넣지 못하면 올린 파일을 지우고 던진다.
+ * 쓴 사람은 DB 기본값이 나로 채운다(별점 · 기록 글과 같다)
+ */
+export async function addVisitPhoto(v: {
+  tripId: string;
+  itemId: string;
+  file: File;
+  caption: string | null;
+  position: number;
+}): Promise<VisitPhoto> {
+  const keys = await uploadVisitPhoto(v.tripId, v.file);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("visit_photos")
+    .insert({
+      item_id: v.itemId,
+      trip_id: v.tripId,
+      caption: v.caption,
+      position: v.position,
+      ...keys,
+    })
+    .select()
+    .single();
+  if (error) {
+    await removeVisitPhotoFiles(v.tripId, [keys.photo_key, keys.thumb_key]);
+    throw error;
+  }
+  return data;
+}
+
+/** 사진 설명을 바꾼다(null = 지우기) */
+export async function updateVisitPhotoCaption(id: string, caption: string | null): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("visit_photos").update({ caption }).eq("id", id);
+  if (error) throw error;
+}
+
+/** 사진 줄을 지운 뒤 파일을 지운다. 이미 없으면 그대로 끝낸다 */
+export async function deleteVisitPhoto(photo: VisitPhoto): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("visit_photos").delete().eq("id", photo.id);
+  if (error) throw error;
+  await removeVisitPhotoFiles(photo.trip_id, [photo.photo_key, photo.thumb_key]);
+}

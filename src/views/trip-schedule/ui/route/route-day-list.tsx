@@ -73,6 +73,7 @@ function RouteDays({ trip, sections, holidayOf, weatherOf, ...rest }: RouteDaysP
         </p>
       )}
       <RecordOverlay
+        tripId={trip.id}
         startDate={trip.start_date}
         rows={sections.flatMap((s) => s.rows)}
         record={rest.record}

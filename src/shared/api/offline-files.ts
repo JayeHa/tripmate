@@ -1,12 +1,12 @@
 /**
- * 기기에 남기는 사진 파일 — 바우처(그림 · 썸네일 · 사진 원본) · 쇼핑 참고 사진 · 택스 리펀 사진.
+ * 기기에 남기는 사진 파일 — 바우처(그림 · 썸네일 · 사진 원본) · 쇼핑 참고 사진 · 택스 리펀 사진 · 기록 사진.
  * 화면은 서버가 준 서명 주소(1시간)로 보는데, 서비스 워커(`app/sw.ts`)는 그 주소의 token 을 빼고 경로로 저장해 둔다.
  * 오프라인이라 서명 주소를 받지 못하면 경로만 있는 주소를 쓴다 — 저장해 둔 사진이면 서비스 워커가 그것을 준다.
  * 저장소를 R2 로 바꾸면(#18 ⑫-b) 이 주소 모양도 함께 바꾼다
  */
 import { ApiError } from "./post-json";
 
-const OFFLINE_BUCKETS = ["vouchers", "pack-photos", "refund-photos"] as const;
+const OFFLINE_BUCKETS = ["vouchers", "pack-photos", "refund-photos", "visit-photos"] as const;
 type OfflineBucket = (typeof OFFLINE_BUCKETS)[number];
 
 const SIGN_PATH = "/storage/v1/object/sign/";
