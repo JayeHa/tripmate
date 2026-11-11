@@ -59,11 +59,14 @@ export async function removeVisitPhotoFiles(tripId: string, keys: string[]): Pro
   await callPhotos({ action: "remove", tripId, keys }).catch(() => undefined);
 }
 
+/** 올린 사진 하나의 두 키 */
+export type VisitPhotoKeys = { photo_key: string; thumb_key: string };
+
 /**
- * 고른 사진 → 줄인 사진(긴 변 1600) + 썸네일(긴 변 192)을 올리고 두 키를 돌려준다. 줄은 아직 없다.
+ * 고른 사진 → 줄인 사진(긴 변 1600) + 썸네일(긴 변 192)을 올리고 두 키를 돌려준다. 줄은 아직 없다(`insertVisitPhoto`).
  * 줄인 결과가 받는 종류가 아니면(브라우저가 못 읽는 HEIC 등) 받지 않는다. 하나만 올라갔으면 그것을 지우고 던진다
  */
-async function uploadVisitPhoto(tripId: string, file: File) {
+export async function uploadVisitPhoto(tripId: string, file: File): Promise<VisitPhotoKeys> {
   const [photo, thumb] = await Promise.all([
     compressImage(file, VISIT_PHOTO_SIDE),
     compressImage(file, VISIT_THUMB_SIDE),
@@ -84,17 +87,12 @@ async function uploadVisitPhoto(tripId: string, file: File) {
 }
 
 /**
- * 사진 하나를 올리고 내 줄로 붙인다 — 붙인 줄을 돌려준다. 줄을 넣지 못하면 올린 파일을 지우고 던진다.
- * 쓴 사람은 DB 기본값이 나로 채운다(별점 · 기록 글과 같다)
+ * 올려 둔 두 키를 내 줄로 붙이고 그 줄을 돌려준다. 쓴 사람은 DB 기본값이 나로 채운다(별점 · 기록 글과 같다).
+ * 실패해도 파일은 지우지 않는다 — 부르는 쪽이 올린 파일을 함께 정리한다
  */
-export async function addVisitPhoto(v: {
-  tripId: string;
-  itemId: string;
-  file: File;
-  caption: string | null;
-  position: number;
-}): Promise<VisitPhoto> {
-  const keys = await uploadVisitPhoto(v.tripId, v.file);
+export async function insertVisitPhoto(
+  v: { tripId: string; itemId: string; caption: string | null; position: number } & VisitPhotoKeys,
+): Promise<VisitPhoto> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("visit_photos")
@@ -103,14 +101,12 @@ export async function addVisitPhoto(v: {
       trip_id: v.tripId,
       caption: v.caption,
       position: v.position,
-      ...keys,
+      photo_key: v.photo_key,
+      thumb_key: v.thumb_key,
     })
     .select()
     .single();
-  if (error) {
-    await removeVisitPhotoFiles(v.tripId, [keys.photo_key, keys.thumb_key]);
-    throw error;
-  }
+  if (error) throw error;
   return data;
 }
 
@@ -121,10 +117,9 @@ export async function updateVisitPhotoCaption(id: string, caption: string | null
   if (error) throw error;
 }
 
-/** 사진 줄을 지운 뒤 파일을 지운다. 이미 없으면 그대로 끝낸다 */
-export async function deleteVisitPhoto(photo: VisitPhoto): Promise<void> {
+/** 사진 줄만 지운다. 이미 없으면 그대로 끝낸다 — 파일은 부르는 쪽이 줄을 지운 뒤 지운다(버킷은 붙은 줄이 없는 파일만 지운다) */
+export async function deleteVisitPhotoRow(id: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("visit_photos").delete().eq("id", photo.id);
+  const { error } = await supabase.from("visit_photos").delete().eq("id", id);
   if (error) throw error;
-  await removeVisitPhotoFiles(photo.trip_id, [photo.photo_key, photo.thumb_key]);
 }
