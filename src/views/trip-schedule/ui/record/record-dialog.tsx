@@ -127,7 +127,7 @@ function RecordForm({ tripId, target, onLockChange, onClose, onSave }: RecordFor
       <div className="flex shrink-0 items-start gap-3 px-5 pt-4 pb-1 lg:px-6 lg:pt-6">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <DialogTitle className="text-lg font-extrabold text-ink-900 lg:text-[19px]">
-            {target.body ? "기록 수정" : "기록 남기기"}
+            {target.body || target.photos.length > 0 ? "기록 수정" : "기록 남기기"}
           </DialogTitle>
           <p className="truncate text-[13px] text-route-sub">{target.caption}</p>
         </div>
