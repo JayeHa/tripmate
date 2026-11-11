@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { ScheduleItem } from "../model/types";
 import { buildRouteDay } from "./route-day";
-import { clampToView, defaultStopId, routeMapOf } from "./route-map";
+import {
+  clampToView,
+  defaultStopId,
+  lineRecordTone,
+  pinRecordTone,
+  routeMapOf,
+  type RouteMapRecord,
+} from "./route-map";
 import type { TimelineRow } from "./timeline";
 
 type LatLng = { lat: number; lng: number };
@@ -141,5 +148,32 @@ describe("clampToView", () => {
 
   it("보이는 칸 안이면 그대로", () => {
     expect(clampToView({ lat: 7, lng: 2 }, view, inset)).toEqual({ lat: 7, lng: 2 });
+  });
+});
+
+describe("pinRecordTone · lineRecordTone", () => {
+  const record: RouteMapRecord = new Map([
+    ["hotel-am", { tone: "done", reached: true }],
+    ["a", { tone: "done", reached: true }],
+    ["b", { tone: "current", reached: true }],
+    ["hotel-pm", { tone: "todo", reached: false }],
+    ["flight", { tone: null, reached: false }],
+  ]);
+
+  it("같은 자리 핀은 지금 여기 > 남음 > 다녀옴", () => {
+    expect(pinRecordTone(["hotel-am", "hotel-pm"], record)).toBe("todo");
+    expect(pinRecordTone(["a", "b"], record)).toBe("current");
+    expect(pinRecordTone(["a"], record)).toBe("done");
+  });
+
+  it("기록 모양이 없으면(항공편 · 모르는 id) 계획 모양", () => {
+    expect(pinRecordTone(["flight"], record)).toBeNull();
+    expect(pinRecordTone(["x"], record)).toBeNull();
+  });
+
+  it("선은 도착 장소까지 왔으면 지나온 구간, 기록 모드가 아니면 계획", () => {
+    expect(lineRecordTone("b", record)).toBe("done");
+    expect(lineRecordTone("hotel-pm", record)).toBe("todo");
+    expect(lineRecordTone("b", undefined)).toBe("plan");
   });
 });

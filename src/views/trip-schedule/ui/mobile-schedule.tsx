@@ -188,6 +188,8 @@ export function MobileSchedule({
           totalDays={totalDays}
           tripId={trip.id}
           rowsOf={(d) => sections[d]?.rows ?? []}
+          mode={mode}
+          record={body.record}
           onShowInList={(id) => {
             // 펼친 뒤의 자리로 옮긴다 — 위에서 접히는 역이 있으면 그만큼 올라온다
             flushSync(() => open.setOpenId(id));

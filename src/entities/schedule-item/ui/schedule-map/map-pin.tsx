@@ -2,6 +2,7 @@ import { BedDouble, type LucideIcon, Utensils } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 
+import type { MapRecordTone } from "../../lib/route-map";
 import type { PlaceCategory } from "../../model/place";
 import type { ReservationStatus } from "../../model/reservation-status";
 
@@ -13,6 +14,17 @@ const PIN_TONE = {
 } satisfies Record<ReservationStatus, string>;
 
 const NO_STATUS_PIN = "border-status-opt bg-white text-ink-700";
+
+/**
+ * 기록 모드 핀 — 다녀옴 초록 채움 · 지금 여기 흰 바탕 초록 4px + 퍼지는 링 · 남음 흰 바탕 회색 테두리.
+ * 예약 상태색 대신 쓴다(카테고리 배지는 그대로)
+ */
+const RECORD_PIN = {
+  done: "border-[2.5px] border-white bg-visited text-white",
+  current:
+    "border-4 border-visited bg-white text-visited-text shadow-[0_0_0_7px_rgba(16,185,129,.22)]",
+  todo: "border-[2.5px] border-[#C9CDD2] bg-white text-[#A0A7B1]",
+} satisfies Record<MapRecordTone, string>;
 
 /**
  * 카테고리 배지는 식당 · 숙소에만. 지도에서 끼니와 잠자리를 번호 · 상태색과 겹치지 않게 알아보게 한다.
@@ -62,15 +74,18 @@ type MapPinProps = {
   category: PlaceCategory | null;
   /** 지금 보고 있는 장소(목록 스크롤 · 핀 선택). 흰 물방울 강조 핀으로 그린다 */
   focus?: boolean;
+  /** 기록 모드 모양. 있으면 상태색 대신 이 모양이고, 고른 핀(focus)은 물방울 대신 잉크 테두리(3px · 2 띄움) */
+  record?: MapRecordTone | null;
 };
 
 /**
  * 지도 위 번호 핀. 숫자 = 순서, 색 · 테두리 = 예약 상태, 오른쪽 위 배지 = 카테고리(식당 흰색 · 숙소 잉크).
  * 보통 핀: 숫자 12/800, 그림자 0 1px 4px .28, 배지 17px(-8/-8).
  * 강조 핀: 44px 흰 물방울(그림자 0 3px 10px .28) 안에 34px 원 + 숫자 15/800, 배지 19px(-6/-6).
+ * 기록 모드(record)는 보통 핀 모양에 다녀감 색을 칠하고, 고르면 잉크 테두리를 두른다(기준점이 원 중심 그대로라 `pinAnchor(false)`).
  */
-export function MapPin({ num, size = "md", status, category, focus }: MapPinProps) {
-  if (focus) {
+export function MapPin({ num, size = "md", status, category, focus, record }: MapPinProps) {
+  if (focus && !record) {
     return (
       <span className="relative block h-13.5 w-11">
         {/* 왼쪽 아래만 각진 원을 -45° 돌리면 각진 모서리가 아래 가운데로 와서 물방울 끝이 된다 */}
@@ -93,6 +108,8 @@ export function MapPin({ num, size = "md", status, category, focus }: MapPinProp
         className={cn(
           "flex items-center justify-center rounded-full border-2 px-1 text-xs font-extrabold shadow-[0_1px_4px_rgba(0,0,0,.28)]",
           status ? PIN_TONE[status] : NO_STATUS_PIN,
+          record && RECORD_PIN[record],
+          record && focus && "outline-3 outline-offset-2 outline-[#111]",
           PIN_SIZE[size],
         )}
       >

@@ -9,10 +9,14 @@ import { MapGuard } from "@/shared/ui/map-guard";
 import { routeLineStyle } from "../../lib/route";
 import {
   clampToView,
+  lineRecordTone,
   type MapInset,
+  type MapRecordTone,
   type MapView,
+  pinRecordTone,
   type RouteMapData,
   type RouteMapPin,
+  type RouteMapRecord,
 } from "../../lib/route-map";
 import { itemName } from "../../model/place";
 import { MapPin, pinAnchor } from "../schedule-map/map-pin";
@@ -38,6 +42,8 @@ type RouteMapProps = {
   hoverLineTo?: string | null;
   /** PC — 핀에 올렸다 · 내렸다(null) */
   onHover?: (id: string | null) => void;
+  /** 기록 모드 — 핀을 다녀감 모양으로, 선을 지나온(초록) · 남은(회색) 구간으로 칠한다 */
+  record?: RouteMapRecord;
   className?: string;
 };
 
@@ -46,6 +52,7 @@ type RouteMapProps = {
  * 고른 장소는 강조 핀, 그리로 들어오는 구간은 잉크색. 범위 밖 장소(공항 · 근교)는 맞추기에서 빼고
  * 보이는 칸 가장자리에 핀을 붙여 「나리타 · 58km 밖」 을 단다. 누르면 고르고 그곳까지 보이게 넓힌다.
  * PC 는 목록과 올림을 맞춘다 — 올린 장소의 핀을 키우고, 올린 구간을 잉크색으로, 핀에 올리면 onHover 로 알린다.
+ * 기록 모드(record)는 핀 · 선을 다녀감으로 칠한다. 고른 핀은 물방울 대신 잉크 테두리.
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다
  */
 export function RouteMap({
@@ -57,6 +64,7 @@ export function RouteMap({
   hoverId = null,
   hoverLineTo = null,
   onHover,
+  record,
   className,
 }: RouteMapProps) {
   const [view, setView] = useState<MapView | null>(null);
@@ -80,7 +88,9 @@ export function RouteMap({
         >
           {data.lines.map((line) => {
             const strong = line.toId === selectedId || line.toId === hoverLineTo;
-            const style = routeLineStyle(line.mode, "plan", { onMap: true });
+            const style = routeLineStyle(line.mode, lineRecordTone(line.toId, record), {
+              onMap: true,
+            });
             return (
               <RoutePolyline
                 key={line.key}
@@ -100,6 +110,7 @@ export function RouteMap({
               onHover={onHover && ((on) => onHover(on ? pin.ids[0] : null))}
               at={pin.offKm !== null && view ? clampToView(pin.at, view, inset) : pin.at}
               onSelect={() => onSelect(pin.ids[0])}
+              record={record ? pinRecordTone(pin.ids, record) : null}
             />
           ))}
           <RouteCamera
@@ -130,11 +141,23 @@ type RouteMapMarkerProps = {
   /** 핀을 그릴 자리 — 범위 밖이면 보이는 칸 가장자리로 끌어온 좌표 */
   at: { lat: number; lng: number };
   onSelect: () => void;
+  /** 기록 모드 모양(없으면 예약 상태색) */
+  record: MapRecordTone | null;
 };
 
 /** 핀 하나. 범위 밖이면 아래에 「나리타 · 58km 밖」(이름 첫 낱말) */
-function RouteMapMarker({ pin, selected, hovered, onHover, at, onSelect }: RouteMapMarkerProps) {
+function RouteMapMarker({
+  pin,
+  selected,
+  hovered,
+  onHover,
+  at,
+  onSelect,
+  record,
+}: RouteMapMarkerProps) {
   const name = itemName(pin.row.item);
+  // 기록 모양 핀은 고르면 테두리만 둘러 원 중심이 그대로다
+  const drop = selected && !record;
   return (
     <AdvancedMarker
       position={at}
@@ -143,7 +166,7 @@ function RouteMapMarker({ pin, selected, hovered, onHover, at, onSelect }: Route
       onMouseEnter={onHover && (() => onHover(true))}
       onMouseLeave={onHover && (() => onHover(false))}
       zIndex={markerZ(selected, hovered)}
-      {...pinAnchor(selected)}
+      {...pinAnchor(drop)}
     >
       {/* 32 / 28 — 크기를 바꾸면 기준점(가운데)이 흔들려 확대로 키운다 */}
       <span
@@ -158,6 +181,7 @@ function RouteMapMarker({ pin, selected, hovered, onHover, at, onSelect }: Route
           status={pin.row.status}
           category={pin.row.category}
           focus={selected}
+          record={record}
         />
         {pin.offKm !== null && (
           <span className="absolute top-full left-1/2 mt-1 -translate-x-1/2 rounded-button bg-[rgba(17,17,17,.78)] px-1.75 py-0.75 text-[11px] font-extrabold whitespace-nowrap text-white">
