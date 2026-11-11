@@ -15,6 +15,7 @@ import {
   guidePlacesQuery,
   memosQuery,
   movesQuery,
+  ratingsQuery,
   scheduleItemsQuery,
   visitsQuery,
 } from "@/entities/schedule-item";
@@ -58,6 +59,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...movesQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...memosQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...visitsQuery(tripId), ...fresh }),
+    qc.fetchQuery({ ...ratingsQuery(tripId), ...fresh }),
     qc.fetchQuery(cityCatalogQuery()),
     qc.fetchQuery(cityAreasQuery()),
     qc.fetchQuery({ ...tripCitiesQuery(tripId), ...fresh }),

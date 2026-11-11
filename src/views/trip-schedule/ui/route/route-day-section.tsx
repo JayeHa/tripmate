@@ -103,6 +103,11 @@ export function RouteDaySection({
         mode={mode}
         onModeChange={onModeChange}
         done={tones?.filter((t) => t.tone === "done").length ?? 0}
+        // 보이는 별점만 — 다녀감을 되돌려도 별점은 남아 있지만 카드에 별점 줄이 없다
+        rated={
+          route.stops.filter((s, i) => tones?.[i].tone === "done" && record.stars[s.row.item.id])
+            .length
+        }
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
@@ -164,6 +169,7 @@ function stopRecord(
   id: string,
 ): StopRecord {
   const { tone, reached, next } = tones[i];
+  const stars = record.stars[id] ?? 0;
   return {
     tone,
     inPassed: reached,
@@ -171,5 +177,7 @@ function stopRecord(
     markedAt: record.markedAt(id),
     skipped: record.marks[id] === "skipped",
     onVisited: next ? () => record.markVisited(id) : undefined,
+    // 다녀온 장소만 — 항공편은 「done」 이 되지 않는다
+    rating: tone === "done" ? { stars, onRate: (n) => record.rate(id, n) } : undefined,
   };
 }

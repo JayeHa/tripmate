@@ -4591,3 +4591,69 @@ describe("다녀감 표시 (0083)", () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+describe("내 별점 (0084)", () => {
+  /** 내 별점을 넣거나 바꾼다(화면의 저장과 같은 upsert — 매긴 사람은 기본값 나) */
+  function upsertRating(trip: string, item: string, stars: number) {
+    return `insert into public.place_ratings (item_id, trip_id, stars, rated_at)
+            values ('${item}', '${trip}', ${stars}, '2027-12-05T10:00:00Z')
+            on conflict (item_id, user_id) do update set stars = excluded.stars, rated_at = excluded.rated_at`;
+  }
+
+  /** A 가 만든 여행에 B 를 멤버로 넣고 장소 하나를 둔다 */
+  async function sharedPlace(date: string) {
+    await as(A);
+    const trip = await newTrip(date, date);
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    return { trip, place };
+  }
+
+  it("사람마다 하나 — 바꾸면 내 줄만 덮고, 일행은 읽기만 한다", async () => {
+    const { trip, place } = await sharedPlace("2027-12-05");
+    await db.query(upsertRating(trip, place, 4));
+    await db.query(upsertRating(trip, place, 5));
+    await as(B);
+    await db.query(upsertRating(trip, place, 2));
+    // B 가 A 의 줄을 바꾸거나 지우려 해도 바뀌지 않는다(RLS 가 0행으로 거른다)
+    await db.query(`update public.place_ratings set stars = 1 where user_id = '${A}'`);
+    await db.query(`delete from public.place_ratings where user_id = '${A}'`);
+    expect(
+      await rejects(
+        `insert into public.place_ratings (item_id, trip_id, user_id, stars) values ('${place}', '${trip}', '${A}', 1)`,
+      ),
+    ).toMatch(/row-level security/);
+    const { rows } = await db.query<{ user_id: string; stars: number }>(
+      `select user_id, stars from public.place_ratings where item_id = '${place}' order by stars`,
+    );
+    expect(rows).toEqual([
+      { user_id: B, stars: 2 },
+      { user_id: A, stars: 5 },
+    ]);
+  });
+
+  it("0~6점 · 장소가 아닌 일정 · 다른 여행 · 멤버가 아니면 거부하고, 일정을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-06", "2027-12-06");
+    const other = await newTrip("2027-12-07", "2027-12-07");
+    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    const { rows: notes } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name)
+       values ('${trip}', 0, 1, 'note', '집합') returning id`,
+    );
+    expect(await rejects(upsertRating(trip, place, 0))).toMatch(/check constraint/);
+    expect(await rejects(upsertRating(trip, place, 6))).toMatch(/check constraint/);
+    expect(await rejects(upsertRating(trip, notes[0].id, 3))).toMatch(/장소 일정에만/);
+    expect(await rejects(upsertRating(other, place, 3))).toMatch(/foreign key/);
+    await as(B);
+    expect(await rejects(upsertRating(trip, place, 3))).toMatch(/row-level security/);
+    await as(A);
+    await db.query(upsertRating(trip, place, 3));
+    await db.query(`delete from public.schedule_items where id = '${place}'`);
+    const { rows } = await db.query(`select 1 from public.place_ratings where trip_id = '${trip}'`);
+    expect(rows).toHaveLength(0);
+  });
+});

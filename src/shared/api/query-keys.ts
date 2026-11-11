@@ -37,6 +37,8 @@ export const queryKeys = {
   memos: (tripId: string) => ["trips", tripId, "memos"] as const,
   /** 일정마다의 다녀감 표시(0083 schedule_visits) — 일행이 함께 쓴다 */
   visits: (tripId: string) => ["trips", tripId, "visits"] as const,
+  /** 다녀온 장소의 별점(0084 place_ratings) — 사람마다 하나, 일행이 함께 읽는다 */
+  ratings: (tripId: string) => ["trips", tripId, "ratings"] as const,
   /** 숙소(장소 포함) — 체크인 순 */
   stays: (tripId: string) => ["trips", tripId, "stays"] as const,
   /** 항공편 — 출발 순 */

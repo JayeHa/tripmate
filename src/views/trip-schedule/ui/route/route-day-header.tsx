@@ -30,6 +30,8 @@ type RouteDayHeaderProps = {
   onModeChange: (mode: DayMode) => void;
   /** 기록 모드 — 그날 다녀온 장소 수 */
   done: number;
+  /** 기록 모드 — 그날 내가 별점을 매긴 장소 수 「⭐ 4」 */
+  rated: number;
 };
 
 /**
@@ -47,6 +49,7 @@ export function RouteDayHeader({
   mode,
   onModeChange,
   done,
+  rated,
 }: RouteDayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
   const tone = dateTone(startDate, day, !!holiday);
@@ -68,7 +71,9 @@ export function RouteDayHeader({
       </div>
       {weather && <DayWeatherLines weather={weather} />}
       {mode === "record" ? (
-        route.totals.places > 0 && <VisitProgress done={done} total={route.totals.places} />
+        route.totals.places > 0 && (
+          <VisitProgress done={done} total={route.totals.places} rated={rated} />
+        )
       ) : (
         <PlanSummary route={route} summary={summary} />
       )}

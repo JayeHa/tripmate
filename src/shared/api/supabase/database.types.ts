@@ -1212,6 +1212,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      place_ratings: {
+        Row: {
+          item_id: string;
+          trip_id: string;
+          user_id: string;
+          stars: number;
+          rated_at: string;
+        };
+        Insert: {
+          item_id: string;
+          trip_id: string;
+          user_id?: string;
+          stars: number;
+          rated_at?: string;
+        };
+        Update: {
+          item_id?: string;
+          trip_id?: string;
+          user_id?: string;
+          stars?: number;
+          rated_at?: string;
+        };
+        Relationships: [];
+      };
       settlements: {
         Row: {
           id: string;

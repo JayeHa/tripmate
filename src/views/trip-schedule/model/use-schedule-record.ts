@@ -5,11 +5,14 @@ import { useMemo, useState } from "react";
 
 import {
   type DayMode,
+  type RatingStars,
   type ScheduleItem,
+  useMyRatings,
   useVisitMarks,
   type VisitMarks,
   visitsQuery,
 } from "@/entities/schedule-item";
+import { useUser } from "@/entities/session";
 import type { Trip } from "@/entities/trip";
 
 import { type RecordDay, recordDay } from "../lib/record";
@@ -27,6 +30,10 @@ export type ScheduleRecord = {
   dayOf: (day: number) => RecordDay;
   /** 「✓ 다녀왔어요」 — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   markVisited: (id: string) => void;
+  /** 내 별점 — 일정 id → 1~5. 안 매긴 일정은 없다 */
+  stars: RatingStars;
+  /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
+  rate: (id: string, stars: number) => void;
 };
 
 /**
@@ -44,12 +51,16 @@ export function useScheduleRecord(
   const [picked, setPicked] = useState<DayMode | null>(null);
   const [marks, setMark] = useVisitMarks(tripId);
   const { data } = useQuery(visitsQuery(tripId));
+  const userId = useUser().data?.id ?? null;
+  const [stars, setStars] = useMyRatings(tripId, userId);
   const at = useMemo(() => new Map(data?.map((v) => [v.item_id, v.marked_at])), [data]);
   const record: ScheduleRecord = {
     marks,
     markedAt: (id) => at.get(id) ?? null,
     dayOf: (day) => recordDay(day, todayIndex),
     markVisited: (id) => setMark(id, "visited"),
+    stars,
+    rate: setStars,
   };
   return {
     ...entry,
