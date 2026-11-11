@@ -56,6 +56,10 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "place_ratings", filter },
         () => refreshAfterSync(queryKeys.ratings(tripId)),
       )
+      // 기록 글 — 일행이 쓴 것도 온다(지금 화면은 내 것만 보여 준다)
+      .on("postgres_changes", { event: "*", schema: "public", table: "visit_notes", filter }, () =>
+        refreshAfterSync(queryKeys.visitNotes(tripId)),
+      )
       // 숙소 자체만 — 연결 카드의 변경은 schedule_items 이벤트로 온다
       .on(
         "postgres_changes",

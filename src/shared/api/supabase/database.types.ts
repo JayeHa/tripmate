@@ -1236,6 +1236,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      visit_notes: {
+        Row: {
+          item_id: string;
+          trip_id: string;
+          user_id: string;
+          body: string;
+          updated_at: string;
+        };
+        Insert: {
+          item_id: string;
+          trip_id: string;
+          user_id?: string;
+          body: string;
+          updated_at?: string;
+        };
+        Update: {
+          item_id?: string;
+          trip_id?: string;
+          user_id?: string;
+          body?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       settlements: {
         Row: {
           id: string;
