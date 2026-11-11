@@ -1,4 +1,4 @@
-import type { RouteTone, StopTone } from "@/entities/schedule-item";
+import { nextStars, RatingPicker, type RouteTone, type StopTone } from "@/entities/schedule-item";
 
 /** 기록 모드의 역 하나 — 노선도 카드가 받는 값 */
 export type StopRecord = {
@@ -12,6 +12,8 @@ export type StopRecord = {
   skipped: boolean;
   /** 그날 표시 없는 첫 장소 — 「✓ 다녀왔어요」. 누를 수 없는 날 · 다른 역은 없다 */
   onVisited?: () => void;
+  /** 다녀온 장소 — 내 별점(0 = 안 매김)과 바꾸기. 그 밖의 역은 없다 */
+  rating?: { stars: number; onRate: (stars: number) => void };
 };
 
 /** 역 하나의 모양 — 표식 · 카드, 들어오는 · 나가는 구간, 패스 · 도착 시각, 흐리게 할지 */
@@ -78,5 +80,27 @@ export function VisitedButton({ onClick }: VisitedButtonProps) {
     >
       ✓ 다녀왔어요
     </button>
+  );
+}
+
+type RatingRowProps = { stars: number; onRate: (stars: number) => void };
+
+/**
+ * 다녀온 장소 카드 안 별점 줄 — 「내 별점」(안 매겼으면 「별점 남기기」) 12/700 + 별 24 + 점수 문구.
+ * 별을 누르면 창 없이 바로 저장하고, 같은 점수를 다시 누르면 지운다
+ */
+export function RatingRow({ stars, onRate }: RatingRowProps) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span className="shrink-0 text-xs font-bold text-route-walk-text">
+        {stars > 0 ? "내 별점" : "별점 남기기"}
+      </span>
+      <RatingPicker
+        value={stars}
+        onPick={(n) => onRate(nextStars(stars, n))}
+        size="card"
+        label="내 별점"
+      />
+    </div>
   );
 }

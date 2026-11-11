@@ -207,6 +207,11 @@
   --color-visited-rail: #eef9f3;
   --color-progress-track: #ecede8;
   --color-visit-note-bg: #f7f7f2;
+  /* 내 별점 — 채운 별 · 올린 별(PC 미리보기) · 빈 별 · 점수 문구 */
+  --color-my-star: #ffb400;
+  --color-my-star-hover: #ffcd4d;
+  --color-my-star-empty: #dde1e6;
+  --color-my-star-text: #b7791f;
 
   /* 초대 안 한 정산 인원(guest) 아바타 — 멤버(블루)와 구분한다. soft 는 고르지 않은 결제자 칩의 아바타 */
   --color-guest: #f59e9e;

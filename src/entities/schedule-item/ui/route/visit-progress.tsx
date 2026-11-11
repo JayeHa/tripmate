@@ -5,9 +5,11 @@ type VisitProgressProps = {
   done: number;
   /** 그날 역 수 */
   total: number;
-  /** 사진 · 한 줄 기록 수 — 둘 다 없으면 오른쪽 글을 그리지 않는다 */
+  /** 사진 · 기록 글 수 — 0 인 것은 빼고, 모두 0 이면 오른쪽 글을 그리지 않는다 */
   photos?: number;
   notes?: number;
+  /** 별점을 매긴 장소 수 */
+  rated?: number;
   /** PC 날짜 레일 — 막대 4 + 「4/13」 */
   compact?: boolean;
   className?: string;
@@ -19,7 +21,7 @@ function percent(done: number, total: number) {
 }
 
 /**
- * 기록 모드의 진행 — 막대(회색 트랙 · 초록 채움, 너비 0.3초) + 「4 / 13곳 다녀왔어요」 · 「📷 6 · 📝 3」.
+ * 기록 모드의 진행 — 막대(회색 트랙 · 초록 채움, 너비 0.3초) + 「4 / 13곳 다녀왔어요」 · 「📷 6 · 📝 3 · ⭐ 4」.
  * compact 는 날짜 레일용 한 줄(막대 4 + 「4/13」)
  */
 export function VisitProgress({
@@ -27,6 +29,7 @@ export function VisitProgress({
   total,
   photos = 0,
   notes = 0,
+  rated = 0,
   compact = false,
   className,
 }: VisitProgressProps) {
@@ -48,6 +51,7 @@ export function VisitProgress({
       />
     </span>
   );
+  const counts = recordCounts(photos, notes, rated);
   if (compact) {
     return (
       <span className={cn("flex items-center gap-1.5", className)}>
@@ -65,12 +69,18 @@ export function VisitProgress({
         <span className="text-[13px] font-extrabold text-ink-900">
           {done} / {total}곳 다녀왔어요
         </span>
-        {(photos > 0 || notes > 0) && (
-          <span className="text-xs font-bold text-route-walk-text">
-            📷 {photos} · 📝 {notes}
-          </span>
-        )}
+        {counts && <span className="text-xs font-bold text-route-walk-text">{counts}</span>}
       </div>
     </div>
   );
+}
+
+/** 「📷 6 · 📝 3 · ⭐ 4」 — 0 인 것은 뺀다. 모두 0 이면 null */
+function recordCounts(photos: number, notes: number, rated: number): string | null {
+  const parts = [
+    photos > 0 && `📷 ${photos}`,
+    notes > 0 && `📝 ${notes}`,
+    rated > 0 && `⭐ ${rated}`,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
 }

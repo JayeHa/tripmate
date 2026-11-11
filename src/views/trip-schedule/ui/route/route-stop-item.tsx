@@ -13,7 +13,7 @@ import {
 import { cn } from "@/shared/lib/utils";
 
 import { StopDetail } from "./stop-detail";
-import { HereChip, stopLook, type StopRecord, VisitedButton } from "./stop-record";
+import { HereChip, RatingRow, stopLook, type StopRecord, VisitedButton } from "./stop-record";
 import { StopSubLine } from "./stop-sub-line";
 
 export type { StopRecord } from "./stop-record";
@@ -157,14 +157,22 @@ type StopInsideProps = Pick<
 >;
 
 /**
- * 카드 안 아래 칸. 기록 모드는 지금 여기의 「✓ 다녀왔어요」 만, 계획 모드는 날짜 메모 · 휴무(늘) · 펼친 칸.
+ * 카드 안 아래 칸. 기록 모드는 다녀온 장소의 별점 줄 · 지금 여기의 「✓ 다녀왔어요」, 계획 모드는 날짜 메모 · 휴무(늘) · 펼친 칸.
  * 그릴 것이 없으면 null(RouteStop 이 빈 칸을 숨긴다)
  */
 function StopInside({ record, ...detail }: StopInsideProps) {
-  if (record) return record.onVisited ? <VisitedButton onClick={record.onVisited} /> : null;
+  if (record) return <RecordInside record={record} />;
   const { stop, open } = detail;
   if (!open && stop.notes.length === 0 && !stop.row.hoursOff) return null;
   return <StopDetail {...detail} />;
+}
+
+type RecordInsideProps = { record: StopRecord };
+
+/** 기록 모드의 카드 안 — 다녀온 장소면 별점 줄, 지금 여기면 「✓ 다녀왔어요」, 그 밖은 비운다 */
+function RecordInside({ record }: RecordInsideProps) {
+  if (record.rating) return <RatingRow {...record.rating} />;
+  return record.onVisited ? <VisitedButton onClick={record.onVisited} /> : null;
 }
 
 type NextSegmentProps = Pick<RouteStopItemProps, "stop" | "onEditMove"> & {
