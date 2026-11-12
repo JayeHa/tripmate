@@ -6,19 +6,21 @@ import { useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { MapGuard } from "@/shared/ui/map-guard";
 
-import { routeLineStyle } from "../../lib/route";
+import { PASS_LINE, routeLineStyle } from "../../lib/route";
 import {
   clampToView,
+  linePassed,
   lineRecordTone,
   type MapInset,
   type MapRecordTone,
   type MapView,
-  pinRecordTone,
+  pinTone,
   type RouteMapData,
   type RouteMapPin,
   type RouteMapRecord,
 } from "../../lib/route-map";
 import { itemName } from "../../model/place";
+import type { VisitMarks } from "../../model/visit";
 import { MapPin, pinAnchor } from "../schedule-map/map-pin";
 import { RouteCamera } from "./route-camera";
 import { RoutePolyline } from "./route-polyline";
@@ -44,8 +46,12 @@ type RouteMapProps = {
   onHover?: (id: string | null) => void;
   /** 기록 모드 — 핀을 다녀감 모양으로, 선을 지나온(초록) · 남은(회색) 구간으로 칠한다 */
   record?: RouteMapRecord;
+  /** 다녀감 표시(일행 공유) — 패스한 곳의 핀 · 그곳에 닿는 선을 회색으로(계획 · 기록 모드 같다) */
+  marks?: VisitMarks;
   className?: string;
 };
+
+const NO_MARKS: VisitMarks = {};
 
 /**
  * 동선 지도 — 번호 핀(예약 상태색) + 수단별 선(대중교통 실선 · 도보 점선 · 항공 파선, 노선도와 같은 언어).
@@ -53,6 +59,7 @@ type RouteMapProps = {
  * 보이는 칸 가장자리에 핀을 붙여 「나리타 · 58km 밖」 을 단다. 누르면 고르고 그곳까지 보이게 넓힌다.
  * PC 는 목록과 올림을 맞춘다 — 올린 장소의 핀을 키우고, 올린 구간을 잉크색으로, 핀에 올리면 onHover 로 알린다.
  * 기록 모드(record)는 핀 · 선을 다녀감으로 칠한다. 고른 핀은 물방울 대신 잉크 테두리.
+ * 패스한 곳(marks)은 모드와 상관없이 진회색 핀, 그곳에 닿는 선은 회색 파선.
  * AdvancedMarker 라 NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID 가 필요하다
  */
 export function RouteMap({
@@ -65,6 +72,7 @@ export function RouteMap({
   hoverLineTo = null,
   onHover,
   record,
+  marks = NO_MARKS,
   className,
 }: RouteMapProps) {
   const [view, setView] = useState<MapView | null>(null);
@@ -88,9 +96,9 @@ export function RouteMap({
         >
           {data.lines.map((line) => {
             const strong = line.toId === selectedId || line.toId === hoverLineTo;
-            const style = routeLineStyle(line.mode, lineRecordTone(line.toId, record), {
-              onMap: true,
-            });
+            const style = linePassed(line, marks)
+              ? PASS_LINE
+              : routeLineStyle(line.mode, lineRecordTone(line.toId, record), { onMap: true });
             return (
               <RoutePolyline
                 key={line.key}
@@ -110,7 +118,7 @@ export function RouteMap({
               onHover={onHover && ((on) => onHover(on ? pin.ids[0] : null))}
               at={pin.offKm !== null && view ? clampToView(pin.at, view, inset) : pin.at}
               onSelect={() => onSelect(pin.ids[0])}
-              record={record ? pinRecordTone(pin.ids, record) : null}
+              record={pinTone(pin.ids, record, marks)}
             />
           ))}
           <RouteCamera

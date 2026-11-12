@@ -5,10 +5,12 @@ import { type ReactNode, useMemo } from "react";
 import {
   buildRouteDay,
   defaultStopId,
+  pinTone,
   RouteMap,
   routeMapOf,
   ScheduleMap,
   type TimelineRow,
+  type VisitMarks,
 } from "@/entities/schedule-item";
 
 import { mapDayOf } from "../../lib/focus";
@@ -50,6 +52,7 @@ type PcMapPaneProps = Pick<
  * 고른 장소가 있으면 그 장소를, 없으면 스크롤 강조된 장소를 강조하고 그 장소의 날을 그린다.
  * 왼쪽 아래 지도 카드는 강조된 장소를 보이고, 그 날에 강조된 장소가 없으면 그날 첫 장소(범위 밖이면 범위 안의 첫 장소)를 보이며 지도에도 강조한다.
  * 기록 모드는 핀 · 선 · 카드 번호를 다녀감으로 칠하고, 강조된 장소가 그 날에 없으면 「✓ 다녀왔어요」 를 둘 장소를 보인다.
+ * 패스한 곳은 두 모드 모두 진회색 핀 · 회색 파선이고, 지도 카드 칩은 다녀감 표시가 먼저다.
  * 편집 중에는 편집하는 날의 일정 지도. 왼쪽 위에 너비 프리셋 · 범례(보기에서만)
  */
 export function PcMapPane({
@@ -78,6 +81,7 @@ export function PcMapPane({
           day={mapDay}
           rows={sections[mapDay]?.rows ?? []}
           record={mode === "record" ? record : null}
+          marks={record.marks}
           selectedId={selectedId ?? focusId}
           onSelect={onPick}
           onOpenDetail={onOpen}
@@ -103,6 +107,8 @@ type PcRouteMapProps = {
   rows: TimelineRow[];
   /** 기록 모드의 다녀감. 계획 모드는 null */
   record: ScheduleLayoutProps["record"] | null;
+  /** 다녀감 표시(두 모드) — 패스 핀 · 선, 지도 카드 칩 */
+  marks: VisitMarks;
   /** 강조할 장소 — 다른 날의 장소이거나 없으면 그날 첫 장소 */
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -120,6 +126,7 @@ function PcRouteMap({
   day,
   rows,
   record,
+  marks,
   selectedId,
   onSelect,
   onOpenDetail,
@@ -146,6 +153,7 @@ function PcRouteMap({
         hoverLineTo={hover.segTo}
         onHover={hover.onStop}
         record={mapRecord}
+        marks={marks}
       />
       {shownId && (
         <PcMapCard
@@ -153,8 +161,9 @@ function PcRouteMap({
           stopId={shownId}
           onPick={onSelect}
           onOpenDetail={onOpenDetail}
-          tone={mapRecord?.get(shownId)?.tone ?? null}
-          onVisited={record && shownId === nextId ? () => record.markVisited(shownId) : undefined}
+          tone={pinTone([shownId], mapRecord, marks)}
+          mark={marks[shownId] ?? null}
+          onMark={record && shownId === nextId ? (m) => record.setMark(shownId, m) : undefined}
         />
       )}
     </>

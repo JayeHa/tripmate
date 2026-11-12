@@ -6,6 +6,7 @@ import {
   ReservationBadge,
   type StopTone,
   type TimelineRow,
+  VisitedChip,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
@@ -53,11 +54,7 @@ export function StopSubLine({ row, tone, dim, markedAt }: StopSubLineProps) {
         </span>
       )}
       {tone === "pass" && <PassChip />}
-      {dim && (
-        <span className="shrink-0 rounded-[5px] bg-visited-soft px-1.5 py-0.5 text-[11px] font-extrabold text-visited-text">
-          ✓ 다녀옴
-        </span>
-      )}
+      {dim && <VisitedChip />}
       {!marked && row.status && <ReservationBadge status={row.status} className="shrink-0" />}
       <span className="truncate text-xs text-route-card-meta empty:hidden">
         {done ? arrivedText(markedAt) : metaText(row, tone !== "todo")}

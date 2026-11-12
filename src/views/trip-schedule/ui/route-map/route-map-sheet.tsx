@@ -133,6 +133,7 @@ function RouteMapBody({
         onSelect={setPicked}
         inset={inset}
         record={mapRecord}
+        marks={record.marks}
       />
       <MapTopBar
         ref={barRef}
@@ -152,6 +153,7 @@ function RouteMapBody({
         totals={route.totals}
         onShowInList={onShowInList}
         record={mapRecord}
+        marks={record.marks}
       />
     </>
   );

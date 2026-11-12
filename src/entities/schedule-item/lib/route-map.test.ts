@@ -5,8 +5,10 @@ import { buildRouteDay } from "./route-day";
 import {
   clampToView,
   defaultStopId,
+  linePassed,
   lineRecordTone,
   pinRecordTone,
+  pinTone,
   routeMapOf,
   type RouteMapRecord,
 } from "./route-map";
@@ -166,6 +168,15 @@ describe("pinRecordTone · lineRecordTone", () => {
     expect(pinRecordTone(["a"], record)).toBe("done");
   });
 
+  it("다녀옴이 패스보다 앞선다 — 한 번이라도 다녀왔으면 다녀온 곳", () => {
+    const withPass: RouteMapRecord = new Map([
+      ["p", { tone: "pass", reached: false }],
+      ["a", { tone: "done", reached: true }],
+    ]);
+    expect(pinRecordTone(["p", "a"], withPass)).toBe("done");
+    expect(pinRecordTone(["p"], withPass)).toBe("pass");
+  });
+
   it("기록 모양이 없으면(항공편 · 모르는 id) 계획 모양", () => {
     expect(pinRecordTone(["flight"], record)).toBeNull();
     expect(pinRecordTone(["x"], record)).toBeNull();
@@ -175,5 +186,27 @@ describe("pinRecordTone · lineRecordTone", () => {
     expect(lineRecordTone("b", record)).toBe("done");
     expect(lineRecordTone("hotel-pm", record)).toBe("todo");
     expect(lineRecordTone("b", undefined)).toBe("plan");
+  });
+});
+
+describe("pinTone · linePassed", () => {
+  const marks = { a: "skipped", b: "visited", c: "skipped" } as const;
+
+  it("계획 모드는 그 자리를 모두 패스했을 때만 패스, 아니면 예약 상태색(null)", () => {
+    expect(pinTone(["a"], undefined, marks)).toBe("pass");
+    expect(pinTone(["a", "c"], undefined, marks)).toBe("pass");
+    expect(pinTone(["a", "b"], undefined, marks)).toBeNull();
+    expect(pinTone(["b"], undefined, marks)).toBeNull();
+  });
+
+  it("기록 모드는 기록 모양을 따른다", () => {
+    const record: RouteMapRecord = new Map([["a", { tone: "current", reached: false }]]);
+    expect(pinTone(["a"], record, marks)).toBe("current");
+  });
+
+  it("패스한 곳에서 나가거나 들어오는 선", () => {
+    expect(linePassed({ fromId: "a", toId: "b" }, marks)).toBe(true);
+    expect(linePassed({ fromId: "b", toId: "c" }, marks)).toBe(true);
+    expect(linePassed({ fromId: "b", toId: "x" }, marks)).toBe(false);
   });
 });

@@ -5,11 +5,12 @@ import {
   itemName,
   MapPin,
   type MapRecordTone,
-  pinRecordTone,
+  pinTone,
   type RouteMapRecord,
   type RouteMapStop,
   segmentChip,
   transitRouteUrl,
+  type VisitMarks,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
@@ -25,6 +26,8 @@ type MapCardsProps = {
   onShowInList: (id: string) => void;
   /** 기록 모드 — 카드 번호를 지도 핀과 같은 다녀감 모양으로 */
   record?: RouteMapRecord;
+  /** 다녀감 표시(두 모드) — 패스한 곳의 번호를 진회색으로 */
+  marks: VisitMarks;
 };
 
 /**
@@ -38,6 +41,7 @@ export function MapCards({
   totals,
   onShowInList,
   record,
+  marks,
 }: MapCardsProps) {
   const rowRef = useCardRow(selectedId, onSelect);
   const index = stops.findIndex((s) => s.row.item.id === selectedId);
@@ -73,7 +77,7 @@ export function MapCards({
             selected={stop.row.item.id === selectedId}
             onSelect={() => onSelect(stop.row.item.id)}
             onShowInList={() => onShowInList(stop.row.item.id)}
-            tone={record ? pinRecordTone([stop.row.item.id], record) : null}
+            tone={pinTone([stop.row.item.id], record, marks)}
           />
         ))}
       </div>
@@ -86,7 +90,7 @@ type MapCardProps = {
   selected: boolean;
   onSelect: () => void;
   onShowInList: () => void;
-  /** 기록 모드 번호 모양(없으면 예약 상태색) */
+  /** 번호 모양 — 기록 모드 다녀감 · 패스(없으면 예약 상태색) */
   tone: MapRecordTone | null;
 };
 
