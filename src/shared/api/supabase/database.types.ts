@@ -1260,6 +1260,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      visit_photos: {
+        Row: {
+          id: string;
+          item_id: string;
+          trip_id: string;
+          user_id: string;
+          photo_key: string;
+          thumb_key: string;
+          caption: string | null;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          item_id: string;
+          trip_id: string;
+          user_id?: string;
+          photo_key: string;
+          thumb_key: string;
+          caption?: string | null;
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          caption?: string | null;
+          position?: number;
+        };
+        Relationships: [];
+      };
       settlements: {
         Row: {
           id: string;

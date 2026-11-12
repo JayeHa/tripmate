@@ -18,6 +18,7 @@ import {
   ratingsQuery,
   scheduleItemsQuery,
   visitNotesQuery,
+  visitPhotosQuery,
   visitsQuery,
 } from "@/entities/schedule-item";
 import { staysQuery } from "@/entities/stay";
@@ -62,6 +63,7 @@ export async function loadTripData(qc: QueryClient, tripId: string): Promise<boo
     qc.fetchQuery({ ...visitsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...ratingsQuery(tripId), ...fresh }),
     qc.fetchQuery({ ...visitNotesQuery(tripId), ...fresh }),
+    qc.fetchQuery({ ...visitPhotosQuery(tripId), ...fresh }),
     qc.fetchQuery(cityCatalogQuery()),
     qc.fetchQuery(cityAreasQuery()),
     qc.fetchQuery({ ...tripCitiesQuery(tripId), ...fresh }),

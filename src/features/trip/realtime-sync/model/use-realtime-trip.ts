@@ -60,6 +60,12 @@ export function useRealtimeTrip(tripId: string) {
       .on("postgres_changes", { event: "*", schema: "public", table: "visit_notes", filter }, () =>
         refreshAfterSync(queryKeys.visitNotes(tripId)),
       )
+      // 기록 사진 — 대기열에 넣지 않으므로 바로 다시 읽는다. 읽기 주소는 키가 그대로면 그대로
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "visit_photos", filter },
+        () => void qc.invalidateQueries({ queryKey: queryKeys.visitPhotos(tripId), exact: true }),
+      )
       // 숙소 자체만 — 연결 카드의 변경은 schedule_items 이벤트로 온다
       .on(
         "postgres_changes",
