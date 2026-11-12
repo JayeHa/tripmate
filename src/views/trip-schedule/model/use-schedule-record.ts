@@ -36,8 +36,6 @@ export type ScheduleRecord = {
    * 「지금 여기」 는 오늘만
    */
   dayOf: (day: number) => RecordDay;
-  /** 「✓ 다녀왔어요」 — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
-  markVisited: (id: string) => void;
   /** 방문 토글 — 다녀왔어요 · 패스 · 지우기(null). 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   setMark: (id: string, mark: VisitMark | null) => void;
   /** 내 별점 — 일정 id → 1~5. 안 매긴 일정은 없다 */
@@ -88,7 +86,6 @@ export function useScheduleRecord(
     marks,
     markedAt: (id) => at.get(id) ?? null,
     dayOf: (day) => recordDay(day, todayIndex),
-    markVisited: (id) => setMark(id, "visited"),
     setMark,
     stars,
     rate: setStars,

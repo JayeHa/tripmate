@@ -16,7 +16,7 @@ const PIN_TONE = {
 const NO_STATUS_PIN = "border-status-opt bg-white text-ink-700";
 
 /**
- * 기록 모드 핀 — 다녀옴 초록 채움 · 지금 여기 흰 바탕 초록 4px + 퍼지는 링 · 남음 흰 바탕 회색 테두리.
+ * 기록 모드 핀 — 다녀옴 초록 채움 · 지금 여기 흰 바탕 초록 4px + 퍼지는 링 · 남음 흰 바탕 회색 테두리 · 패스 진회색 채움(계획 모드도).
  * 예약 상태색 대신 쓴다(카테고리 배지는 그대로)
  */
 const RECORD_PIN = {
@@ -24,6 +24,7 @@ const RECORD_PIN = {
   current:
     "border-4 border-visited bg-white text-visited-text shadow-[0_0_0_7px_rgba(16,185,129,.22)]",
   todo: "border-[2.5px] border-[#C9CDD2] bg-white text-[#A0A7B1]",
+  pass: "border-[2.5px] border-white bg-pass-strong text-white",
 } satisfies Record<MapRecordTone, string>;
 
 /**

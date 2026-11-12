@@ -1,4 +1,5 @@
 import { itemCoords } from "../model/place";
+import type { VisitMarks } from "../model/visit";
 import { haversineKm } from "./distance";
 import type { RouteMode, RouteSegment, RouteTone } from "./route";
 import type { RouteDay } from "./route-day";
@@ -36,7 +37,15 @@ export type RouteMapPin = {
 };
 
 /** 핀 사이 선 하나 */
-export type RouteMapLine = { key: string; from: LatLng; to: LatLng; mode: RouteMode; toId: string };
+export type RouteMapLine = {
+  key: string;
+  from: LatLng;
+  to: LatLng;
+  mode: RouteMode;
+  /** 출발 · 도착 장소 id — 패스한 곳에 닿는 선을 고른다 */
+  fromId: string;
+  toId: string;
+};
 
 export type RouteMapData = { stops: RouteMapStop[]; pins: RouteMapPin[]; lines: RouteMapLine[] };
 
@@ -129,14 +138,15 @@ export function routeMapOf(route: RouteDay): RouteMapData {
       from: prev.at,
       to: stop.at,
       mode,
+      fromId: prev.row.item.id,
       toId: stop.row.item.id,
     });
   });
   return { stops, pins: [...pins.values()], lines };
 }
 
-/** 기록 모드 핀 모양 — 다녀옴 · 지금 여기 · 남음 */
-export type MapRecordTone = "done" | "current" | "todo";
+/** 지도 핀 모양 — 다녀옴 · 지금 여기 · 남음(기록 모드), 패스(두 모드) */
+export type MapRecordTone = "done" | "current" | "todo" | "pass";
 
 /**
  * 기록 모드의 지도 — 장소 id 마다 모양(없으면 계획 모양 — 항공편)과 그 장소까지 왔는지(들어오는 선을 초록으로).
@@ -145,8 +155,8 @@ export type MapRecordTone = "done" | "current" | "todo";
 export type RouteMapRecord = ReadonlyMap<string, { tone: MapRecordTone | null; reached: boolean }>;
 
 /**
- * 핀 하나의 기록 모양. 같은 자리를 두 번 가는 핀(숙소에서 나와 숙소로)은 지금 여기 > 남음 > 다녀옴 —
- * 아침에 나온 숙소도 밤에 다시 갈 곳이면 남은 곳이다. 기록 모양이 없는 핀은 null(계획 모양)
+ * 핀 하나의 기록 모양. 같은 자리를 두 번 가는 핀(숙소에서 나와 숙소로)은 지금 여기 > 남음 > 다녀옴 > 패스 —
+ * 아침에 나온 숙소도 밤에 다시 갈 곳이면 남은 곳이고, 한 번이라도 다녀왔으면 다녀온 곳이다. 기록 모양이 없는 핀은 null(계획 모양)
  */
 export function pinRecordTone(
   ids: readonly string[],
@@ -155,7 +165,28 @@ export function pinRecordTone(
   const tones = ids.map((id) => record.get(id)?.tone ?? null);
   if (tones.includes("current")) return "current";
   if (tones.includes("todo")) return "todo";
-  return tones.includes("done") ? "done" : null;
+  if (tones.includes("done")) return "done";
+  return tones.includes("pass") ? "pass" : null;
+}
+
+/**
+ * 지도 핀 모양 — 기록 모드는 다녀감, 계획 모드는 그 자리의 일정을 모두 패스했을 때만 패스(나머지는 예약 상태색 — null)
+ */
+export function pinTone(
+  ids: readonly string[],
+  record: RouteMapRecord | undefined,
+  marks: VisitMarks,
+): MapRecordTone | null {
+  if (record) return pinRecordTone(ids, record);
+  return ids.every((id) => marks[id] === "skipped") ? "pass" : null;
+}
+
+/** 패스한 장소에서 나가거나 들어오는 선 — 모드와 상관없이 회색 파선으로 그린다 */
+export function linePassed(
+  line: Pick<RouteMapLine, "fromId" | "toId">,
+  marks: VisitMarks,
+): boolean {
+  return marks[line.fromId] === "skipped" || marks[line.toId] === "skipped";
 }
 
 /** 선의 색 — 기록 모드면 도착 장소까지 왔을 때 지나온 구간(초록), 아니면 남은 구간. 계획 모드는 수단 색 */

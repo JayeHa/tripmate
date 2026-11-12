@@ -28,6 +28,15 @@ export function SlimRow({ emoji, name, pinNo = null, onClick }: SlimRowProps) {
   );
 }
 
+/** 「✓ 다녀옴」 칩 — 연초록 바탕 · 진초록 11/800 · r5 */
+export function VisitedChip() {
+  return (
+    <span className="shrink-0 rounded-[5px] bg-visited-soft px-1.5 py-0.5 text-[11px] font-extrabold text-visited-text">
+      ✓ 다녀옴
+    </span>
+  );
+}
+
 /** 「패스」 칩 — 진회색 바탕 · 흰 11/800 · r5 */
 export function PassChip() {
   return (

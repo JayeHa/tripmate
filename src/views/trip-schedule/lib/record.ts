@@ -106,10 +106,10 @@ export function routeMapRecord(route: RouteDay, tones: readonly RecordStop[]): R
   );
 }
 
-/** 지도 핀의 기록 모양 — 계획 모양(항공편)은 null, 패스는 아직 지도에 따로 그리지 않아 남은 모양으로 */
+/** 지도 핀의 기록 모양 — 계획 모양(항공편)은 null */
 function mapTone(tone: StopTone): MapRecordTone | null {
   if (tone === "plan" || tone === "visited") return null;
-  return tone === "pass" ? "todo" : tone;
+  return tone;
 }
 
 /** 「✓ 다녀왔어요」 를 둘 장소(그날 표시 없는 첫 장소, 누를 수 있는 날만). 없으면 null */

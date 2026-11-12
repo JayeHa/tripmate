@@ -5,10 +5,14 @@ import {
   itemName,
   MapPin,
   type MapRecordTone,
+  PassChip,
   ReservationBadge,
+  type ReservationStatus,
   type RouteMapStop,
   type TimelineRow,
   transitRouteUrl,
+  VisitedChip,
+  type VisitMark,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
@@ -21,10 +25,12 @@ type PcMapCardProps = {
   onPick: (id: string) => void;
   /** 「상세 ›」 */
   onOpenDetail: (row: TimelineRow) => void;
-  /** 기록 모드의 모양 — 번호를 다녀감 색으로. 계획 모드 · 항공편은 null */
+  /** 번호 모양 — 기록 모드는 다녀감, 계획 모드는 패스만. 없으면 예약 상태색 */
   tone?: MapRecordTone | null;
-  /** 기록 모드에서 「✓ 다녀왔어요」 를 둘 장소면 — 「상세 ›」 오른쪽에 */
-  onVisited?: () => void;
+  /** 이 장소의 다녀감 표시 — 있으면 예약 상태 칩 대신 「✓ 다녀옴」 · 「패스」 칩 */
+  mark?: VisitMark | null;
+  /** 기록 모드에서 지금 여기 장소면 — 「상세 ›」 오른쪽에 「패스」 · 「✓ 다녀왔어요」 */
+  onMark?: (mark: VisitMark) => void;
 };
 
 /** 기록 모드 번호 36 — 다녀옴 초록 · 지금 여기 진한 초록 · 남음 회색, 모두 흰 숫자 */
@@ -32,6 +38,7 @@ const RECORD_NUM = {
   done: "bg-visited",
   current: "bg-visited-text",
   todo: "bg-[#C9CDD2]",
+  pass: "bg-pass-strong",
 } satisfies Record<MapRecordTone, string>;
 
 /** ‹ › 버튼 — 36×34 · r8 · 1px 회색 테두리, 끝이면 흐리게 */
@@ -41,7 +48,8 @@ const STEP =
 /**
  * PC 지도 왼쪽 아래 카드(400 · r16). 번호 36(핀 색) · 「day 1 · 2번째 · 12:10」 + 예약 상태 · 이름 · 「카테고리 · 설명」 ·
  * 오른쪽 길찾기(직전 장소 → 이 장소 대중교통). 아래 줄 ‹ 「2 / 8」 › 로 그날 앞뒤 장소를 고르고, 「상세 ›」 로 일정 상세.
- * 기록 모드는 번호를 다녀감 색으로 칠하고, 「✓ 다녀왔어요」 를 둘 장소면 「상세 ›」 오른쪽에 그 버튼(상세는 남긴다 — 기록 모드 PC 는 상세를 여기서만 연다)
+ * 기록 모드는 번호를 다녀감 색으로 칠하고, 지금 여기 장소면 「상세 ›」 오른쪽에 「패스」 · 「✓ 다녀왔어요」(상세는 남긴다 — 기록 모드 PC 는 상세를 여기서만 연다).
+ * 칩은 다녀감 표시가 먼저 — 「✓ 다녀옴」 · 「패스」, 없으면 예약 상태(계획 · 기록 모드 같다)
  */
 export function PcMapCard({
   stops,
@@ -49,7 +57,8 @@ export function PcMapCard({
   onPick,
   onOpenDetail,
   tone = null,
-  onVisited,
+  mark = null,
+  onMark,
 }: PcMapCardProps) {
   const index = stops.findIndex((s) => s.row.item.id === stopId);
   const stop = stops[index];
@@ -78,7 +87,7 @@ export function PcMapCard({
             <span className="truncate text-xs font-extrabold text-route-stop tabular-nums">
               {headLine(stop)}
             </span>
-            {row.status && <ReservationBadge status={row.status} className="shrink-0" />}
+            <StatusChip mark={mark} status={row.status} />
           </span>
           <span className="truncate text-[17px] font-extrabold text-[#111]">{name}</span>
           <span className="truncate text-[13px] text-ink-500 empty:hidden">{metaLine(row)}</span>
@@ -123,18 +132,36 @@ export function PcMapCard({
         >
           상세 ›
         </button>
-        {onVisited && (
-          <button
-            type="button"
-            onClick={onVisited}
-            className="flex h-8.5 items-center rounded-button bg-visited px-3 text-[13px] font-extrabold text-white"
-          >
-            ✓ 다녀왔어요
-          </button>
+        {onMark && (
+          <>
+            <button
+              type="button"
+              onClick={() => onMark("skipped")}
+              className="flex h-8.5 items-center rounded-button bg-surface-muted px-3 text-[13px] font-bold text-ink-700"
+            >
+              패스
+            </button>
+            <button
+              type="button"
+              onClick={() => onMark("visited")}
+              className="flex h-8.5 items-center rounded-button bg-visited px-3 text-[13px] font-extrabold text-white"
+            >
+              ✓ 다녀왔어요
+            </button>
+          </>
         )}
       </div>
     </div>
   );
+}
+
+type StatusChipProps = { mark: VisitMark | null; status: ReservationStatus | null };
+
+/** 머리 줄 칩 — 다녀감 표시가 있으면 그것(「✓ 다녀옴」 · 「패스」), 없으면 예약 상태. 둘 다 없으면 없다 */
+function StatusChip({ mark, status }: StatusChipProps) {
+  if (mark === "visited") return <VisitedChip />;
+  if (mark === "skipped") return <PassChip />;
+  return status && <ReservationBadge status={status} className="shrink-0" />;
 }
 
 /** 「day 1 · 2번째 · 12:10」 — 시각이 없으면 뺀다 */

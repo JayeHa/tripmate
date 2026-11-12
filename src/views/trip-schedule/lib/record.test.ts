@@ -106,9 +106,9 @@ describe("기록 모드 지도 · 레일", () => {
     expect(nextStopId(route, recordOfRoute(route, {}, "other"))).toBeNull();
   });
 
-  it("지도는 패스를 아직 남은 모양으로", () => {
+  it("지도의 패스는 패스 모양", () => {
     const tones = recordOfRoute(route, { a: "skipped" }, "today");
-    expect(routeMapRecord(route, tones).get("a")).toEqual({ tone: "todo", reached: false });
+    expect(routeMapRecord(route, tones).get("a")).toEqual({ tone: "pass", reached: false });
   });
 
   it("진행은 장소만 센다 — 다녀옴 · 패스 따로", () => {
