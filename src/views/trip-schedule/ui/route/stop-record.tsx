@@ -25,7 +25,7 @@ export type StopVisit = {
   markedAt: string | null;
   /** 펼친 카드의 방문 토글 — 누를 수 있는 날(여행 중 오늘까지)의 장소만 */
   toggle?: { value: VisitMark | null; onChange: (next: VisitMark | null) => void };
-  /** 기록 모드 · 그날 표시 없는 첫 장소 — 큰 「패스」 · 「✓ 다녀왔어요」(이 카드는 펼치지 않는다) */
+  /** 기록 모드 · 그날 표시 없는 첫 장소 — 큰 「패스」 · 「✓ 다녀왔어요」(펼쳐도 토글 줄은 없다) */
   onNow?: (mark: VisitMark) => void;
   /** 다녀온 장소(기록 모드) — 내 별점(0 = 안 매김)과 바꾸기 */
   rating?: { stars: number; onRate: (stars: number) => void };

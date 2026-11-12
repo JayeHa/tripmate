@@ -71,9 +71,7 @@ export function StopDetail({
           <NoteChips checklist={checklist} vouchers={vouchers} />
           <AlternativesLine alternatives={row.alternatives} />
           <div className="flex flex-wrap gap-1.5">
-            <button type="button" onClick={onOpenDetail} className={OUTLINE}>
-              상세
-            </button>
+            <DetailButton onClick={onOpenDetail} />
             {onAddMemo && (
               <button type="button" onClick={onAddMemo} className={OUTLINE}>
                 + 메모
@@ -108,6 +106,17 @@ export function StopDetail({
 /** 펼침 버튼 — 30 · r15 · 1px 회색 테두리 · 13/700 */
 const OUTLINE =
   "flex h-7.5 items-center rounded-full border border-line bg-white px-3 text-[13px] font-bold text-ink-900";
+
+type DetailButtonProps = { onClick: () => void };
+
+/** 펼친 카드의 「상세」 — 일정 상세 창을 연다. 계획 모드 버튼 줄 · 기록 모드 펼친 카드가 같이 쓴다 */
+export function DetailButton({ onClick }: DetailButtonProps) {
+  return (
+    <button type="button" onClick={onClick} className={OUTLINE}>
+      상세
+    </button>
+  );
+}
 
 type MemoBoxProps = { row: RouteStopData["row"] };
 

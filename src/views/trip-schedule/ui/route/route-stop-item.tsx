@@ -15,7 +15,7 @@ import {
   VisitToggleRow,
 } from "@/entities/schedule-item";
 
-import { StopDetail } from "./stop-detail";
+import { DetailButton, StopDetail } from "./stop-detail";
 import { HereChip, RatingRow, RecordNote, type StopVisit } from "./stop-record";
 import { StopSubLine } from "./stop-sub-line";
 
@@ -64,7 +64,7 @@ type RouteStopItemProps = {
  * 구간 글자를 누르면 이동 방법 창. `id="item-…"` 로 화면이 그 줄을 찾아 스크롤하고,
  * 지도 핀이 있는 역에는 `data-focus-id` 를 단다(PC 스크롤 강조가 기준선을 지난 역을 찾는다).
  * 펼친 카드 맨 아래에 방문 토글(계획 · 기록 같다). 패스한 곳은 접힌 회색 한 줄이고 누르면 원래 카드로 펼친다.
- * 기록 모드는 표식 · 선 · 카드를 다녀감으로 칠하고, 표시 없는 첫 장소는 펼치지 않고 큰 「패스」 · 「✓ 다녀왔어요」 를 둔다
+ * 기록 모드는 표식 · 선 · 카드를 다녀감으로 칠하고, 표시 없는 첫 장소에는 큰 「패스」 · 「✓ 다녀왔어요」 를 둔다
  */
 export function RouteStopItem({
   stop,
@@ -88,8 +88,6 @@ export function RouteStopItem({
 }: RouteStopItemProps) {
   const { row, seg } = stop;
   const { tone } = visit;
-  // 지금 여기 카드는 큰 버튼이 있어 펼치지 않는다
-  const expandable = !visit.onNow;
   return (
     <li id={`item-${row.item.id}`} data-focus-id={row.num !== null ? row.item.id : undefined}>
       <RouteStop
@@ -106,9 +104,9 @@ export function RouteStopItem({
         selected={open}
         hovered={focused}
         pinNo={showPin ? row.num : null}
-        onClick={expandable ? onToggle : undefined}
+        onClick={onToggle}
         onHover={onHover}
-        expandable={expandable}
+        expandable
         slim={tone === "pass" && !open}
         dim={visit.dim && !open}
         record={visit.record}
@@ -153,18 +151,24 @@ type StopInsideProps = Pick<
 >;
 
 /**
- * 카드 안 아래 칸 — 기록 모드는 다녀온 장소의 별점 줄 · 기록 · 지금 여기의 큰 버튼, 계획 모드는 날짜 메모 · 휴무(늘) · 펼친 칸.
- * 펼쳤으면 맨 아래에 방문 토글. 그릴 것이 없으면 null(RouteStop 이 빈 칸을 숨긴다)
+ * 카드 안 아래 칸 — 기록 모드는 다녀온 장소의 별점 줄 · 기록 · 지금 여기의 큰 버튼(펼치면 「상세」), 계획 모드는 날짜 메모 · 휴무(늘) · 펼친 칸.
+ * 펼쳤으면 맨 아래에 방문 토글 — 지금 여기는 큰 버튼이 같은 일을 해서 없다. 그릴 것이 없으면 null(RouteStop 이 빈 칸을 숨긴다)
  */
 function StopInside({ visit, ...detail }: StopInsideProps) {
   const { stop, open } = detail;
-  const toggle = open && visit.toggle && <VisitToggleRow {...visit.toggle} />;
+  const toggle = open && visit.toggle && !visit.onNow && <VisitToggleRow {...visit.toggle} />;
   if (visit.record) {
+    // 기록 모드는 상세 칸을 그리지 않아서 일정 상세(메모 · 바우처 · 영업시간)로 가는 길을 따로 둔다
     return (
       <>
         {visit.rating && <RatingRow {...visit.rating} />}
         {visit.note && <RecordNote {...visit.note} />}
         {visit.onNow && <VisitNowButtons onChange={visit.onNow} />}
+        {open && (
+          <div className="flex">
+            <DetailButton onClick={detail.onOpenDetail} />
+          </div>
+        )}
         {toggle}
       </>
     );

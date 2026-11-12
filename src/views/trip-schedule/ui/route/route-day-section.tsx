@@ -53,7 +53,7 @@ export type RouteDaySectionProps = {
   onShowMap?: (day: number, id: string) => void;
   checklistOf: (row: TimelineRow) => { count: number; href: string };
   voucherOf: (row: TimelineRow) => { count: number; onOpen: () => void };
-  /** 「계획 | 기록」 — 기록이면 다녀감으로 역 · 선을 칠하고 펼치지 않는다 */
+  /** 「계획 | 기록」 — 기록이면 다녀감으로 역 · 선을 칠한다 */
   mode: DayMode;
   onModeChange: (mode: DayMode) => void;
   record: ScheduleRecord;
