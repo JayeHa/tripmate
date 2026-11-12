@@ -2,8 +2,8 @@ import { format, parseISO } from "date-fns";
 
 import {
   CATEGORY_LABEL,
+  PassChip,
   ReservationBadge,
-  SkippedBadge,
   type StopTone,
   type TimelineRow,
 } from "@/entities/schedule-item";
@@ -22,23 +22,24 @@ const CATEGORY_CHIP: Record<NonNullable<TimelineRow["category"]>, string> = {
 
 type StopSubLineProps = {
   row: TimelineRow;
-  /** 패스한 곳 — 상태 칩 자리에 「패스」 */
-  skipped: boolean;
-  /** 기록 모드의 모양. 계획 모드는 "plan" */
+  /** 역 모양 — 방문 표시가 있으면(다녀옴 · 패스) 예약 상태 칩을 숨긴다 */
   tone: StopTone;
+  /** 계획 모드 · 여행 중 오늘 다녀온 곳 — 「✓ 다녀옴」 칩 */
+  dim: boolean;
   /** 다녀왔어요를 누른 시각(ISO) — 다녀온 곳은 「10:52 도착」 */
   markedAt: string | null;
 };
 
 /**
- * 카드 둘째 줄 — 카테고리 칩(항공편은 「항공」) · 예약 상태 칩(패스한 곳은 「패스」) · 회색 글자.
+ * 카드 둘째 줄 — 카테고리 칩(항공편은 「항공」) · 방문 칩(「패스」 · 오늘 다녀온 곳 「✓ 다녀옴」) 또는 예약 상태 칩 · 회색 글자.
  * 회색 글자는 「메모 2」, 숙소 중간 날은 「숙박 2/3박 · 체크아웃 …」, 항공편은 「제주항공 · 7C1181」 을 앞에.
  * 장소 설명은 넣지 않는다 — 카드마다 길이가 달라져 일정이 다시 구분되지 않는다(펼침 · 상세에서 본다).
- * 기록 모드: 다녀온 곳은 상태 칩 대신 「10:52 도착」, 남은 곳은 메모 수를 숨긴다
+ * 방문 표시가 있으면 예약 상태 칩은 숨긴다. 기록 모드: 다녀온 곳은 「10:52 도착」, 남은 곳은 메모 수를 숨긴다
  */
-export function StopSubLine({ row, skipped, tone, markedAt }: StopSubLineProps) {
+export function StopSubLine({ row, tone, dim, markedAt }: StopSubLineProps) {
   const label = row.kind === "flight" ? "항공" : row.category && CATEGORY_LABEL[row.category];
   const done = tone === "done";
+  const marked = done || tone === "visited" || tone === "pass";
   return (
     <>
       {label && (
@@ -51,10 +52,13 @@ export function StopSubLine({ row, skipped, tone, markedAt }: StopSubLineProps) 
           {label}
         </span>
       )}
-      {skipped && <SkippedBadge />}
-      {!skipped && !done && row.status && (
-        <ReservationBadge status={row.status} className="shrink-0" />
+      {tone === "pass" && <PassChip />}
+      {dim && (
+        <span className="shrink-0 rounded-[5px] bg-visited-soft px-1.5 py-0.5 text-[11px] font-extrabold text-visited-text">
+          ✓ 다녀옴
+        </span>
       )}
+      {!marked && row.status && <ReservationBadge status={row.status} className="shrink-0" />}
       <span className="truncate text-xs text-route-card-meta empty:hidden">
         {done ? arrivedText(markedAt) : metaText(row, tone !== "todo")}
       </span>

@@ -21,7 +21,7 @@ type DayRailProps = {
   /** 레일 아래 고정 도구(항공편 · 숙소) */
   footer?: ReactNode;
   /** 기록 모드 — 날마다 다녀온 곳 수 · 장소 수. 있으면 하루 요약 대신 진행 줄, 켜진 날은 초록 */
-  progressOf?: (day: number) => { done: number; total: number };
+  progressOf?: (day: number) => { done: number; passed: number; total: number };
 };
 
 /**
@@ -92,7 +92,12 @@ export function DayRail({
               )}
               {progress
                 ? progress.total > 0 && (
-                    <VisitProgress compact done={progress.done} total={progress.total} />
+                    <VisitProgress
+                      compact
+                      done={progress.done}
+                      passed={progress.passed}
+                      total={progress.total}
+                    />
                   )
                 : summary && (
                     <span className="line-clamp-2 text-[13px]/[1.45] text-ink-500">{summary}</span>

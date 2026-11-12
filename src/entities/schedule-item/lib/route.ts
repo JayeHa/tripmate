@@ -231,6 +231,9 @@ export function routeLineStyle(
   return { width, style: line.style, color: onMap ? line.mapColor : line.color };
 }
 
+/** 패스한 역에 닿는 구간 — 수단과 상관없이 2px 회색 파선(목록 · 지도 같다) */
+export const PASS_LINE: RouteLine = { width: 2, style: "dashed", color: "#9CA3AF" };
+
 /** 하루 요약 칩 — 대중교통 · 도보 분의 합(그날 구간 합, 항공 · 좌표 없는 구간은 빼고) */
 export function routeTotals(segments: readonly (RouteSegment | null)[]): {
   transit: number;

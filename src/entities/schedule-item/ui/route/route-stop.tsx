@@ -5,15 +5,16 @@ import { cn } from "@/shared/lib/utils";
 import type { RouteLine } from "../../lib/route";
 import type { StopKind } from "../../lib/route-day";
 import type { PlaceCategory } from "../../model/place";
-import { RouteLineBar } from "./route-line";
-import { StopMarker, type StopTone } from "./stop-marker";
+import { SlimRow } from "./pass-row";
+import { StopAxis } from "./stop-axis";
+import type { StopTone } from "./stop-marker";
 
 /** 카드 테두리 — 지금 여기(초록) · 고른 카드(계획 파랑 · 기록 초록) · 올림(PC) · 보통 */
-function cardClass(tone: StopTone, selected: boolean, hovered: boolean): string {
+function cardClass(tone: StopTone, selected: boolean, hovered: boolean, record: boolean): string {
   if (tone === "current") {
     return "border-[1.5px] border-visited shadow-[0_0_0_4px_rgba(16,185,129,.12)]";
   }
-  if (selected && tone === "plan") {
+  if (selected && !record) {
     return "border-route-card-open shadow-[0_0_0_3px_rgba(58,139,255,.12)]";
   }
   if (selected) return "border-visited-line shadow-[0_0_0_3px_rgba(16,185,129,.1)]";
@@ -52,12 +53,18 @@ type RouteStopProps = {
   onHover?: (hovering: boolean) => void;
   /** 카드 안 아래 칸(노트 · 메모 · 버튼 · 기록). 이 칸을 눌러도 접히지 않는다 */
   children?: ReactNode;
+  /** 패스한 곳 — 카드 대신 회색 한 줄(36). 누르면(onClick) 펼친다 */
+  slim?: boolean;
+  /** 계획 모드 · 오늘 다녀온 곳 — 줄째 흐리게(.55) */
+  dim?: boolean;
+  /** 기록 모드 — 고른 카드 테두리가 초록 */
+  record?: boolean;
 };
 
 /**
  * 노선도의 역(장소) 한 줄 — 3열 격자 「시각 48 | 선 28 | 장소 카드」. 표식은 선 칸 가운데, 위에서 24(카드 첫 줄 높이).
  * 들어오는 구간 선은 표식 위, 나가는 구간 선은 표식 아래부터 카드 끝까지 이어진다. 회색 목록 바탕(#F7F8FA) 위에서 쓴다.
- * 남은 역(기록 모드)은 줄 전체를 흐리게 한다
+ * 남은 역(기록 모드)은 줄 전체를 흐리게 한다(.45). 패스한 곳은 접힌 회색 한 줄(표식은 위에서 22, 시각은 회색)이고 투명도는 없다
  */
 export function RouteStop({
   time,
@@ -77,57 +84,116 @@ export function RouteStop({
   expandable = false,
   onHover,
   children,
+  slim = false,
+  dim = false,
+  record = false,
 }: RouteStopProps) {
   return (
     <div
       className={cn(
         "grid grid-cols-[48px_28px_minmax(0,1fr)] transition-opacity",
         tone === "todo" && "opacity-45",
+        dim && "opacity-55",
       )}
       onPointerEnter={onHover && (() => onHover(true))}
       onPointerLeave={onHover && (() => onHover(false))}
     >
-      <span className="pt-4.25 pr-1 text-right text-[13px]/4 font-extrabold text-ink-900 tabular-nums">
-        {time}
-      </span>
-      <span className="relative">
-        <RouteLineBar line={inLine} className="top-0 h-6" />
-        <RouteLineBar line={outLine} className="top-6 bottom-0" />
-        <StopMarker
-          kind={kind}
-          tone={tone}
-          category={category}
-          className="absolute top-6 left-1/2 z-1 -translate-1/2"
-        />
-      </span>
+      <StopAxis
+        time={time}
+        kind={kind}
+        tone={tone}
+        category={category}
+        inLine={inLine}
+        outLine={outLine}
+        slim={slim}
+      />
       <div className="min-w-0 py-1 pl-1">
-        <div
-          className={cn(
-            "flex flex-col rounded-card border bg-white px-3.5 py-2.75 transition-[border-color,box-shadow] duration-150",
-            cardClass(tone, selected, hovered),
-            onHover &&
-              !selected &&
-              "hover:border-route-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,.07)]",
-          )}
-        >
-          {/* 폭을 정해 둔다 — iOS Safari 는 세로 flex 안의 button 을 늘이지 않고 내용 폭으로 그려 긴 이름이 말줄임 없이 카드 밖으로 넘친다 */}
-          <button
-            type="button"
+        {slim ? (
+          <SlimRow emoji={emoji} name={name} pinNo={pinNo} onClick={onClick} />
+        ) : (
+          <StopCard
+            name={name}
+            emoji={emoji}
+            aside={aside}
+            sub={sub}
+            tone={tone}
+            selected={selected}
+            hovered={hovered}
+            pinNo={pinNo}
             onClick={onClick}
-            aria-expanded={expandable ? selected : undefined}
-            className="flex w-full min-w-0 flex-col gap-1.25 text-left"
+            expandable={expandable}
+            hoverable={!!onHover}
+            record={record}
           >
-            <StopTitle emoji={emoji} name={name} aside={aside} pinNo={pinNo} selected={selected} />
-            {sub && (
-              <span className="flex w-full min-w-0 items-center gap-1.5 empty:hidden">{sub}</span>
-            )}
-          </button>
-          {/* 자식 컴포넌트가 아무것도 그리지 않으면 빈 칸도 숨긴다 */}
-          {children && (
-            <div className="flex min-w-0 flex-col gap-2 pt-2.25 empty:hidden">{children}</div>
-          )}
-        </div>
+            {children}
+          </StopCard>
+        )}
       </div>
+    </div>
+  );
+}
+
+type StopCardProps = Pick<
+  RouteStopProps,
+  | "name"
+  | "emoji"
+  | "aside"
+  | "sub"
+  | "tone"
+  | "selected"
+  | "hovered"
+  | "pinNo"
+  | "onClick"
+  | "expandable"
+  | "record"
+  | "children"
+> & {
+  /** PC — 올리면 테두리 · 그림자를 바꾼다 */
+  hoverable: boolean;
+};
+
+/** 장소 카드 — 첫 줄(이름) · 둘째 줄, 그 아래 카드 안 칸. 첫 두 줄을 누르면 펼친다 · 접는다 */
+function StopCard({
+  name,
+  emoji,
+  aside,
+  sub,
+  tone,
+  selected = false,
+  hovered = false,
+  pinNo = null,
+  onClick,
+  expandable = false,
+  record = false,
+  children,
+  hoverable,
+}: StopCardProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col rounded-card border bg-white px-3.5 py-2.75 transition-[border-color,box-shadow] duration-150",
+        cardClass(tone, selected, hovered, record),
+        hoverable &&
+          !selected &&
+          "hover:border-route-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,.07)]",
+      )}
+    >
+      {/* 폭을 정해 둔다 — iOS Safari 는 세로 flex 안의 button 을 늘이지 않고 내용 폭으로 그려 긴 이름이 말줄임 없이 카드 밖으로 넘친다 */}
+      <button
+        type="button"
+        onClick={onClick}
+        aria-expanded={expandable ? selected : undefined}
+        className="flex w-full min-w-0 flex-col gap-1.25 text-left"
+      >
+        <StopTitle emoji={emoji} name={name} aside={aside} pinNo={pinNo} selected={selected} />
+        {sub && (
+          <span className="flex w-full min-w-0 items-center gap-1.5 empty:hidden">{sub}</span>
+        )}
+      </button>
+      {/* 자식 컴포넌트가 아무것도 그리지 않으면 빈 칸도 숨긴다 */}
+      {children && (
+        <div className="flex min-w-0 flex-col gap-2 pt-2.25 empty:hidden">{children}</div>
+      )}
     </div>
   );
 }

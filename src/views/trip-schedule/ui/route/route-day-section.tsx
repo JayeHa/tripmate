@@ -7,15 +7,15 @@ import {
   type DayMode,
   type FlightTimes,
   itemCoords,
-  type PastKind,
   type TimelineRow,
 } from "@/entities/schedule-item";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 
-import { recordOfRoute, type RecordStop } from "../../lib/record";
+import type { RecordStop } from "../../lib/record";
 import type { ScheduleRecord } from "../../model/use-schedule-record";
 import { RouteDayHeader } from "./route-day-header";
-import { RouteStopItem, type StopRecord } from "./route-stop-item";
+import { RouteStopItem } from "./route-stop-item";
+import { stopVisitsOf } from "./stop-visits";
 
 /** PC — 목록 ↔ 지도 올림(hover). 모바일은 없다 */
 export type RouteHover = {
@@ -45,7 +45,6 @@ export type RouteDaySectionProps = {
   showPins?: boolean;
   /** PC — 지도와 맞추는 올림 */
   hover?: RouteHover;
-  past: ReadonlyMap<string, PastKind>;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
   /** PC — 펼친 카드의 「+ 메모」. 모바일은 상세에서 메모를 쓴다 */
@@ -77,7 +76,6 @@ export function RouteDaySection({
   focusId = null,
   showPins = false,
   hover,
-  past,
   onOpen,
   onEditMove,
   onAddMemo,
@@ -89,7 +87,9 @@ export function RouteDaySection({
   record,
 }: RouteDaySectionProps) {
   const route = useMemo(() => buildRouteDay(rows, flightOf), [rows, flightOf]);
-  const tones = mode === "record" ? recordOfRoute(route, record.marks, record.dayOf(day)) : null;
+  const { visits, tones } = stopVisitsOf(route, mode, record, day);
+  // 머리 개수 줄은 기록 모드만
+  const recTones = mode === "record" ? tones : null;
   return (
     <section data-day-section={day} aria-label={`day ${day + 1}`} className="flex flex-col pb-6">
       <RouteDayHeader
@@ -102,11 +102,12 @@ export function RouteDaySection({
         onOpenNote={onOpen}
         mode={mode}
         onModeChange={onModeChange}
-        done={tones?.filter((t) => t.tone === "done").length ?? 0}
+        done={recTones?.filter((t) => t.tone === "done").length ?? 0}
+        passed={recTones?.filter((t) => t.tone === "pass").length ?? 0}
         // 보이는 것만 — 다녀감을 되돌려도 별점 · 글은 남아 있지만 카드에 그 줄이 없다
-        rated={countDone(route.stops, tones, record.stars)}
-        notes={countDone(route.stops, tones, record.notes)}
-        photos={countPhotos(route.stops, tones, record.photos)}
+        rated={countDone(route.stops, recTones, record.stars)}
+        notes={countDone(route.stops, recTones, record.notes)}
+        photos={countPhotos(route.stops, recTones, record.photos)}
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
@@ -128,8 +129,7 @@ export function RouteDaySection({
               focused={openId !== id && (focusId === id || hovered)}
               {...hoverHandlers}
               showPin={showPins}
-              past={past.get(row.item.id) ?? null}
-              nextPast={!!stop.next && past.has(stop.next.item.id)}
+              visit={visits[i]}
               checklist={checklistOf(row)}
               vouchers={voucherOf(row)}
               onOpenDetail={() => onOpen(row)}
@@ -137,7 +137,6 @@ export function RouteDaySection({
               onShowMap={onShowMap && (() => onShowMap(day, row.item.id))}
               onOpenNote={onOpen}
               onEditMove={onEditMove}
-              record={tones ? stopRecord(tones, i, record, id) : undefined}
             />
           );
         })}
@@ -157,41 +156,6 @@ function stopHover(hover: RouteHover | undefined, id: string, nextId: string | u
     onHover: (on: boolean) => hover.onStop(on ? id : null),
     segHighlight: !!nextId && hover.segTo === nextId,
     onSegHover: nextId ? (on: boolean) => hover.onSeg(on ? nextId : null) : undefined,
-  };
-}
-
-/** 기록 모드의 역 하나 — 모양 · 앞뒤 구간을 지나왔는지 · 도착 시각 · 패스 · 표시 없는 첫 장소면 「✓ 다녀왔어요」 */
-function stopRecord(
-  tones: RecordStop[],
-  i: number,
-  record: ScheduleRecord,
-  id: string,
-): StopRecord {
-  const { tone, reached, next } = tones[i];
-  const stars = record.stars[id] ?? 0;
-  return {
-    tone,
-    inPassed: reached,
-    outPassed: tones[i + 1]?.reached ?? false,
-    markedAt: record.markedAt(id),
-    skipped: record.marks[id] === "skipped",
-    onVisited: next ? () => record.markVisited(id) : undefined,
-    // 다녀온 장소만 — 항공편은 「done」 이 되지 않는다
-    rating: tone === "done" ? { stars, onRate: (n) => record.rate(id, n) } : undefined,
-    note: tone === "done" ? noteOf(record, id) : undefined,
-  };
-}
-
-/** 다녀온 장소 카드의 기록 — 글 · 사진(썸네일 주소) · 기록 창 열기 */
-function noteOf(record: ScheduleRecord, id: string): NonNullable<StopRecord["note"]> {
-  return {
-    body: record.notes[id] ?? "",
-    photos: (record.photos[id] ?? []).map((p) => ({
-      id: p.id,
-      src: record.thumbUrls[p.thumb_key],
-      caption: p.caption,
-    })),
-    onWrite: () => record.openWrite(id),
   };
 }
 

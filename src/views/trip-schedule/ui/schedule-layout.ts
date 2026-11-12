@@ -1,4 +1,4 @@
-import type { DayMode, MemoAuthor, PastKind, TimelineRow } from "@/entities/schedule-item";
+import type { DayMode, MemoAuthor, TimelineRow } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 import type { ScheduleEditState } from "@/features/schedule/edit-mode";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
@@ -30,8 +30,6 @@ export type ScheduleLayoutProps = {
   isPending: boolean;
   /** 뷰가 보내는 「그 날로 스크롤」 요청 */
   jump: DayJump | null;
-  /** 다녀온 일정(여행 중 · 홈 「다음 장소」 와 같은 기준) — 흐리게 그린다 */
-  past: ReadonlyMap<string, PastKind>;
   /** 들어갈 때 보여 줄 곳(여행 중 · `?day` 없이 들어왔을 때). 처리하면 onEntryDone */
   entry: ScheduleEntry | null;
   onEntryDone: () => void;

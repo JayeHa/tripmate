@@ -14,7 +14,6 @@ type RouteDaysProps = Pick<
   | "sections"
   | "holidayOf"
   | "weatherOf"
-  | "past"
   | "onOpen"
   | "onEditMove"
   | "checklistOf"

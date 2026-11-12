@@ -40,9 +40,6 @@ export function useScheduleProgress(
   return { ...dayProgress(items, todayIndex, marks), todayIndex };
 }
 
-/** 여행 중이 아닐 때의 다녀온 줄 — 렌더마다 새 Set 을 만들지 않게 */
-const NO_PAST: ReadonlyMap<string, PastKind> = new Map();
-
 /**
  * 일정 화면이 레이아웃에 내리는 「다녀온 일정」 과 「들어갈 때 보여 줄 곳」.
  * 들어갈 곳은 주소에 `?day` 가 없이 들어왔을 때만(홈 「일정 ›」 · 하단 탭) — 날짜를 골라 들어왔으면(`?day` · `?open`) 그 날짜가 먼저다.
@@ -68,5 +65,5 @@ export function useScheduleEntry(
   );
   const onEntryDone = useCallback(() => setDone(true), []);
   // 여행 중 오늘(0-base). 여행 전 · 후, 일정을 읽기 전에는 null
-  return { past: progress?.past ?? NO_PAST, entry, onEntryDone, todayIndex: day };
+  return { entry, onEntryDone, todayIndex: day };
 }
