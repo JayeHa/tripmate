@@ -1214,21 +1214,21 @@ export type Database = {
       };
       place_ratings: {
         Row: {
-          item_id: string;
+          place_key: string;
           trip_id: string;
           user_id: string;
           stars: number;
           rated_at: string;
         };
         Insert: {
-          item_id: string;
+          place_key: string;
           trip_id: string;
           user_id?: string;
           stars: number;
           rated_at?: string;
         };
         Update: {
-          item_id?: string;
+          place_key?: string;
           trip_id?: string;
           user_id?: string;
           stars?: number;
@@ -1505,6 +1505,10 @@ export type Database = {
       rotate_invite_token: {
         Args: { p_trip_id: string };
         Returns: string;
+      };
+      rate_place: {
+        Args: { p_item: string; p_stars: number; p_at: string };
+        Returns: undefined;
       };
       is_trip_member: {
         Args: { p_trip_id: string };

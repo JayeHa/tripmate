@@ -7,6 +7,7 @@ import {
   type DayMode,
   type FlightTimes,
   itemCoords,
+  placeKeyOf,
   type TimelineRow,
 } from "@/entities/schedule-item";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
@@ -105,7 +106,7 @@ export function RouteDaySection({
         done={recTones?.filter((t) => t.tone === "done").length ?? 0}
         passed={recTones?.filter((t) => t.tone === "pass").length ?? 0}
         // 보이는 것만 — 다녀감을 되돌려도 별점 · 글은 남아 있지만 카드에 그 줄이 없다
-        rated={countDone(route.stops, recTones, record.stars)}
+        rated={countRatedPlaces(route.stops, recTones, record.stars)}
         notes={countDone(route.stops, recTones, record.notes)}
         photos={countPhotos(route.stops, recTones, record.photos)}
       />
@@ -171,7 +172,19 @@ function countPhotos(
   );
 }
 
-/** 다녀온 장소 중 값(별점 · 기록 글)이 있는 곳의 수. 계획 모드는 0 */
+/** 다녀온 장소 중 별점을 매긴 장소의 수 — 같은 장소(숙소 두 번)는 한 번만 센다. 계획 모드는 0 */
+function countRatedPlaces(
+  stops: readonly { row: TimelineRow }[],
+  tones: RecordStop[] | null,
+  stars: ScheduleRecord["stars"],
+): number {
+  const keys = stops
+    .filter((s, i) => tones?.[i].tone === "done" && stars[s.row.item.id])
+    .map((s) => placeKeyOf(s.row.item));
+  return new Set(keys).size;
+}
+
+/** 다녀온 장소 중 값(기록 글)이 있는 곳의 수. 계획 모드는 0 */
 function countDone(
   stops: readonly { row: TimelineRow }[],
   tones: RecordStop[] | null,

@@ -12,7 +12,10 @@ export const RATING_KEY = [SYNC_KEY, "rating"] as const;
 /** 별점 저장의 값 — 기기에 남아 되살아나므로 여행 id 와 누른 시각까지 담는다. stars 가 0 이면 지우기 */
 export type RatingVars = {
   tripId: string;
+  /** 누른 일정 — 서버는 이 일정에서 장소키를 구한다 */
   itemId: string;
+  /** 그 일정의 장소키 — 화면을 먼저 바꿀 때 쓴다. 장소 단위로 바뀌기 전에 기기에 남은 저장에는 없다 */
+  placeKey?: string;
   stars: number;
   /** 나 — 화면을 먼저 바꿀 때 내 줄을 찾는다(서버에는 보내지 않는다, DB 가 나로 채운다) */
   userId: string;
@@ -22,7 +25,7 @@ export type RatingVars = {
 
 /**
  * 별점 저장의 함수 · 동작을 등록한다(앱이 시작할 때 한 번, 기기에서 되살린 저장도 쓴다).
- * 다녀감 표시(registerVisitSync)와 같다 — 화면을 먼저 바꾸고 올리며, 일정 × 나가 키라 다시 올려도 같다.
+ * 다녀감 표시(registerVisitSync)와 같다 — 화면을 먼저 바꾸고 올리며, 여행의 장소 × 나가 키라 다시 올려도 같다.
  * 서버에 닿지 못했으면 화면은 그대로 두고 「저장 실패 · 다시 시도」 로 남기고, 그 밖의 실패는 다시 읽어 되돌린다
  */
 export function registerRatingSync(qc: QueryClient): void {
@@ -34,14 +37,17 @@ export function registerRatingSync(qc: QueryClient): void {
     mutationFn: (v: RatingVars) => saveRating(v),
     onMutate: async (v: RatingVars) => {
       await qc.cancelQueries({ queryKey: queryKeys.ratings(v.tripId) });
+      const key = v.placeKey;
+      // 장소키가 없는 예전 저장은 화면을 먼저 바꾸지 않는다 — 올린 뒤 다시 읽는다
+      if (!key) return;
       qc.setQueryData<PlaceRating[]>(queryKeys.ratings(v.tripId), (rows) => {
         if (!rows) return rows;
-        const rest = rows.filter((r) => !(r.item_id === v.itemId && r.user_id === v.userId));
+        const rest = rows.filter((r) => !(r.place_key === key && r.user_id === v.userId));
         if (v.stars === 0) return rest;
         return [
           ...rest,
           {
-            item_id: v.itemId,
+            place_key: key,
             trip_id: v.tripId,
             user_id: v.userId,
             stars: v.stars,

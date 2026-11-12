@@ -27,8 +27,8 @@ export type StopVisit = {
   toggle?: { value: VisitMark | null; onChange: (next: VisitMark | null) => void };
   /** 기록 모드 · 그날 표시 없는 첫 장소 — 큰 「패스」 · 「✓ 다녀왔어요」(펼쳐도 토글 줄은 없다) */
   onNow?: (mark: VisitMark) => void;
-  /** 다녀온 장소(기록 모드) — 내 별점(0 = 안 매김)과 바꾸기 */
-  rating?: { stars: number; onRate: (stars: number) => void };
+  /** 다녀온 장소(기록 모드) — 내 별점(0 = 안 매김) · 이 여행에서 그 장소를 들르는 횟수와 바꾸기 */
+  rating?: RatingRowProps;
   /** 다녀온 장소(기록 모드) — 내 기록 글(없으면 "") · 사진과 기록 창 열기 */
   note?: RecordNoteProps;
 };
@@ -42,13 +42,33 @@ export function HereChip() {
   );
 }
 
-type RatingRowProps = { stars: number; onRate: (stars: number) => void };
+type RatingRowProps = {
+  stars: number;
+  /** 이 여행에서 그 장소를 들르는 횟수 — 2 이상이면 아래에 반복 안내 */
+  repeat: number;
+  onRate: (stars: number) => void;
+};
 
 /**
  * 다녀온 장소 카드 안 별점 줄 — 「내 별점」(안 매겼으면 「별점 남기기」) 12/700 + 별 24 + 점수 문구.
- * 별을 누르면 창 없이 바로 저장하고, 같은 점수를 다시 누르면 지운다
+ * 별을 누르면 창 없이 바로 저장하고, 같은 점수를 다시 누르면 지운다.
+ * 별점은 여행의 장소마다 하나라 같은 장소를 여러 번 들르면 아래에 「🔁 이 여행에서 3번 들러요 · 별점은 하나예요」
  */
-export function RatingRow({ stars, onRate }: RatingRowProps) {
+export function RatingRow({ stars, repeat, onRate }: RatingRowProps) {
+  return (
+    <>
+      <RatingLine stars={stars} onRate={onRate} />
+      {repeat > 1 && (
+        <p className="truncate text-[11px] text-route-card-meta">
+          🔁 이 여행에서 {repeat}번 들러요 · 별점은 하나예요
+        </p>
+      )}
+    </>
+  );
+}
+
+/** 「내 별점」 라벨 + 별 */
+function RatingLine({ stars, onRate }: Omit<RatingRowProps, "repeat">) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       <span className="shrink-0 text-xs font-bold text-route-walk-text">

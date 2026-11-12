@@ -11,9 +11,9 @@ export async function fetchRatings(tripId: string): Promise<PlaceRating[]> {
 }
 
 /**
- * 내 별점 하나를 올린다 — 오프라인 대기열로 올라온다. stars 가 0 이면 지운다.
- * 매긴 사람은 DB 기본값이 나로 채우고, 지우기도 RLS 가 내 줄만 남긴다 — 그래서 사람 id 를 보내지 않는다.
- * 일정 × 나가 키라 두 번 올라가도 결과가 같다. at = 누른 시각(오프라인에서 누른 때)
+ * 일정 하나에서 그 장소의 내 별점을 올린다 — 오프라인 대기열로 올라온다. stars 가 0 이면 지운다.
+ * 장소키는 DB(rate_place)가 일정에서 구하고, 매긴 사람은 나로 채운다 — 그래서 장소키 · 사람 id 를 보내지 않는다.
+ * 여행의 장소 × 나가 키라 두 번 올라가도 결과가 같다. at = 누른 시각(오프라인에서 누른 때)
  */
 export async function saveRating(v: {
   tripId: string;
@@ -22,14 +22,10 @@ export async function saveRating(v: {
   at: string;
 }): Promise<void> {
   const supabase = createClient();
-  const { error } =
-    v.stars > 0
-      ? await supabase
-          .from("place_ratings")
-          .upsert(
-            { item_id: v.itemId, trip_id: v.tripId, stars: v.stars, rated_at: v.at },
-            { onConflict: "item_id,user_id" },
-          )
-      : await supabase.from("place_ratings").delete().eq("item_id", v.itemId);
+  const { error } = await supabase.rpc("rate_place", {
+    p_item: v.itemId,
+    p_stars: v.stars,
+    p_at: v.at,
+  });
   if (error) throw error;
 }

@@ -4592,67 +4592,111 @@ describe("다녀감 표시 (0083)", () => {
   });
 });
 
-describe("내 별점 (0084)", () => {
-  /** 내 별점을 넣거나 바꾼다(화면의 저장과 같은 upsert — 매긴 사람은 기본값 나) */
-  function upsertRating(trip: string, item: string, stars: number) {
-    return `insert into public.place_ratings (item_id, trip_id, stars, rated_at)
-            values ('${item}', '${trip}', ${stars}, '2027-12-05T10:00:00Z')
-            on conflict (item_id, user_id) do update set stars = excluded.stars, rated_at = excluded.rated_at`;
+describe("장소 별점 (0084 · 0087)", () => {
+  /** 일정 하나에서 그 장소의 내 별점을 바꾼다(화면의 저장과 같다). 0 이면 지운다 */
+  function rate(item: string, stars: number) {
+    return `select public.rate_place('${item}', ${stars}::smallint, '2027-12-05T10:00:00Z')`;
   }
 
-  /** A 가 만든 여행에 B 를 멤버로 넣고 장소 하나를 둔다 */
-  async function sharedPlace(date: string) {
+  /** 여행의 별점 — 장소키 · 사람 · 점수 */
+  async function ratingsOf(trip: string) {
+    const { rows } = await db.query<{ place_key: string; user_id: string; stars: number }>(
+      `select place_key, user_id, stars from public.place_ratings where trip_id = '${trip}' order by stars`,
+    );
+    return rows;
+  }
+
+  /** A 가 만든 여행에 B 를 멤버로 넣는다 */
+  async function sharedTrip(date: string) {
     await as(A);
     const trip = await newTrip(date, date);
     await db.exec(
       `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
     );
     await as(A);
-    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
-    return { trip, place };
+    return trip;
   }
 
-  it("사람마다 하나 — 바꾸면 내 줄만 덮고, 일행은 읽기만 한다", async () => {
-    const { trip, place } = await sharedPlace("2027-12-05");
-    await db.query(upsertRating(trip, place, 4));
-    await db.query(upsertRating(trip, place, 5));
+  it("같은 장소를 여러 번 들러도 사람마다 하나 — 어느 일정에서 바꿔도 같은 줄, 일행은 읽기만 한다", async () => {
+    const trip = await sharedTrip("2027-12-05");
+    const hotel = { name: "호텔", google_place_id: "g-hotel", lat: 35.66, lng: 139.7 };
+    const am = await addPlace(trip, 0, hotel);
+    const pm = await addPlace(trip, 0, hotel);
+    await db.query(rate(am, 4));
+    await db.query(rate(pm, 5));
     await as(B);
-    await db.query(upsertRating(trip, place, 2));
+    // B 가 따로 만든 장소 행이라도 구글 장소 ID 가 같으면 같은 장소다
+    const mine = await addPlace(trip, 0, hotel);
+    await db.query(rate(mine, 2));
     // B 가 A 의 줄을 바꾸거나 지우려 해도 바뀌지 않는다(RLS 가 0행으로 거른다)
     await db.query(`update public.place_ratings set stars = 1 where user_id = '${A}'`);
     await db.query(`delete from public.place_ratings where user_id = '${A}'`);
-    expect(
-      await rejects(
-        `insert into public.place_ratings (item_id, trip_id, user_id, stars) values ('${place}', '${trip}', '${A}', 1)`,
-      ),
-    ).toMatch(/row-level security/);
-    const { rows } = await db.query<{ user_id: string; stars: number }>(
-      `select user_id, stars from public.place_ratings where item_id = '${place}' order by stars`,
-    );
-    expect(rows).toEqual([
-      { user_id: B, stars: 2 },
-      { user_id: A, stars: 5 },
+    expect(await ratingsOf(trip)).toEqual([
+      { place_key: "g-hotel", user_id: B, stars: 2 },
+      { place_key: "g-hotel", user_id: A, stars: 5 },
     ]);
   });
 
-  it("0~6점 · 장소가 아닌 일정 · 다른 여행 · 멤버가 아니면 거부하고, 일정을 지우면 함께 지워진다", async () => {
+  it("구글 장소 ID 가 없으면 장소 행이 키 — 다른 여행은 따로, 0 은 지우기", async () => {
     await as(A);
     const trip = await newTrip("2027-12-06", "2027-12-06");
     const other = await newTrip("2027-12-07", "2027-12-07");
-    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    const item = await addPlace(trip, 0, { name: "골목 식당", lat: 35.66, lng: 139.7 });
+    const { rows: placeRows } = await db.query<{ place_id: string }>(
+      `select place_id from public.schedule_items where id = '${item}'`,
+    );
+    const otherItem = await addPlace(other, 0, { name: "골목 식당 2", lat: 35.66, lng: 139.7 });
+    await db.query(rate(item, 3));
+    await db.query(rate(otherItem, 5));
+    expect(await ratingsOf(trip)).toEqual([
+      { place_key: placeRows[0].place_id, user_id: A, stars: 3 },
+    ]);
+    await db.query(rate(item, 0));
+    await db.query(rate(item, 0));
+    expect(await ratingsOf(trip)).toEqual([]);
+  });
+
+  it("6점 · 장소가 아닌 일정 · 없는 일정 · 다른 여행의 장소 · 멤버가 아니면 거부한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-08", "2027-12-08");
+    const other = await newTrip("2027-12-09", "2027-12-09");
+    const place = await addPlace(trip, 0, {
+      name: "츠타야",
+      google_place_id: "g-tsutaya",
+      lat: 35.66,
+      lng: 139.7,
+    });
     const { rows: notes } = await db.query<{ id: string }>(
       `insert into public.schedule_items (trip_id, day_index, position, kind, name)
        values ('${trip}', 0, 1, 'note', '집합') returning id`,
     );
-    expect(await rejects(upsertRating(trip, place, 0))).toMatch(/check constraint/);
-    expect(await rejects(upsertRating(trip, place, 6))).toMatch(/check constraint/);
-    expect(await rejects(upsertRating(trip, notes[0].id, 3))).toMatch(/장소 일정에만/);
-    expect(await rejects(upsertRating(other, place, 3))).toMatch(/foreign key/);
+    expect(await rejects(rate(place, 6))).toMatch(/check constraint/);
+    expect(await rejects(rate(notes[0].id, 3))).toMatch(/장소 일정에만/);
+    expect(await rejects(rate("00000000-0000-0000-0000-000000000000", 3))).toMatch(/장소 일정에만/);
+    // 직접 넣어도 그 여행 일정에 없는 장소키는 거부한다
+    expect(
+      await rejects(
+        `insert into public.place_ratings (trip_id, place_key, stars) values ('${other}', 'g-tsutaya', 3)`,
+      ),
+    ).toMatch(/이 여행 일정에 있는 장소에만/);
     await as(B);
-    expect(await rejects(upsertRating(trip, place, 3))).toMatch(/row-level security/);
+    expect(await rejects(rate(place, 3))).toMatch(/장소 일정에만|row-level security/);
+  });
+
+  it("일정을 지워도 별점은 남고(지우기는 그냥 끝난다), 여행을 지우면 함께 지워진다", async () => {
     await as(A);
-    await db.query(upsertRating(trip, place, 3));
+    const trip = await newTrip("2027-12-10", "2027-12-10");
+    const place = await addPlace(trip, 0, {
+      name: "이치란",
+      google_place_id: "g-ichiran",
+      lat: 35.66,
+      lng: 139.7,
+    });
+    await db.query(rate(place, 4));
     await db.query(`delete from public.schedule_items where id = '${place}'`);
+    expect(await ratingsOf(trip)).toEqual([{ place_key: "g-ichiran", user_id: A, stars: 4 }]);
+    await db.query(rate(place, 0));
+    await db.query(`delete from public.trips where id = '${trip}'`);
     const { rows } = await db.query(`select 1 from public.place_ratings where trip_id = '${trip}'`);
     expect(rows).toHaveLength(0);
   });
