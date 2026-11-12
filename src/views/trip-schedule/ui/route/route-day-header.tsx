@@ -30,6 +30,8 @@ type RouteDayHeaderProps = {
   onModeChange: (mode: DayMode) => void;
   /** 기록 모드 — 그날 다녀온 장소 수 */
   done: number;
+  /** 기록 모드 — 그날 패스한 장소 수 */
+  passed: number;
   /** 기록 모드 — 그날 내가 별점을 매긴 장소 수 「⭐ 4」 */
   rated: number;
   /** 기록 모드 — 그날 내가 기록 글을 남긴 장소 수 「📝 3」 */
@@ -53,6 +55,7 @@ export function RouteDayHeader({
   mode,
   onModeChange,
   done,
+  passed,
   rated,
   notes,
   photos,
@@ -80,6 +83,7 @@ export function RouteDayHeader({
         route.totals.places > 0 && (
           <VisitProgress
             done={done}
+            passed={passed}
             total={route.totals.places}
             photos={photos}
             notes={notes}

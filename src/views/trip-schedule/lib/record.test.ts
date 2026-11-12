@@ -5,6 +5,7 @@ import type { RouteDay, TimelineRow } from "@/entities/schedule-item";
 import {
   nextStopId,
   placeProgress,
+  planStops,
   recordDay,
   recordOfRoute,
   recordStops,
@@ -19,29 +20,33 @@ const stops = [
 ];
 
 describe("recordStops", () => {
-  it("표시 없는 첫 장소가 지금 여기, 그 앞은 지나왔다", () => {
+  it("표시 없는 첫 장소가 지금 여기, 다녀온 역으로 들어오는 구간만 지나왔다", () => {
     const r = recordStops(stops, { a: "visited" }, "today");
     expect(r.map((s) => s.tone)).toEqual(["done", "plan", "current", "todo"]);
     expect(r.map((s) => s.next)).toEqual([false, false, true, false]);
-    expect(r.map((s) => s.reached)).toEqual([true, true, true, false]);
+    expect(r.map((s) => s.reached)).toEqual([true, false, false, false]);
   });
 
-  it("패스한 곳은 남은 모양이지만 지나간 것으로 본다", () => {
+  it("패스는 따로 모양을 두고, 그 역으로 들어오는 구간은 지나오지 않았다", () => {
     const r = recordStops(stops, { a: "visited", b: "skipped" }, "today");
-    expect(r.map((s) => s.tone)).toEqual(["done", "plan", "todo", "current"]);
-    expect(r.map((s) => s.reached)).toEqual([true, true, true, true]);
+    expect(r.map((s) => s.tone)).toEqual(["done", "plan", "pass", "current"]);
+    expect(r.map((s) => s.reached)).toEqual([true, false, false, false]);
   });
 
-  it("다 마쳤으면 지금 여기가 없고 모두 지나왔다", () => {
+  it("순서와 상관없다 — 뒤를 먼저 다녀와도 앞의 표시 없는 곳이 지금 여기, 항공편은 그 뒤를 다녀왔으면 지나왔다", () => {
+    const r = recordStops(stops, { c: "visited" }, "today");
+    expect(r.map((s) => s.tone)).toEqual(["current", "plan", "todo", "done"]);
+    expect(r.map((s) => s.reached)).toEqual([false, true, false, true]);
+  });
+
+  it("다 마쳤으면 지금 여기가 없다", () => {
     const r = recordStops(stops, { a: "visited", b: "visited", c: "skipped" }, "today");
     expect(r.some((s) => s.tone === "current" || s.next)).toBe(false);
-    expect(r.every((s) => s.reached)).toBe(true);
   });
 
-  it("누를 수 없는 날은 지금 여기가 없고 다녀온 곳만 지나왔다", () => {
+  it("누를 수 없는 날은 지금 여기 · 버튼이 없다", () => {
     const r = recordStops(stops, { b: "visited" }, "other");
     expect(r.map((s) => s.tone)).toEqual(["todo", "plan", "done", "todo"]);
-    expect(r.map((s) => s.reached)).toEqual([false, false, true, false]);
     expect(r.some((s) => s.next)).toBe(false);
   });
 
@@ -49,7 +54,17 @@ describe("recordStops", () => {
     const r = recordStops(stops, { a: "visited" }, "past");
     expect(r.map((s) => s.tone)).toEqual(["done", "plan", "todo", "todo"]);
     expect(r.map((s) => s.next)).toEqual([false, false, true, false]);
-    expect(r.map((s) => s.reached)).toEqual([true, true, true, false]);
+  });
+});
+
+describe("planStops", () => {
+  it("다녀옴은 ✓ 표식 · 패스는 회색 줄, 흐림은 여행 중 오늘만", () => {
+    const marks = { a: "visited", b: "skipped", f: "visited" } as const;
+    const today = planStops(stops, marks, "today");
+    expect(today.map((s) => s.tone)).toEqual(["visited", "plan", "pass", "plan"]);
+    expect(today.map((s) => s.dim)).toEqual([true, false, false, false]);
+    expect(planStops(stops, marks, "past").some((s) => s.dim)).toBe(false);
+    expect(planStops(stops, marks, "other").some((s) => s.dim)).toBe(false);
   });
 });
 
@@ -82,8 +97,8 @@ describe("기록 모드 지도 · 레일", () => {
     const tones = recordOfRoute(route, { a: "visited" }, "today");
     const map = routeMapRecord(route, tones);
     expect(map.get("a")).toEqual({ tone: "done", reached: true });
-    expect(map.get("f")).toEqual({ tone: null, reached: true });
-    expect(map.get("b")).toEqual({ tone: "current", reached: true });
+    expect(map.get("f")).toEqual({ tone: null, reached: false });
+    expect(map.get("b")).toEqual({ tone: "current", reached: false });
     expect(nextStopId(route, tones)).toBe("b");
   });
 
@@ -91,10 +106,16 @@ describe("기록 모드 지도 · 레일", () => {
     expect(nextStopId(route, recordOfRoute(route, {}, "other"))).toBeNull();
   });
 
-  it("레일 진행은 장소만 센다(패스는 다녀온 곳이 아니다)", () => {
+  it("지도는 패스를 아직 남은 모양으로", () => {
+    const tones = recordOfRoute(route, { a: "skipped" }, "today");
+    expect(routeMapRecord(route, tones).get("a")).toEqual({ tone: "todo", reached: false });
+  });
+
+  it("진행은 장소만 센다 — 다녀옴 · 패스 따로", () => {
     const rows = [row("a", "place"), row("f", "flight"), row("n", "note"), row("b", "place")];
     expect(placeProgress(rows, { a: "visited", b: "skipped", f: "visited" })).toEqual({
       done: 1,
+      passed: 1,
       total: 2,
     });
   });
