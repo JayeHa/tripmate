@@ -12,6 +12,7 @@ import {
   useMyVisitPhotos,
   useVisitMarks,
   useVisitPhotoUrls,
+  visitCountsOf,
   type VisitMark,
   type VisitMarks,
   type VisitNoteBodies,
@@ -38,8 +39,10 @@ export type ScheduleRecord = {
   dayOf: (day: number) => RecordDay;
   /** 방문 토글 — 다녀왔어요 · 패스 · 지우기(null). 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   setMark: (id: string, mark: VisitMark | null) => void;
-  /** 내 별점 — 일정 id → 1~5. 안 매긴 일정은 없다 */
+  /** 내 별점 — 일정 id → 1~5. 별점은 여행의 장소마다 하나라 같은 장소의 일정은 같은 값, 안 매긴 일정은 없다 */
   stars: RatingStars;
+  /** 일정 id → 그 장소를 이 여행에서 들르는 횟수(장소 일정만) — 2 이상이면 별점 줄 아래 반복 안내 */
+  visits: Readonly<Record<string, number>>;
   /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   rate: (id: string, stars: number) => void;
   /** 내 기록 글 — 일정 id → 글. 안 남긴 일정은 없다 */
@@ -72,7 +75,8 @@ export function useScheduleRecord(
   const [marks, setMark] = useVisitMarks(tripId);
   const { data } = useQuery(visitsQuery(tripId));
   const userId = useUser().data?.id ?? null;
-  const [stars, setStars] = useMyRatings(tripId, userId);
+  const [stars, setStars] = useMyRatings(tripId, userId, items);
+  const visits = useMemo(() => visitCountsOf(items), [items]);
   const [notes, setNote] = useMyVisitNotes(tripId, userId);
   const photos = useMyVisitPhotos(tripId, userId);
   const thumbKeys = useMemo(
@@ -88,6 +92,7 @@ export function useScheduleRecord(
     dayOf: (day) => recordDay(day, todayIndex),
     setMark,
     stars,
+    visits,
     rate: setStars,
     notes,
     saveNote: setNote,

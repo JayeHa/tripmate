@@ -43,7 +43,11 @@ export function stopVisitsOf(
         : undefined,
       onNow: rec && next ? (m) => record.setMark(id, m) : undefined,
       rating: done
-        ? { stars: record.stars[id] ?? 0, onRate: (n) => record.rate(id, n) }
+        ? {
+            stars: record.stars[id] ?? 0,
+            repeat: record.visits[id] ?? 1,
+            onRate: (n) => record.rate(id, n),
+          }
         : undefined,
       note: done ? noteOf(record, id) : undefined,
     };
