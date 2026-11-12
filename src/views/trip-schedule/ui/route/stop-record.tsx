@@ -6,6 +6,8 @@ import {
   type VisitMark,
 } from "@/entities/schedule-item";
 
+import type { CrewRating } from "../../lib/crew";
+import { CrewRatingRow } from "./crew-rating-row";
 import { type CardPhoto, RecordPhotoRow } from "./record-photo-row";
 
 /** 역 하나의 방문 모양 — 계획 · 기록 모드 모두 노선도 카드가 받는다 */
@@ -46,18 +48,22 @@ type RatingRowProps = {
   stars: number;
   /** 이 여행에서 그 장소를 들르는 횟수 — 2 이상이면 아래에 반복 안내 */
   repeat: number;
+  /** 「일행」 줄 — 혼자 여행이면 null */
+  crew: CrewRating | null;
   onRate: (stars: number) => void;
 };
 
 /**
  * 다녀온 장소 카드 안 별점 줄 — 「내 별점」(안 매겼으면 「별점 남기기」) 12/700 + 별 24 + 점수 문구.
  * 별을 누르면 창 없이 바로 저장하고, 같은 점수를 다시 누르면 지운다.
- * 별점은 여행의 장소마다 하나라 같은 장소를 여러 번 들르면 아래에 「🔁 이 여행에서 3번 들러요 · 별점은 하나예요」
+ * 일행이 있으면 아래에 「일행」 줄(사람마다 별점 · 평균).
+ * 별점은 여행의 장소마다 하나라 같은 장소를 여러 번 들르면 맨 아래에 「🔁 이 여행에서 3번 들러요 · 별점은 하나예요」
  */
-export function RatingRow({ stars, repeat, onRate }: RatingRowProps) {
+export function RatingRow({ stars, repeat, crew, onRate }: RatingRowProps) {
   return (
     <>
       <RatingLine stars={stars} onRate={onRate} />
+      {crew && <CrewRatingRow {...crew} />}
       {repeat > 1 && (
         <p className="truncate text-[11px] text-route-card-meta">
           🔁 이 여행에서 {repeat}번 들러요 · 별점은 하나예요
@@ -68,10 +74,10 @@ export function RatingRow({ stars, repeat, onRate }: RatingRowProps) {
 }
 
 /** 「내 별점」 라벨 + 별 */
-function RatingLine({ stars, onRate }: Omit<RatingRowProps, "repeat">) {
+function RatingLine({ stars, onRate }: Pick<RatingRowProps, "stars" | "onRate">) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <span className="shrink-0 text-xs font-bold text-route-walk-text">
+      <span className="w-15.5 shrink-0 text-xs font-bold text-route-walk-text">
         {stars > 0 ? "내 별점" : "별점 남기기"}
       </span>
       <RatingPicker

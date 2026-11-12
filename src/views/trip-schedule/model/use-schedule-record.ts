@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 
 import {
   type DayMode,
+  ratingsByItem,
+  ratingsQuery,
   type RatingStars,
   type ScheduleItem,
   useMyRatings,
@@ -21,7 +23,9 @@ import {
 } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import type { Trip } from "@/entities/trip";
+import { useTripMembers } from "@/entities/trip-member";
 
+import { type CrewMember, type CrewRating, crewRating } from "../lib/crew";
 import { type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 
@@ -43,6 +47,8 @@ export type ScheduleRecord = {
   stars: RatingStars;
   /** 일정 id → 그 장소를 이 여행에서 들르는 횟수(장소 일정만) — 2 이상이면 별점 줄 아래 반복 안내 */
   visits: Readonly<Record<string, number>>;
+  /** 그 일정 장소의 「일행」 줄 — 나를 뺀 멤버의 별점 · 평균. 혼자 여행이면 null */
+  crew: (id: string) => CrewRating | null;
   /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   rate: (id: string, stars: number) => void;
   /** 내 기록 글 — 일정 id → 글. 안 남긴 일정은 없다 */
@@ -77,6 +83,7 @@ export function useScheduleRecord(
   const userId = useUser().data?.id ?? null;
   const [stars, setStars] = useMyRatings(tripId, userId, items);
   const visits = useMemo(() => visitCountsOf(items), [items]);
+  const crew = useCrew(tripId, userId, items);
   const [notes, setNote] = useMyVisitNotes(tripId, userId);
   const photos = useMyVisitPhotos(tripId, userId);
   const thumbKeys = useMemo(
@@ -93,6 +100,7 @@ export function useScheduleRecord(
     setMark,
     stars,
     visits,
+    crew,
     rate: setStars,
     notes,
     saveNote: setNote,
@@ -108,4 +116,23 @@ export function useScheduleRecord(
     onModeChange: setPicked,
     record,
   };
+}
+
+const NO_STARS = {};
+
+/** 일정 id → 「일행」 줄. 멤버 · 별점이 바뀔 때만 새로 만든다 */
+function useCrew(tripId: string, userId: string | null, items: readonly ScheduleItem[]) {
+  const { data: ratings } = useQuery(ratingsQuery(tripId));
+  const { data: members } = useTripMembers(tripId);
+  const byItem = useMemo(() => ratingsByItem(ratings ?? [], items), [ratings, items]);
+  const crewMembers = useMemo(
+    () =>
+      (members ?? []).map((m): CrewMember => ({
+        id: m.user_id,
+        name: m.profile.display_name ?? "이름 없음",
+        avatarUrl: m.profile.avatar_url,
+      })),
+    [members],
+  );
+  return (id: string) => crewRating(crewMembers, userId, byItem[id] ?? NO_STARS);
 }
