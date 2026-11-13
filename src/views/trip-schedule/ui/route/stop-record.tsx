@@ -31,7 +31,7 @@ export type StopVisit = {
   onNow?: (mark: VisitMark) => void;
   /** 다녀온 장소(기록 모드) — 내 별점(0 = 안 매김) · 이 여행에서 그 장소를 들르는 횟수와 바꾸기 */
   rating?: RatingRowProps;
-  /** 다녀온 장소(기록 모드) — 내 기록 글(없으면 "") · 사진과 기록 창 열기 */
+  /** 다녀온 장소(기록 모드) — 일행과 함께 쓰는 기록 글(없으면 "") · 사진과 기록 창 열기 */
   note?: RecordNoteProps;
 };
 

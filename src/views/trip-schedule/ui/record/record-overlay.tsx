@@ -6,7 +6,8 @@ import { itemName, type TimelineRow, type VisitPhoto } from "@/entities/schedule
 import { dayLabel } from "@/shared/lib/days";
 
 import type { ScheduleRecord } from "../../model/use-schedule-record";
-import { RecordDialog, type RecordTarget } from "./record-dialog";
+import { RecordDialog } from "./record-dialog";
+import type { RecordTarget } from "./record-form";
 
 type RecordOverlayProps = {
   tripId: string;
@@ -18,7 +19,8 @@ type RecordOverlayProps = {
 
 /**
  * 일정 화면의 기록 창 — 카드의 「+ 기록 · 사진 남기기」 · 「✎ 기록 수정」 이 연다.
- * 저장하면 바뀐 별점 · 글만 올린다(둘 다 오프라인 대기열 — 사진은 창이 올린다). 연 일정을 일행이 지우면 창이 닫힌다
+ * 저장하면 바뀐 별점 · 글만 올린다(둘 다 오프라인 대기열 — 사진은 창이 올린다). 글 · 사진은 일행과 함께 쓰는 것이라
+ * 창은 열 때 본 값에서 바뀐 것만 저장한다. 연 일정을 일행이 지우면 창이 닫힌다
  */
 export function RecordOverlay({ tripId, startDate, rows, record }: RecordOverlayProps) {
   const row = rows.find((r) => r.item.id === record.writing) ?? null;
@@ -26,17 +28,20 @@ export function RecordOverlay({ tripId, startDate, rows, record }: RecordOverlay
     itemId: row.item.id,
     caption: captionOf(row, startDate, record.markedAt(row.item.id)),
     stars: record.stars[row.item.id] ?? 0,
-    body: record.notes[row.item.id] ?? "",
+    body: record.notes[row.item.id]?.body ?? "",
+    noteAt: record.notes[row.item.id]?.updated_at ?? null,
     photos: record.photos[row.item.id] ?? NO_PHOTOS,
   };
   return (
     <RecordDialog
       tripId={tripId}
       target={target}
+      shared={record.shared}
+      uploader={record.uploader}
       onClose={record.closeWrite}
       onSave={(itemId, draft) => {
         if (draft.stars !== (record.stars[itemId] ?? 0)) record.rate(itemId, draft.stars);
-        record.saveNote(itemId, draft.body);
+        if (draft.note) record.saveNote(itemId, draft.note.body, draft.note.seen);
       }}
     />
   );

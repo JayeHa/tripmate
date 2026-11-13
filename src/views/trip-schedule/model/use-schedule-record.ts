@@ -10,14 +10,14 @@ import {
   type RatingStars,
   type ScheduleItem,
   useMyRatings,
-  useMyVisitNotes,
-  useMyVisitPhotos,
   useVisitMarks,
+  useVisitNotes,
+  useVisitPhotos,
   useVisitPhotoUrls,
   visitCountsOf,
   type VisitMark,
   type VisitMarks,
-  type VisitNoteBodies,
+  type VisitNotesByItem,
   type VisitPhotosByItem,
   visitsQuery,
 } from "@/entities/schedule-item";
@@ -25,7 +25,7 @@ import { useUser } from "@/entities/session";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 
-import { type CrewMember, type CrewRating, crewRating } from "../lib/crew";
+import { type CrewMember, type CrewRating, crewRating, uploaderOf } from "../lib/crew";
 import { type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 
@@ -51,14 +51,21 @@ export type ScheduleRecord = {
   crew: (id: string) => CrewRating | null;
   /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   rate: (id: string, stars: number) => void;
-  /** 내 기록 글 — 일정 id → 글. 안 남긴 일정은 없다 */
-  notes: VisitNoteBodies;
-  /** 내 기록 글을 바꾼다(비우면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
-  saveNote: (id: string, body: string) => void;
-  /** 내 기록 사진 — 일정 id → 순서대로. 붙이지 않은 일정은 없다(바꾸기는 기록 창이 한다) */
+  /** 기록 글 — 일정 id → 그 일정의 글(일행과 함께 쓰는 하나). 아무도 안 남긴 일정은 없다 */
+  notes: VisitNotesByItem;
+  /**
+   * 기록 글을 바꾼다(비우면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다.
+   * seen = 고치기 시작할 때 본 글의 updated_at(없었으면 null). 그사이 일행이 고친 글을 덮으면 알림이 뜬다
+   */
+  saveNote: (id: string, body: string, seen: string | null) => void;
+  /** 기록 사진(일행이 올린 것까지) — 일정 id → 순서대로. 붙이지 않은 일정은 없다(바꾸기는 기록 창이 한다) */
   photos: VisitPhotosByItem;
-  /** 내 기록 사진 썸네일의 키 → 읽기 주소(카드 사진 줄) */
+  /** 기록 사진 썸네일의 키 → 읽기 주소(카드 사진 줄) */
   thumbUrls: Readonly<Record<string, string>>;
+  /** 일행이 있는 여행 — 기록 창에 「일행과 함께 써요」 · 올린 사람을 보인다. 혼자 여행이면 false */
+  shared: boolean;
+  /** 사진을 올린 사람(null = 나, 방금 고른 사진). 혼자 여행이거나 나간 사람이면 null — 그리지 않는다 */
+  uploader: (userId: string | null) => CrewMember | null;
   /** 기록 창을 연 일정. 닫혀 있으면 null */
   writing: string | null;
   openWrite: (id: string) => void;
@@ -84,8 +91,8 @@ export function useScheduleRecord(
   const [stars, setStars] = useMyRatings(tripId, userId, items);
   const visits = useMemo(() => visitCountsOf(items), [items]);
   const crew = useCrew(tripId, userId, items);
-  const [notes, setNote] = useMyVisitNotes(tripId, userId);
-  const photos = useMyVisitPhotos(tripId, userId);
+  const [notes, saveNote] = useVisitNotes(tripId, userId);
+  const photos = useVisitPhotos(tripId);
   const thumbKeys = useMemo(
     () => Object.values(photos).flatMap((ps) => ps.map((p) => p.thumb_key)),
     [photos],
@@ -100,12 +107,14 @@ export function useScheduleRecord(
     setMark,
     stars,
     visits,
-    crew,
+    crew: crew.rating,
     rate: setStars,
     notes,
-    saveNote: setNote,
+    saveNote,
     photos,
     thumbUrls,
+    shared: crew.members.length > 1,
+    uploader: (id) => uploaderOf(crew.members, userId, id),
     writing,
     openWrite: setWriting,
     closeWrite: () => setWriting(null),
@@ -120,7 +129,7 @@ export function useScheduleRecord(
 
 const NO_STARS = {};
 
-/** 일정 id → 「일행」 줄. 멤버 · 별점이 바뀔 때만 새로 만든다 */
+/** 여행 멤버와 일정 id → 「일행」 줄. 멤버 · 별점이 바뀔 때만 새로 만든다 */
 function useCrew(tripId: string, userId: string | null, items: readonly ScheduleItem[]) {
   const { data: ratings } = useQuery(ratingsQuery(tripId));
   const { data: members } = useTripMembers(tripId);
@@ -134,5 +143,8 @@ function useCrew(tripId: string, userId: string | null, items: readonly Schedule
       })),
     [members],
   );
-  return (id: string) => crewRating(crewMembers, userId, byItem[id] ?? NO_STARS);
+  return {
+    members: crewMembers,
+    rating: (id: string) => crewRating(crewMembers, userId, byItem[id] ?? NO_STARS),
+  };
 }

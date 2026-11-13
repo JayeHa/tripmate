@@ -9,6 +9,8 @@ type PhotoPreviewProps = {
   /** 고른 사진(0부터) · 전체 장수 */
   index: number;
   count: number;
+  /** 올린 사람 이름 — 「2 / 3 · 김동규」. 혼자 여행이면 없다 */
+  by?: string;
   caption: string;
   onCaption: (text: string) => void;
   onSelect: (index: number) => void;
@@ -21,13 +23,14 @@ const ARROW =
   "absolute top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink-700 shadow-[0_1px_4px_rgba(0,0,0,.15)]";
 
 /**
- * 고른 사진 크게(200, PC 240) + 설명 칸(40자). 왼쪽 위 「2 / 3」, 오른쪽 위 「사진 삭제」, 좌우 ‹ ›(처음 · 끝에서 숨김).
+ * 고른 사진 크게(200, PC 240) + 설명 칸(40자). 왼쪽 위 「2 / 3 · 올린 사람」, 오른쪽 위 「사진 삭제」, 좌우 ‹ ›(처음 · 끝에서 숨김).
  * 설명 칸의 Enter 는 저장이 아니라 다음 사진으로 — 한글 조합을 끝내는 Enter 는 무시한다(안 그러면 마지막 글자가 다음 사진으로 넘어간다)
  */
 export function PhotoPreview({
   src,
   index,
   count,
+  by,
   caption,
   onCaption,
   onSelect,
@@ -41,8 +44,9 @@ export function PhotoPreview({
         {src && (
           <img src={src} alt={caption || `사진 ${index + 1}`} className="size-full object-cover" />
         )}
-        <span className="absolute top-2 left-2 rounded-xl bg-white/88 px-2 text-xs/6 font-extrabold text-ink-700 tabular-nums">
+        <span className="absolute top-2 left-2 max-w-[60%] truncate rounded-xl bg-white/88 px-2 text-xs/6 font-extrabold text-ink-700 tabular-nums">
           {index + 1} / {count}
+          {by && ` · ${by}`}
         </span>
         {!disabled && (
           <button

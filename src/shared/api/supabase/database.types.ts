@@ -1240,21 +1240,21 @@ export type Database = {
         Row: {
           item_id: string;
           trip_id: string;
-          user_id: string;
+          updated_by: string | null;
           body: string;
           updated_at: string;
         };
         Insert: {
           item_id: string;
           trip_id: string;
-          user_id?: string;
+          updated_by?: string | null;
           body: string;
           updated_at?: string;
         };
         Update: {
           item_id?: string;
           trip_id?: string;
-          user_id?: string;
+          updated_by?: string | null;
           body?: string;
           updated_at?: string;
         };
@@ -1509,6 +1509,10 @@ export type Database = {
       rate_place: {
         Args: { p_item: string; p_stars: number; p_at: string };
         Returns: undefined;
+      };
+      save_visit_note: {
+        Args: { p_item: string; p_body: string; p_at: string; p_seen: string | null };
+        Returns: boolean;
       };
       is_trip_member: {
         Args: { p_trip_id: string };

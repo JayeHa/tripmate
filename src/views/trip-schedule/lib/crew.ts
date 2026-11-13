@@ -44,3 +44,17 @@ export function crewRating(
         : null,
   };
 }
+
+/**
+ * 기록 사진을 올린 사람 — 썸네일의 아바타 · 「2 / 3 · 김동규」. userId 가 null 이면 나(방금 고른 사진).
+ * 혼자 여행이면 null — 올린 사람이 늘 나라 그리지 않는다. 여행에서 나간 사람도 null
+ */
+export function uploaderOf(
+  members: readonly CrewMember[],
+  me: string | null,
+  userId: string | null,
+): CrewMember | null {
+  if (members.length < 2) return null;
+  const id = userId ?? me;
+  return members.find((m) => m.id === id) ?? null;
+}

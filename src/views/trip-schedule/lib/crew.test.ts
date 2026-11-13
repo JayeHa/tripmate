@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type CrewMember, crewRating } from "./crew";
+import { type CrewMember, crewRating, uploaderOf } from "./crew";
 
 /** 멤버 한 명 */
 function member(id: string): CrewMember {
@@ -35,5 +35,20 @@ describe("crewRating", () => {
     expect(crew?.people.map((p) => p.id)).toEqual(["a", "b", "c"]);
     expect(crew?.more).toBe(2);
     expect(crewRating(members.slice(0, 5), "me", {})?.people).toHaveLength(4);
+  });
+});
+
+describe("uploaderOf", () => {
+  const members = [member("me"), member("a")];
+
+  it("올린 사람을 멤버에서 찾는다 — 새로 고른 사진(null)은 나", () => {
+    expect(uploaderOf(members, "me", "a")?.id).toBe("a");
+    expect(uploaderOf(members, "me", null)?.id).toBe("me");
+  });
+
+  it("혼자 여행이거나 나간 사람이면 null", () => {
+    expect(uploaderOf([member("me")], "me", "me")).toBeNull();
+    expect(uploaderOf(members, "me", "gone")).toBeNull();
+    expect(uploaderOf(members, null, null)).toBeNull();
   });
 });

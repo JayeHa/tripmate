@@ -56,11 +56,11 @@ export function useRealtimeTrip(tripId: string) {
         { event: "*", schema: "public", table: "place_ratings", filter },
         () => refreshAfterSync(queryKeys.ratings(tripId)),
       )
-      // 기록 글 — 일행이 쓴 것도 온다(지금 화면은 내 것만 보여 준다)
+      // 기록 글 — 일정마다 하나를 일행이 함께 쓴다. 일행이 고치면 카드의 글이 바뀐다
       .on("postgres_changes", { event: "*", schema: "public", table: "visit_notes", filter }, () =>
         refreshAfterSync(queryKeys.visitNotes(tripId)),
       )
-      // 기록 사진 — 대기열에 넣지 않으므로 바로 다시 읽는다. 읽기 주소는 키가 그대로면 그대로
+      // 기록 사진(일행이 올린 것까지) — 대기열에 넣지 않으므로 바로 다시 읽는다. 읽기 주소는 키가 그대로면 그대로
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "visit_photos", filter },
