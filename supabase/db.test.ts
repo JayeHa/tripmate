@@ -4974,3 +4974,95 @@ describe("기록 사진 (0086 · 0088)", () => {
     expect(rows).toEqual([{ caption: "입구" }]);
   });
 });
+
+describe("기록 영상 (0089)", () => {
+  /** 내가 올린 영상 줄을 넣는 SQL — 표지 두 키와 영상 키는 그 여행 폴더. video 는 `'키', 길이, 표지 초` */
+  function videoSql(trip: string, item: string, n: number, video: string) {
+    return `insert into public.visit_photos
+              (item_id, trip_id, photo_key, thumb_key, position, video_key, duration, poster_at)
+            values ('${item}', '${trip}', '${trip}/p${n}.jpg', '${trip}/t${n}.jpg', ${n}, ${video})`;
+  }
+
+  /** A 의 여행에 장소 일정 하나 */
+  async function ownPlace(date: string) {
+    await as(A);
+    const trip = await newTrip(date, date);
+    const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    return { trip, place };
+  }
+
+  it("영상 줄은 키 · 길이 · 표지 초가 함께 있어야 하고, 31초 미만 · 표지는 길이 안 · 폴더 안 키만. 사진과 합쳐 10개", async () => {
+    const { trip, place } = await ownPlace("2027-12-20");
+    const other = await newTrip("2027-12-21", "2027-12-21");
+    await db.query(videoSql(trip, place, 0, `'${trip}/v0.mp4', 12.4, 1`));
+    await db.query(videoSql(trip, place, 1, `'${trip}/v1.mov', 30.04, 0`));
+    const bad = [
+      `'${trip}/v2.mp4', null, 1`,
+      `'${trip}/v2.mp4', 12, null`,
+      `null, 12, 1`,
+      `'${trip}/v2.mp4', 31, 1`,
+      `'${trip}/v2.mp4', 0, 0`,
+      `'${trip}/v2.mp4', 12, 13`,
+      `'${trip}/v2.mp4', 12, -1`,
+    ];
+    for (const video of bad) {
+      expect(await rejects(videoSql(trip, place, 2, video))).toMatch(/visit_photos_video_chk/);
+    }
+    expect(await rejects(videoSql(trip, place, 2, `'${other}/v2.mp4', 12, 1`))).toMatch(
+      /visit_photos_video_key_chk/,
+    );
+    expect(await rejects(videoSql(trip, place, 2, `'${trip}/v0.mp4', 12, 1`))).toMatch(
+      /duplicate key/,
+    );
+    for (let n = 2; n < 10; n++) {
+      await db.query(
+        `insert into public.visit_photos (item_id, trip_id, photo_key, thumb_key, position)
+         values ('${place}', '${trip}', '${trip}/p${n}.jpg', '${trip}/t${n}.jpg', ${n})`,
+      );
+    }
+    expect(await rejects(videoSql(trip, place, 10, `'${trip}/v10.mp4', 5, 1`))).toMatch(
+      /visit photo limit/,
+    );
+  });
+
+  it("영상 키 · 길이 · 표지 초는 바꾸지 못하고 설명 · 순서만 바꾼다", async () => {
+    const { trip, place } = await ownPlace("2027-12-22");
+    await db.query(videoSql(trip, place, 0, `'${trip}/v0.mp4', 12, 1`));
+    for (const set of [`video_key = '${trip}/x.mp4'`, "duration = 10", "poster_at = 3"]) {
+      expect(
+        await rejects(`update public.visit_photos set ${set} where trip_id = '${trip}'`),
+      ).toMatch(/설명 · 순서만/);
+    }
+    await db.query(
+      `update public.visit_photos set caption = '불쇼', position = 4 where trip_id = '${trip}'`,
+    );
+    const { rows } = await db.query(
+      `select caption, position, duration, poster_at from public.visit_photos where trip_id = '${trip}'`,
+    );
+    expect(rows).toEqual([{ caption: "불쇼", position: 4, duration: 12, poster_at: 1 }]);
+  });
+
+  it("영상 파일은 멤버만 올리고 익명은 못 올린다. 붙은 줄이 없는 파일만 지운다", async () => {
+    const { trip, place } = await ownPlace("2027-12-23");
+    /** 그 여행 폴더에 영상 파일을 올리는 SQL */
+    const put = (name: string) =>
+      `insert into storage.objects (bucket_id, name) values ('visit-videos', '${trip}/${name}')`;
+    /** 그 이름의 파일 수 */
+    const count = async (name: string) =>
+      (await db.query(`select 1 from storage.objects where name = '${trip}/${name}'`)).rows.length;
+    await db.query(put("v0.mp4"));
+    await db.query(videoSql(trip, place, 0, `'${trip}/v0.mp4', 12, 1`));
+    await db.exec(`select set_config('test.jwt', '{"is_anonymous":true}', false)`);
+    expect(await rejects(put("anon.mp4"))).toMatch(/row-level security/);
+    await db.exec(`select set_config('test.jwt', '', false)`);
+    await as(B);
+    expect(await rejects(put("b.mp4"))).toMatch(/row-level security/);
+    await as(A);
+    // 줄이 붙어 있는 파일은 지워지지 않는다(RLS 는 오류 없이 0줄)
+    await db.query(`delete from storage.objects where name = '${trip}/v0.mp4'`);
+    expect(await count("v0.mp4")).toBe(1);
+    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    await db.query(`delete from storage.objects where name = '${trip}/v0.mp4'`);
+    expect(await count("v0.mp4")).toBe(0);
+  });
+});
