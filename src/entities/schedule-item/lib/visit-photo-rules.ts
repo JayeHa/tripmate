@@ -4,7 +4,7 @@ export const VISIT_PHOTO_MIMES = ["image/jpeg", "image/png", "image/webp"] as co
 /** 한 장 최대 크기(5MB) — 버킷 `file_size_limit` 와 같다(0086) */
 export const VISIT_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 
-/** 일정 × 사람의 최대 장수 — 트리거 `visit_photo_guard` 와 같다(0086) */
+/** 일정 하나의 최대 장수(일행이 올린 것까지) — 트리거 `visit_photo_guard` 와 같다(0088) */
 export const VISIT_PHOTO_LIMIT = 10;
 
 /** 사진별 설명 최대 글자 수 — DB check 와 같다(0086) */

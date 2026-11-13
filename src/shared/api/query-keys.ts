@@ -39,9 +39,9 @@ export const queryKeys = {
   visits: (tripId: string) => ["trips", tripId, "visits"] as const,
   /** 다녀온 장소의 별점(0084 place_ratings) — 사람마다 하나, 일행이 함께 읽는다 */
   ratings: (tripId: string) => ["trips", tripId, "ratings"] as const,
-  /** 다녀온 장소의 기록 글(0085 visit_notes) — 사람마다 하나, 일행이 함께 읽는다 */
+  /** 다녀온 장소의 기록 글(0085 · 0088 visit_notes) — 일정마다 하나, 일행이 함께 쓴다 */
   visitNotes: (tripId: string) => ["trips", tripId, "visit-notes"] as const,
-  /** 기록 사진 줄(일행 것까지). 읽기 주소는 뒤에 "urls" + 키 */
+  /** 기록 사진 줄(0086 · 0088 visit_photos) — 일정마다 일행이 함께 올린다. 읽기 주소는 뒤에 "urls" + 키 */
   visitPhotos: (tripId: string) => ["trips", tripId, "visit-photos"] as const,
   /** 숙소(장소 포함) — 체크인 순 */
   stays: (tripId: string) => ["trips", tripId, "stays"] as const,

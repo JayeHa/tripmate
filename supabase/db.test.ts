@@ -4702,79 +4702,205 @@ describe("장소 별점 (0084 · 0087)", () => {
   });
 });
 
-describe("기록 글 (0085)", () => {
-  /** 내 기록 글을 넣거나 바꾼다(화면의 저장과 같은 upsert — 쓴 사람은 기본값 나) */
-  function upsertNote(trip: string, item: string, body: string) {
-    return `insert into public.visit_notes (item_id, trip_id, body, updated_at)
-            values ('${item}', '${trip}', '${body}', '2027-12-08T10:00:00Z')
-            on conflict (item_id, user_id) do update set body = excluded.body, updated_at = excluded.updated_at`;
+describe("기록 글 (0085 · 0088)", () => {
+  const C = "88888888-8888-8888-8888-888888888888";
+
+  /** 화면의 저장과 같은 호출 — 일행이 그사이 고친 글을 덮었는지 돌려준다 */
+  async function saveNote(item: string, body: string, seen: string | null, at: string) {
+    const { rows } = await db.query<{ overwrote: boolean }>(
+      `select public.save_visit_note($1, $2, $3, $4) as overwrote`,
+      [item, body, at, seen],
+    );
+    return rows[0].overwrote;
   }
 
-  it("사람마다 하나 — 바꾸면 내 줄만 덮고, 일행은 읽기만 한다", async () => {
+  /** 그 일정에 남은 글 줄들 */
+  async function notesOf(item: string) {
+    const { rows } = await db.query<{ body: string; updated_by: string | null }>(
+      `select body, updated_by from public.visit_notes where item_id = '${item}'`,
+    );
+    return rows;
+  }
+
+  /** A 의 여행에 B 를 멤버로 넣고 장소 일정 하나를 만든다 */
+  async function sharedPlace(date: string) {
     await as(A);
-    const trip = await newTrip("2027-12-08", "2027-12-08");
+    const trip = await newTrip(date, date);
     await db.exec(
       `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
     );
     await as(A);
     const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
-    await db.query(upsertNote(trip, place, "국물 진함"));
-    await db.query(upsertNote(trip, place, "마늘 추가 필수"));
+    return { trip, place };
+  }
+
+  const T1 = "2027-12-08T10:00:00Z";
+  const T2 = "2027-12-08T11:00:00Z";
+  const T3 = "2027-12-08T12:00:00Z";
+
+  it("일정에 하나 — 일행이 고치면 같은 줄을 덮고 고친 사람이 바뀐다. 못 본 글을 덮었을 때만 true", async () => {
+    const { place } = await sharedPlace("2027-12-08");
+    expect(await saveNote(place, "국물 진함", null, T1)).toBe(false);
+    // 같은 저장이 다시 올라가도(대기열 재시도) 알리지 않는다
+    expect(await saveNote(place, "국물 진함", null, T1)).toBe(false);
     await as(B);
-    await db.query(upsertNote(trip, place, "줄 40분"));
-    await db.query(`update public.visit_notes set body = '바꿈' where user_id = '${A}'`);
-    await db.query(`delete from public.visit_notes where user_id = '${A}'`);
-    expect(
-      await rejects(
-        `insert into public.visit_notes (item_id, trip_id, user_id, body) values ('${place}', '${trip}', '${A}', '남의 이름')`,
-      ),
-    ).toMatch(/row-level security/);
-    const { rows } = await db.query<{ user_id: string; body: string }>(
-      `select user_id, body from public.visit_notes where item_id = '${place}' order by body`,
-    );
-    expect(rows).toEqual([
-      { user_id: A, body: "마늘 추가 필수" },
-      { user_id: B, body: "줄 40분" },
-    ]);
+    // A 의 글을 보고 고쳤다
+    expect(await saveNote(place, "줄 40분", T1, T2)).toBe(false);
+    expect(await notesOf(place)).toEqual([{ body: "줄 40분", updated_by: B }]);
+    await as(A);
+    // B 가 고친 것을 못 보고(본 것은 T1) 저장했다
+    expect(await saveNote(place, "마늘 추가 필수", T1, T3)).toBe(true);
+    expect(await saveNote(place, "마늘 추가 필수", T1, T3)).toBe(false);
+    expect(await notesOf(place)).toEqual([{ body: "마늘 추가 필수", updated_by: A }]);
   });
 
-  it("빈 글 · 200자 넘는 글 · 장소가 아닌 일정 · 다른 여행은 거부하고, 일정을 지우면 함께 지워진다", async () => {
+  it("비우면 지운다 — 일행 글도 지우고, 못 본 글을 지웠으면 true. 없는 글 지우기는 그냥 끝난다", async () => {
+    const { place } = await sharedPlace("2027-12-09");
+    await saveNote(place, "국물 진함", null, T1);
+    await as(B);
+    expect(await saveNote(place, "", T1, T2)).toBe(false);
+    expect(await notesOf(place)).toEqual([]);
+    expect(await saveNote(place, "", null, T2)).toBe(false);
     await as(A);
-    const trip = await newTrip("2027-12-09", "2027-12-09");
-    const other = await newTrip("2027-12-10", "2027-12-10");
+    await saveNote(place, "다시 씀", null, T2);
+    await as(B);
+    // 글이 없던 때(null)를 보고 지웠다 — 그사이 A 가 쓴 글을 지운 것
+    expect(await saveNote(place, "", null, T3)).toBe(true);
+    expect(await notesOf(place)).toEqual([]);
+  });
+
+  it("남의 이름으로 쓰거나 고친 사람을 둔 채 글만 바꾸지 못하고, 멤버가 아니면 쓰지도 지우지도 못한다", async () => {
+    const { trip, place } = await sharedPlace("2027-12-10");
+    const mine = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    await saveNote(place, "국물 진함", null, T1);
+    const solo = await newTrip("2027-12-11", "2027-12-11");
+    const hidden = await addPlace(solo, 0, { name: "돈키호테", lat: 35.66, lng: 139.7 });
+    await saveNote(hidden, "A 만 보는 글", null, T1);
+    await as(B);
+    expect(
+      await rejects(`update public.visit_notes set body = '바꿈' where item_id = '${place}'`),
+    ).toMatch(/row-level security/);
+    expect(
+      await rejects(
+        `insert into public.visit_notes (item_id, trip_id, updated_by, body) values ('${mine}', '${trip}', '${A}', '남의 이름')`,
+      ),
+    ).toMatch(/row-level security/);
+    expect(
+      await rejects(`select public.save_visit_note('${hidden}', '끼어들기', '${T2}', null)`),
+    ).toMatch(/일정이 없다/);
+    expect(await saveNote(hidden, "", null, T2)).toBe(false);
+    // RLS 는 오류 없이 0줄 — 줄이 그대로인지로 확인한다
+    await db.query(`delete from public.visit_notes where item_id = '${hidden}'`);
+    await as(A);
+    expect(await notesOf(hidden)).toEqual([{ body: "A 만 보는 글", updated_by: A }]);
+    expect(await notesOf(place)).toEqual([{ body: "국물 진함", updated_by: A }]);
+  });
+
+  it("빈 글 · 200자 넘는 글 · 장소가 아닌 일정 · 없는 일정 · 다른 여행은 거부하고, 일정을 지우면 함께 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-12", "2027-12-12");
+    const other = await newTrip("2027-12-13", "2027-12-13");
     const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
     const { rows: notes } = await db.query<{ id: string }>(
       `insert into public.schedule_items (trip_id, day_index, position, kind, name)
        values ('${trip}', 0, 1, 'note', '집합') returning id`,
     );
-    expect(await rejects(upsertNote(trip, place, "  "))).toMatch(/check constraint/);
-    expect(await rejects(upsertNote(trip, place, "가".repeat(201)))).toMatch(/check constraint/);
-    expect(await rejects(upsertNote(trip, notes[0].id, "메모"))).toMatch(/장소 일정에만/);
-    expect(await rejects(upsertNote(other, place, "다른 여행"))).toMatch(/foreign key/);
-    await db.query(upsertNote(trip, place, "가".repeat(200)));
+    const save = (item: string, body: string) =>
+      `select public.save_visit_note('${item}', '${body}', '${T1}', null)`;
+    expect(await rejects(save(place, "  "))).toMatch(/check constraint/);
+    expect(await rejects(save(place, "가".repeat(201)))).toMatch(/check constraint/);
+    expect(await rejects(save(notes[0].id, "메모"))).toMatch(/장소 일정에만/);
+    expect(await rejects(save("00000000-0000-0000-0000-000000000000", "메모"))).toMatch(
+      /일정이 없다/,
+    );
+    expect(
+      await rejects(
+        `insert into public.visit_notes (item_id, trip_id, body) values ('${place}', '${other}', '다른 여행')`,
+      ),
+    ).toMatch(/foreign key/);
+    await saveNote(place, "가".repeat(200), null, T1);
     await db.query(`delete from public.schedule_items where id = '${place}'`);
     const { rows } = await db.query(`select 1 from public.visit_notes where trip_id = '${trip}'`);
     expect(rows).toHaveLength(0);
   });
+
+  it("마지막으로 고친 사람의 계정이 지워져도 글은 남는다", async () => {
+    const { trip, place } = await sharedPlace("2027-12-14");
+    await db.exec(`
+      reset role;
+      insert into auth.users (id, email) values ('${C}', 'leaver@x');
+      insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${C}', 'member');
+    `);
+    await as(C);
+    await saveNote(place, "떠날 사람이 쓴 글", null, T1);
+    await db.exec(`reset role; delete from auth.users where id = '${C}';`);
+    await as(A);
+    expect(await notesOf(place)).toEqual([{ body: "떠날 사람이 쓴 글", updated_by: null }]);
+    // 고친 사람이 없는 글은 본 버전이 다르면 덮었다고 알린다
+    expect(await saveNote(place, "이어 씀", null, T2)).toBe(true);
+  });
+
+  it("옛 줄(일정 × 사람)은 일정마다 가장 나중에 고친 한 줄만 남긴다", async () => {
+    const pg = await migratedDb(MIGRATIONS.filter((f) => f < "0088"));
+    await pg.exec(`
+      insert into auth.users (id, email) values ('${A}', 'a@x'), ('${B}', 'b@x');
+      select set_config('test.uid', '${A}', false);
+    `);
+    const { rows: trips } = await pg.query<{ id: string }>(
+      `select public.create_trip('t', '2027-12-15', '2027-12-15', array['tokyo']) as id`,
+    );
+    const trip = trips[0].id;
+    const { rows: places } = await pg.query<{ id: string }>(
+      `select public.add_schedule_place($1, 0, $2) as id`,
+      [trip, JSON.stringify({ name: "이치란", lat: 35.66, lng: 139.7 })],
+    );
+    const place = places[0].id;
+    await pg.exec(`
+      insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');
+      insert into public.visit_notes (item_id, trip_id, user_id, body, updated_at) values
+        ('${place}', '${trip}', '${A}', '먼저 쓴 글', '${T1}'),
+        ('${place}', '${trip}', '${B}', '나중에 쓴 글', '${T2}');
+    `);
+    await applyMigration(pg, "0088_shared_visit_records.sql");
+    const { rows } = await pg.query(
+      `select body, updated_by from public.visit_notes where item_id = '${place}'`,
+    );
+    expect(rows).toEqual([{ body: "나중에 쓴 글", updated_by: B }]);
+    await pg.close();
+  }, 30_000);
 });
 
-describe("기록 사진 (0086)", () => {
-  /** 내 사진 줄을 넣는 SQL — 키는 그 여행 폴더 */
+describe("기록 사진 (0086 · 0088)", () => {
+  /** 내가 올린 사진 줄을 넣는 SQL — 키는 그 여행 폴더 */
   function photoSql(trip: string, item: string, n: number, caption = "null") {
     return `insert into public.visit_photos (item_id, trip_id, photo_key, thumb_key, caption, position)
             values ('${item}', '${trip}', '${trip}/p${n}.jpg', '${trip}/t${n}.jpg', ${caption}, ${n})`;
   }
 
-  it("일정 × 사람에 10장까지, 설명은 1–40자, 장소가 아닌 일정 · 다른 여행 · 폴더 밖 키는 거부, 일정을 지우면 함께 지워진다", async () => {
+  /** A 의 여행에 B 를 멤버로 넣고 장소 일정 하나를 만든다 */
+  async function sharedPlace(date: string) {
     await as(A);
-    const trip = await newTrip("2027-12-11", "2027-12-11");
-    const other = await newTrip("2027-12-12", "2027-12-12");
+    const trip = await newTrip(date, date);
+    await db.exec(
+      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
+    );
+    await as(A);
     const place = await addPlace(trip, 0, { name: "이치란", lat: 35.66, lng: 139.7 });
+    return { trip, place };
+  }
+
+  it("일정에 10장까지(일행 것까지 세어), 설명은 1–40자, 장소가 아닌 일정 · 다른 여행 · 폴더 밖 키는 거부, 일정을 지우면 함께 지워진다", async () => {
+    const { trip, place } = await sharedPlace("2027-12-16");
+    const other = await newTrip("2027-12-17", "2027-12-17");
     const { rows: notes } = await db.query<{ id: string }>(
       `insert into public.schedule_items (trip_id, day_index, position, kind, name)
        values ('${trip}', 0, 1, 'note', '집합') returning id`,
     );
-    for (let n = 0; n < 10; n++) await db.query(photoSql(trip, place, n));
+    for (let n = 0; n < 6; n++) await db.query(photoSql(trip, place, n));
+    await as(B);
+    for (let n = 6; n < 10; n++) await db.query(photoSql(trip, place, n));
+    expect(await rejects(photoSql(trip, place, 10))).toMatch(/visit photo limit/);
+    await as(A);
     expect(await rejects(photoSql(trip, place, 10))).toMatch(/visit photo limit/);
     await db.query(`delete from public.visit_photos where photo_key = '${trip}/p9.jpg'`);
     expect(await rejects(photoSql(trip, place, 11, "'  '"))).toMatch(/check constraint/);
@@ -4793,43 +4919,58 @@ describe("기록 사진 (0086)", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("설명 · 순서만 바꾸고, 일행은 읽기만 하며, 파일은 붙은 줄이 없을 때만 지운다", async () => {
-    await as(A);
-    const trip = await newTrip("2027-12-13", "2027-12-13");
-    await db.exec(
-      `reset role; insert into public.trip_members (trip_id, user_id, role) values ('${trip}', '${B}', 'member');`,
-    );
-    await as(A);
-    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+  it("일행도 설명 · 순서를 고치고 지운다. 올린 사람 · 키는 못 바꾸고, 남의 이름으로 넣지 못하며, 파일은 붙은 줄이 없을 때만 지운다", async () => {
+    const { trip, place } = await sharedPlace("2027-12-18");
     await db.query(photoSql(trip, place, 0));
     await db.query(
       `insert into storage.objects (bucket_id, name) values ('visit-photos', '${trip}/p0.jpg')`,
     );
-    await db.query(`update public.visit_photos set caption = '입구', position = 3`);
     expect(await rejects(`update public.visit_photos set photo_key = '${trip}/x.jpg'`)).toMatch(
       /설명 · 순서만/,
     );
     await as(B);
-    // RLS 는 오류 없이 0줄 — 줄 · 파일이 그대로인지로 확인한다
-    await db.query(`update public.visit_photos set caption = 'B' where trip_id = '${trip}'`);
-    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
-    await db.query(`delete from storage.objects where name = '${trip}/p0.jpg'`);
+    await db.query(
+      `update public.visit_photos set caption = '입구', position = 3 where trip_id = '${trip}'`,
+    );
+    expect(
+      await rejects(`update public.visit_photos set user_id = '${B}' where trip_id = '${trip}'`),
+    ).toMatch(/설명 · 순서만/);
     expect(
       await rejects(`insert into public.visit_photos (item_id, trip_id, user_id, photo_key, thumb_key)
         values ('${place}', '${trip}', '${A}', '${trip}/p1.jpg', '${trip}/t1.jpg')`),
     ).toMatch(/row-level security/);
-    const { rows } = await db.query<{ caption: string; position: number }>(
-      `select caption, position from public.visit_photos where trip_id = '${trip}'`,
+    const { rows } = await db.query<{ user_id: string; caption: string; position: number }>(
+      `select user_id, caption, position from public.visit_photos where trip_id = '${trip}'`,
     );
-    expect(rows).toEqual([{ caption: "입구", position: 3 }]);
-    expect(
-      (await db.query(`select 1 from storage.objects where name = '${trip}/p0.jpg'`)).rows,
-    ).toHaveLength(1);
-    await as(A);
-    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    expect(rows).toEqual([{ user_id: A, caption: "입구", position: 3 }]);
+    // 줄이 붙어 있는 파일은 지워지지 않는다(RLS 는 오류 없이 0줄)
     await db.query(`delete from storage.objects where name = '${trip}/p0.jpg'`);
     expect(
       (await db.query(`select 1 from storage.objects where name = '${trip}/p0.jpg'`)).rows,
+    ).toHaveLength(1);
+    // 일행이 올린 사진도 줄 → 파일 순서로 지운다
+    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    await db.query(`delete from storage.objects where name = '${trip}/p0.jpg'`);
+    expect(
+      (await db.query(`select 1 from public.visit_photos where trip_id = '${trip}'`)).rows,
     ).toHaveLength(0);
+    expect(
+      (await db.query(`select 1 from storage.objects where name = '${trip}/p0.jpg'`)).rows,
+    ).toHaveLength(0);
+  });
+
+  it("멤버가 아니면 남의 여행 사진을 고치지도 지우지도 못한다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-12-19", "2027-12-19");
+    const place = await addPlace(trip, 0, { name: "츠타야", lat: 35.66, lng: 139.7 });
+    await db.query(photoSql(trip, place, 0, "'입구'"));
+    await as(B);
+    await db.query(`update public.visit_photos set caption = 'B' where trip_id = '${trip}'`);
+    await db.query(`delete from public.visit_photos where trip_id = '${trip}'`);
+    await as(A);
+    const { rows } = await db.query<{ caption: string }>(
+      `select caption from public.visit_photos where trip_id = '${trip}'`,
+    );
+    expect(rows).toEqual([{ caption: "입구" }]);
   });
 });

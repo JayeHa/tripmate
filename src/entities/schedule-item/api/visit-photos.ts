@@ -87,7 +87,7 @@ export async function uploadVisitPhoto(tripId: string, file: File): Promise<Visi
 }
 
 /**
- * 올려 둔 두 키를 내 줄로 붙이고 그 줄을 돌려준다. 쓴 사람은 DB 기본값이 나로 채운다(별점 · 기록 글과 같다).
+ * 올려 둔 두 키를 줄로 붙이고 그 줄을 돌려준다. 올린 사람은 DB 기본값이 나로 채운다(사람 id 를 보내지 않는다).
  * 실패해도 파일은 지우지 않는다 — 부르는 쪽이 올린 파일을 함께 정리한다
  */
 export async function insertVisitPhoto(
@@ -110,14 +110,14 @@ export async function insertVisitPhoto(
   return data;
 }
 
-/** 사진 설명을 바꾼다(null = 지우기) */
+/** 사진 설명을 바꾼다(null = 지우기) — 일행이 올린 사진도 고친다 */
 export async function updateVisitPhotoCaption(id: string, caption: string | null): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("visit_photos").update({ caption }).eq("id", id);
   if (error) throw error;
 }
 
-/** 사진 줄만 지운다. 이미 없으면 그대로 끝낸다 — 파일은 부르는 쪽이 줄을 지운 뒤 지운다(버킷은 붙은 줄이 없는 파일만 지운다) */
+/** 사진 줄만 지운다(일행이 올린 사진도). 이미 없으면 그대로 끝낸다 — 파일은 부르는 쪽이 줄을 지운 뒤 지운다(버킷은 붙은 줄이 없는 파일만 지운다) */
 export async function deleteVisitPhotoRow(id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("visit_photos").delete().eq("id", id);

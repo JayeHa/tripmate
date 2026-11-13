@@ -56,10 +56,10 @@ export function stopVisitsOf(
   return { visits, tones };
 }
 
-/** 다녀온 장소 카드의 기록 — 글 · 사진(썸네일 주소) · 기록 창 열기 */
+/** 다녀온 장소 카드의 기록 — 일행과 함께 쓰는 글 · 사진(썸네일 주소) · 기록 창 열기 */
 function noteOf(record: ScheduleRecord, id: string): NonNullable<StopVisit["note"]> {
   return {
-    body: record.notes[id] ?? "",
+    body: record.notes[id]?.body ?? "",
     photos: (record.photos[id] ?? []).map((p) => ({
       id: p.id,
       src: record.thumbUrls[p.thumb_key],

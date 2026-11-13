@@ -35,7 +35,7 @@ async function isMember(tripId: string): Promise<boolean> {
  * 기록 사진 서명 주소 — 올리기(upload: 새 키 + 한 번 쓰는 PUT 주소) · 보기(read: 키마다 GET 주소) · 지우기(remove).
  * 사진과 썸네일이 모두 이 길로 다닌다. 그 여행 멤버만, 그 여행 폴더의 키만.
  * 저장소는 `shared/api/storage/visit-photos` 가 정한다(지금 Supabase Storage, 최종 R2). 택스 리펀 사진 라우트와 같은 모양이다.
- * 지우기는 버킷 정책이 붙은 줄이 없는 파일만 남긴다 — 일행 사진은 줄이 남아 있어 지워지지 않는다
+ * 지우기는 버킷 정책이 붙은 줄이 없는 파일만 지운다 — 사진 줄(멤버 누구나 지운다)이 남아 있는 파일은 지워지지 않는다
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Body | null;

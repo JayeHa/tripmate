@@ -19,10 +19,10 @@ export const visitPhotosQuery = (tripId: string) =>
     queryFn: () => fetchVisitPhotos(tripId),
   });
 
-/** 그 여행에서 내가 붙인 기록 사진 — 일정 id → 순서대로. 나를 모르는 동안(로그인 확인 전)은 빈 값 */
-export function useMyVisitPhotos(tripId: string, userId: string | null): VisitPhotosByItem {
+/** 그 여행의 기록 사진(일행이 올린 것까지) — 일정 id → 순서대로 */
+export function useVisitPhotos(tripId: string): VisitPhotosByItem {
   const { data } = useQuery(visitPhotosQuery(tripId));
-  return useMemo(() => photosByItem(data ?? [], userId), [data, userId]);
+  return useMemo(() => photosByItem(data ?? []), [data]);
 }
 
 /**
