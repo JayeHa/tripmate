@@ -46,6 +46,7 @@ export function stopVisitsOf(
         ? {
             stars: record.stars[id] ?? 0,
             repeat: record.visits[id] ?? 1,
+            crew: record.crew(id),
             onRate: (n) => record.rate(id, n),
           }
         : undefined,

@@ -4,6 +4,7 @@ import {
   nextStars,
   placeKeyOf,
   type PlaceRating,
+  ratingsByItem,
   ratingText,
   starsOf,
   visitCountsOf,
@@ -71,5 +72,15 @@ describe("ratingText", () => {
     expect(ratingText(1)).toBe("별로예요");
     expect(ratingText(5)).toBe("최고예요");
     expect(ratingText(0)).toBeNull();
+  });
+});
+
+describe("ratingsByItem", () => {
+  it("일정마다 그 장소의 사람별 별점 — 같은 장소는 같은 값, 아무도 안 매긴 일정은 없다", () => {
+    const rows = [rating("g-hotel", "me", 4), rating("g-hotel", "friend", 2)];
+    expect(ratingsByItem(rows, items)).toEqual({
+      "hotel-am": { me: 4, friend: 2 },
+      "hotel-pm": { me: 4, friend: 2 },
+    });
   });
 });

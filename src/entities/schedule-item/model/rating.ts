@@ -67,6 +67,28 @@ export function starsOf(
   );
 }
 
+/** 한 장소의 사람별 별점 — 사용자 id → 1~5. 안 매긴 사람은 없다 */
+export type PeopleStars = Readonly<Record<string, number>>;
+
+/** 일정 id → 그 장소의 사람별 별점(일행 것까지). 같은 장소의 일정은 같은 값, 아무도 안 매긴 일정은 없다 */
+export function ratingsByItem(
+  ratings: readonly PlaceRating[],
+  items: readonly Pick<ScheduleItem, "id" | "place">[],
+): Readonly<Record<string, PeopleStars>> {
+  const byKey = new Map<string, Record<string, number>>();
+  for (const r of ratings) {
+    const people = byKey.get(r.place_key) ?? {};
+    people[r.user_id] = r.stars;
+    byKey.set(r.place_key, people);
+  }
+  return Object.fromEntries(
+    items.flatMap((item) => {
+      const people = byKey.get(placeKeyOf(item) ?? "");
+      return people ? [[item.id, people]] : [];
+    }),
+  );
+}
+
 /** 별을 눌렀을 때 남길 점수 — 같은 점수를 다시 누르면 0(지우기) */
 export function nextStars(current: number, tapped: number): number {
   return current === tapped ? 0 : tapped;

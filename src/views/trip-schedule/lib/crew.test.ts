@@ -1,0 +1,39 @@
+import { describe, expect, it } from "vitest";
+
+import { type CrewMember, crewRating } from "./crew";
+
+/** 멤버 한 명 */
+function member(id: string): CrewMember {
+  return { id, name: id, avatarUrl: null };
+}
+
+describe("crewRating", () => {
+  it("나를 뺀 일행마다 별점, 안 매겼으면 null", () => {
+    const crew = crewRating([member("me"), member("a"), member("b")], "me", { a: 4 });
+    expect(crew?.people.map((p) => [p.id, p.stars])).toEqual([
+      ["a", 4],
+      ["b", null],
+    ]);
+    expect(crew?.more).toBe(0);
+  });
+
+  it("혼자 여행이면 null", () => {
+    expect(crewRating([member("me")], "me", { me: 5 })).toBeNull();
+  });
+
+  it("평균은 매긴 멤버(나 포함)가 2명 이상일 때만, 소수 한 자리 — 나간 사람은 세지 않는다", () => {
+    const members = [member("me"), member("a"), member("b")];
+    expect(crewRating(members, "me", { me: 5 })?.average).toBeNull();
+    expect(crewRating(members, "me", { me: 5, a: 4 })?.average).toBe(4.5);
+    expect(crewRating(members, "me", { me: 5, a: 4, b: 4 })?.average).toBe(4.3);
+    expect(crewRating(members, "me", { me: 5, gone: 1 })?.average).toBeNull();
+  });
+
+  it("일행이 4명을 넘으면 3명 + 나머지 수", () => {
+    const members = ["me", "a", "b", "c", "d", "e"].map(member);
+    const crew = crewRating(members, "me", {});
+    expect(crew?.people.map((p) => p.id)).toEqual(["a", "b", "c"]);
+    expect(crew?.more).toBe(2);
+    expect(crewRating(members.slice(0, 5), "me", {})?.people).toHaveLength(4);
+  });
+});
