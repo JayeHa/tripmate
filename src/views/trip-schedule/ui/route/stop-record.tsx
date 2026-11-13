@@ -31,7 +31,7 @@ export type StopVisit = {
   onNow?: (mark: VisitMark) => void;
   /** 다녀온 장소(기록 모드) — 내 별점(0 = 안 매김) · 이 여행에서 그 장소를 들르는 횟수와 바꾸기 */
   rating?: RatingRowProps;
-  /** 다녀온 장소(기록 모드) — 일행과 함께 쓰는 기록 글(없으면 "") · 사진과 기록 창 열기 */
+  /** 다녀온 장소(기록 모드) — 일행과 함께 쓰는 기록 글(없으면 "") · 사진과 기록 창 · 자세히 보기 열기 */
   note?: RecordNoteProps;
 };
 
@@ -90,13 +90,20 @@ function RatingLine({ stars, onRate }: Pick<RatingRowProps, "stars" | "onRate">)
   );
 }
 
-type RecordNoteProps = { body: string; photos: readonly CardPhoto[]; onWrite: () => void };
+type RecordNoteProps = {
+  body: string;
+  photos: readonly CardPhoto[];
+  /** 기록 창(고치기) */
+  onWrite: () => void;
+  /** 기록 자세히 보기(읽기) */
+  onView: () => void;
+};
 
 /**
  * 다녀온 장소 카드 안 기록 — 사진 줄 · 글(따옴표 · 3줄 말줄임) + 「✎ 기록 수정」, 둘 다 없으면 점선 「+ 기록 · 사진 남기기」.
- * 모두 기록 창을 연다
+ * 사진 · 글을 누르면 자세히 보기(읽기), 「✎ 기록 수정」 · 「+ 기록 · 사진 남기기」 는 기록 창을 연다
  */
-export function RecordNote({ body, photos, onWrite }: RecordNoteProps) {
+export function RecordNote({ body, photos, onWrite, onView }: RecordNoteProps) {
   if (!body && photos.length === 0) {
     return (
       <button
@@ -110,11 +117,16 @@ export function RecordNote({ body, photos, onWrite }: RecordNoteProps) {
   }
   return (
     <>
-      {photos.length > 0 && <RecordPhotoRow photos={photos} onOpen={onWrite} />}
+      {photos.length > 0 && <RecordPhotoRow photos={photos} onOpen={onView} />}
       {body && (
-        <p className="line-clamp-3 rounded-button bg-visit-note-bg px-2.5 py-2 text-[13px]/[1.45] wrap-break-word whitespace-pre-line text-ink-700">
-          “{body}”
-        </p>
+        <button
+          type="button"
+          onClick={onView}
+          className="relative rounded-button bg-visit-note-bg px-2.5 py-2 text-left text-[13px]/[1.45] text-ink-700"
+        >
+          <span className="line-clamp-3 wrap-break-word whitespace-pre-line">“{body}”</span>
+          <span className="sr-only">자세히 보기</span>
+        </button>
       )}
       <button
         type="button"

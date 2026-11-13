@@ -25,7 +25,14 @@ import { useUser } from "@/entities/session";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 
-import { type CrewMember, type CrewRating, crewRating, uploaderOf } from "../lib/crew";
+import {
+  type CrewMember,
+  type CrewRating,
+  crewRating,
+  type RatingBoard,
+  ratingBoard,
+  uploaderOf,
+} from "../lib/crew";
 import { type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 
@@ -49,6 +56,8 @@ export type ScheduleRecord = {
   visits: Readonly<Record<string, number>>;
   /** 그 일정 장소의 「일행」 줄 — 나를 뺀 멤버의 별점 · 평균. 혼자 여행이면 null */
   crew: (id: string) => CrewRating | null;
+  /** 그 일정 장소의 별점 박스(기록 자세히 보기) — 나를 포함한 멤버 모두. 혼자 여행이면 null */
+  board: (id: string) => RatingBoard | null;
   /** 내 별점을 바꾼다(0 이면 지운다) — 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   rate: (id: string, stars: number) => void;
   /** 기록 글 — 일정 id → 그 일정의 글(일행과 함께 쓰는 하나). 아무도 안 남긴 일정은 없다 */
@@ -70,6 +79,10 @@ export type ScheduleRecord = {
   writing: string | null;
   openWrite: (id: string) => void;
   closeWrite: () => void;
+  /** 기록 자세히 보기를 연 일정. 닫혀 있으면 null — 「수정」 은 이것을 닫고 기록 창을 연다 */
+  viewing: string | null;
+  openView: (id: string) => void;
+  closeView: () => void;
 };
 
 /**
@@ -99,6 +112,7 @@ export function useScheduleRecord(
   );
   const { data: thumbUrls = NO_URLS } = useVisitPhotoUrls(tripId, thumbKeys);
   const [writing, setWriting] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
   const at = useMemo(() => new Map(data?.map((v) => [v.item_id, v.marked_at])), [data]);
   const record: ScheduleRecord = {
     marks,
@@ -108,6 +122,7 @@ export function useScheduleRecord(
     stars,
     visits,
     crew: crew.rating,
+    board: crew.board,
     rate: setStars,
     notes,
     saveNote,
@@ -118,6 +133,9 @@ export function useScheduleRecord(
     writing,
     openWrite: setWriting,
     closeWrite: () => setWriting(null),
+    viewing,
+    openView: setViewing,
+    closeView: () => setViewing(null),
   };
   return {
     ...entry,
@@ -129,7 +147,7 @@ export function useScheduleRecord(
 
 const NO_STARS = {};
 
-/** 여행 멤버와 일정 id → 「일행」 줄. 멤버 · 별점이 바뀔 때만 새로 만든다 */
+/** 여행 멤버와 일정 id → 「일행」 줄 · 별점 박스. 멤버 · 별점이 바뀔 때만 새로 만든다 */
 function useCrew(tripId: string, userId: string | null, items: readonly ScheduleItem[]) {
   const { data: ratings } = useQuery(ratingsQuery(tripId));
   const { data: members } = useTripMembers(tripId);
@@ -146,5 +164,6 @@ function useCrew(tripId: string, userId: string | null, items: readonly Schedule
   return {
     members: crewMembers,
     rating: (id: string) => crewRating(crewMembers, userId, byItem[id] ?? NO_STARS),
+    board: (id: string) => ratingBoard(crewMembers, userId, byItem[id] ?? NO_STARS),
   };
 }
