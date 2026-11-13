@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type CrewMember, crewRating, uploaderOf } from "./crew";
+import { type CrewMember, crewRating, ratingBoard, uploaderOf } from "./crew";
 
 /** 멤버 한 명 */
 function member(id: string): CrewMember {
@@ -50,5 +50,28 @@ describe("uploaderOf", () => {
     expect(uploaderOf([member("me")], "me", "me")).toBeNull();
     expect(uploaderOf(members, "me", "gone")).toBeNull();
     expect(uploaderOf(members, null, null)).toBeNull();
+  });
+});
+
+describe("ratingBoard", () => {
+  const members = [member("a"), member("me"), member("b")];
+
+  it("멤버 모두 한 줄씩 — 나 먼저, 안 매겼으면 null", () => {
+    const board = ratingBoard(members, "me", { me: 5, b: 4 });
+    expect(board?.people.map((p) => [p.id, p.stars, p.me])).toEqual([
+      ["me", 5, true],
+      ["a", null, false],
+      ["b", 4, false],
+    ]);
+  });
+
+  it("평균 · 사람 수는 매긴 멤버만 — 한 명이어도 보이고, 나간 사람은 세지 않는다", () => {
+    expect(ratingBoard(members, "me", { me: 5, b: 4 })).toMatchObject({ average: 4.5, count: 2 });
+    expect(ratingBoard(members, "me", { a: 3, gone: 1 })).toMatchObject({ average: 3, count: 1 });
+    expect(ratingBoard(members, "me", {})).toMatchObject({ average: null, count: 0 });
+  });
+
+  it("혼자 여행이면 null", () => {
+    expect(ratingBoard([member("me")], "me", { me: 5 })).toBeNull();
   });
 });

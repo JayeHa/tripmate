@@ -16,7 +16,7 @@ type RecordPhotoRowProps = {
 
 /**
  * 다녀온 장소 카드 안 사진 줄 — 56 · r10 · 사이 6(PC 72 · r12 · 사이 8), 넘치면 가로 스크롤.
- * 설명이 있는 사진은 아래에 11 회색 한 줄(말줄임). 누르면 기록을 연다
+ * 설명이 있는 사진은 아래에 11 회색 한 줄(말줄임). 누르면 기록 자세히 보기를 연다
  */
 export function RecordPhotoRow({ photos, onOpen }: RecordPhotoRowProps) {
   return (
