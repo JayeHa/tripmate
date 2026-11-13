@@ -5,4 +5,5 @@ export { LinkedVouchers, VoucherAddChip } from "./ui/linked-vouchers";
 export { NumberCopyRow } from "./ui/number-copy-row";
 export { VoucherFormDialog } from "./ui/voucher-form-dialog";
 export type { RenderVoucherTarget } from "./ui/voucher-form-panel";
+export { VoucherUsedToggle } from "./ui/voucher-used-toggle";
 export { VoucherViewer } from "./ui/voucher-viewer";

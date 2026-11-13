@@ -113,8 +113,7 @@ function ViewerBody({
           <span className="truncate text-xs text-ink-350">
             {/* 「1 / 2」 는 현장용 페이지의 쪽이라 전체 보기에서는 뺀다(그 화면 위에 「전체 N쪽」) */}
             {viewerSubText(
-              content.owners,
-              content.target,
+              { owners: content.owners, target: content.target, used: viewer.usedAt !== null },
               viewer.page,
               allPages ? 0 : viewer.total,
             )}
