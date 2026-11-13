@@ -37,7 +37,10 @@ export function MobileDayBar({
       </div>
       {/* 칩 줄과 같은 위 · 아래 여백 · 밑줄. 왼쪽의 흰 그러데이션(16)이 잘리는 칩을 흐린다 */}
       <div className="relative shrink-0 border-b border-divider bg-white pt-0.5 pr-4 pb-2.5 before:pointer-events-none before:absolute before:inset-y-0 before:-left-4 before:w-4 before:bg-linear-to-r before:from-white/0 before:to-white">
-        <DayModeToggle value={mode} onChange={onModeChange} />
+        {/* 첫 사용 말풍선이 가리키는 자리 — 세그먼트와 같은 크기 · 모서리 */}
+        <div data-coach="mode" className="flex rounded-memo">
+          <DayModeToggle value={mode} onChange={onModeChange} />
+        </div>
       </div>
     </div>
   );

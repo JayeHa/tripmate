@@ -166,14 +166,23 @@ type StopInsideProps = Pick<
  */
 function StopInside({ visit, ...detail }: StopInsideProps) {
   const { stop, open } = detail;
-  const toggle = open && visit.toggle && !visit.onNow && <VisitToggleRow {...visit.toggle} />;
+  // data-coach 는 첫 사용 말풍선이 가리키는 자리 — 큰 버튼 줄은 테두리를 두를 모서리(12)도 준다
+  const toggle = open && visit.toggle && !visit.onNow && (
+    <div data-coach="visit-row">
+      <VisitToggleRow {...visit.toggle} />
+    </div>
+  );
   if (visit.record) {
     // 기록 모드는 상세 칸을 그리지 않아서 일정 상세(메모 · 바우처 · 영업시간)로 가는 길을 따로 둔다
     return (
       <>
         {visit.rating && <RatingRow {...visit.rating} />}
         {visit.note && <RecordNote {...visit.note} />}
-        {visit.onNow && <VisitNowButtons onChange={visit.onNow} />}
+        {visit.onNow && (
+          <div data-coach="visit-now" className="rounded-card">
+            <VisitNowButtons onChange={visit.onNow} />
+          </div>
+        )}
         {open && (
           <div className="flex">
             <DetailButton onClick={detail.onOpenDetail} />

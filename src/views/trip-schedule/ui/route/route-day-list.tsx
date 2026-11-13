@@ -5,6 +5,7 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { WeatherCredit } from "@/shared/ui/weather";
 
 import { useFlightTimes } from "../../model/use-flight-times";
+import { RouteCoachTip } from "../coach-tip";
 import { RecordOverlay } from "../record/record-overlay";
 import type { ScheduleLayoutProps } from "../schedule-layout";
 import { RouteDaySection, type RouteDaySectionProps } from "./route-day-section";
@@ -46,7 +47,7 @@ export function RouteDayList({ trip, isPending, ...rest }: RouteDayListProps) {
 
 /**
  * 모든 날짜를 이어서(날짜마다 RouteDaySection). 항공편 카드는 항공편 목록의 편명 시각으로 비행 구간을 센다.
- * 날씨를 하나라도 보이면 맨 아래 날씨 출처(CC BY 4.0). 다녀온 장소 카드가 여는 기록 창도 여기 둔다(모바일 · PC 가 함께 쓴다)
+ * 날씨를 하나라도 보이면 맨 아래 날씨 출처(CC BY 4.0). 다녀온 장소 카드가 여는 기록 창 · 첫 사용 말풍선도 여기 둔다(모바일 · PC 가 함께 쓴다)
  */
 function RouteDays({ trip, sections, holidayOf, weatherOf, ...rest }: RouteDaysProps) {
   const flightOf = useFlightTimes(trip.id);
@@ -75,6 +76,11 @@ function RouteDays({ trip, sections, holidayOf, weatherOf, ...rest }: RouteDaysP
         startDate={trip.start_date}
         rows={sections.flatMap((s) => s.rows)}
         record={rest.record}
+      />
+      <RouteCoachTip
+        ready={sections.some((s) => s.rows.length > 0)}
+        mode={rest.mode}
+        openId={rest.openId}
       />
     </>
   );

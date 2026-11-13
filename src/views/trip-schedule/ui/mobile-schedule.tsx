@@ -108,6 +108,7 @@ export function MobileSchedule({
             <button
               type="button"
               onClick={() => setMap({ day, focusId: null })}
+              data-coach="map"
               className="flex h-9 items-center gap-1.5 rounded-full bg-ink-900 pr-3.5 pl-3 text-[13px] font-extrabold text-white"
             >
               🗺 동선 보기

@@ -62,7 +62,10 @@ export function PcRail({
       footer={<RailTools {...tools} />}
     >
       {!edit.editing && (
-        <DayModeToggle value={mode} onChange={onModeChange} className="mt-2.5 grid grid-cols-2" />
+        // 첫 사용 말풍선이 가리키는 자리 — 세그먼트와 같은 크기 · 모서리
+        <div data-coach="mode" className="mt-2.5 rounded-memo">
+          <DayModeToggle value={mode} onChange={onModeChange} className="grid grid-cols-2" />
+        </div>
       )}
       <DayViewToggle
         mode={view.mode}
