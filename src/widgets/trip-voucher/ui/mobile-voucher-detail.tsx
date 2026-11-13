@@ -3,7 +3,7 @@
 import { ArrowLeft, Download, Maximize2 } from "lucide-react";
 
 import type { Voucher } from "@/entities/voucher";
-import { useVoucherDownload } from "@/features/voucher";
+import { useVoucherDownload, VoucherUsedToggle } from "@/features/voucher";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
@@ -24,7 +24,7 @@ type MobileVoucherDetailProps = {
 
 /**
  * 모바일 바우처 상세 — 전체 화면 페이지. 머리 52(← · 「바우처」 17/800 · 원본 저장 ⬇ · 「수정」) + 스크롤 본문 +
- * 아래 고정 「현장에서 보여주기」(52 · 잉크).
+ * 아래 고정 줄(사용 토글 + 「현장에서 보여주기」 52 · 잉크).
  * 그사이 일행이 지우면 닫힌다. 닫히는 동안에는 마지막 바우처를 그대로 그린다(지워져 닫히면 빈 틀)
  */
 export function MobileVoucherDetail({
@@ -77,10 +77,18 @@ export function MobileVoucherDetail({
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-7">
           {shown && <VoucherDetailBody detail={shown} onShow={onShow} />}
         </div>
-        <div className="shrink-0 border-t border-surface-muted px-5 pt-3 pb-[calc(1.875rem+env(safe-area-inset-bottom))]">
+        <div className="flex shrink-0 gap-2 border-t border-surface-muted px-5 pt-3 pb-[calc(1.875rem+env(safe-area-inset-bottom))]">
+          {shown && (
+            <VoucherUsedToggle
+              tripId={tripId}
+              voucher={shown.voucher}
+              size="bar"
+              onToast={onToast}
+            />
+          )}
           <Button
             size="cta"
-            className="w-full gap-1.5 bg-ink-900 hover:bg-ink-800"
+            className="min-w-0 flex-1 gap-1.5 bg-ink-900 hover:bg-ink-800"
             onClick={onShow}
           >
             <Maximize2 className="size-4.5" aria-hidden="true" />

@@ -51,14 +51,21 @@ export function numberLabel(
   return `${n.label} · ${name}${n.owner === me ? " (나)" : ""}`;
 }
 
-/** 뷰어 머리의 보조 줄 — 「정원, 동규 · 10.20 · 치이카와 파크 · 1 / 3」. 연결이 없으면 「기타」, 한 장이면 쪽 표시 없음 */
+/**
+ * 뷰어 머리의 보조 줄 — 「정원, 동규 · 10.20 · 치이카와 파크 · 1 / 3」. 연결이 없으면 「기타」, 한 장이면 쪽 표시 없음.
+ * 이미 쓴 바우처는 맨 앞에 「✓ 사용함」
+ */
 export function viewerSubText(
-  owners: string,
-  target: string | null,
+  v: { owners: string; target: string | null; used: boolean },
   page: number,
   total: number,
 ): string {
-  return [owners, target ?? "기타", total > 1 ? `${page + 1} / ${total}` : null]
+  return [
+    v.used ? "✓ 사용함" : null,
+    v.owners,
+    v.target ?? "기타",
+    total > 1 ? `${page + 1} / ${total}` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 }

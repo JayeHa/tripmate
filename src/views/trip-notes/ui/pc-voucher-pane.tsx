@@ -3,7 +3,7 @@
 import { Download, Maximize2, Ticket } from "lucide-react";
 
 import type { Voucher } from "@/entities/voucher";
-import { useVoucherDownload } from "@/features/voucher";
+import { useVoucherDownload, VoucherUsedToggle } from "@/features/voucher";
 import { useVoucherDetail, VoucherDetailBody } from "@/widgets/trip-voucher";
 
 type PcVoucherPaneProps = {
@@ -21,7 +21,7 @@ const HEAD_BUTTON =
   "flex h-8 items-center gap-1 rounded-button border border-line-strong px-3 text-[13px] font-bold text-ink-900 hover:bg-surface-sunken disabled:opacity-40";
 
 /**
- * PC 바우처 오른쪽 칸 — 머리 60(「바우처 상세」 · 다운로드 · 수정 · 크게 보기) + 내용. 고른 것이 없거나 일행이 지웠으면 안내만
+ * PC 바우처 오른쪽 칸 — 머리 60(「바우처 상세」 · 사용 토글 · 다운로드 · 수정 · 크게 보기) + 내용. 고른 것이 없거나 일행이 지웠으면 안내만
  */
 export function PcVoucherPane({ tripId, id, onEdit, onShow, onToast }: PcVoucherPaneProps) {
   const detail = useVoucherDetail(tripId, id);
@@ -32,6 +32,12 @@ export function PcVoucherPane({ tripId, id, onEdit, onShow, onToast }: PcVoucher
         <>
           <div className="flex h-15 shrink-0 items-center gap-2 border-b border-surface-muted px-6">
             <h2 className="flex-1 text-[13px] font-bold text-ink-400">바우처 상세</h2>
+            <VoucherUsedToggle
+              tripId={tripId}
+              voucher={detail.voucher}
+              size="head"
+              onToast={onToast}
+            />
             {detail.voucher.file_key && (
               <button
                 type="button"

@@ -47,10 +47,15 @@ describe("번호 줄", () => {
 
 describe("뷰어", () => {
   it("보조 줄 — 연결이 없으면 「기타」, 여러 장일 때만 「i / n」", () => {
-    expect(viewerSubText("모두", "10.20 · 치이카와 파크", 1, 3)).toBe(
-      "모두 · 10.20 · 치이카와 파크 · 2 / 3",
+    const v = { owners: "모두", target: "10.20 · 치이카와 파크", used: false };
+    expect(viewerSubText(v, 1, 3)).toBe("모두 · 10.20 · 치이카와 파크 · 2 / 3");
+    expect(viewerSubText({ owners: "정원", target: null, used: false }, 0, 1)).toBe("정원 · 기타");
+  });
+
+  it("보조 줄 — 이미 쓴 바우처는 맨 앞에 「✓ 사용함」", () => {
+    expect(viewerSubText({ owners: "정원", target: null, used: true }, 0, 2)).toBe(
+      "✓ 사용함 · 정원 · 기타 · 1 / 2",
     );
-    expect(viewerSubText("정원", null, 0, 1)).toBe("정원 · 기타");
   });
 });
 
