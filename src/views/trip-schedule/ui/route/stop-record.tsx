@@ -122,10 +122,10 @@ export function RecordNote({ body, photos, onWrite, onView }: RecordNoteProps) {
         <button
           type="button"
           onClick={onView}
-          aria-label="기록 자세히 보기"
-          className="rounded-button bg-visit-note-bg px-2.5 py-2 text-left text-[13px]/[1.45] text-ink-700"
+          className="relative rounded-button bg-visit-note-bg px-2.5 py-2 text-left text-[13px]/[1.45] text-ink-700"
         >
           <span className="line-clamp-3 wrap-break-word whitespace-pre-line">“{body}”</span>
+          <span className="sr-only">자세히 보기</span>
         </button>
       )}
       <button
