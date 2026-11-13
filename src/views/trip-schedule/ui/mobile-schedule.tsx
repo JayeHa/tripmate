@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { ScheduleMap } from "@/entities/schedule-item";
-import { DayChips } from "@/features/schedule/day-selector";
 import { MobileScheduleEditor } from "@/features/schedule/edit-mode";
 import { useElementHeight } from "@/shared/lib/use-element-height";
 import { cn } from "@/shared/lib/utils";
@@ -16,6 +15,7 @@ import { useOpenStop } from "../model/use-open-stop";
 import { useVisibleDay } from "../model/use-visible-day";
 import { useWindowScrolled } from "../model/use-window-scrolled";
 import { MobileFloatingAdd } from "./floating-add/mobile-floating-add";
+import { MobileDayBar } from "./mobile-day-bar";
 import { RouteDayList } from "./route/route-day-list";
 import { RouteMapSheet, type RouteMapTarget } from "./route-map/route-map-sheet";
 import type { ScheduleLayoutProps } from "./schedule-layout";
@@ -28,7 +28,7 @@ const TITLE_AFTER = 120;
 const ITEM_SCROLL_GAP = 12;
 
 /**
- * 모바일 일정 — 상단바 아래에 여행 머리(제목 · 날짜 · 일행 · 숙소 칩)가 지나가고, 날짜 칩이 붙고(sticky) 그 아래 모든 날짜를 노선도로 이어서 그린다.
+ * 모바일 일정 — 상단바 아래에 여행 머리(제목 · 날짜 · 일행 · 숙소 칩)가 지나가고, 날짜 칩 · 「계획 | 기록」 이 붙고(sticky) 그 아래 모든 날짜를 노선도로 이어서 그린다.
  * 상단바의 작은 제목은 여행 머리가 올라간 뒤에만 보이고, 오른쪽 「🗺 동선 보기」 는 보고 있는 날의 동선 지도를 연다.
  * 페이지(window)가 스크롤된다. sticky 아래를 지난 날짜가 「보고 있는 날」(칩 · `?day`)이고, 칩을 누르면 그 날짜로 스크롤한다.
  * 역을 누르면 펼친다(화면에 하나). 동선 지도의 「일정에서 보기」 는 그 역을 펼친 채 날짜 칩 줄 아래로 옮긴다
@@ -57,10 +57,14 @@ export function MobileSchedule({
   const stickyRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const stickyHeight = useElementHeight(stickyRef);
-  const open = useOpenStop(mode, onModeChange);
-  const [map, setMap] = useState<RouteMapTarget | null>(null);
   /** sticky 영역(상단바 + 날짜 칩) 아래 끝의 화면 y */
   const stickyBottom = () => stickyRef.current?.getBoundingClientRect().bottom ?? 0;
+  const open = useOpenStop(mode, onModeChange, {
+    list: () => listRef.current,
+    line: stickyBottom,
+    scrollBy: (dy) => window.scrollBy({ top: dy, behavior: "instant" }),
+  });
+  const [map, setMap] = useState<RouteMapTarget | null>(null);
   /** 그 장소 줄을 날짜 칩 줄 바로 아래로. 칩 줄은 붙은 자리(top + 높이)를 기준으로 잰다 — 맨 위에서 내려갈 때도 옮긴 뒤 위치에 맞게 */
   const scrollToItem = useCallback((id: string, smooth = true) => {
     const row = document.getElementById(`item-${id}`);
@@ -120,18 +124,20 @@ export function MobileSchedule({
           onOpenFlights={onOpenFlights}
         />
       )}
-      {/* 상단바 아래에 붙는 날짜 칩. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
+      {/* 상단바 아래에 붙는 날짜 칩 · 「계획 | 기록」. 상단바 높이(52px)는 AppHeader 의 h-13 과 같다 */}
       <div
         ref={stickyRef}
         className="sticky top-[calc(var(--shell-top)+3.25rem)] z-10 border-b border-line-card bg-white"
       >
         {trip && (
-          <DayChips
+          <MobileDayBar
             startDate={trip.start_date}
             totalDays={totalDays}
-            value={day}
-            onChange={(d) => scrollToDay(d)}
+            day={day}
+            onDayChange={(d) => scrollToDay(d)}
             holidayOf={body.holidayOf}
+            mode={mode}
+            onModeChange={open.changeMode}
           />
         )}
       </div>
@@ -145,7 +151,6 @@ export function MobileSchedule({
             openId={open.openId}
             onToggle={open.toggle}
             mode={mode}
-            onModeChange={open.changeMode}
             onShowMap={(d, id) => setMap({ day: d, focusId: id })}
             {...body}
           />

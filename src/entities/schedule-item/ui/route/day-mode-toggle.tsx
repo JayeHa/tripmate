@@ -15,7 +15,10 @@ type DayModeToggleProps = {
   className?: string;
 };
 
-/** 날짜 머리 오른쪽 「계획 | 기록」 세그먼트 — 회색 트랙(안쪽 3 · r10) · 칸 r8 · 12/700, 안 켜진 칸 글자는 연회색 */
+/**
+ * 「계획 | 기록」 세그먼트 — 회색 트랙(안쪽 3 · r10) · 칸 r8 · 12/700, 안 켜진 칸 글자는 연회색.
+ * 어디서든 바꿀 수 있게 스크롤해도 남는 자리에 둔다(모바일 날짜 칩 줄 오른쪽 · PC 날짜 레일 제목 아래)
+ */
 export function DayModeToggle({ value, onChange, className }: DayModeToggleProps) {
   return (
     <div

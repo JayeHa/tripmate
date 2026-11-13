@@ -56,6 +56,7 @@ export * from "./ui/reservation-status-picker";
 export * from "./ui/route/day-mode-toggle";
 export * from "./ui/route/pass-row";
 export * from "./ui/route/rating-picker";
+export * from "./ui/route/route-note-row";
 export * from "./ui/route/route-segment";
 export * from "./ui/route/route-stop";
 export * from "./ui/route/stop-marker";

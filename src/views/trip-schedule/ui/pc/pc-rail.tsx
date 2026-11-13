@@ -1,3 +1,4 @@
+import { DayModeToggle } from "@/entities/schedule-item";
 import type { Trip } from "@/entities/trip";
 
 import { placeProgress } from "../../lib/record";
@@ -18,6 +19,7 @@ type PcRailProps = Pick<
   | "flightCount"
   | "sections"
   | "mode"
+  | "onModeChange"
   | "record"
 > & {
   trip: Trip;
@@ -27,7 +29,7 @@ type PcRailProps = Pick<
 };
 
 /**
- * PC 일정 왼쪽 날짜 레일 — 여행 제목 · 「이어서 / 하루씩」 · 날짜 목록 · 아래 숙소 · 항공편.
+ * PC 일정 왼쪽 날짜 레일 — 여행 제목 · 「계획 | 기록」(편집 중에는 없다) · 「이어서 / 하루씩」 · 날짜 목록 · 아래 숙소 · 항공편.
  * 켜진 날은 보고 있는 날, 편집 중에는 편집하는 날(레일도 편집할 날을 고른다).
  * 기록 모드(편집 중이 아닐 때)는 날마다 하루 요약 대신 다녀온 곳 진행 줄
  */
@@ -40,6 +42,7 @@ export function PcRail({
   view,
   sections,
   mode,
+  onModeChange,
   record,
   ...tools
 }: PcRailProps) {
@@ -58,6 +61,9 @@ export function PcRail({
       }
       footer={<RailTools {...tools} />}
     >
+      {!edit.editing && (
+        <DayModeToggle value={mode} onChange={onModeChange} className="mt-2.5 grid grid-cols-2" />
+      )}
       <DayViewToggle
         mode={view.mode}
         onChange={view.setMode}

@@ -1,6 +1,5 @@
 import {
   type DayMode,
-  DayModeToggle,
   durationText,
   itemName,
   type RouteDay,
@@ -27,7 +26,6 @@ type RouteDayHeaderProps = {
   onOpenNote: (note: TimelineRow) => void;
   /** 「계획 | 기록」(화면 전체에 하나) */
   mode: DayMode;
-  onModeChange: (mode: DayMode) => void;
   /** 기록 모드 — 그날 다녀온 장소 수 */
   done: number;
   /** 기록 모드 — 그날 패스한 장소 수 */
@@ -41,8 +39,9 @@ type RouteDayHeaderProps = {
 };
 
 /**
- * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800), 오른쪽에 「계획 | 기록」 · 날씨 ·
- * 계획은 하루 요약 · 요약 칩, 기록은 진행 막대 「4 / 13곳 다녀왔어요」 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창)
+ * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800) · 날씨 ·
+ * 계획은 하루 요약 · 요약 칩 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창), 기록은 진행 막대 「4 / 13곳 다녀왔어요」.
+ * 날짜 메모는 여행 전 · 중에 보는 것이라 기록에는 없다. `data-day-head` 는 보기를 바꿀 때 보던 자리를 재는 표시다
  */
 export function RouteDayHeader({
   startDate,
@@ -53,7 +52,6 @@ export function RouteDayHeader({
   weather,
   onOpenNote,
   mode,
-  onModeChange,
   done,
   passed,
   rated,
@@ -63,20 +61,17 @@ export function RouteDayHeader({
   const { date, dow } = dayParts(startDate, day);
   const tone = dateTone(startDate, day, !!holiday);
   return (
-    <div className="flex flex-col gap-2.5 px-5 pt-4 pb-1.5">
-      <div className="flex items-end justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="flex min-w-0 items-baseline gap-1.5 text-xs font-bold text-ink-350">
-            <span className={cn("shrink-0", tone && DATE_TONE[tone])}>
-              {date} ({dow})
-            </span>
-            {holiday && <span className="truncate text-holiday">{holiday}</span>}
+    <div data-day-head className="flex flex-col gap-2.5 px-5 pt-4 pb-1.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="flex min-w-0 items-baseline gap-1.5 text-xs font-bold text-ink-350">
+          <span className={cn("shrink-0", tone && DATE_TONE[tone])}>
+            {date} ({dow})
           </span>
-          <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
-            day {day + 1}
-          </h2>
-        </div>
-        <DayModeToggle value={mode} onChange={onModeChange} />
+          {holiday && <span className="truncate text-holiday">{holiday}</span>}
+        </span>
+        <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink-900">
+          day {day + 1}
+        </h2>
       </div>
       {weather && <DayWeatherLines weather={weather} />}
       {mode === "record" ? (
@@ -93,16 +88,17 @@ export function RouteDayHeader({
       ) : (
         <PlanSummary route={route} summary={summary} />
       )}
-      {route.preNotes.map((note) => (
-        <button
-          type="button"
-          key={note.item.id}
-          onClick={() => onOpenNote(note)}
-          className="rounded-memo bg-white px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-walk-text"
-        >
-          📌 {itemName(note.item)}
-        </button>
-      ))}
+      {mode === "plan" &&
+        route.preNotes.map((note) => (
+          <button
+            type="button"
+            key={note.item.id}
+            onClick={() => onOpenNote(note)}
+            className="rounded-memo bg-white px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-walk-text"
+          >
+            📌 {itemName(note.item)}
+          </button>
+        ))}
     </div>
   );
 }

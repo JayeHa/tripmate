@@ -194,9 +194,6 @@
   /* 구간 글자의 옅은 뒷부분(출발 · 상세). 기록 모드 지나온 구간은 초록 */
   --color-route-label-sub: #b0b6be;
   --color-visited-label-sub: #8fd3b6;
-  /* 노선도의 노트(날짜 메모) — 앞 역 아래 경고 상자 */
-  --color-route-note: #9a3412;
-  --color-route-note-bg: #fff4e5;
 
   /* 기록 모드 — 다녀온 곳 · 진행 */
   --color-visited: #10b981;

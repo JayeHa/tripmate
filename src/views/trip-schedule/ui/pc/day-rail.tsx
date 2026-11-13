@@ -16,7 +16,7 @@ type DayRailProps = {
   summaries: readonly (string | null)[];
   /** 그 날의 여행지 공휴일 이름 — 날짜 아래 빨간 한 줄 */
   holidayOf: (day: number) => string | null;
-  /** 제목 아래에 두는 것 — 「이어서 / 하루씩」 전환 */
+  /** 제목 아래에 두는 것 — 「계획 | 기록」 · 「이어서 / 하루씩」 전환 */
   children?: ReactNode;
   /** 레일 아래 고정 도구(항공편 · 숙소) */
   footer?: ReactNode;
