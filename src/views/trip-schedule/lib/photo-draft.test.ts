@@ -22,6 +22,9 @@ function saved(id: string, position: number, caption: string | null = null): Vis
     caption,
     position,
     created_at: "2027-01-01",
+    video_key: null,
+    duration: null,
+    poster_at: null,
   };
 }
 

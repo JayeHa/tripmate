@@ -1271,6 +1271,9 @@ export type Database = {
           caption: string | null;
           position: number;
           created_at: string;
+          video_key: string | null;
+          duration: number | null;
+          poster_at: number | null;
         };
         Insert: {
           id?: string;
@@ -1282,6 +1285,9 @@ export type Database = {
           caption?: string | null;
           position?: number;
           created_at?: string;
+          video_key?: string | null;
+          duration?: number | null;
+          poster_at?: number | null;
         };
         Update: {
           caption?: string | null;

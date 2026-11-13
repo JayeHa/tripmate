@@ -20,6 +20,9 @@ function photo(
     caption: null,
     position,
     created_at: at,
+    video_key: null,
+    duration: null,
+    poster_at: null,
   };
 }
 
