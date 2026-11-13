@@ -9,7 +9,6 @@ import {
   RatingPicker,
   useVisitPhotoUrls,
   VISIT_NOTE_MAX,
-  VISIT_PHOTO_LIMIT,
   type VisitPhoto,
 } from "@/entities/schedule-item";
 import { useReportLock } from "@/shared/lib/use-dialog-state";
@@ -59,7 +58,7 @@ type RecordFormProps = RecordCrewProps & {
 };
 
 /**
- * 창 안 — 머리 · 별점 · 기록 글 · 사진 · 하단 버튼.
+ * 창 안 — 머리 · 별점 · 기록 글 · 사진 · 영상 · 하단 버튼.
  * 글 · 사진은 **열 때 본 값**(opened)에서 시작하고 그 값과 달라진 것만 저장한다. 창을 연 동안 일행이 고친 것이 실시간으로 들어와도
  * 지금 값과 비교하지 않는다 — 그러면 손대지 않은 글이 일행의 새 글을 옛 글로 되돌리고, 일행이 그사이 올린 사진을 「뺀 사진」 으로 지운다
  */
@@ -83,12 +82,14 @@ export function RecordForm({
   );
   const online = useOnline();
   const saving = photos.progress !== null;
-  useReportLock(saving, onLockChange);
+  // 고른 영상을 읽는 동안에도 닫기 · 저장을 막는다 — 읽고 나서 붙일 초안이 그사이 바뀌지 않게
+  const busy = saving || photos.reading;
+  useReportLock(busy, onLockChange);
 
   /** 사진을 먼저 올리고(바꿨으면) 별점 · 글을 저장해 닫는다. 사진이 실패하면 별점 · 글도 저장하지 않고 창에 남는다 */
   async function submit() {
     if (photos.changed && !online) {
-      setError("오프라인이에요. 사진은 연결되면 저장해 주세요");
+      setError("오프라인이에요. 사진 · 영상은 연결되면 저장해 주세요");
       return;
     }
     setError(null);
@@ -105,7 +106,7 @@ export function RecordForm({
       className="flex min-h-0 flex-1 flex-col"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!saving) void submit();
+        if (!busy) void submit();
       }}
     >
       <span
@@ -123,7 +124,7 @@ export function RecordForm({
           type="button"
           aria-label="닫기"
           onClick={onClose}
-          disabled={saving}
+          disabled={busy}
           className="-mr-1.5 flex size-8 shrink-0 items-center justify-center text-ink-400"
         >
           <X className="size-5.5" strokeWidth={2} />
@@ -163,11 +164,12 @@ export function RecordForm({
           </div>
         </RecordBlock>
         <PhotoPicker
+          tripId={tripId}
           photos={photos}
           urls={urls}
           offline={!online}
           saving={saving}
-          onOverflow={() => setError(`사진은 ${VISIT_PHOTO_LIMIT}장까지 붙일 수 있어요`)}
+          onNotice={setError}
           shared={shared}
           uploader={uploader}
         />
@@ -184,7 +186,7 @@ export function RecordForm({
           size="cta"
           className="lg:h-10.5 lg:min-w-22 lg:text-[15px]"
           onClick={onClose}
-          disabled={saving}
+          disabled={busy}
         >
           취소
         </Button>
@@ -192,7 +194,7 @@ export function RecordForm({
           type="submit"
           size="cta"
           className="flex-1 lg:h-10.5 lg:min-w-22 lg:flex-none lg:text-[15px]"
-          disabled={saving}
+          disabled={busy}
         >
           {saving ? savingText(photos.progress) : "저장"}
         </Button>
@@ -201,8 +203,8 @@ export function RecordForm({
   );
 }
 
-/** 저장 버튼 글 — 새 사진을 올리는 중이면 「사진 올리는 중 2/5」 */
+/** 저장 버튼 글 — 새 사진 · 영상을 올리는 중이면 「올리는 중 2/5」 */
 function savingText(progress: { done: number; total: number } | null): string {
   if (!progress || progress.total === 0) return "저장 중…";
-  return `사진 올리는 중 ${progress.done}/${progress.total}`;
+  return `올리는 중 ${progress.done}/${progress.total}`;
 }
