@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   mapDayOf,
   pcFocusLine,
+  pickAnchor,
   pickFocus,
   pickVisibleDay,
   pinScrollTarget,
@@ -72,6 +73,39 @@ describe("pickVisibleDay", () => {
     expect(pickVisibleDay(sections, 79)).toBe(0);
     expect(pickVisibleDay([{ day: 3, top: 500 }], 100)).toBe(3);
     expect(pickVisibleDay([], 100)).toBeNull();
+  });
+});
+
+describe("pickAnchor", () => {
+  const marks = [
+    { top: -300, bottom: -100 },
+    { top: -100, bottom: 140 },
+    { top: 140, bottom: 400 },
+  ];
+  it("기준선에 걸친 것 — 윗변이 다음 것보다 기준선에 가까울 때", () => {
+    expect(pickAnchor(marks, 0)).toBe(1);
+    expect(pickAnchor(marks, 20)).toBe(1);
+  });
+
+  it("걸친 것이 거의 다 지나가 다음 것의 윗변이 더 가까우면 다음 것", () => {
+    expect(pickAnchor(marks, 100)).toBe(2);
+  });
+
+  it("걸친 것이 마지막이면 멀어도 그것", () => {
+    expect(pickAnchor(marks, 390)).toBe(2);
+  });
+
+  it("아랫변이 기준선과 같으면 지나간 것 — 그 아래 첫 번째", () => {
+    expect(pickAnchor(marks, 140)).toBe(2);
+  });
+
+  it("아직 아무것도 안 지났으면 첫 번째", () => {
+    expect(pickAnchor(marks, -500)).toBe(0);
+  });
+
+  it("모두 지나갔거나 후보가 없으면 null", () => {
+    expect(pickAnchor(marks, 400)).toBeNull();
+    expect(pickAnchor([], 100)).toBeNull();
   });
 });
 

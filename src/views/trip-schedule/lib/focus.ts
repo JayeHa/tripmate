@@ -88,3 +88,21 @@ export function pcFocusLine(list: { top: number; height: number } | undefined, s
   if (!list) return 0;
   return list.top + Math.min(list.height * 0.4, scrollTop + 120);
 }
+
+/** 보던 자리의 후보 — 날짜 머리 · 장소 줄의 화면 y(위 · 아래 변) */
+export type AnchorCandidate = { top: number; bottom: number };
+
+/**
+ * 「보던 자리」 로 삼을 후보의 순서 — 기준선에 걸친 것, 없으면 기준선 아래 첫 번째.
+ * 다만 걸친 것의 윗변보다 그 다음 것의 윗변이 기준선에 더 가까우면 다음 것 — 거의 다 지나간 날짜 머리 · 카드는
+ * 보이는 부분(아래쪽)의 높이가 바뀌므로, 그 윗변을 지키면 정작 보고 있던 다음 장소가 밀린다.
+ * 후보는 목록 순서(위 → 아래)로 받는다. 모두 기준선 위로 지나갔으면(후보가 없어도) null.
+ * 목록 내용이 바뀐 뒤 이 후보의 윗변을 같은 높이에 돌려 놓으면, 위쪽이 길어지거나 짧아져도 보던 것이 그대로 있다
+ */
+export function pickAnchor(candidates: readonly AnchorCandidate[], line: number): number | null {
+  const at = candidates.findIndex((c) => c.bottom > line);
+  if (at === -1) return null;
+  const next = candidates[at + 1];
+  const nextIsNearer = next && Math.abs(next.top - line) < Math.abs(candidates[at].top - line);
+  return nextIsNearer ? at + 1 : at;
+}

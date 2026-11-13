@@ -42,7 +42,7 @@ type PcScheduleProps = ScheduleLayoutProps & {
  * 목록은 모든 날짜를 노선도(장소 카드)로 이어서 그린다. 칸 위를 지난 날짜가 「보고 있는 날」(레일 · `?day`)이고,
  * 레일에서 날짜를 누르면 그 날짜로 스크롤한다. 카드를 누르면 고르고 펼친다(다시 누르면 접고 고른 것이 없다).
  * 지도는 고른 장소를, 고른 것이 없으면 기준선을 지난 장소를 강조한다. 핀을 누르면 그 카드를 고르고 그리로 스크롤한다.
- * 레일 제목 아래에서 「하루씩」 으로 바꾸면 고른 날짜만 그리고, 목록 끝에 이전 · 다음 날 버튼을 둔다(끝 여백 없음).
+ * 「계획 | 기록」 은 레일 제목 아래에 있어 어디를 보고 있든 바꾼다. 그 아래에서 「하루씩」 으로 바꾸면 고른 날짜만 그리고, 목록 끝에 이전 · 다음 날 버튼을 둔다(끝 여백 없음).
  * 편집은 보기와 상관없이 한 날짜다
  */
 export function PcSchedule({
@@ -73,13 +73,17 @@ export function PcSchedule({
   const view = usePcDayView(onGuide);
   const one = view.mode === "one";
   const shown = one ? sections.slice(day, day + 1) : sections;
-  const open = useOpenStop(mode, onModeChange);
+  const listRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const open = useOpenStop(mode, onModeChange, {
+    list: () => contentRef.current,
+    line: () => listRef.current?.getBoundingClientRect().top ?? 0,
+    scrollBy: (dy) => listRef.current?.scrollBy({ top: dy, behavior: "instant" }),
+  });
   const hover = useRouteHover();
   const selected = shownOpenId(open.openId, shown);
   // 고른 장소는 보고 있는 날 안에 있을 때만 지도를 이끈다 — 레일 · 스크롤로 다른 날에 가면 지도는 그 날(강조)을 따르고 카드는 펼친 채 둔다
   const pinned = selected && mapDayOf(sections, selected, -1) === day ? selected : null;
-  const listRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const focus = useScrollFocus({
     scroller: listRef,
     list: contentRef,
@@ -127,6 +131,7 @@ export function PcSchedule({
           view={view}
           sections={sections}
           mode={mode}
+          onModeChange={open.changeMode}
           record={body.record}
           onOpenStays={onOpenStays}
           stayCount={stayCount}
@@ -157,7 +162,6 @@ export function PcSchedule({
               openId={selected}
               onToggle={open.toggle}
               mode={mode}
-              onModeChange={open.changeMode}
               focusId={pinned ? null : focus.focusId}
               showPins
               hover={hover}

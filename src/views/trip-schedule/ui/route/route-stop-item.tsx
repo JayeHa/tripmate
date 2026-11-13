@@ -4,6 +4,7 @@ import {
   type RouteLine,
   routeLineStyle,
   type RouteMode,
+  RouteNoteRow,
   RouteSegmentRow,
   RouteStop,
   type RouteStopData,
@@ -54,6 +55,7 @@ type RouteStopItemProps = {
   onAddMemo?: () => void;
   /** 「🗺 지도에서」. PC 는 없다 */
   onShowMap?: () => void;
+  /** 이 역 뒤에 둔 날짜 메모를 눌렀다 — 시간 · 메모 창 */
   onOpenNote: (note: TimelineRow) => void;
   /** 구간 글자 — 다음 줄로 이동 방법 창. 없으면 눌러도 아무 일 없다 */
   onEditMove?: (next: TimelineRow) => void;
@@ -61,7 +63,7 @@ type RouteStopItemProps = {
 
 /**
  * 노선도의 역(장소 카드) 하나와 다음 역까지의 구간. 카드를 누르면 카드 안을 펼치고(메모 · 상세 · 길찾기 · 지도에서),
- * 구간 글자를 누르면 이동 방법 창. `id="item-…"` 로 화면이 그 줄을 찾아 스크롤하고,
+ * 구간 글자를 누르면 이동 방법 창. 이 역 뒤에 둔 날짜 메모는 카드와 구간 사이에 「📌」 흰 상자로(계획 모드만 — 기록은 다녀온 뒤에 쓰는 것만 보인다). `id="item-…"` 로 화면이 그 줄을 찾아 스크롤하고,
  * 지도 핀이 있는 역에는 `data-focus-id` 를 단다(PC 스크롤 강조가 기준선을 지난 역을 찾는다).
  * 펼친 카드 맨 아래에 방문 토글(계획 · 기록 같다). 패스한 곳은 접힌 회색 한 줄이고 누르면 원래 카드로 펼친다.
  * 기록 모드는 표식 · 선 · 카드를 다녀감으로 칠하고, 표시 없는 첫 장소에는 큰 「패스」 · 「✓ 다녀왔어요」 를 둔다
@@ -88,6 +90,7 @@ export function RouteStopItem({
 }: RouteStopItemProps) {
   const { row, seg } = stop;
   const { tone } = visit;
+  const outLine = seg && lineOf(seg.mode, visit.outTone, visit.outPass);
   return (
     <li id={`item-${row.item.id}`} data-focus-id={row.num !== null ? row.item.id : undefined}>
       <RouteStop
@@ -100,7 +103,7 @@ export function RouteStopItem({
         tone={tone}
         category={row.category}
         inLine={inSeg && lineOf(inSeg.mode, visit.inTone, visit.inPass)}
-        outLine={seg && lineOf(seg.mode, visit.outTone, visit.outPass)}
+        outLine={outLine}
         selected={open}
         hovered={focused}
         pinNo={showPin ? row.num : null}
@@ -121,9 +124,17 @@ export function RouteStopItem({
           onOpenDetail={onOpenDetail}
           onAddMemo={onAddMemo}
           onShowMap={onShowMap}
-          onOpenNote={onOpenNote}
         />
       </RouteStop>
+      {!visit.record &&
+        stop.notes.map((note) => (
+          <RouteNoteRow
+            key={note.item.id}
+            text={itemName(note.item)}
+            line={outLine}
+            onClick={() => onOpenNote(note)}
+          />
+        ))}
       <NextSegment
         stop={stop}
         tone={visit.outTone}
@@ -147,11 +158,10 @@ type StopInsideProps = Pick<
   | "onOpenDetail"
   | "onAddMemo"
   | "onShowMap"
-  | "onOpenNote"
 >;
 
 /**
- * 카드 안 아래 칸 — 기록 모드는 다녀온 장소의 별점 줄 · 기록 · 지금 여기의 큰 버튼(펼치면 「상세」), 계획 모드는 날짜 메모 · 휴무(늘) · 펼친 칸.
+ * 카드 안 아래 칸 — 기록 모드는 다녀온 장소의 별점 줄 · 기록 · 지금 여기의 큰 버튼(펼치면 「상세」), 계획 모드는 휴무(늘) · 펼친 칸.
  * 펼쳤으면 맨 아래에 방문 토글 — 지금 여기는 큰 버튼이 같은 일을 해서 없다. 그릴 것이 없으면 null(RouteStop 이 빈 칸을 숨긴다)
  */
 function StopInside({ visit, ...detail }: StopInsideProps) {
@@ -173,7 +183,7 @@ function StopInside({ visit, ...detail }: StopInsideProps) {
       </>
     );
   }
-  if (!open && stop.notes.length === 0 && !stop.row.hoursOff) return null;
+  if (!open && !stop.row.hoursOff) return null;
   return (
     <>
       <StopDetail {...detail} />

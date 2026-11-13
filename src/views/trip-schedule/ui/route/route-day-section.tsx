@@ -56,7 +56,6 @@ export type RouteDaySectionProps = {
   voucherOf: (row: TimelineRow) => { count: number; onOpen: () => void };
   /** 「계획 | 기록」 — 기록이면 다녀감으로 역 · 선을 칠한다 */
   mode: DayMode;
-  onModeChange: (mode: DayMode) => void;
   record: ScheduleRecord;
 };
 
@@ -84,7 +83,6 @@ export function RouteDaySection({
   checklistOf,
   voucherOf,
   mode,
-  onModeChange,
   record,
 }: RouteDaySectionProps) {
   const route = useMemo(() => buildRouteDay(rows, flightOf), [rows, flightOf]);
@@ -102,7 +100,6 @@ export function RouteDaySection({
         weather={weather}
         onOpenNote={onOpen}
         mode={mode}
-        onModeChange={onModeChange}
         done={recTones?.filter((t) => t.tone === "done").length ?? 0}
         passed={recTones?.filter((t) => t.tone === "pass").length ?? 0}
         // 보이는 것만 — 다녀감을 되돌려도 별점 · 글은 남아 있지만 카드에 그 줄이 없다
