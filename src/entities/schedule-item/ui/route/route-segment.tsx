@@ -3,11 +3,11 @@ import { cn } from "@/shared/lib/utils";
 import type { RouteLine, RouteTone } from "../../lib/route";
 import { RouteLineBar } from "./route-line";
 
-/** 구간 글자 색 — [진한 「수단 소요시간」, 옅은 「출발 · 상세」]. 기록 모드는 지나온 초록 · 남은 연회색 */
+/** 구간 글자 색 — [진한 「수단 소요시간」, 옅은 「출발 · 상세」]. 기록 모드의 지나온 구간은 초록, 남은 구간은 계획과 같다(흐리게 하지 않는다 — 선 색으로 구분) */
 const TEXT: Record<RouteTone, [string, string]> = {
   plan: ["text-route-walk-text", "text-route-label-sub"],
   done: ["text-visited-text", "text-visited-label-sub"],
-  todo: ["text-route-chip-dim", "text-route-branch"],
+  todo: ["text-route-walk-text", "text-route-label-sub"],
 };
 
 type RouteSegmentRowProps = {
