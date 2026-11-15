@@ -1,4 +1,9 @@
-import type { DayMode, RouteDay, RouteTone } from "@/entities/schedule-item";
+import {
+  type DayMode,
+  type RouteDay,
+  type RouteTone,
+  visitVideoOf,
+} from "@/entities/schedule-item";
 
 import { planOfRoute, recordOfRoute, type RecordStop } from "../../lib/record";
 import type { ScheduleRecord } from "../../model/use-schedule-record";
@@ -56,7 +61,7 @@ export function stopVisitsOf(
   return { visits, tones };
 }
 
-/** 다녀온 장소 카드의 기록 — 일행과 함께 쓰는 글 · 사진(썸네일 주소) · 기록 창 · 자세히 보기 열기 */
+/** 다녀온 장소 카드의 기록 — 일행과 함께 쓰는 글 · 사진(썸네일 주소, 영상이면 길이) · 기록 창 · 자세히 보기 열기 */
 function noteOf(record: ScheduleRecord, id: string): NonNullable<StopVisit["note"]> {
   return {
     body: record.notes[id]?.body ?? "",
@@ -64,6 +69,7 @@ function noteOf(record: ScheduleRecord, id: string): NonNullable<StopVisit["note
       id: p.id,
       src: record.thumbUrls[p.thumb_key],
       caption: p.caption,
+      duration: visitVideoOf(p)?.duration ?? null,
     })),
     onWrite: () => record.openWrite(id),
     onView: () => record.openView(id),
