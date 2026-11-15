@@ -14,17 +14,17 @@ export type VisitToggle = {
 
 /**
  * 상세 「방문」 줄(다녀왔어요 · 패스) — 일정 화면의 회색과 홈 「다음 장소」 가 같은 표시를 본다(일행 공유).
- * 여행 중에 오늘까지의 장소 일정만 — 항공편 · 메모 · 대체 장소, 오늘 뒤의 날, 여행 전 · 후에는 null(줄을 그리지 않는다)
+ * 오늘까지의 장소 일정만 — 항공편 · 메모 · 대체 장소, 오늘 뒤의 날, 여행 전에는 null(줄을 그리지 않는다).
+ * 여행이 끝났으면 모든 날이 오늘 앞이라 줄이 있다 — 빠뜨린 곳을 다녀온 뒤에 고친다(2026-11-16 사용자 결정)
  */
 export function useVisitToggle(
   tripId: string,
   startDate: string,
-  totalDays: number,
   item: ScheduleItem,
 ): VisitToggle | null {
   const [marks, setMark] = useVisitMarks(tripId);
   const today = differenceInCalendarDays(parseISO(todayISO()), parseISO(startDate));
-  if (today < 0 || today >= totalDays) return null;
+  if (today < 0) return null;
   if (item.kind !== "place" || item.alternative_of !== null || item.day_index > today) return null;
   const mark = marks[item.id] ?? null;
   return { mark, toggle: (next) => setMark(item.id, mark === next ? null : next) };

@@ -125,7 +125,7 @@ function MainDetail({
   onOpenAlternative,
 }: MainDetailProps) {
   const plan = usePlanEdit(tripId, row.item);
-  const visit = useVisitToggle(tripId, startDate, totalDays, row.item);
+  const visit = useVisitToggle(tripId, startDate, row.item);
   const actions = useItemActions(tripId, row.item, (message) => {
     onClose();
     onToast(message);

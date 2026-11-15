@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { RouteDay, TimelineRow } from "@/entities/schedule-item";
 
 import {
+  arrivedAt,
   nextStopId,
   placeProgress,
   planStops,
@@ -68,6 +69,18 @@ describe("planStops", () => {
   });
 });
 
+describe("arrivedAt", () => {
+  it("그 일정의 날에 눌렀으면 누른 시각", () => {
+    expect(arrivedAt("2026-10-31T15:52:00", "2026-10-31", 0)).toBe("2026-10-31T15:52:00");
+    expect(arrivedAt("2026-11-01T09:10:00", "2026-10-31", 1)).toBe("2026-11-01T09:10:00");
+  });
+
+  it("다른 날 눌렀으면 null — 다녀온 뒤에 고친 표시", () => {
+    expect(arrivedAt("2026-11-16T12:52:00", "2026-10-31", 0)).toBeNull();
+    expect(arrivedAt("2026-11-01T09:10:00", "2026-10-31", 0)).toBeNull();
+  });
+});
+
 describe("recordDay", () => {
   it("오늘 · 오늘 앞 · 오늘 뒤", () => {
     expect(recordDay(2, 2)).toBe("today");
@@ -75,8 +88,17 @@ describe("recordDay", () => {
     expect(recordDay(3, 2)).toBe("other");
   });
 
-  it("여행 중이 아니면 그 밖", () => {
+  it("여행 전이면 그 밖", () => {
     expect(recordDay(0, null)).toBe("other");
+  });
+
+  it("여행이 끝났으면 모든 날이 오늘 앞 — 「지금 여기」 는 없다", () => {
+    expect(recordDay(0, null, true)).toBe("past");
+    expect(recordDay(4, null, true)).toBe("past");
+    expect(recordStops(stops, {}, recordDay(0, null, true))[0]).toMatchObject({
+      tone: "todo",
+      next: true,
+    });
   });
 });
 
