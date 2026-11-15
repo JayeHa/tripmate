@@ -62,6 +62,12 @@ export async function removeVisitPhotoFiles(tripId: string, keys: string[]): Pro
 /** 올린 사진 하나의 두 키 */
 export type VisitPhotoKeys = { photo_key: string; thumb_key: string };
 
+/** 줄 하나에 붙는 파일 값 — 사진이면 영상 칸 셋이 null, 영상이면 사진 키 둘이 표지 */
+export type VisitMediaKeys = Pick<
+  VisitPhoto,
+  "photo_key" | "thumb_key" | "video_key" | "duration" | "poster_at"
+>;
+
 /**
  * 고른 사진 → 줄인 사진(긴 변 1600) + 썸네일(긴 변 192)을 올리고 두 키를 돌려준다. 줄은 아직 없다(`insertVisitPhoto`).
  * 줄인 결과가 받는 종류가 아니면(브라우저가 못 읽는 HEIC 등) 받지 않는다. 하나만 올라갔으면 그것을 지우고 던진다
@@ -87,11 +93,11 @@ export async function uploadVisitPhoto(tripId: string, file: File): Promise<Visi
 }
 
 /**
- * 올려 둔 두 키를 줄로 붙이고 그 줄을 돌려준다. 올린 사람은 DB 기본값이 나로 채운다(사람 id 를 보내지 않는다).
+ * 올려 둔 키를 줄로 붙이고 그 줄을 돌려준다(영상이면 원본 키 · 길이 · 표지 지점까지). 올린 사람은 DB 기본값이 나로 채운다(사람 id 를 보내지 않는다).
  * 실패해도 파일은 지우지 않는다 — 부르는 쪽이 올린 파일을 함께 정리한다
  */
 export async function insertVisitPhoto(
-  v: { tripId: string; itemId: string; caption: string | null; position: number } & VisitPhotoKeys,
+  v: { tripId: string; itemId: string; caption: string | null; position: number } & VisitMediaKeys,
 ): Promise<VisitPhoto> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -103,6 +109,9 @@ export async function insertVisitPhoto(
       position: v.position,
       photo_key: v.photo_key,
       thumb_key: v.thumb_key,
+      video_key: v.video_key,
+      duration: v.duration,
+      poster_at: v.poster_at,
     })
     .select()
     .single();

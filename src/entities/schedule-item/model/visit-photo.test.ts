@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { photosByItem, type VisitPhoto } from "./visit-photo";
+import { photosByItem, type VisitPhoto, visitVideoOf } from "./visit-photo";
 
 /** 테스트용 사진 줄 */
 function photo(
@@ -41,5 +41,18 @@ describe("photosByItem", () => {
 
   it("사진이 없으면 빈 값", () => {
     expect(photosByItem([])).toEqual({});
+  });
+});
+
+describe("visitVideoOf", () => {
+  it("영상 줄이면 원본 키 · 길이 · 표지 지점, 사진 줄이면 null", () => {
+    expect(visitVideoOf(photo("a", "i", "me", 0))).toBeNull();
+    const video = {
+      ...photo("b", "i", "me", 1),
+      video_key: "t/b.mp4",
+      duration: 12.4,
+      poster_at: 1,
+    };
+    expect(visitVideoOf(video)).toEqual({ key: "t/b.mp4", duration: 12.4, posterAt: 1 });
   });
 });
