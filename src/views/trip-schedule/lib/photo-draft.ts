@@ -103,3 +103,28 @@ export function countText(draft: readonly DraftPhoto[], limit: number): string {
     .filter(Boolean)
     .join(" · ");
 }
+
+/** 고른 파일을 읽은 결과 — 받은 것 · 마지막으로 받지 못한 까닭(없으면 null) · 자리가 차서 읽지 않은 파일이 있는가 */
+export type PickedFiles<T> = { picked: T[]; refused: string | null; overflow: boolean };
+
+/**
+ * 고른 파일을 **받은 수가 남은 자리(room)에 닿을 때까지** 차례로 읽는다. read 는 받으면 그 값, 받지 않으면 까닭(문구)을 돌려준다.
+ * 받지 못한 파일은 자리를 쓰지 않는다 — 먼저 자리만큼 자르면 거절된 영상 뒤의 파일이 자리가 있는데도 알림 없이 버려진다
+ */
+export async function readPicked<T extends object>(
+  files: readonly File[],
+  room: number,
+  read: (file: File) => Promise<T | string>,
+): Promise<PickedFiles<T>> {
+  const result: PickedFiles<T> = { picked: [], refused: null, overflow: false };
+  for (const file of files) {
+    if (result.picked.length >= room) {
+      result.overflow = true;
+      break;
+    }
+    const r = await read(file);
+    if (typeof r === "string") result.refused = r;
+    else result.picked.push(r);
+  }
+  return result;
+}

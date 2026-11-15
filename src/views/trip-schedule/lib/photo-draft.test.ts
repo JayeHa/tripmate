@@ -8,6 +8,7 @@ import {
   type DraftPhoto,
   hasPhotoChanges,
   photoChanges,
+  readPicked,
   uncaptioned,
 } from "./photo-draft";
 
@@ -103,5 +104,50 @@ describe("countText", () => {
     expect(countText([picked("a", "입구"), picked("b", "메뉴")], 10)).toBe("2 / 10");
     const draft = [picked("a", "입구"), { ...pickedVideo("v"), caption: "불꽃" }, picked("c")];
     expect(countText(draft, 10)).toBe("3 / 10 · 영상 1 · 설명 없음 1");
+  });
+});
+
+describe("readPicked", () => {
+  /** 테스트용 읽기 — 이름이 bad 로 시작하면 받지 않고 그 이름을 까닭으로, 아니면 이름을 담아 받는다 */
+  function read(file: File): Promise<{ name: string } | string> {
+    return Promise.resolve(file.name.startsWith("bad") ? `${file.name} 거절` : { name: file.name });
+  }
+
+  /** 테스트용 파일 */
+  function file(name: string): File {
+    return new File([], name);
+  }
+
+  it("받지 못한 파일은 자리를 쓰지 않는다 — 자리가 하나여도 그 뒤의 파일이 들어온다", async () => {
+    const r = await readPicked([file("bad1"), file("a")], 1, read);
+    expect(r).toEqual({ picked: [{ name: "a" }], refused: "bad1 거절", overflow: false });
+  });
+
+  it("자리가 차면 남은 파일은 읽지 않고 넘쳤다고 알린다", async () => {
+    const seen: string[] = [];
+    const r = await readPicked([file("a"), file("b"), file("bad1")], 1, (f) => {
+      seen.push(f.name);
+      return read(f);
+    });
+    expect(r).toEqual({ picked: [{ name: "a" }], refused: null, overflow: true });
+    expect(seen).toEqual(["a"]);
+  });
+
+  it("자리에 꼭 맞으면 넘치지 않았다 — 받지 못한 까닭은 마지막 것", async () => {
+    const r = await readPicked([file("bad1"), file("a"), file("bad2"), file("b")], 2, read);
+    expect(r).toEqual({
+      picked: [{ name: "a" }, { name: "b" }],
+      refused: "bad2 거절",
+      overflow: false,
+    });
+  });
+
+  it("자리가 없으면 하나도 읽지 않는다", async () => {
+    expect(await readPicked([file("a")], 0, read)).toEqual({
+      picked: [],
+      refused: null,
+      overflow: true,
+    });
+    expect(await readPicked([], 0, read)).toEqual({ picked: [], refused: null, overflow: false });
   });
 });

@@ -14,7 +14,13 @@ import { ApiError } from "@/shared/api/post-json";
 import { queryKeys } from "@/shared/api/query-keys";
 import { saveErrorText } from "@/shared/api/sync";
 
-import { draftOf, type DraftPhoto, hasPhotoChanges, photoChanges } from "../lib/photo-draft";
+import {
+  draftOf,
+  type DraftPhoto,
+  hasPhotoChanges,
+  photoChanges,
+  readPicked,
+} from "../lib/photo-draft";
 import { applyPhotoRows, uploadAdded } from "./record-photo-save";
 
 /** 10개를 넘겼을 때 문구 */
@@ -78,23 +84,21 @@ export function useRecordPhotos(tripId: string, itemId: string, saved: readonly 
   }
 
   /**
-   * 고른 파일을 뒤에 붙이고 첫 새 것을 고른다. 10개를 넘친 것 · 받지 않는 영상은 버리고 알릴 문구를 돌려준다(없으면 null)
+   * 고른 파일을 뒤에 붙이고 첫 새 것을 고른다. 10개를 넘친 것 · 받지 않는 영상은 버리고 알릴 문구를 돌려준다(없으면 null).
+   * 받지 않는 영상은 자리를 쓰지 않는다. 둘 다 있으면 받지 않은 까닭을 알린다 — 꽉 찬 것은 「10 / 10」 으로 보인다
    */
   async function add(files: readonly File[]): Promise<string | null> {
     const room = Math.max(0, VISIT_PHOTO_LIMIT - draft.length);
     setReading(true);
-    const read: (DraftPhoto | string)[] = [];
-    for (const file of files.slice(0, room)) {
-      read.push(await draftOfFile(file).catch(pickErrorText));
-    }
+    const { picked, refused, overflow } = await readPicked(files, room, (file) =>
+      draftOfFile(file).catch(pickErrorText),
+    );
     setReading(false);
-    const picked = read.filter((r) => typeof r !== "string");
     if (picked.length > 0) {
       setDraft([...draft, ...picked]);
       setSelected(draft.length);
     }
-    const refused = read.findLast((r) => typeof r === "string");
-    return refused ?? (files.length > room ? LIMIT_TEXT : null);
+    return refused ?? (overflow ? LIMIT_TEXT : null);
   }
 
   /** i 번째를 뺀다 — 고른 자리는 그 다음 것(끝이면 앞의 것) */
