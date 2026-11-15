@@ -64,7 +64,8 @@ type RouteStopProps = {
 /**
  * 노선도의 역(장소) 한 줄 — 3열 격자 「시각 48 | 선 28 | 장소 카드」. 표식은 선 칸 가운데, 위에서 24(카드 첫 줄 높이).
  * 들어오는 구간 선은 표식 위, 나가는 구간 선은 표식 아래부터 카드 끝까지 이어진다. 회색 목록 바탕(#F7F8FA) 위에서 쓴다.
- * 남은 역(기록 모드)은 줄 전체를 흐리게 한다(.45). 패스한 곳은 접힌 회색 한 줄(표식은 위에서 22, 시각은 회색)이고 투명도는 없다
+ * 남은 역(기록 모드)은 흐리게 하지 않는다 — 표식(회색 점)과 선 색으로만 구분한다(2026-11-15 사용자 결정. 여행이 끝난 뒤 표시하지 않은 곳이 모두 흐려 읽기 어려웠다).
+ * 패스한 곳은 접힌 회색 한 줄(표식은 위에서 22, 시각은 회색)이다
  */
 export function RouteStop({
   time,
@@ -92,7 +93,6 @@ export function RouteStop({
     <div
       className={cn(
         "grid grid-cols-[48px_28px_minmax(0,1fr)] transition-opacity",
-        tone === "todo" && "opacity-45",
         dim && "opacity-55",
       )}
       onPointerEnter={onHover && (() => onHover(true))}
