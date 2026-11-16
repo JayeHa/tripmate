@@ -11,6 +11,7 @@ import {
   readPicked,
   toFront,
   uncaptioned,
+  withCover,
 } from "./photo-draft";
 
 /** 테스트용 저장된 사진 */
@@ -46,7 +47,7 @@ function picked(key: string, caption = ""): DraftPhoto {
 /** 테스트용 새 영상 — 12초, 표지 1초 */
 function pickedVideo(key: string): DraftPhoto {
   const local = { poster: new Blob(), src: `blob:${key}` };
-  return { ...picked(key), video: { duration: 12, posterAt: 1, local } };
+  return { ...picked(key), video: { duration: 12, posterAt: 1, local, cover: null } };
 }
 
 describe("photoChanges", () => {
@@ -131,13 +132,37 @@ describe("영상", () => {
     const row = { ...saved("v", 1), video_key: "t/v.mp4", duration: 12.4, poster_at: 1 };
     const [photo, video] = draftOf([saved("a", 0), row]);
     expect(photo.video).toBeNull();
-    expect(video.video).toEqual({ duration: 12.4, posterAt: 1, local: null });
+    expect(video.video).toEqual({ duration: 12.4, posterAt: 1, local: null, cover: null });
   });
 
   it("새 영상은 읽은 값을 들고 올릴 것에 든다", () => {
     const c = photoChanges([], [picked("p"), pickedVideo("v")]);
     expect(c.added.map((a) => a.video?.duration ?? null)).toEqual([null, 12]);
     expect(c.added[1].video?.local?.src).toBe("blob:v");
+  });
+});
+
+describe("표지 바꾸기", () => {
+  it("저장된 영상 — 바꾼 표지 · 장면이 할 일에 든다. 사진에는 아무것도 하지 않는다", () => {
+    const row = { ...saved("v", 0), video_key: "t/v.mp4", duration: 12, poster_at: 1 };
+    const frame = new Blob(["f"]);
+    const [video] = draftOf([row]);
+    const next = withCover(video, 6.75, frame, "blob:f");
+    expect(next.preview).toBe("blob:f");
+    const c = photoChanges([row], [next]);
+    expect(c.covers).toEqual([{ key: "v", row, poster: frame, posterAt: 6.75 }]);
+    expect(hasPhotoChanges(c)).toBe(true);
+    const photo = draftOf([saved("a", 0)])[0];
+    expect(withCover(photo, 2, frame, "blob:f")).toBe(photo);
+  });
+
+  it("새 영상 — 올릴 표지 · 장면만 바뀌고 따로 바꿀 것은 없다", () => {
+    const frame = new Blob(["f"]);
+    const next = withCover(pickedVideo("n"), 4, frame, "blob:f");
+    expect(next.video?.local?.poster).toBe(frame);
+    const c = photoChanges([], [next]);
+    expect(c.covers).toEqual([]);
+    expect(c.added[0].video?.posterAt).toBe(4);
   });
 });
 

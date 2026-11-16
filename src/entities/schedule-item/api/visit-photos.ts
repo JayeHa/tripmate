@@ -126,6 +126,22 @@ export async function updateVisitPhotoCaption(id: string, caption: string | null
   if (error) throw error;
 }
 
+/** 영상의 표지를 바꾼다 — 새로 올린 표지 두 키와 그 장면(초). 바뀐 줄을 돌려준다. 옛 표지 파일은 부르는 쪽이 지운다 */
+export async function updateVisitVideoCover(
+  id: string,
+  cover: VisitPhotoKeys & { poster_at: number },
+): Promise<VisitPhoto> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("visit_photos")
+    .update(cover)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 /** 사진 · 영상의 놓는 순서를 바꾼다(0 = 대표) — 일행이 올린 것도 옮긴다 */
 export async function updateVisitPhotoPosition(id: string, position: number): Promise<void> {
   const supabase = createClient();

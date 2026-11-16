@@ -36,6 +36,17 @@ export function defaultPosterAt(duration: number): number {
   return Math.min(1, duration / 2);
 }
 
+/** 표지 고르기의 필름 띠 칸 수 */
+export const VISIT_COVER_FRAMES = 8;
+
+/** 표지 고르기의 장면 지점(초) — 길이를 8칸으로 나눈 각 칸의 가운데. 첫 칸이 0초(검은 화면이 많다)가 되지 않게 */
+export function coverPoints(duration: number): number[] {
+  return Array.from(
+    { length: VISIT_COVER_FRAMES },
+    (_, i) => ((i + 0.5) * duration) / VISIT_COVER_FRAMES,
+  );
+}
+
 /** 영상 시간 글 — 「0:12」. 초 아래는 버린다 */
 export function videoClock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));

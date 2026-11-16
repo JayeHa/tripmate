@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  coverPoints,
   defaultPosterAt,
   fitsVisitVideoLength,
   isVisitVideoMime,
@@ -53,5 +54,15 @@ describe("videoClock", () => {
     expect(videoClock(12.9)).toBe("0:12");
     expect(videoClock(30.04)).toBe("0:30");
     expect(videoClock(75)).toBe("1:15");
+  });
+});
+
+describe("coverPoints", () => {
+  it("8칸 각 칸의 가운데 — 0초 · 끝은 들지 않는다", () => {
+    expect(coverPoints(16)).toEqual([1, 3, 5, 7, 9, 11, 13, 15]);
+    const p = coverPoints(0.8);
+    expect(p).toHaveLength(8);
+    expect(p[0]).toBeGreaterThan(0);
+    expect(p[7]).toBeLessThan(0.8);
   });
 });

@@ -8,6 +8,8 @@ export type DraftVideo = {
   posterAt: number;
   /** 새 영상만 — 표지 사진(JPEG)과 바로 재생할 주소(object URL). 저장된 영상은 null(재생할 때 읽기 주소를 받는다) */
   local: { poster: Blob; src: string } | null;
+  /** 저장된 영상의 표지를 바꿨으면 새 표지 사진(JPEG), 아니면 null. 새 영상은 local.poster 를 바꾼다 */
+  cover: Blob | null;
 };
 
 /** 기록 창에서 고치는 사진 · 영상 하나 — 저장된 줄이거나 새로 고른 파일 */
@@ -35,16 +37,23 @@ export function draftOf(photos: readonly VisitPhoto[]): DraftPhoto[] {
       file: null,
       preview: null,
       caption: p.caption ?? "",
-      video: video && { duration: video.duration, posterAt: video.posterAt, local: null },
+      video: video && {
+        duration: video.duration,
+        posterAt: video.posterAt,
+        local: null,
+        cover: null,
+      },
     };
   });
 }
 
-/** 저장할 때 할 일 — 지울 줄 · 설명을 바꿀 줄 · 자리를 옮길 줄 · 올릴 새 사진 · 영상(놓을 순서까지) */
+/** 저장할 때 할 일 — 지울 줄 · 설명을 바꿀 줄 · 자리를 옮길 줄 · 표지를 바꿀 영상 · 올릴 새 사진 · 영상(놓을 순서까지) */
 export type PhotoChanges = {
   removed: VisitPhoto[];
   captions: { id: string; caption: string | null }[];
   moves: { id: string; position: number }[];
+  /** 표지를 바꾼 저장된 영상 — 화면 key · 줄 · 새 표지 · 그 장면(초) */
+  covers: { key: string; row: VisitPhoto; poster: Blob; posterAt: number }[];
   added: {
     key: string;
     file: File;
@@ -78,6 +87,11 @@ export function photoChanges(
     moves: renumber
       ? draft.flatMap((d, i) => (d.saved ? [{ id: d.saved.id, position: i }] : []))
       : [],
+    covers: draft.flatMap((d) =>
+      d.saved && d.video?.cover
+        ? [{ key: d.key, row: d.saved, poster: d.video.cover, posterAt: d.video.posterAt }]
+        : [],
+    ),
     added: added.map(({ d, i }, n) => ({
       key: d.key,
       file: d.file as File,
@@ -99,6 +113,16 @@ function reordered(saved: readonly VisitPhoto[], draft: readonly DraftPhoto[]): 
   return natural.some((id, i) => id !== order[i]);
 }
 
+/** 고른 장면을 그 영상의 표지로 — 새 영상은 올릴 표지를, 저장된 영상은 바꿀 표지를 바꾼다. 영상이 아니면 그대로 */
+export function withCover(d: DraftPhoto, at: number, frame: Blob, preview: string): DraftPhoto {
+  if (!d.video) return d;
+  const { local } = d.video;
+  const video = local
+    ? { ...d.video, posterAt: at, local: { ...local, poster: frame } }
+    : { ...d.video, posterAt: at, cover: frame };
+  return { ...d, preview, video };
+}
+
 /** 고른 것을 맨 앞(대표)으로 옮긴다 — 나머지는 순서 그대로 */
 export function toFront<T>(list: readonly T[], i: number): T[] {
   return [list[i], ...list.filter((_, j) => j !== i)];
@@ -106,7 +130,9 @@ export function toFront<T>(list: readonly T[], i: number): T[] {
 
 /** 저장할 사진 일이 있는가 */
 export function hasPhotoChanges(c: PhotoChanges): boolean {
-  return c.removed.length + c.captions.length + c.moves.length + c.added.length > 0;
+  return (
+    c.removed.length + c.captions.length + c.moves.length + c.covers.length + c.added.length > 0
+  );
 }
 
 /** 설명 없는 사진 · 영상 수 — 막지는 않고 알려만 준다 */

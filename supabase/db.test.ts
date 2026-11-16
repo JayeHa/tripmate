@@ -4926,7 +4926,7 @@ describe("기록 사진 (0086 · 0088)", () => {
       `insert into storage.objects (bucket_id, name) values ('visit-photos', '${trip}/p0.jpg')`,
     );
     expect(await rejects(`update public.visit_photos set photo_key = '${trip}/x.jpg'`)).toMatch(
-      /설명 · 순서만/,
+      /설명 · 순서 · 영상 표지만/,
     );
     await as(B);
     await db.query(
@@ -4934,7 +4934,7 @@ describe("기록 사진 (0086 · 0088)", () => {
     );
     expect(
       await rejects(`update public.visit_photos set user_id = '${B}' where trip_id = '${trip}'`),
-    ).toMatch(/설명 · 순서만/);
+    ).toMatch(/설명 · 순서 · 영상 표지만/);
     expect(
       await rejects(`insert into public.visit_photos (item_id, trip_id, user_id, photo_key, thumb_key)
         values ('${place}', '${trip}', '${A}', '${trip}/p1.jpg', '${trip}/t1.jpg')`),
@@ -5025,21 +5025,34 @@ describe("기록 영상 (0089)", () => {
     );
   });
 
-  it("영상 키 · 길이 · 표지 초는 바꾸지 못하고 설명 · 순서만 바꾼다", async () => {
+  it("영상 키 · 길이는 바꾸지 못하고 설명 · 순서 · 표지(키 둘 + 표지 초)를 바꾼다 — 표지 키도 그 여행 폴더, 표지 초는 길이 안 (0090)", async () => {
     const { trip, place } = await ownPlace("2027-12-22");
+    const other = await newTrip("2027-12-24", "2027-12-24");
     await db.query(videoSql(trip, place, 0, `'${trip}/v0.mp4', 12, 1`));
-    for (const set of [`video_key = '${trip}/x.mp4'`, "duration = 10", "poster_at = 3"]) {
-      expect(
-        await rejects(`update public.visit_photos set ${set} where trip_id = '${trip}'`),
-      ).toMatch(/설명 · 순서만/);
+    /** 그 여행의 줄을 바꾸는 SQL */
+    const set = (s: string) => `update public.visit_photos set ${s} where trip_id = '${trip}'`;
+    for (const s of [`video_key = '${trip}/x.mp4'`, "duration = 10"]) {
+      expect(await rejects(set(s))).toMatch(/설명 · 순서 · 영상 표지만/);
     }
+    expect(await rejects(set("poster_at = 13"))).toMatch(/visit_photos_video_chk/);
+    expect(await rejects(set(`photo_key = '${other}/p9.jpg'`))).toMatch(/visit_photos_keys_chk/);
+    await db.query(set(`caption = '불쇼', position = 4`));
     await db.query(
-      `update public.visit_photos set caption = '불쇼', position = 4 where trip_id = '${trip}'`,
+      set(`photo_key = '${trip}/p8.jpg', thumb_key = '${trip}/t8.jpg', poster_at = 6.5`),
     );
     const { rows } = await db.query(
-      `select caption, position, duration, poster_at from public.visit_photos where trip_id = '${trip}'`,
+      `select caption, position, duration, poster_at, photo_key, thumb_key from public.visit_photos where trip_id = '${trip}'`,
     );
-    expect(rows).toEqual([{ caption: "불쇼", position: 4, duration: 12, poster_at: 1 }]);
+    expect(rows).toEqual([
+      {
+        caption: "불쇼",
+        position: 4,
+        duration: 12,
+        poster_at: 6.5,
+        photo_key: `${trip}/p8.jpg`,
+        thumb_key: `${trip}/t8.jpg`,
+      },
+    ]);
   });
 
   it("영상 파일은 멤버만 올리고 익명은 못 올린다. 붙은 줄이 없는 파일만 지운다", async () => {
