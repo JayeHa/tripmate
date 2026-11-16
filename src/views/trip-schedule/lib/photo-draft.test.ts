@@ -84,13 +84,13 @@ describe("대표(맨 앞)", () => {
     expect(toFront(["a", "b"], 0)).toEqual(["a", "b"]);
   });
 
-  it("옮기면 모두 놓인 자리로 다시 매긴다 — 값이 달라진 줄만", () => {
-    const rows = [saved("a", 0), saved("b", 1), saved("c", 5)];
-    const c = photoChanges(rows, toFront(draftOf(rows), 2));
+  it("옮기면 모두 놓인 자리로 다시 매긴다 — 열 때와 같은 값도 쓴다(일행이 그사이 옮긴 값을 덮게)", () => {
+    const rows = [saved("a", 0), saved("b", 1), saved("c", 2)];
+    const c = photoChanges(rows, toFront(draftOf(rows), 1));
     expect(c.moves).toEqual([
-      { id: "c", position: 0 },
+      { id: "b", position: 0 },
       { id: "a", position: 1 },
-      { id: "b", position: 2 },
+      { id: "c", position: 2 },
     ]);
     expect(hasPhotoChanges(c)).toBe(true);
   });

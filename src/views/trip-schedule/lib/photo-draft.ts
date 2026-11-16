@@ -57,7 +57,8 @@ export type PhotoChanges = {
 
 /**
  * 저장된 사진과 고친 값의 차이. 순서를 바꾸지 않았으면 새 사진은 남은 사진 뒤에 고른 순서대로 놓는다(남은 사진의 순서 값은 그대로).
- * 순서를 바꿨으면(「대표로 설정」) 모두 놓인 자리(0부터)로 다시 매긴다 — 값이 달라진 줄만 옮긴다.
+ * 순서를 바꿨으면(「대표로 설정」) 모두 놓인 자리(0부터)로 다시 매긴다 — 열 때 본 값과 같아도 모두 쓴다
+ * (그사이 일행이 순서를 바꿨으면 그 값이 남아 내 순서와 섞인다. 나중 저장이 순서 전체를 이긴다).
  * 올린 새 사진은 saved 를 채워 두므로, 실패한 뒤 다시 저장해도 두 번 올리지 않는다
  */
 export function photoChanges(
@@ -75,9 +76,7 @@ export function photoChanges(
       return d.saved && caption !== d.saved.caption ? [{ id: d.saved.id, caption }] : [];
     }),
     moves: renumber
-      ? draft.flatMap((d, i) =>
-          d.saved && d.saved.position !== i ? [{ id: d.saved.id, position: i }] : [],
-        )
+      ? draft.flatMap((d, i) => (d.saved ? [{ id: d.saved.id, position: i }] : []))
       : [],
     added: added.map(({ d, i }, n) => ({
       key: d.key,
