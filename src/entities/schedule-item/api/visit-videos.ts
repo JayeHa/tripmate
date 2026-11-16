@@ -1,8 +1,9 @@
 import { postJson } from "@/shared/api/post-json";
-import { readVideoFrame } from "@/shared/lib/video-frame";
+import { readVideoFrame, readVideoFrames, type VideoFrames } from "@/shared/lib/video-frame";
 
 import { VISIT_PHOTO_SIDE } from "../lib/visit-photo-rules";
 import {
+  coverPoints,
   defaultPosterAt,
   fitsVisitVideoLength,
   isVisitVideoMime,
@@ -14,6 +15,7 @@ import {
   uploadVisitPhoto,
   type VisitMediaKeys,
   VisitPhotoError,
+  type VisitPhotoKeys,
 } from "./visit-photos";
 
 /** 고른 영상에서 읽은 것 — 길이(초) · 표지 지점(초) · 표지 사진(JPEG) */
@@ -68,8 +70,7 @@ export async function uploadVisitVideo(
   file: File,
   picked: PickedVideo,
 ): Promise<VisitMediaKeys> {
-  const poster = new File([picked.poster], "poster.jpg", { type: "image/jpeg" });
-  const keys = await uploadVisitPhoto(tripId, poster);
+  const keys = await uploadVisitCover(tripId, picked.poster);
   try {
     const video_key = await uploadFile(tripId, file);
     return { ...keys, video_key, duration: picked.duration, poster_at: picked.posterAt };
@@ -77,6 +78,19 @@ export async function uploadVisitVideo(
     await removeVisitPhotoFiles(tripId, [keys.photo_key, keys.thumb_key]);
     throw e;
   }
+}
+
+/** 표지 사진(JPEG)을 기록 사진처럼 올린다(긴 변 1600 + 썸네일 192). 두 키를 돌려준다 */
+export function uploadVisitCover(tripId: string, poster: Blob): Promise<VisitPhotoKeys> {
+  return uploadVisitPhoto(tripId, new File([poster], "poster.jpg", { type: "image/jpeg" }));
+}
+
+/**
+ * 표지 고르기의 장면 8개(`coverPoints`) — 긴 변 1600 이라 고른 장면을 그대로 표지로 올린다.
+ * remote = 저장소의 서명 주소(다른 출처). 못 읽으면 null
+ */
+export function readVisitCoverFrames(src: string, remote: boolean): Promise<VideoFrames | null> {
+  return readVideoFrames(src, coverPoints, VISIT_PHOTO_SIDE, remote);
 }
 
 /**

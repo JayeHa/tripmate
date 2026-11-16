@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   VISIT_PHOTO_LIMIT,
@@ -12,6 +12,7 @@ import { cn } from "@/shared/lib/utils";
 import type { CrewMember } from "../../lib/crew";
 import { countText, type DraftPhoto, uncaptioned } from "../../lib/photo-draft";
 import type { RecordPhotos } from "../../model/use-record-photos";
+import { CoverDialog, type CoverTarget } from "./cover-dialog";
 import { PhotoPreview, type PreviewVideo } from "./photo-preview";
 import { PhotoThumbs } from "./photo-thumbs";
 import { RecordBlock } from "./record-block";
@@ -41,7 +42,8 @@ type PhotoPickerProps = {
  * 하나도 없으면 큰 「사진 · 영상 추가」 칸. 라벨 오른쪽 「5 / 10 · 영상 1」, 설명 없는 것이 있으면 「· 설명 없음 N」(막지 않는다).
  * 새로 고른 것이 바로 골라진다. 영상은 고를 때 확인하고 표지를 만들어서 그동안(reading) 칸을 막는다.
  * 오프라인에서는 보기만 한다(사진 · 영상은 대기열에 넣지 않는다).
- * 일행이 함께 올린다 — 일행이 있으면 썸네일 왼쪽 위에 올린 사람 아바타, 큰 칸의 칩에 이름
+ * 일행이 함께 올린다 — 일행이 있으면 썸네일 왼쪽 위에 올린 사람 아바타, 큰 칸의 칩에 이름.
+ * 영상의 「🎞 표지 바꾸기」 는 기록 창 위에 표지 고르기 창을 겹쳐 연다 — 고른 장면은 저장할 때 올린다
  */
 export function PhotoPicker({
   tripId,
@@ -54,6 +56,7 @@ export function PhotoPicker({
   uploader,
 }: PhotoPickerProps) {
   const input = useRef<HTMLInputElement>(null);
+  const [cover, setCover] = useState<CoverTarget | null>(null);
   const { draft, selected } = photos;
   const disabled = offline || saving || photos.reading;
   const missing = uncaptioned(draft);
@@ -115,11 +118,21 @@ export function PhotoPicker({
               onSelect={photos.select}
               onRemove={() => photos.remove(selected)}
               onSetLead={() => photos.setLead(selected)}
+              onCover={() => setCover(coverTarget(tripId, current, urls))}
               disabled={disabled}
             />
           )}
         </>
       )}
+      <CoverDialog
+        tripId={tripId}
+        target={cover}
+        onClose={() => setCover(null)}
+        onPick={(key, at, frame) => {
+          const i = draft.findIndex((d) => d.key === key);
+          if (i >= 0) photos.setCover(i, at, frame);
+        }}
+      />
       <input
         ref={input}
         type="file"
@@ -146,5 +159,23 @@ function previewVideo(tripId: string, d: DraftPhoto): PreviewVideo | null {
     posterAt: d.video.posterAt,
     localSrc: d.video.local?.src ?? null,
     videoKey: d.saved?.video_key ?? null,
+  };
+}
+
+/** 표지 고르기 창에 넘길 값 — 지금 표지(새 영상 · 바꾼 표지는 미리보기, 저장된 표지는 읽기 주소). 영상이 아니면 null */
+function coverTarget(
+  tripId: string,
+  d: DraftPhoto,
+  urls: Readonly<Record<string, string>>,
+): CoverTarget | null {
+  const video = previewVideo(tripId, d);
+  if (!video) return null;
+  return {
+    key: d.key,
+    duration: video.duration,
+    posterAt: video.posterAt,
+    poster: d.preview ?? (d.saved ? urls[d.saved.photo_key] : undefined),
+    localSrc: video.localSrc,
+    videoKey: video.videoKey,
   };
 }
