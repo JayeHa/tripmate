@@ -1,3 +1,5 @@
+import { format, parseISO } from "date-fns";
+
 import type {
   MapRecordTone,
   RouteDay,
@@ -7,6 +9,7 @@ import type {
   VisitMark,
   VisitMarks,
 } from "@/entities/schedule-item";
+import { dayIndexToDate } from "@/shared/lib/days";
 
 /** 역 하나의 방문 모양 — 표식 · 카드와 지나왔는지(기록 모드) */
 export type RecordStop = {
@@ -19,7 +22,7 @@ export type RecordStop = {
   dim: boolean;
 };
 
-/** 그 날이 여행 중 오늘인지 · 오늘 앞의 날인지 · 그 밖(오늘 뒤 · 여행 전후)인지 */
+/** 그 날이 여행 중 오늘인지 · 오늘 앞의 날(끝난 여행은 모든 날)인지 · 그 밖(오늘 뒤 · 여행 전)인지 */
 export type RecordDay = "today" | "past" | "other";
 
 /** 진행을 칠할 역 — 장소인지(항공편은 세지 않는다) */
@@ -75,10 +78,24 @@ export function planStops(
   });
 }
 
-/** 그 날(0-base)이 여행 중 오늘 · 오늘 앞 · 그 밖. 여행 중이 아니면(todayIndex null) 모두 그 밖 */
-export function recordDay(day: number, todayIndex: number | null): RecordDay {
+/**
+ * 그 날(0-base)이 여행 중 오늘 · 오늘 앞 · 그 밖. 여행이 끝났으면(ended) 모든 날이 오늘 앞이다 —
+ * 다녀온 뒤에도 빠뜨린 곳을 다녀옴 · 패스로 고치고 기록을 남기게(2026-11-16 사용자 결정). 여행 전(todayIndex null)은 모두 그 밖
+ */
+export function recordDay(day: number, todayIndex: number | null, ended = false): RecordDay {
+  if (ended) return "past";
   if (todayIndex === null || day > todayIndex) return "other";
   return day === todayIndex ? "today" : "past";
+}
+
+/**
+ * 도착 시각 — 다녀왔어요를 **그 일정의 날**(기기 날짜)에 눌렀을 때만 누른 시각이다.
+ * 다른 날 눌렀으면 null — 다녀온 뒤에 고친 표시라 그 시각은 도착이 아니다(화면은 시각 없이 날짜만)
+ */
+export function arrivedAt(markedAt: string, startDate: string, dayIndex: number): string | null {
+  return format(parseISO(markedAt), "yyyy-MM-dd") === dayIndexToDate(startDate, dayIndex)
+    ? markedAt
+    : null;
 }
 
 /** 노선도의 역 → 판정 입력 */

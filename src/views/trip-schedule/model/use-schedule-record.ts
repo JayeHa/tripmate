@@ -24,6 +24,7 @@ import {
 import { useUser } from "@/entities/session";
 import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
+import { todayISO } from "@/shared/lib/days";
 
 import {
   type CrewMember,
@@ -33,7 +34,7 @@ import {
   ratingBoard,
   uploaderOf,
 } from "../lib/crew";
-import { type RecordDay, recordDay } from "../lib/record";
+import { arrivedAt, type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 
 const NO_URLS: Readonly<Record<string, string>> = {};
@@ -41,7 +42,7 @@ const NO_URLS: Readonly<Record<string, string>> = {};
 /** 기록 모드가 읽고 바꾸는 다녀감(일행 공유 표시) */
 export type ScheduleRecord = {
   marks: VisitMarks;
-  /** 표시를 남긴 시각(ISO) — 「10:52 도착」. 없으면 null */
+  /** 도착 시각(ISO) — 「10:52 도착」. 표시가 없거나 그 일정의 날이 아닌 날 표시했으면(다녀온 뒤에 고침) null */
   markedAt: (id: string) => string | null;
   /**
    * 그 날이 여행 중 오늘 · 오늘 앞 · 그 밖인지. 「✓ 다녀왔어요」 는 오늘까지(상세 「방문」 과 같은 규칙),
@@ -97,6 +98,8 @@ export function useScheduleRecord(
 ) {
   const entry = useScheduleEntry(tripId, trip, items, ready);
   const { todayIndex } = entry;
+  // 여행이 끝났다 — 모든 날에서 다녀감을 고칠 수 있다(ISO 날짜라 글자로 비교한다)
+  const ended = trip !== undefined && todayISO() > trip.end_date;
   const [picked, setPicked] = useState<DayMode | null>(null);
   const [marks, setMark] = useVisitMarks(tripId);
   const { data } = useQuery(visitsQuery(tripId));
@@ -113,11 +116,22 @@ export function useScheduleRecord(
   const { data: thumbUrls = NO_URLS } = useVisitPhotoUrls(tripId, thumbKeys);
   const [writing, setWriting] = useState<string | null>(null);
   const [viewing, setViewing] = useState<string | null>(null);
-  const at = useMemo(() => new Map(data?.map((v) => [v.item_id, v.marked_at])), [data]);
+  // 도착 시각 — 그 일정의 날에 누른 표시만(다녀온 뒤에 고친 표시는 시각 없이)
+  const start = trip?.start_date;
+  const at = useMemo(() => {
+    const dayIndex = new Map(items.map((i) => [i.id, i.day_index]));
+    return new Map(
+      data?.map((v) => {
+        const day = dayIndex.get(v.item_id);
+        const time = start && day !== undefined ? arrivedAt(v.marked_at, start, day) : null;
+        return [v.item_id, time];
+      }),
+    );
+  }, [data, items, start]);
   const record: ScheduleRecord = {
     marks,
     markedAt: (id) => at.get(id) ?? null,
-    dayOf: (day) => recordDay(day, todayIndex),
+    dayOf: (day) => recordDay(day, todayIndex, ended),
     setMark,
     stars,
     visits,
