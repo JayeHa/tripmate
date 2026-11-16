@@ -126,6 +126,13 @@ export async function updateVisitPhotoCaption(id: string, caption: string | null
   if (error) throw error;
 }
 
+/** 사진 · 영상의 놓는 순서를 바꾼다(0 = 대표) — 일행이 올린 것도 옮긴다 */
+export async function updateVisitPhotoPosition(id: string, position: number): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("visit_photos").update({ position }).eq("id", id);
+  if (error) throw error;
+}
+
 /** 사진 줄만 지운다(일행이 올린 사진도). 이미 없으면 그대로 끝낸다 — 파일은 부르는 쪽이 줄을 지운 뒤 지운다(버킷은 붙은 줄이 없는 파일만 지운다) */
 export async function deleteVisitPhotoRow(id: string): Promise<void> {
   const supabase = createClient();

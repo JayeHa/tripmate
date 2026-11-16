@@ -20,6 +20,7 @@ import {
   hasPhotoChanges,
   photoChanges,
   readPicked,
+  toFront,
 } from "../lib/photo-draft";
 import { applyPhotoRows, uploadAdded } from "./record-photo-save";
 
@@ -44,7 +45,7 @@ function pickErrorText(e: unknown): string {
  * 기록 창의 사진 · 영상 — 고친 값(초안) · 고른 것 · 저장. 열 때의 저장된 사진에서 시작하고, 저장할 때만 올린다.
  * saved 는 **창을 열 때 본 사진**이어야 한다 — 사진은 일행이 함께 올려서, 지금 값을 넘기면 그사이 일행이 올린 사진을 뺀 것으로 보고 지운다.
  * 영상은 **고를 때** 종류 · 크기 · 길이를 확인하고 표지를 만든다(reading) — 받지 않는 영상은 초안에 들지 않는다.
- * 저장은 **파일 먼저** — 새 것을 모두 올린 뒤에야 줄을 고친다(지우기 → 설명 → 넣기. 그사이 일행이 올려 10개를 넘으면 넣기가 거부되고 문구를 돌려준다).
+ * 저장은 **파일 먼저** — 새 것을 모두 올린 뒤에야 줄을 고친다(지우기 → 설명 → 순서 → 넣기. 그사이 일행이 올려 10개를 넘으면 넣기가 거부되고 문구를 돌려준다).
  * 형식 · 크기 · 업로드 실패는 기존 사진을 건드리기 전에 나서, 그때 「취소」 하면 정말 아무것도 바뀌지 않는다.
  * 뺀 것의 파일은 줄을 지운 뒤 마지막에 지운다. 붙인 새 것은 바로 초안에 적어 다시 저장해도 두 번 올리지 않는다.
  * 미리보기 · 재생 주소(object URL)는 창이 사라질 때 놓는다
@@ -107,6 +108,12 @@ export function useRecordPhotos(tripId: string, itemId: string, saved: readonly 
     setSelected(Math.max(0, Math.min(i, draft.length - 2)));
   }
 
+  /** i 번째를 맨 앞(대표)으로 옮기고 계속 그것을 고른다 */
+  function setLead(i: number) {
+    setDraft(toFront(draft, i));
+    setSelected(0);
+  }
+
   /** i 번째의 설명을 바꾼다 */
   function setCaption(i: number, caption: string) {
     setDraft(draft.map((d, j) => (j === i ? { ...d, caption } : d)));
@@ -143,6 +150,7 @@ export function useRecordPhotos(tripId: string, itemId: string, saved: readonly 
     select: setSelected,
     add,
     remove,
+    setLead,
     setCaption,
     /** 저장할 사진 일이 있다 */
     changed: hasPhotoChanges(photoChanges(saved, draft)),

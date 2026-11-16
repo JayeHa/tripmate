@@ -114,6 +114,7 @@ export function PhotoPicker({
               onCaption={(text) => photos.setCaption(selected, text)}
               onSelect={photos.select}
               onRemove={() => photos.remove(selected)}
+              onSetLead={() => photos.setLead(selected)}
               disabled={disabled}
             />
           )}
