@@ -22,6 +22,8 @@ type PhotoPreviewProps = {
   onCaption: (text: string) => void;
   onSelect: (index: number) => void;
   onRemove: () => void;
+  /** 「★ 대표로 설정」 — 맨 앞으로 옮긴다 */
+  onSetLead: () => void;
   /** 오프라인 · 저장 중 — 빼기 · 설명 고치기를 막는다 */
   disabled: boolean;
 };
@@ -31,7 +33,7 @@ const ARROW =
 
 /**
  * 고른 사진 · 영상 크게(200, PC 240) + 설명 칸(40자). 왼쪽 위 「2 / 3 · 올린 사람」, 오른쪽 위 「삭제」, 좌우 ‹ ›(처음 · 끝에서 숨김).
- * 영상은 표지 위에서 눌러 재생한다(`VideoStage`).
+ * 영상은 표지 위에서 눌러 재생한다(`VideoStage`). 큰 칸 아래 「★ 대표로 설정」 — 맨 앞이면 대표라는 안내.
  * 설명 칸의 Enter 는 저장이 아니라 다음 것으로 — 한글 조합을 끝내는 Enter 는 무시한다(안 그러면 마지막 글자가 다음 것으로 넘어간다)
  */
 export function PhotoPreview({
@@ -44,6 +46,7 @@ export function PhotoPreview({
   onCaption,
   onSelect,
   onRemove,
+  onSetLead,
   disabled,
 }: PhotoPreviewProps) {
   const last = index === count - 1;
@@ -91,6 +94,7 @@ export function PhotoPreview({
           </button>
         )}
       </div>
+      <LeadRow lead={index === 0} disabled={disabled} onSetLead={onSetLead} />
       <input
         value={caption}
         onChange={(e) => onCaption(e.target.value)}
@@ -114,5 +118,31 @@ export function PhotoPreview({
         </span>
       </div>
     </div>
+  );
+}
+
+type LeadRowProps = { lead: boolean; disabled: boolean; onSetLead: () => void };
+
+/**
+ * 큰 칸 아래 줄 — 맨 앞이 아니면 「★ 대표로 설정」(누르면 맨 앞으로), 맨 앞이면 파란 「★ 대표 · 카드 맨 앞에 보여요」.
+ * 대표 = 놓는 순서의 맨 앞(사진이든 영상이든)이다. 카드의 사진 줄 · 기록 자세히 보기가 그 순서로 보인다
+ */
+function LeadRow({ lead, disabled, onSetLead }: LeadRowProps) {
+  const pill = "flex h-7.5 items-center rounded-full px-3 text-[13px] font-bold";
+  if (lead)
+    return (
+      <p className={`${pill} self-start bg-route-transit-soft text-brand-text`}>
+        ★ 대표 · 카드 맨 앞에 보여요
+      </p>
+    );
+  return (
+    <button
+      type="button"
+      onClick={onSetLead}
+      disabled={disabled}
+      className={`${pill} self-start border border-line text-ink-700 disabled:opacity-50`}
+    >
+      ★ 대표로 설정
+    </button>
   );
 }

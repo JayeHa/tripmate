@@ -9,6 +9,7 @@ import {
   hasPhotoChanges,
   photoChanges,
   readPicked,
+  toFront,
   uncaptioned,
 } from "./photo-draft";
 
@@ -74,6 +75,48 @@ describe("photoChanges", () => {
     const c = photoChanges([], [up]);
     expect(c.added).toEqual([]);
     expect(c.captions).toEqual([{ id: "x", caption: null }]);
+  });
+});
+
+describe("대표(맨 앞)", () => {
+  it("toFront — 고른 것을 맨 앞으로, 나머지는 순서 그대로", () => {
+    expect(toFront(["a", "b", "c", "d"], 2)).toEqual(["c", "a", "b", "d"]);
+    expect(toFront(["a", "b"], 0)).toEqual(["a", "b"]);
+  });
+
+  it("옮기면 모두 놓인 자리로 다시 매긴다 — 열 때와 같은 값도 쓴다(일행이 그사이 옮긴 값을 덮게)", () => {
+    const rows = [saved("a", 0), saved("b", 1), saved("c", 2)];
+    const c = photoChanges(rows, toFront(draftOf(rows), 1));
+    expect(c.moves).toEqual([
+      { id: "b", position: 0 },
+      { id: "a", position: 1 },
+      { id: "c", position: 2 },
+    ]);
+    expect(hasPhotoChanges(c)).toBe(true);
+  });
+
+  it("새 사진을 대표로 — 새 사진도 놓인 자리로", () => {
+    const rows = [saved("a", 0), saved("b", 1)];
+    const c = photoChanges(rows, toFront([...draftOf(rows), picked("n1")], 2));
+    expect(c.added.map((a) => a.position)).toEqual([0]);
+    expect(c.moves).toEqual([
+      { id: "a", position: 1 },
+      { id: "b", position: 2 },
+    ]);
+  });
+
+  it("옮기지 않았으면 자리 값이 띄엄띄엄이어도 그대로 — 뺀 것 · 새 것만으로는 옮기지 않는다", () => {
+    const rows = [saved("a", 0), saved("b", 3), saved("c", 7)];
+    const draft = [...draftOf(rows).filter((d) => d.key !== "b"), picked("n1")];
+    const c = photoChanges(rows, draft);
+    expect(c.moves).toEqual([]);
+    expect(c.added.map((a) => a.position)).toEqual([8]);
+  });
+
+  it("다시 저장 — 올려 둔 새 사진은 열 때 없던 것으로 보아 옮긴 것으로 치지 않는다", () => {
+    const rows = [saved("a", 0)];
+    const up = { ...picked("n1"), saved: saved("x", 1) };
+    expect(photoChanges(rows, [...draftOf(rows), up]).moves).toEqual([]);
   });
 });
 

@@ -3,6 +3,7 @@ import {
   insertVisitPhoto,
   removeVisitMediaFiles,
   updateVisitPhotoCaption,
+  updateVisitPhotoPosition,
   uploadVisitPhoto,
   uploadVisitVideo,
   type VisitMediaKeys,
@@ -50,7 +51,7 @@ export async function uploadAdded(
 }
 
 /**
- * 줄을 고친다 — 지우기 → 설명 → 넣기(붙인 줄마다 onSaved). 끝나면(실패해도) 지운 줄의 파일과 붙이지 못한 새 파일을 지운다
+ * 줄을 고친다 — 지우기 → 설명 → 순서 → 넣기(붙인 줄마다 onSaved). 끝나면(실패해도) 지운 줄의 파일과 붙이지 못한 새 파일을 지운다
  */
 export async function applyPhotoRows(
   target: { tripId: string; itemId: string },
@@ -66,6 +67,7 @@ export async function applyPhotoRows(
       gone.push(p);
     }
     for (const c of changes.captions) await updateVisitPhotoCaption(c.id, c.caption);
+    for (const m of changes.moves) await updateVisitPhotoPosition(m.id, m.position);
     while (left.length > 0) {
       onSaved(left[0].key, await insertVisitPhoto({ ...target, ...left[0] }));
       left.shift();

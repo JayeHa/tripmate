@@ -40,10 +40,11 @@ export function draftOf(photos: readonly VisitPhoto[]): DraftPhoto[] {
   });
 }
 
-/** 저장할 때 할 일 — 지울 줄 · 설명을 바꿀 줄 · 올릴 새 사진 · 영상(놓을 순서까지) */
+/** 저장할 때 할 일 — 지울 줄 · 설명을 바꿀 줄 · 자리를 옮길 줄 · 올릴 새 사진 · 영상(놓을 순서까지) */
 export type PhotoChanges = {
   removed: VisitPhoto[];
   captions: { id: string; caption: string | null }[];
+  moves: { id: string; position: number }[];
   added: {
     key: string;
     file: File;
@@ -55,7 +56,9 @@ export type PhotoChanges = {
 };
 
 /**
- * 저장된 사진과 고친 값의 차이. 새 사진은 남은 사진 뒤에 고른 순서대로 놓는다(남은 사진의 순서 값은 그대로).
+ * 저장된 사진과 고친 값의 차이. 순서를 바꾸지 않았으면 새 사진은 남은 사진 뒤에 고른 순서대로 놓는다(남은 사진의 순서 값은 그대로).
+ * 순서를 바꿨으면(「대표로 설정」) 모두 놓인 자리(0부터)로 다시 매긴다 — 열 때 본 값과 같아도 모두 쓴다
+ * (그사이 일행이 순서를 바꿨으면 그 값이 남아 내 순서와 섞인다. 나중 저장이 순서 전체를 이긴다).
  * 올린 새 사진은 saved 를 채워 두므로, 실패한 뒤 다시 저장해도 두 번 올리지 않는다
  */
 export function photoChanges(
@@ -64,26 +67,46 @@ export function photoChanges(
 ): PhotoChanges {
   const kept = new Set(draft.flatMap((d) => (d.saved ? [d.saved.id] : [])));
   const last = Math.max(-1, ...draft.flatMap((d) => (d.saved ? [d.saved.position] : [])));
-  const added = draft.flatMap((d) => (d.file && !d.saved ? [d] : []));
+  const renumber = reordered(saved, draft);
+  const added = draft.flatMap((d, i) => (d.file && !d.saved ? [{ d, i }] : []));
   return {
     removed: saved.filter((p) => !kept.has(p.id)),
     captions: draft.flatMap((d) => {
       const caption = cleanCaption(d.caption);
       return d.saved && caption !== d.saved.caption ? [{ id: d.saved.id, caption }] : [];
     }),
-    added: added.map((d, i) => ({
+    moves: renumber
+      ? draft.flatMap((d, i) => (d.saved ? [{ id: d.saved.id, position: i }] : []))
+      : [],
+    added: added.map(({ d, i }, n) => ({
       key: d.key,
       file: d.file as File,
       caption: cleanCaption(d.caption),
-      position: last + 1 + i,
+      position: renumber ? i : last + 1 + n,
       video: d.video,
     })),
   };
 }
 
+/** 처음 놓인 순서(열 때 본 사진 → 그 뒤에 새로 붙인 것)와 지금 순서가 다른가 — 「대표로 설정」 으로 옮겼다 */
+function reordered(saved: readonly VisitPhoto[], draft: readonly DraftPhoto[]): boolean {
+  const opened = new Set(saved.map((p) => p.id));
+  const order = draft.map((d) => d.saved?.id ?? d.key);
+  const natural = [
+    ...saved.flatMap((p) => (order.includes(p.id) ? [p.id] : [])),
+    ...order.filter((id) => !opened.has(id)),
+  ];
+  return natural.some((id, i) => id !== order[i]);
+}
+
+/** 고른 것을 맨 앞(대표)으로 옮긴다 — 나머지는 순서 그대로 */
+export function toFront<T>(list: readonly T[], i: number): T[] {
+  return [list[i], ...list.filter((_, j) => j !== i)];
+}
+
 /** 저장할 사진 일이 있는가 */
 export function hasPhotoChanges(c: PhotoChanges): boolean {
-  return c.removed.length + c.captions.length + c.added.length > 0;
+  return c.removed.length + c.captions.length + c.moves.length + c.added.length > 0;
 }
 
 /** 설명 없는 사진 · 영상 수 — 막지는 않고 알려만 준다 */

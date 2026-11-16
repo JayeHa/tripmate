@@ -20,7 +20,8 @@ type PhotoThumbsProps = {
 
 /**
  * 썸네일 줄 — 56 · r10 · 사이 8, 고른 것은 흰 2 + 파랑 2 링, 설명이 있으면 왼쪽 아래 💬,
- * 올린 사람이 있으면 왼쪽 위 아바타 16(흰 테두리 1.5). 영상은 표지 가운데 ▶(22) + 오른쪽 아래 길이
+ * 올린 사람이 있으면 왼쪽 위 아바타 16(흰 테두리 1.5). 영상은 표지 가운데 ▶(22) + 오른쪽 아래 길이.
+ * 맨 앞은 대표 — 오른쪽 위 파란 「대표」
  */
 export function PhotoThumbs({ draft, urls, selected, by, onSelect, onAdd }: PhotoThumbsProps) {
   return (
@@ -42,6 +43,11 @@ export function PhotoThumbs({ draft, urls, selected, by, onSelect, onAdd }: Phot
           )}
           {d.video && <VideoMark duration={d.video.duration} />}
           <Uploader person={by(d)} />
+          {i === 0 && (
+            <span className="absolute top-0.75 right-0.75 h-4 rounded-[5px] border-[1.5px] border-white bg-action px-1 text-[9px]/[13px] font-extrabold text-white">
+              대표
+            </span>
+          )}
           {d.caption.trim() && (
             <span aria-hidden className="absolute bottom-0.75 left-0.75 text-[9px]/none">
               💬
@@ -78,9 +84,9 @@ function Uploader({ person }: UploaderProps) {
   );
 }
 
-/** 썸네일 버튼의 이름 — 「사진 2 · 김동규」 · 「영상 3」 */
+/** 썸네일 버튼의 이름 — 「사진 1 · 대표 · 김동규」 · 「영상 3」 */
 function thumbLabel(d: DraftPhoto, i: number, person: CrewMember | null): string {
-  const name = `${d.video ? "영상" : "사진"} ${i + 1}`;
+  const name = `${d.video ? "영상" : "사진"} ${i + 1}${i === 0 ? " · 대표" : ""}`;
   return person ? `${name} · ${person.name}` : name;
 }
 
