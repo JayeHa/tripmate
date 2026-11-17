@@ -4,11 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import {
+  type CrewMember,
+  type CrewRating,
+  crewRating,
   type DayMode,
+  type RatingBoard,
+  ratingBoard,
   ratingsByItem,
   ratingsQuery,
   type RatingStars,
   type ScheduleItem,
+  uploaderOf,
   useMyRatings,
   useVisitMarks,
   useVisitNotes,
@@ -26,14 +32,6 @@ import type { Trip } from "@/entities/trip";
 import { useTripMembers } from "@/entities/trip-member";
 import { todayISO } from "@/shared/lib/days";
 
-import {
-  type CrewMember,
-  type CrewRating,
-  crewRating,
-  type RatingBoard,
-  ratingBoard,
-  uploaderOf,
-} from "../lib/crew";
 import { arrivedAt, type RecordDay, recordDay } from "../lib/record";
 import { useScheduleEntry } from "./use-schedule-progress";
 

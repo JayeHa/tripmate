@@ -1,8 +1,6 @@
-import { ratingText } from "@/entities/schedule-item";
+import { type BoardPerson, type RatingBoard as Board, ratingText } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-
-import type { BoardPerson, RatingBoard as Board } from "../../lib/crew";
 
 type RatingBoardProps = { board: Board };
 

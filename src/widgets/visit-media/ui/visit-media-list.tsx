@@ -3,13 +3,17 @@
 
 import { useState } from "react";
 
-import { useVisitPhotoUrls, type VisitPhoto, visitVideoOf } from "@/entities/schedule-item";
+import {
+  type CrewMember,
+  useVisitPhotoUrls,
+  type VisitPhoto,
+  visitVideoOf,
+} from "@/entities/schedule-item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 
-import type { CrewMember } from "../../lib/crew";
 import { VideoStage } from "./video-stage";
 
-type RecordViewPhotosProps = {
+type VisitMediaListProps = {
   tripId: string;
   photos: readonly VisitPhoto[];
   /** 사진을 올린 사람. 혼자 여행이거나 나간 사람이면 null — 아바타 · 「○○님 사진」 을 그리지 않는다 */
@@ -17,11 +21,11 @@ type RecordViewPhotosProps = {
 };
 
 /**
- * 기록 자세히 보기의 사진 · 영상 — 폭 그대로 하나씩(250, PC 300 · r12), 사이 20.
+ * 기록의 사진 · 영상 목록(기록 자세히 보기) — 폭 그대로 하나씩(250, PC 300 · r12), 사이 20.
  * 바로 아래 올린 사람 아바타 20 + 설명, 설명이 없으면 「○○님 사진」(영상이면 「○○님 영상」).
  * 영상은 표지 + ▶ + 길이이고 눌러야 재생한다(소리 켜짐) — **한 번에 하나**: 다른 영상을 누르면 보던 영상은 표지로 돌아간다
  */
-export function RecordViewPhotos({ tripId, photos, uploader }: RecordViewPhotosProps) {
+export function VisitMediaList({ tripId, photos, uploader }: VisitMediaListProps) {
   const { data: urls = NO_URLS } = useVisitPhotoUrls(
     tripId,
     photos.map((p) => p.photo_key),

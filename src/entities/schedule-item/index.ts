@@ -12,6 +12,7 @@ export * from "./api/visit-photos";
 export * from "./api/visit-videos";
 export * from "./api/visits";
 export * from "./lib/add-place-error";
+export * from "./lib/crew";
 export * from "./lib/day-cities";
 export * from "./lib/day-progress";
 export { haversineKm, transitRouteUrl, walkLabel } from "./lib/distance";

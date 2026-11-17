@@ -3,13 +3,13 @@
 import { useRef, useState } from "react";
 
 import {
+  type CrewMember,
   VISIT_PHOTO_LIMIT,
   VISIT_VIDEO_MAX_SECONDS,
   VISIT_VIDEO_MIMES,
 } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 
-import type { CrewMember } from "../../lib/crew";
 import { countText, type DraftPhoto, uncaptioned } from "../../lib/photo-draft";
 import type { RecordPhotos } from "../../model/use-record-photos";
 import { CoverDialog, type CoverTarget } from "./cover-dialog";

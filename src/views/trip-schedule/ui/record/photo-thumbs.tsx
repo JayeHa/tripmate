@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- 서명 주소 · 미리보기(object URL) 사진이라 이미지 최적화를 거치지 않는다 */
+import type { CrewMember } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 
-import type { CrewMember } from "../../lib/crew";
 import type { DraftPhoto } from "../../lib/photo-draft";
 import { VideoMark } from "./video-mark";
 

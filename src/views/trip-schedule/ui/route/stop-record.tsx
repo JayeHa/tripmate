@@ -1,4 +1,5 @@
 import {
+  type CrewRating,
   nextStars,
   RatingPicker,
   type RouteTone,
@@ -6,7 +7,6 @@ import {
   type VisitMark,
 } from "@/entities/schedule-item";
 
-import type { CrewRating } from "../../lib/crew";
 import { CrewRatingRow } from "./crew-rating-row";
 import { type CardPhoto, RecordPhotoRow } from "./record-photo-row";
 
