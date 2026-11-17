@@ -105,10 +105,10 @@ export function DetailButton({ onClick }: DetailButtonProps) {
 
 type MemoBoxProps = { row: RouteStopData["row"] };
 
-/** 메모 상자(#F7F8FA · r10) — 메모마다 한 줄, 영업하는 날은 운영시간. 아무것도 없으면 「메모가 없어요」 */
+/** 메모 상자(#F7F8FA · r10) — 메모마다 한 줄, 영업하는 날은 운영시간. 아무것도 없으면 상자째 그리지 않는다 */
 function MemoBox({ row }: MemoBoxProps) {
   const hours = row.hours && !row.hoursOff ? row.hours : null;
-  const empty = row.memos.length === 0 && !hours;
+  if (row.memos.length === 0 && !hours) return null;
   return (
     <div className="flex flex-col gap-1.25 rounded-memo bg-surface-sunken px-3 py-2.5">
       {row.memos.map((memo) => (
@@ -118,7 +118,6 @@ function MemoBox({ row }: MemoBoxProps) {
         </p>
       ))}
       {hours && <p className="text-[13px]/[1.45] text-ink-700">· 운영 {hours}</p>}
-      {empty && <p className="text-[13px] text-ink-350">메모가 없어요</p>}
     </div>
   );
 }
