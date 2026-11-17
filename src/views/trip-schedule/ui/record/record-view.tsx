@@ -2,14 +2,18 @@
 
 import { ChevronLeft, X } from "lucide-react";
 
-import { ratingText, type VisitPhoto } from "@/entities/schedule-item";
+import {
+  type CrewMember,
+  type RatingBoard as Board,
+  ratingText,
+  type VisitPhoto,
+} from "@/entities/schedule-item";
 import { useHeldWhileClosing } from "@/shared/lib/use-dialog-state";
 import { cn } from "@/shared/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import { VisitMediaList } from "@/widgets/visit-media";
 
-import type { CrewMember, RatingBoard as Board } from "../../lib/crew";
 import { RatingBoard, Stars } from "./rating-board";
-import { RecordViewPhotos } from "./record-view-photos";
 
 /** 자세히 보기를 연 장소 — 머리 글과 일행이 함께 쓴 기록 */
 export type RecordViewTarget = {
@@ -65,7 +69,7 @@ export function RecordView({ tripId, target, uploader, onClose, onEdit }: Record
               {shown.body && (
                 <Note body={shown.body} editor={shown.editor} divided={shown.photos.length > 0} />
               )}
-              <RecordViewPhotos tripId={tripId} photos={shown.photos} uploader={uploader} />
+              <VisitMediaList tripId={tripId} photos={shown.photos} uploader={uploader} />
             </div>
           </>
         )}

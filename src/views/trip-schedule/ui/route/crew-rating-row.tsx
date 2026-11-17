@@ -1,7 +1,6 @@
+import type { CrewPerson, CrewRating } from "@/entities/schedule-item";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-
-import type { CrewPerson, CrewRating } from "../../lib/crew";
 
 type CrewRatingRowProps = CrewRating;
 

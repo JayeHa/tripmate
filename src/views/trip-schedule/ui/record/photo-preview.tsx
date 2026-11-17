@@ -2,8 +2,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { VISIT_CAPTION_MAX } from "@/entities/schedule-item";
-
-import { VideoStage, type VideoStageProps } from "./video-stage";
+import { VideoStage, type VideoStageProps } from "@/widgets/visit-media";
 
 /** 영상이면 재생 칸에 넘길 값 — id 가 바뀌면 재생 칸을 새로 그린다 */
 export type PreviewVideo = Omit<VideoStageProps, "poster" | "alt"> & { id: string };

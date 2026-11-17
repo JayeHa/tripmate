@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import {
   cleanNoteBody,
+  type CrewMember,
   nextStars,
   RatingPicker,
   useVisitPhotoUrls,
@@ -16,7 +17,6 @@ import { useOnline } from "@/shared/lib/use-online";
 import { Button } from "@/shared/ui/button";
 import { DialogTitle } from "@/shared/ui/dialog";
 
-import type { CrewMember } from "../../lib/crew";
 import { useRecordPhotos } from "../../model/use-record-photos";
 import { PhotoPicker } from "./photo-picker";
 import { RecordBlock } from "./record-block";
