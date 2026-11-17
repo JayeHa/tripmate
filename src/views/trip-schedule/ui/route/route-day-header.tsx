@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   type DayMode,
   durationText,
@@ -7,6 +9,7 @@ import {
   VisitProgress,
 } from "@/entities/schedule-item";
 import { dateTone, dayParts } from "@/shared/lib/days";
+import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
 import { DayWeatherLines } from "@/shared/ui/weather";
@@ -36,11 +39,13 @@ type RouteDayHeaderProps = {
   notes: number;
   /** 기록 모드 — 그날 내가 붙인 사진 수 「📷 6」 */
   photos: number;
+  /** 기록 모드 — 개수 줄 오른쪽 「📖 여행기」(그날 읽기). 아직 열리지 않은 날은 null */
+  travelogueHref?: string | null;
 };
 
 /**
  * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800) · 날씨 ·
- * 계획은 하루 요약 · 요약 칩 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창), 기록은 진행 막대 「4 / 13곳 다녀왔어요」.
+ * 계획은 하루 요약 · 요약 칩 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창), 기록은 진행 막대 「4 / 13곳 다녀왔어요」 + 오른쪽 「📖 여행기」(그날 읽기).
  * 날짜 메모는 여행 전 · 중에 보는 것이라 기록에는 없다. `data-day-head` 는 보기를 바꿀 때 보던 자리를 재는 표시다
  */
 export function RouteDayHeader({
@@ -57,6 +62,7 @@ export function RouteDayHeader({
   rated,
   notes,
   photos,
+  travelogueHref = null,
 }: RouteDayHeaderProps) {
   const { date, dow } = dayParts(startDate, day);
   const tone = dateTone(startDate, day, !!holiday);
@@ -83,6 +89,17 @@ export function RouteDayHeader({
             photos={photos}
             notes={notes}
             rated={rated}
+            aside={
+              travelogueHref && (
+                <Link
+                  href={travelogueHref}
+                  transitionTypes={NAV.forward}
+                  className="text-xs font-extrabold text-action"
+                >
+                  📖 여행기
+                </Link>
+              )
+            }
           />
         )
       ) : (

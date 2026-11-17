@@ -47,6 +47,8 @@ export type ScheduleRecord = {
    * 「지금 여기」 는 오늘만
    */
   dayOf: (day: number) => RecordDay;
+  /** 그 날의 여행기(그날 읽기) 주소 — 오늘까지의 날(끝난 여행은 모든 날)만, 아니면 null */
+  travelogueHref: (day: number) => string | null;
   /** 방문 토글 — 다녀왔어요 · 패스 · 지우기(null). 오프라인 대기열로 올라가고 화면은 먼저 바뀐다 */
   setMark: (id: string, mark: VisitMark | null) => void;
   /** 내 별점 — 일정 id → 1~5. 별점은 여행의 장소마다 하나라 같은 장소의 일정은 같은 값, 안 매긴 일정은 없다 */
@@ -130,6 +132,10 @@ export function useScheduleRecord(
     marks,
     markedAt: (id) => at.get(id) ?? null,
     dayOf: (day) => recordDay(day, todayIndex, ended),
+    travelogueHref: (day) =>
+      recordDay(day, todayIndex, ended) === "other"
+        ? null
+        : `/trips/${tripId}/travelogue?day=${day + 1}`,
     setMark,
     stars,
     visits,
