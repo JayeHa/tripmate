@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { cn } from "@/shared/lib/utils";
 
 type VisitProgressProps = {
@@ -12,6 +14,8 @@ type VisitProgressProps = {
   notes?: number;
   /** 별점을 매긴 장소 수 */
   rated?: number;
+  /** 개수 줄 오른쪽 끝(「📖 여행기」). compact 에는 없다 */
+  aside?: ReactNode;
   /** PC 날짜 레일 — 막대 4 + 「4/13」 */
   compact?: boolean;
   className?: string;
@@ -24,7 +28,7 @@ function percent(done: number, total: number) {
 
 /**
  * 기록 모드의 진행 — 막대(회색 트랙 · 초록 다녀옴 + 진회색 패스, 너비 0.3초) + 「4 / 13곳 다녀왔어요 · 패스 1」 · 「📷 6 · 📝 3 · ⭐ 4」.
- * compact 는 날짜 레일용 한 줄(막대 4 + 「4/13」)
+ * 개수 줄 오른쪽 끝에 aside(「📖 여행기」)를 둘 수 있다. compact 는 날짜 레일용 한 줄(막대 4 + 「4/13」)
  */
 export function VisitProgress({
   done,
@@ -33,6 +37,7 @@ export function VisitProgress({
   photos = 0,
   notes = 0,
   rated = 0,
+  aside,
   compact = false,
   className,
 }: VisitProgressProps) {
@@ -77,7 +82,12 @@ export function VisitProgress({
           {done} / {total}곳 다녀왔어요
           {passed > 0 && <span className="font-bold text-route-card-meta"> · 패스 {passed}</span>}
         </span>
-        {counts && <span className="text-xs font-bold text-route-walk-text">{counts}</span>}
+        {(counts || aside) && (
+          <span className="flex shrink-0 items-center gap-2.5">
+            {counts && <span className="text-xs font-bold text-route-walk-text">{counts}</span>}
+            {aside}
+          </span>
+        )}
       </div>
     </div>
   );

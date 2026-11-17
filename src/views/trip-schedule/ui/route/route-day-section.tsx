@@ -106,6 +106,7 @@ export function RouteDaySection({
         rated={countRatedPlaces(route.stops, recTones, record.stars)}
         notes={countDone(route.stops, recTones, record.notes)}
         photos={countPhotos(route.stops, recTones, record.photos)}
+        travelogueHref={record.travelogueHref(day)}
       />
       {route.stops.length === 0 && (
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>

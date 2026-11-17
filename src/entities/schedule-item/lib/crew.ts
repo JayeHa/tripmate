@@ -1,4 +1,4 @@
-import type { PeopleStars } from "@/entities/schedule-item";
+import type { PeopleStars } from "../model/rating";
 
 /** 별점 줄에 그릴 멤버 — 아바타 · 이름 */
 export type CrewMember = { id: string; name: string; avatarUrl: string | null };
