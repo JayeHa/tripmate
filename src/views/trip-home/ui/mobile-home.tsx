@@ -29,6 +29,7 @@ type MobileHomeProps = {
  * 80px 넘게 내리면 ✕ 옆에 여행 이름 · D-day 칩이 나온다. 둘 다 page 의 직계 자식이어야 sticky 가 끝까지 붙는다.
  * 가이드 지도 보기(data-guide-map)면 화면 높이에 맞춰 지도가 남은 칸을 채운다(스크롤 없음). 지도를 넓게 보이게
  * 여행 이름 줄을 빼고 ✕ 옆에 여행 이름 · D-day 칩을 둔다(내렸을 때 모양).
+ * flex-1(기준 0%)이면 높이 값이 무시돼 지도 칸 높이가 정해지지 않고 지도(h-full)가 0 이 된다 — 지도 보기에서는 flex-none 으로 높이를 그대로 쓴다
  * 모바일 브라우저로 열었으면 「홈 화면에 추가」 안내를 띄울 수 있다(InstallNudge)
  */
 export function MobileHome({ tripId, trip, tab, onTab }: MobileHomeProps) {
@@ -37,7 +38,7 @@ export function MobileHome({ tripId, trip, tab, onTab }: MobileHomeProps) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const showToast = useCallback((text: string) => setToast({ text, id: Date.now() }), []);
   return (
-    <main className="group/home flex flex-1 flex-col has-data-guide-map:h-[calc(100dvh-var(--shell-top)-var(--tab-bar))]">
+    <main className="group/home flex flex-1 flex-col has-data-guide-map:h-[calc(100dvh-var(--shell-top)-var(--tab-bar))] has-data-guide-map:flex-none">
       <div className="sticky top-(--shell-top) z-20 flex h-13 shrink-0 items-center gap-3.5 bg-white px-4.5 text-ink-900">
         <Link href="/trips" transitionTypes={NAV.back} aria-label="내 여행으로" className="flex">
           <X className="size-6.5" strokeWidth={2} />
