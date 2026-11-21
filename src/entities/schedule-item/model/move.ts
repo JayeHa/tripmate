@@ -18,6 +18,9 @@ export const MOVE_MODE_LABEL = {
 
 export const MOVE_DETAIL_MAX = 60;
 
+/** 직접 정하는 소요 시간의 범위(분) — DB check 와 같다 */
+export const MOVE_MINUTES_MAX = 1440;
+
 /** 이동 수단. 없거나 모르는 값이면 null */
 export function moveModeOf(move: Pick<Move, "mode">): MoveMode | null {
   return MOVE_MODES.find((m) => m === move.mode) ?? null;

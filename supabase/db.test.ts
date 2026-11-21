@@ -2433,6 +2433,21 @@ describe("moves (0011)", () => {
     expect(left.rows[0].n).toBe(0);
   });
 
+  it("소요 시간만 적어도 기록이고, 1분 ~ 24시간 밖은 거부한다 (0091)", async () => {
+    await as(A);
+    const { id, a, b } = await tripWithTwoPlaces("2027-04-03");
+    await db.query(
+      `insert into public.moves (trip_id, from_item_id, to_item_id, minutes) values ('${id}', '${a}', '${b}', 25)`,
+    );
+    for (const bad of [0, 1441]) {
+      expect(
+        await rejects(
+          `insert into public.moves (trip_id, from_item_id, to_item_id, minutes) values ('${id}', '${b}', '${a}', ${bad})`,
+        ),
+      ).toMatch(/check constraint/);
+    }
+  });
+
   it("같은 여행 조건은 FK 가 고정한다: RLS 를 우회해도 다른 여행의 일정은 못 잇고, 이어진 일정은 다른 여행으로 못 옮긴다", async () => {
     await as(A);
     const one = await tripWithTwoPlaces("2027-04-05");

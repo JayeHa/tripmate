@@ -26,10 +26,14 @@ export type TimelineLeg = {
   url: string;
   fromItemId: string;
   fromName: string;
+  /** 출발 장소의 좌표 — 이동 방법 창의 자동 시간 · 구글맵 경로 */
+  fromAt: { lat: number; lng: number };
   mode: MoveMode | null;
   /** 「🚇 지하철」. 수단 없이 상세만 적었으면 null */
   modeLabel: string | null;
   detail: string | null;
+  /** 직접 정한 소요 시간(분). 없으면 자동 */
+  minutes: number | null;
   /** 적어 둔 기록이 있는지 (수정 · 지우기) */
   hasMove: boolean;
 };
@@ -126,9 +130,11 @@ function legOf(
     url: transitRouteUrl(prev.at, here),
     fromItemId: prev.item.id,
     fromName: itemName(prev.item),
+    fromAt: { lat: prev.at.lat, lng: prev.at.lng },
     mode,
     modeLabel: mode ? MOVE_MODE_LABEL[mode] : null,
     detail: move?.detail || null,
+    minutes: move?.minutes ?? null,
     hasMove: !!move,
   };
 }

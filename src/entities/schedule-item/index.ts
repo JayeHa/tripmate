@@ -15,14 +15,23 @@ export * from "./lib/add-place-error";
 export * from "./lib/crew";
 export * from "./lib/day-cities";
 export * from "./lib/day-progress";
-export { haversineKm, transitRouteUrl, walkLabel } from "./lib/distance";
+export { autoMoveMinutes, segmentTravelMode } from "./lib/directions";
+export {
+  directionsUrl,
+  type GmapTravelMode,
+  haversineKm,
+  transitRouteUrl,
+  walkLabel,
+} from "./lib/distance";
 export * from "./lib/format-leg";
 export { categoryFromGoogle } from "./lib/google-category";
 export * from "./lib/link-pick";
 export { fitZoom } from "./lib/map-fit";
 export * from "./lib/route";
 export * from "./lib/route-day";
+export * from "./lib/route-line-style";
 export * from "./lib/route-map";
+export * from "./lib/route-text";
 export * from "./lib/timeline";
 export * from "./lib/visit-photo-rules";
 export * from "./lib/visit-video-rules";

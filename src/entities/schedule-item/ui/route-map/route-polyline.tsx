@@ -3,7 +3,7 @@
 import { useMap } from "@vis.gl/react-google-maps";
 import { useEffect } from "react";
 
-import type { RouteLine } from "../../lib/route";
+import type { RouteLine } from "../../lib/route-line-style";
 
 type LatLng = { lat: number; lng: number };
 

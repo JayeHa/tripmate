@@ -20,8 +20,8 @@ type MapCardsProps = {
   stops: RouteMapStop[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  /** 그날 대중교통 · 도보 분의 합 */
-  totals: { transit: number; walk: number };
+  /** 그날 대중교통 · 도보 · 택시 분의 합 */
+  totals: { transit: number; walk: number; taxi: number };
   /** 「일정에서 보기」 — 지도를 닫고 노선도에서 그 역을 펼친다 */
   onShowInList: (id: string) => void;
   /** 기록 모드 — 카드 번호를 지도 핀과 같은 다녀감 모양으로 */
@@ -31,7 +31,7 @@ type MapCardsProps = {
 };
 
 /**
- * 동선 지도 아래 시트 — 머리 「13곳 · 대중교통 0분 · 도보 46분」 + 「5 / 13」, 그 아래 장소 카드를 가로로 넘긴다.
+ * 동선 지도 아래 시트 — 머리 「13곳 · 대중교통 0분 · 도보 46분」(택시가 있으면 「· 택시 15분」 도) + 「5 / 13」, 그 아래 장소 카드를 가로로 넘긴다.
  * 고른 카드가 바뀌면(핀 누르기) 그 카드를 왼쪽 20 에 맞추고, 손으로 넘겨 멈추면 그 카드를 고른다
  */
 export function MapCards({
@@ -56,6 +56,7 @@ export function MapCards({
         <span className="truncate text-[15px] font-extrabold text-ink-900">
           {stops.length}곳 · 대중교통 {durationText(totals.transit)} · 도보{" "}
           {durationText(totals.walk)}
+          {totals.taxi > 0 && ` · 택시 ${durationText(totals.taxi)}`}
         </span>
         {index >= 0 && (
           <span className="shrink-0 text-[13px] font-bold text-ink-350 tabular-nums">

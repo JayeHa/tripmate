@@ -6,7 +6,7 @@ import { useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { MapGuard } from "@/shared/ui/map-guard";
 
-import { PASS_LINE, routeLineStyle } from "../../lib/route";
+import { PASS_LINE, routeLineStyle } from "../../lib/route-line-style";
 import {
   clampToView,
   linePassed,

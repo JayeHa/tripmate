@@ -122,9 +122,12 @@ export function RouteDayHeader({
 
 type PlanSummaryProps = Pick<RouteDayHeaderProps, "route" | "summary">;
 
-/** 계획 모드 — 하루 요약 · 요약 칩(「🚇 대중교통 2시간 5분」 · 「🚶 도보 25분」 · 「9곳」, 0 이면 그 칩은 뺀다) */
+/**
+ * 계획 모드 — 하루 요약 · 요약 칩(「🚇 대중교통 2시간 5분」 · 「🚕 택시 15분」 · 「🚶 도보 25분」 · 「9곳」, 0 이면 그 칩은 뺀다).
+ * 택시로 고른 구간은 대중교통에 넣지 않고 따로 센다
+ */
 function PlanSummary({ route, summary }: PlanSummaryProps) {
-  const { transit, walk, places } = route.totals;
+  const { transit, walk, taxi, places } = route.totals;
   return (
     <>
       {summary && <p className="text-[13px]/normal text-pretty text-route-walk-text">{summary}</p>}
@@ -135,6 +138,7 @@ function PlanSummary({ route, summary }: PlanSummaryProps) {
               🚇 대중교통 {durationText(transit)}
             </span>
           )}
+          {taxi > 0 && <span className={cn(CHIP, PLAIN)}>🚕 택시 {durationText(taxi)}</span>}
           {walk > 0 && <span className={cn(CHIP, PLAIN)}>🚶 도보 {durationText(walk)}</span>}
           <span className={cn(CHIP, PLAIN)}>{places}곳</span>
         </div>

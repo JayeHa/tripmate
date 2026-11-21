@@ -16,6 +16,8 @@ export type MoveInput = {
   toItemId: string;
   mode: MoveMode | null;
   detail: string | null;
+  /** 직접 정한 소요 시간(분, 1–1440). null 이면 자동 */
+  minutes: number | null;
 };
 
 /** 쌍의 이동 방법을 저장한다. 같은 쌍이 있으면 덮어쓴다(from · to unique) */
@@ -28,6 +30,7 @@ export async function saveMove(input: MoveInput): Promise<void> {
       to_item_id: input.toItemId,
       mode: input.mode,
       detail: input.detail,
+      minutes: input.minutes,
     },
     { onConflict: "from_item_id,to_item_id" },
   );

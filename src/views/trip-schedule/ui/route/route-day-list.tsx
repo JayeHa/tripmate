@@ -17,6 +17,7 @@ type RouteDaysProps = Pick<
   | "weatherOf"
   | "onOpen"
   | "onEditMove"
+  | "onOpenGmap"
   | "checklistOf"
   | "voucherOf"
   | "mode"

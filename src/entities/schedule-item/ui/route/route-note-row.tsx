@@ -1,4 +1,4 @@
-import type { RouteLine } from "../../lib/route";
+import type { RouteLine } from "../../lib/route-line-style";
 import { RouteLineBar } from "./route-line";
 
 type RouteNoteRowProps = {

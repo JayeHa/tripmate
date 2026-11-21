@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-import type { RouteLine } from "../../lib/route";
+import type { RouteLine } from "../../lib/route-line-style";
 
 /** 선 모양 → 세로 선의 스타일. 실선은 채운 막대, 점선 · 파선은 왼쪽 테두리 */
 function lineStyle(line: RouteLine): CSSProperties {
