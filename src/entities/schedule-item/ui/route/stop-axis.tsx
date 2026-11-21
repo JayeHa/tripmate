@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 
-import type { RouteLine } from "../../lib/route";
 import type { StopKind } from "../../lib/route-day";
+import type { RouteLine } from "../../lib/route-line-style";
 import type { PlaceCategory } from "../../model/place";
 import { RouteLineBar } from "./route-line";
 import { StopMarker, type StopTone } from "./stop-marker";

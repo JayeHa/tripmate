@@ -42,6 +42,8 @@ export type ScheduleLayoutProps = {
   record: ScheduleRecord;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
+  /** 구간 줄로 구글맵 길찾기를 열었다 — 토스트 */
+  onOpenGmap?: () => void;
   /** 그 날짜의 「일정 추가」 · 플로팅 — 그 날로 일정 추가 창을 연다 */
   onAddPlace: (day: number) => void;
   /** 그 날짜의 「메모 추가」 · 플로팅 — 날짜 메모 */

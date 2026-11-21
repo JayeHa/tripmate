@@ -5,17 +5,12 @@ import {
   itemCoords,
   NoteChips,
   type RouteStopData,
-  transitRouteUrl,
 } from "@/entities/schedule-item";
-
-type LatLng = { lat: number; lng: number };
 
 type StopDetailProps = {
   stop: RouteStopData;
   /** 펼쳤다 — 메모 · 칩 · 버튼을 보인다. 접어도 휴무는 보인다 */
   open: boolean;
-  /** 직전 역의 좌표 — 「길찾기」 출발지. 그날 첫 장소면 null(지금 위치에서) */
-  prevAt: LatLng | null;
   checklist?: { count: number; href: string };
   vouchers?: { count: number; onOpen: () => void };
   onOpenDetail: () => void;
@@ -28,12 +23,12 @@ type StopDetailProps = {
 /**
  * 역 아래 칸. 늘 보이는 것: 그날 휴무.
  * 펼치면: 메모 상자(「· 」 줄, ★ 중요는 「★」, 영업하는 날은 「운영 …」) · 체크리스트 · 바우처 칩 · 대체 장소 ·
- * 「상세」 · 「+ 메모」(PC) · 「길찾기」(직전 역 → 이 역 대중교통) · 「🗺 지도에서」(모바일)
+ * 「상세」 · 「+ 메모」(PC) · 「🗺 지도에서」(모바일).
+ * 「길찾기」 는 없다 — 들어오는 구간 줄이 같은 길찾기(직전 역 → 이 역)를 연다(2026-11-21 사용자 결정)
  */
 export function StopDetail({
   stop,
   open,
-  prevAt,
   checklist,
   vouchers,
   onOpenDetail,
@@ -61,16 +56,6 @@ export function StopDetail({
               <button type="button" onClick={onAddMemo} className={OUTLINE}>
                 + 메모
               </button>
-            )}
-            {here && (
-              <a
-                href={transitRouteUrl(prevAt, here)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={OUTLINE}
-              >
-                길찾기
-              </a>
             )}
             {here && onShowMap && (
               <button

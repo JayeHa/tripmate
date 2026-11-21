@@ -32,8 +32,8 @@ export type RouteDay = {
   /** 첫 역보다 앞에 둔 날짜 메모 — day 머리 아래 「📌」 */
   preNotes: TimelineRow[];
   stops: RouteStopData[];
-  /** 요약 칩 — 대중교통 · 도보 분의 합과 장소 수 */
-  totals: { transit: number; walk: number; places: number };
+  /** 요약 칩 — 대중교통 · 도보 · 택시 분의 합과 장소 수 */
+  totals: { transit: number; walk: number; taxi: number; places: number };
 };
 
 /** 숙소 · 공항 · 항공편은 환승역처럼 굵은 잉크 링, 임시는 점선, 그 밖은 파란 링 */
@@ -62,7 +62,7 @@ function segmentOf(
     itemCoords(row.item),
     itemCoords(next.item),
     next.time,
-    leg && { mode: leg.mode, detail: leg.detail },
+    leg && { mode: leg.mode, detail: leg.detail, minutes: leg.minutes },
   );
 }
 

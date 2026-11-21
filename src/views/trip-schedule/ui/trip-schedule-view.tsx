@@ -121,6 +121,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
     ...useScheduleRecord(tripId, trip, items, { items: itemsReady, settled }),
     onOpen: openCard,
     onEditMove: moveDialog.openFor,
+    onOpenGmap: () => overlays.showToast("구글맵에서 길찾기를 열었어요"),
     onAddPlace: add.open,
     authorOf,
     checklistOf,
@@ -141,12 +142,7 @@ export function TripScheduleView({ tripId }: TripScheduleViewProps) {
       )}
       {isDesktop === false && <MobileSchedule {...layout} />}
 
-      <MoveDialog
-        tripId={tripId}
-        open={moveDialog.open}
-        pair={moveDialog.pair}
-        onClose={moveDialog.close}
-      />
+      <MoveDialog tripId={tripId} {...moveDialog.dialog} />
 
       {trip && (
         <AddScheduleDialog

@@ -131,6 +131,7 @@ describe("buildTimeline", () => {
       to_item_id: "b",
       mode: null,
       detail: null,
+      minutes: null,
       created_at: "",
       updated_at: "",
       ...patch,

@@ -981,6 +981,7 @@ export type Database = {
           to_item_id: string;
           mode: string | null;
           detail: string | null;
+          minutes: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -991,6 +992,7 @@ export type Database = {
           to_item_id: string;
           mode?: string | null;
           detail?: string | null;
+          minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1001,6 +1003,7 @@ export type Database = {
           to_item_id?: string;
           mode?: string | null;
           detail?: string | null;
+          minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };

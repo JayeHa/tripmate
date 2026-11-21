@@ -4,6 +4,9 @@ import { type MoveMode, useDeleteMove, useSaveMove } from "@/entities/schedule-i
 
 type PairIds = { fromItemId: string; toItemId: string };
 
+/** 창에 적은 값. minutes 가 null 이면 자동 */
+export type MoveValues = { mode: MoveMode | null; minutes: number | null; detail: string };
+
 /**
  * 이동 방법 창의 저장 · 지우기. 창이 닫히지 않게 할지(locked)와 보여 줄 오류를 한 곳에서 정한다.
  * - 요청이 서버에 가 있는 동안은 잠근다. 닫힌 뒤 실패하면 사용자가 모른다
@@ -16,18 +19,21 @@ export function useMoveActions(tripId: string) {
   const pending = save.isPending || remove.isPending;
   const paused = save.isPaused || remove.isPaused;
 
-  /** 수단 · 상세를 저장한다. 둘 다 비었으면 지우기로 처리한다 */
-  function submit(ids: PairIds, mode: MoveMode | null, detail: string, onDone: () => void) {
-    const trimmed = detail.trim();
-    if (!mode && !trimmed) {
+  /** 수단 · 소요 시간 · 상세를 저장한다. 모두 비었으면 지우기(= 자동으로)로 처리한다 */
+  function submit(ids: PairIds, values: MoveValues, onDone: () => void) {
+    const detail = values.detail.trim() || null;
+    if (!values.mode && values.minutes === null && !detail) {
       erase(ids, onDone);
       return;
     }
     remove.reset();
-    save.mutate({ ...ids, mode, detail: trimmed || null }, { onSuccess: onDone });
+    save.mutate(
+      { ...ids, mode: values.mode, minutes: values.minutes, detail },
+      { onSuccess: onDone },
+    );
   }
 
-  /** 기록을 지운다 */
+  /** 기록을 지운다 — 창의 「자동으로」 */
   function erase(ids: PairIds, onDone: () => void) {
     save.reset();
     remove.mutate(ids, { onSuccess: onDone });

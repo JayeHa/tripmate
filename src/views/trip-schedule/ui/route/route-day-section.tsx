@@ -6,7 +6,6 @@ import {
   buildRouteDay,
   type DayMode,
   type FlightTimes,
-  itemCoords,
   placeKeyOf,
   type TimelineRow,
 } from "@/entities/schedule-item";
@@ -48,6 +47,8 @@ export type RouteDaySectionProps = {
   hover?: RouteHover;
   onOpen: (row: TimelineRow) => void;
   onEditMove?: (row: TimelineRow) => void;
+  /** 구간 줄로 구글맵 길찾기를 열었다(토스트) */
+  onOpenGmap?: () => void;
   /** PC — 펼친 카드의 「+ 메모」. 모바일은 상세에서 메모를 쓴다 */
   onAddMemo?: (row: TimelineRow) => void;
   /** 「🗺 지도에서」 — 그날 지도에서 그 장소를 고른 채로. PC 는 없다(지도가 옆에 있다) */
@@ -78,6 +79,7 @@ export function RouteDaySection({
   hover,
   onOpen,
   onEditMove,
+  onOpenGmap,
   onAddMemo,
   onShowMap,
   checklistOf,
@@ -122,7 +124,6 @@ export function RouteDaySection({
               key={row.item.id}
               stop={stop}
               inSeg={prev?.seg ?? null}
-              prevAt={prev ? itemCoords(prev.row.item) : null}
               open={openId === row.item.id}
               onToggle={() => onToggle(row.item.id)}
               focused={openId !== id && (focusId === id || hovered)}
@@ -136,6 +137,7 @@ export function RouteDaySection({
               onShowMap={onShowMap && (() => onShowMap(day, row.item.id))}
               onOpenNote={onOpen}
               onEditMove={onEditMove}
+              onOpenGmap={onOpenGmap}
             />
           );
         })}

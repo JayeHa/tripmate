@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  durationText,
-  flightSegment,
-  placeSegment,
-  routeLineStyle,
-  routeTotals,
-  segmentChip,
-  segmentLabel,
-  segmentMeta,
-} from "./route";
+import { flightSegment, placeSegment, routeTotals } from "./route";
+import { routeLineStyle } from "./route-line-style";
+import { durationText, segmentChip, segmentLabel, segmentMeta } from "./route-text";
 
 const TOKYO_STATION = { lat: 35.6812, lng: 139.7671 };
 /** 도쿄역에서 약 0.5km */
@@ -83,6 +76,35 @@ describe("placeSegment", () => {
     const same = placeSegment(TOKYO_STATION, TOKYO_STATION, "10:00");
     expect(same).toMatchObject({ mode: "walk", minutes: null });
     expect(segmentChip(same)).toBeNull();
+  });
+
+  it("직접 정한 소요 시간은 「약」 없이 그 분 — 수단을 고르지 않았으면 수단은 추정 그대로", () => {
+    const seg = placeSegment(TOKYO_STATION, SKYTREE, "10:00", {
+      mode: null,
+      detail: null,
+      minutes: 35,
+    });
+    expect(seg).toMatchObject({
+      mode: "transit",
+      modeName: "대중교통",
+      minutes: 35,
+      estimated: false,
+    });
+    expect(seg.picked).toBeNull();
+    expect(segmentLabel(seg)).toBe("대중교통 35분");
+    expect(segmentMeta(seg)).toBe("09:25 출발");
+  });
+
+  it("수단만 고르면 시간은 그 수단 식, 항공에 소요 시간을 정하면 그 시간을 보인다", () => {
+    const taxi = placeSegment(TOKYO_STATION, SKYTREE, null, { mode: "taxi", detail: null });
+    expect(taxi).toMatchObject({ picked: "taxi", minutes: 20, estimated: false });
+    const fukuoka = { lat: 33.5902, lng: 130.4017 };
+    const flight = placeSegment(TOKYO_STATION, fukuoka, null, {
+      mode: "flight",
+      detail: null,
+      minutes: 110,
+    });
+    expect(segmentLabel(flight)).toBe("비행 1시간 50분");
   });
 
   it("출발 시각은 자정을 넘겨 돌아간다", () => {
@@ -160,6 +182,17 @@ describe("routeTotals", () => {
     expect(routeTotals([walk, transit, flight, placeSegment(null, NEAR, null), null])).toEqual({
       transit: 20,
       walk: 6,
+      taxi: 0,
     });
+  });
+
+  it("택시로 고른 구간은 대중교통에 넣지 않고 따로, 직접 정한 소요 시간으로 센다", () => {
+    const taxi = placeSegment(TOKYO_STATION, SKYTREE, null, {
+      mode: "taxi",
+      detail: null,
+      minutes: 15,
+    });
+    const bus = placeSegment(TOKYO_STATION, SKYTREE, null, { mode: "bus", detail: null });
+    expect(routeTotals([taxi, bus])).toEqual({ transit: 20, walk: 0, taxi: 15 });
   });
 });

@@ -45,16 +45,22 @@ function row({ id, at, flightId, ...patch }: RowPatch): TimelineRow {
 }
 
 /** fromItemId 에서 오는 길(이동 방법 창을 열 수 있는 쌍) */
-function legFrom(fromItemId: string, mode: TimelineLeg["mode"] = null): TimelineLeg {
+function legFrom(
+  fromItemId: string,
+  mode: TimelineLeg["mode"] = null,
+  minutes: number | null = null,
+): TimelineLeg {
   return {
     label: "",
     url: "",
     fromItemId,
     fromName: "",
+    fromAt: { lat: 0, lng: 0 },
     mode,
     modeLabel: null,
     detail: mode ? "긴자행" : null,
-    hasMove: mode !== null,
+    minutes,
+    hasMove: mode !== null || minutes !== null,
   };
 }
 
@@ -96,6 +102,14 @@ describe("buildRouteDay", () => {
     expect(last).toMatchObject({ seg: null, next: null, editable: false });
   });
 
+  it("직접 정한 소요 시간을 구간에 넘긴다", () => {
+    const day = buildRouteDay([
+      row({ id: "a", at: TOKYO_STATION }),
+      row({ id: "b", at: SKYTREE, time: "10:00", leg: legFrom("a", null, 40) }),
+    ]);
+    expect(day.stops[0].seg).toMatchObject({ minutes: 40, estimated: false, depTime: "09:20" });
+  });
+
   it("항공편 역은 편명 시각으로, 편명을 모르거나 좌표가 없으면 칩 없는 선", () => {
     const flightOf = (id: string) =>
       id === "f1"
@@ -125,6 +139,6 @@ describe("buildRouteDay", () => {
       row({ id: "b", at: SKYTREE, leg: legFrom("a") }),
       row({ id: "f", kind: "flight" }),
     ]);
-    expect(day.totals).toEqual({ transit: 20, walk: 0, places: 2 });
+    expect(day.totals).toEqual({ transit: 20, walk: 0, taxi: 0, places: 2 });
   });
 });
