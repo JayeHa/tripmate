@@ -52,6 +52,11 @@ export function RouteSegmentRow({
   ariaLabel,
 }: RouteSegmentRowProps) {
   const [strong, weak] = TEXT[tone];
+  // 올림 강조는 링크 유무와 상관없이 — 항공으로 고른 구간(링크 없음)도 지도 파선을 진하게
+  const hover = onHover && {
+    onPointerEnter: () => onHover(true),
+    onPointerLeave: () => onHover(false),
+  };
   const body = (
     <>
       <span aria-hidden="true">{icon}</span>
@@ -89,8 +94,7 @@ export function RouteSegmentRow({
               rel="noopener noreferrer"
               title="구글맵에서 길찾기"
               onClick={onOpenGmap}
-              onPointerEnter={onHover && (() => onHover(true))}
-              onPointerLeave={onHover && (() => onHover(false))}
+              {...hover}
               // 이름을 따로 주면 안의 글자 대신 읽히므로 출발 시각 · 상세까지 함께 넣는다
               aria-label={
                 ariaLabel
@@ -102,7 +106,9 @@ export function RouteSegmentRow({
               {body}
             </a>
           ) : (
-            <span className="flex min-w-0 items-center gap-1.25">{body}</span>
+            <span {...hover} className="flex min-w-0 items-center gap-1.25">
+              {body}
+            </span>
           )}
           {onEdit && (
             <button
