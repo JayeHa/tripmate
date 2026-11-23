@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  type ScheduleItem,
-  useDeleteScheduleItem,
-  useUpdateScheduleItem,
-} from "@/entities/schedule-item";
+import { type ScheduleItem, useDeleteScheduleItem, useUpdateNote } from "@/entities/schedule-item";
 import { useUser } from "@/entities/session";
 import { saveErrorText } from "@/shared/api/sync";
 import { useMountedDone } from "@/shared/lib/use-mounted-done";
@@ -16,6 +12,7 @@ import { pinnedByOf } from "../lib/memo-draft";
 
 /**
  * 날짜 메모 고치기 — 시간(선택) · 글 · 홈에 고정. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.
+ * 시간을 새로 정하면 노선도에서 그 시각 자리로 옮겨 간다(시간을 지우면 자리는 그대로).
  * 열릴 때마다 새로 마운트돼 그때 값에서 시작한다
  */
 export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => void) {
@@ -23,7 +20,7 @@ export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => vo
   const [draft, setDraft] = useState<NoteDraft>(initial);
   const [error, setError] = useState<string | null>(null);
   const { data: user } = useUser();
-  const update = useUpdateScheduleItem(tripId);
+  const update = useUpdateNote(tripId);
   const remove = useDeleteScheduleItem(tripId);
   const finish = useMountedDone(onDone);
   const pending = update.isPending || remove.isPending;

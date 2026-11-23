@@ -1,13 +1,6 @@
 import Link from "next/link";
 
-import {
-  type DayMode,
-  durationText,
-  itemName,
-  type RouteDay,
-  type TimelineRow,
-  VisitProgress,
-} from "@/entities/schedule-item";
+import { type DayMode, durationText, type RouteDay, VisitProgress } from "@/entities/schedule-item";
 import { dateTone, dayParts } from "@/shared/lib/days";
 import { NAV } from "@/shared/lib/nav-transition";
 import { cn } from "@/shared/lib/utils";
@@ -25,8 +18,6 @@ type RouteDayHeaderProps = {
   /** 여행지 공휴일 이름 — 날짜 옆에 빨갛게 */
   holiday?: string | null;
   weather?: SourcedWeatherDay | null;
-  /** 날짜 메모를 눌렀다 — 시간 · 메모 창 */
-  onOpenNote: (note: TimelineRow) => void;
   /** 「계획 | 기록」(화면 전체에 하나) */
   mode: DayMode;
   /** 기록 모드 — 그날 다녀온 장소 수 */
@@ -45,8 +36,8 @@ type RouteDayHeaderProps = {
 
 /**
  * 노선도의 day 머리 — 「11.2 (월) 공휴일」(12/700 회색) + 「day 3」(22/800) · 날씨 ·
- * 계획은 하루 요약 · 요약 칩 · 첫 역 앞의 날짜 메모(「📌」, 누르면 시간 · 메모 창), 기록은 진행 막대 「4 / 13곳 다녀왔어요」 + 오른쪽 「📖 여행기」(그날 읽기).
- * 날짜 메모는 여행 전 · 중에 보는 것이라 기록에는 없다. `data-day-head` 는 보기를 바꿀 때 보던 자리를 재는 표시다
+ * 계획은 하루 요약 · 요약 칩, 기록은 진행 막대 「4 / 13곳 다녀왔어요」 + 오른쪽 「📖 여행기」(그날 읽기).
+ * 첫 역 앞의 메모는 머리가 아니라 목록 맨 위의 메모 카드다. `data-day-head` 는 보기를 바꿀 때 보던 자리를 재는 표시다
  */
 export function RouteDayHeader({
   startDate,
@@ -55,7 +46,6 @@ export function RouteDayHeader({
   summary,
   holiday,
   weather,
-  onOpenNote,
   mode,
   done,
   passed,
@@ -105,17 +95,6 @@ export function RouteDayHeader({
       ) : (
         <PlanSummary route={route} summary={summary} />
       )}
-      {mode === "plan" &&
-        route.preNotes.map((note) => (
-          <button
-            type="button"
-            key={note.item.id}
-            onClick={() => onOpenNote(note)}
-            className="rounded-memo bg-white px-2.5 py-2 text-left text-xs/[1.45] whitespace-pre-line text-route-walk-text"
-          >
-            📌 {itemName(note.item)}
-          </button>
-        ))}
     </div>
   );
 }

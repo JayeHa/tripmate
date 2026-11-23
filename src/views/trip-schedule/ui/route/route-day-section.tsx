@@ -7,6 +7,7 @@ import {
   type DayMode,
   type FlightTimes,
   placeKeyOf,
+  RouteMemoCard,
   type TimelineRow,
 } from "@/entities/schedule-item";
 import type { SourcedWeatherDay } from "@/shared/lib/weather-days";
@@ -100,7 +101,6 @@ export function RouteDaySection({
         summary={summary}
         holiday={holiday}
         weather={weather}
-        onOpenNote={onOpen}
         mode={mode}
         done={recTones?.filter((t) => t.tone === "done").length ?? 0}
         passed={recTones?.filter((t) => t.tone === "pass").length ?? 0}
@@ -114,6 +114,13 @@ export function RouteDaySection({
         <p className="px-5 pt-1 pb-3 text-[13px] text-ink-350">아직 일정이 없어요</p>
       )}
       <ol className="pt-1.5 pr-4 pl-1">
+        {/* 첫 역 앞의 메모 — 선 없이 카드만. 메모는 여행 전 · 중에 보는 것이라 기록 모드에는 없다 */}
+        {mode === "plan" &&
+          route.preNotes.map((note) => (
+            <li key={note.item.id}>
+              <RouteMemoCard row={note} line={null} onClick={() => onOpen(note)} />
+            </li>
+          ))}
         {route.stops.map((stop, i) => {
           const prev = route.stops[i - 1];
           const { row } = stop;
