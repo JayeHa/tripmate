@@ -16,6 +16,7 @@ import {
   moveScheduleItemToDay,
   type NewPlaceFields,
   type ScheduleEntry,
+  updateNote,
   updatePlace,
   updateScheduleItem,
 } from "../api/schedule-items";
@@ -107,6 +108,16 @@ export function useUpdateScheduleItem(tripId: string) {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"schedule_items"> }) =>
       updateScheduleItem(id, patch),
+    onSuccess: invalidate,
+  });
+}
+
+/** 날짜 메모 고치기 — 시간을 새로 정했으면 그 시각 자리로 옮긴다(updateNote) */
+export function useUpdateNote(tripId: string) {
+  const invalidate = useInvalidateItems(tripId);
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"schedule_items"> }) =>
+      updateNote(id, patch),
     onSuccess: invalidate,
   });
 }

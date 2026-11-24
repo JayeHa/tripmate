@@ -1519,6 +1519,10 @@ export type Database = {
         Args: { p_item: string; p_stars: number; p_at: string };
         Returns: undefined;
       };
+      place_note_by_time: {
+        Args: { p_item: string };
+        Returns: undefined;
+      };
       save_visit_note: {
         Args: { p_item: string; p_body: string; p_at: string; p_seen: string | null };
         Returns: boolean;

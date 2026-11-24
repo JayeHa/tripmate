@@ -59,6 +59,17 @@ async function endPosition(tripId: string, dayIndex: number): Promise<number> {
   return last ? last.position + 1 : 0;
 }
 
+/**
+ * 날짜 메모(note 일정) 고치기. 시간을 새로 정했으면 그 시각 자리로 옮긴다(0092 — 그 시각보다 늦은 첫 일정 앞, 없으면 그날 끝).
+ * 시간을 지웠거나 그대로면 자리는 그대로다
+ */
+export async function updateNote(id: string, patch: TablesUpdate<"schedule_items">): Promise<void> {
+  await updateScheduleItem(id, patch);
+  if (!patch.start_time) return;
+  const { error } = await createClient().rpc("place_note_by_time", { p_item: id });
+  if (error) throw error;
+}
+
 /** 다른 날로 이동: 대상 날의 맨 끝으로 */
 export async function moveScheduleItemToDay(
   item: ScheduleItem,

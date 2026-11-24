@@ -194,6 +194,17 @@
   --color-route-label-sub: #b0b6be;
   --color-visited-label-sub: #8fd3b6;
 
+  /* 노선도 메모 카드 — 노란 메모지 바탕 · 테두리(올림) · 「📝 메모」 · 네모 표식 · 「📌 홈 고정」 */
+  --color-memo-card: #fff8e6;
+  --color-memo-card-line: #eed9a0;
+  --color-memo-card-hover: #ddb95a;
+  --color-memo-card-label: #a16207;
+  --color-memo-card-body: #4b5563;
+  --color-memo-mark: #f5c451;
+  --color-memo-mark-ring: #e9c46a;
+  --color-memo-pin-bg: #fce9b2;
+  --color-memo-pin-text: #92400e;
+
   /* 기록 모드 — 다녀온 곳 · 진행 */
   --color-visited: #10b981;
   --color-visited-text: #059669;

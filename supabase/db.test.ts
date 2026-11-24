@@ -2385,6 +2385,74 @@ describe("0013 데이터 이전", () => {
   });
 });
 
+describe("place_note_by_time (0092)", () => {
+  /** 그날 일정 이름을 순서대로(대체 장소 빼고) */
+  async function order(trip: string) {
+    const { rows } = await db.query<{ name: string }>(
+      `select coalesce(s.name, p.name) as name from public.schedule_items s
+       left join public.places p on p.id = s.place_id
+       where s.trip_id = '${trip}' and s.day_index = 0 and s.alternative_of is null
+       order by s.position, s.created_at`,
+    );
+    return rows.map((r) => r.name);
+  }
+
+  /** 그날 끝에 메모를 넣는다 */
+  async function addNote(trip: string, name: string, time: string | null) {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name, start_time)
+       values ('${trip}', 0, 100, 'note', '${name}', ${time ? `'${time}'` : "null"}) returning id`,
+    );
+    return rows[0].id;
+  }
+
+  /** 장소 셋(10:00 · 시간 없음 · 14:00) 이 있는 하루 */
+  async function dayWithPlaces(day: string) {
+    const id = await newTrip(day, day);
+    const a = await addPlace(id, 0, { name: "A" });
+    await addPlace(id, 0, { name: "B" });
+    const c = await addPlace(id, 0, { name: "C" });
+    await db.query(`update public.schedule_items set start_time = '10:00' where id = '${a}'`);
+    await db.query(`update public.schedule_items set start_time = '14:00' where id = '${c}'`);
+    return id;
+  }
+
+  it("메모 시각보다 늦은 첫 일정 앞으로, 없으면 맨 끝 — 시간 없는 일정은 건너뛴다", async () => {
+    await as(A);
+    const id = await dayWithPlaces("2027-05-01");
+    const noon = await addNote(id, "점심 메모", "12:00");
+    await db.query(`select public.place_note_by_time('${noon}')`);
+    expect(await order(id)).toEqual(["A", "B", "점심 메모", "C"]);
+
+    const early = await addNote(id, "아침 메모", "08:00");
+    await db.query(`select public.place_note_by_time('${early}')`);
+    expect(await order(id)).toEqual(["아침 메모", "A", "B", "점심 메모", "C"]);
+
+    const late = await addNote(id, "밤 메모", "22:00");
+    await db.query(`update public.schedule_items set position = 0 where id = '${late}'`);
+    await db.query(`select public.place_note_by_time('${late}')`);
+    expect(await order(id)).toEqual(["아침 메모", "A", "B", "점심 메모", "C", "밤 메모"]);
+  });
+
+  it("시간 없는 메모는 그대로, 메모가 아니거나 멤버가 아니면 거부", async () => {
+    await as(A);
+    const id = await dayWithPlaces("2027-05-02");
+    const plain = await addNote(id, "준비물", null);
+    await db.query(`update public.schedule_items set position = -1 where id = '${plain}'`);
+    await db.query(`select public.place_note_by_time('${plain}')`);
+    expect(await order(id)).toEqual(["준비물", "A", "B", "C"]);
+
+    const { rows } = await db.query<{ id: string }>(
+      `select id from public.schedule_items where trip_id = '${id}' and kind = 'place' limit 1`,
+    );
+    expect(await rejects(`select public.place_note_by_time('${rows[0].id}')`)).toMatch(
+      /메모가 없다/,
+    );
+    await as(B);
+    expect(await rejects(`select public.place_note_by_time('${plain}')`)).toMatch(/메모가 없다/);
+  });
+});
+
 describe("moves (0011)", () => {
   /** 여행 하나와 그 안의 장소 두 곳을 만든다 */
   async function tripWithTwoPlaces(day: string) {

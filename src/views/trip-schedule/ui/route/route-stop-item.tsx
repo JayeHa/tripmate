@@ -5,8 +5,8 @@ import {
   PASS_LINE,
   type RouteLine,
   routeLineStyle,
+  RouteMemoCard,
   type RouteMode,
-  RouteNoteRow,
   RouteSegmentRow,
   RouteStop,
   type RouteStopData,
@@ -128,9 +128,9 @@ export function RouteStopItem({
       </RouteStop>
       {!visit.record &&
         stop.notes.map((note) => (
-          <RouteNoteRow
+          <RouteMemoCard
             key={note.item.id}
-            text={itemName(note.item)}
+            row={note}
             line={outLine}
             onClick={() => onOpenNote(note)}
           />
