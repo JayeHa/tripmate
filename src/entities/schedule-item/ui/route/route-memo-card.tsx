@@ -1,7 +1,8 @@
 import { memoParts } from "../../lib/memo-text";
 import type { RouteLine } from "../../lib/route-line-style";
 import type { TimelineRow } from "../../lib/timeline";
-import { itemName } from "../../model/place";
+import { itemName, planLinksOf } from "../../model/place";
+import { MemoLinkPreview } from "./memo-link-preview";
 import { RouteLineBar } from "./route-line";
 
 type RouteMemoCardProps = {
@@ -16,11 +17,13 @@ type RouteMemoCardProps = {
 /**
  * 노선도의 일반 메모 한 줄 — 장소처럼 「시각 48 | 선 28 | 카드」 한 줄을 차지하는 노란 메모지 카드.
  * 시각은 장소보다 흐리게, 선 칸은 그 자리의 구간 선을 끊지 않고 이어 가며 표식은 노란 네모(장소의 동그라미와 구분).
- * 카드는 「📝 메모」(★ 중요 · 「📌 홈 고정」) · 제목(첫 줄) · 본문(나머지, 3줄 말줄임)이고 오른쪽 위 모서리가 접혀 있다
+ * 카드는 「📝 메모」(★ 중요 · 「📌 홈 고정」) · 제목(첫 줄) · 본문(나머지, 3줄 말줄임) · 링크(최대 5)이고 오른쪽 위 모서리가 접혀 있다.
+ * 링크는 따로 새 탭으로 열려서 카드 전체가 버튼이 아니다 — 버튼이 카드를 덮고(before) 링크가 그 위에 올라온다
  */
 export function RouteMemoCard({ row, line, onClick }: RouteMemoCardProps) {
   const { starred, title, body } = memoParts(itemName(row.item));
   const pinned = row.item.pinned_by !== null;
+  const links = planLinksOf(row.item);
   return (
     <div className="grid grid-cols-[48px_28px_minmax(0,1fr)]">
       <span className="pt-3.5 pr-1 text-right text-[13px]/4 font-extrabold text-route-card-meta tabular-nums">
@@ -34,33 +37,44 @@ export function RouteMemoCard({ row, line, onClick }: RouteMemoCardProps) {
         />
       </span>
       <div className="min-w-0 py-1 pl-1">
-        <button
-          type="button"
-          onClick={onClick}
-          className="relative flex w-full flex-col gap-2 rounded-card border border-memo-card-line bg-memo-card px-3.25 pt-2.75 pb-3 text-left hover:border-memo-card-hover"
-        >
+        <div className="relative flex flex-col gap-2 rounded-card border border-memo-card-line bg-memo-card px-3.25 pt-2.75 pb-3 has-[>button:hover]:border-memo-card-hover">
           <span
             aria-hidden="true"
             className="absolute -top-px -right-px size-4 rounded-[0_12px_0_6px] bg-[linear-gradient(225deg,var(--color-surface-sunken)_50%,var(--color-memo-card-line)_50%)]"
           />
-          <span className="flex items-center gap-1.5 pr-4 text-[11px] font-extrabold text-memo-card-label">
-            📝 메모
-            {starred && <span className="text-important">★ 중요</span>}
-            {pinned && (
-              <span className="ml-auto rounded-[5px] bg-memo-pin-bg px-1.5 py-0.5 text-[10px] font-extrabold text-memo-pin-text">
-                📌 홈 고정
-              </span>
-            )}
-          </span>
-          <span className="flex flex-col gap-0.5">
-            <span className="text-sm font-extrabold wrap-break-word text-ink-900">{title}</span>
-            {body && (
-              <span className="line-clamp-3 text-[13px]/normal wrap-break-word whitespace-pre-line text-memo-card-body">
-                {body}
-              </span>
-            )}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={onClick}
+            className="flex flex-col gap-2 text-left before:absolute before:inset-0 before:rounded-card"
+          >
+            <span className="flex items-center gap-1.5 pr-4 text-[11px] font-extrabold text-memo-card-label">
+              📝 메모
+              {starred && <span className="text-important">★ 중요</span>}
+              {pinned && (
+                <span className="ml-auto rounded-[5px] bg-memo-pin-bg px-1.5 py-0.5 text-[10px] font-extrabold text-memo-pin-text">
+                  📌 홈 고정
+                </span>
+              )}
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-extrabold wrap-break-word text-ink-900">{title}</span>
+              {body && (
+                <span className="line-clamp-3 text-[13px]/normal wrap-break-word whitespace-pre-line text-memo-card-body">
+                  {body}
+                </span>
+              )}
+            </span>
+          </button>
+          {links.length > 0 && (
+            <ul className="flex flex-col gap-1.5">
+              {links.map((l) => (
+                <li key={l.url}>
+                  <MemoLinkPreview link={l} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

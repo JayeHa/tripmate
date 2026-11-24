@@ -12,6 +12,8 @@ type SheetDialogProps = {
   title?: string;
   /** 제목을 보이지 않을 때 읽기 프로그램이 읽을 이름 */
   ariaTitle?: string;
+  /** 제목 아래 작은 회색 줄(12). 제목이 있을 때만 */
+  description?: React.ReactNode;
   /** 요청이 서버에 가 있는 동안 — 닫지 못하게 */
   locked?: boolean;
   children: React.ReactNode;
@@ -26,6 +28,7 @@ export function SheetDialog({
   onClose,
   title,
   ariaTitle,
+  description,
   locked = false,
   children,
 }: SheetDialogProps) {
@@ -38,9 +41,18 @@ export function SheetDialog({
         className="top-auto bottom-0 left-0 flex max-h-[85dvh] w-full max-w-none translate-0 flex-col gap-0 overflow-hidden rounded-none rounded-t-sheet bg-white p-0 ring-0 sm:max-w-none lg:top-1/2 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100dvh-2rem)] lg:w-120 lg:max-w-120 lg:-translate-1/2 lg:rounded-sheet lg:shadow-sheet"
       >
         <div className="flex shrink-0 items-center gap-3 px-5 pt-5 pb-3.5">
-          <DialogTitle className={title ? "flex-1 text-lg font-extrabold text-ink-900" : "sr-only"}>
-            {title ?? ariaTitle}
-          </DialogTitle>
+          {title && description ? (
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <DialogTitle className="text-lg font-extrabold text-ink-900">{title}</DialogTitle>
+              <div className="text-xs text-ink-350">{description}</div>
+            </div>
+          ) : (
+            <DialogTitle
+              className={title ? "flex-1 text-lg font-extrabold text-ink-900" : "sr-only"}
+            >
+              {title ?? ariaTitle}
+            </DialogTitle>
+          )}
           {!title && <span className="flex-1" />}
           <button
             type="button"
