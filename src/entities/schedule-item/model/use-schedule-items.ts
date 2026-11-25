@@ -14,6 +14,7 @@ import {
   fetchSavedPlaces,
   fetchScheduleItems,
   moveScheduleItemToDay,
+  type NewDayMemo,
   type NewPlaceFields,
   type ScheduleEntry,
   updateNote,
@@ -136,20 +137,11 @@ export function useMoveScheduleItemToDay(tripId: string) {
   });
 }
 
-/** 날짜 메모를 그날 끝에 넣는다(note 일정) */
+/** 날짜 메모를 넣는다(note 일정) — 시간이 없으면 그날 끝, 있으면 그 시각 자리 */
 export function useAddDayMemo(tripId: string) {
   const invalidate = useInvalidateItems(tripId);
   return useMutation({
-    mutationFn: ({
-      dayIndex,
-      text,
-      pinnedBy,
-    }: {
-      dayIndex: number;
-      text: string;
-      /** 홈에 고정한 사람(나), 고정하지 않으면 null */
-      pinnedBy: string | null;
-    }) => addDayMemo(tripId, dayIndex, text, pinnedBy),
+    mutationFn: (memo: NewDayMemo) => addDayMemo(tripId, memo),
     onSuccess: invalidate,
   });
 }

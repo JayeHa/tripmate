@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { memoParts } from "./memo-text";
+import { memoParts, splitStar, withStar } from "./memo-text";
 
 describe("memoParts", () => {
   it("첫 줄은 제목, 나머지는 본문", () => {
@@ -21,5 +21,14 @@ describe("memoParts", () => {
       title: "현금만 받아요",
       body: "",
     });
+  });
+});
+
+describe("splitStar · withStar", () => {
+  it("앞머리를 떼고 붙이면 처음 글로 돌아온다", () => {
+    expect(splitStar("★ 현금만")).toEqual({ starred: true, rest: "현금만" });
+    expect(splitStar("현금만")).toEqual({ starred: false, rest: "현금만" });
+    expect(withStar("현금만", true)).toBe("★ 현금만");
+    expect(withStar("현금만", false)).toBe("현금만");
   });
 });

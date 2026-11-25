@@ -81,23 +81,43 @@ export async function moveScheduleItemToDay(
   });
 }
 
-/** 날짜 메모 — 그날 맨 끝에 note 일정 한 줄(글은 제목 칸)을 넣는다 */
-export async function addDayMemo(
-  tripId: string,
-  dayIndex: number,
-  text: string,
-  pinnedBy: string | null,
-): Promise<void> {
+/** 새 날짜 메모의 칸 */
+export type NewDayMemo = {
+  dayIndex: number;
+  /** 글(제목 칸). 중요면 앞머리 「★ 」 까지 */
+  text: string;
+  /** 「HH:mm」, 없으면 null */
+  time: string | null;
+  links: { title: string; url: string }[];
+  /** 홈에 고정한 사람(나), 고정하지 않으면 null */
+  pinnedBy: string | null;
+};
+
+/**
+ * 날짜 메모 — 그날 맨 끝에 note 일정 한 줄(글은 제목 칸)을 넣는다.
+ * 시간이 있으면 넣은 뒤 그 시각 자리로 옮긴다(0092 place_note_by_time).
+ * 옮기기가 실패해도 던지지 않는다 — 메모는 이미 들어가 맨 끝에 있고, 실패로 받아 다시 저장하면 같은 메모가 둘이 된다.
+ * 자리는 메모 창에서 시간을 다시 저장하면 고쳐진다
+ */
+export async function addDayMemo(tripId: string, memo: NewDayMemo): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("schedule_items").insert({
-    trip_id: tripId,
-    day_index: dayIndex,
-    position: await endPosition(tripId, dayIndex),
-    kind: "note",
-    name: text,
-    pinned_by: pinnedBy,
-  });
+  const { data, error } = await supabase
+    .from("schedule_items")
+    .insert({
+      trip_id: tripId,
+      day_index: memo.dayIndex,
+      position: await endPosition(tripId, memo.dayIndex),
+      kind: "note",
+      name: memo.text,
+      start_time: memo.time,
+      links: memo.links,
+      pinned_by: memo.pinnedBy,
+    })
+    .select("id")
+    .single();
   if (error) throw error;
+  if (!memo.time) return;
+  await supabase.rpc("place_note_by_time", { p_item: data.id });
 }
 
 /** 장소 검색에서 고른 곳. 0013 add_schedule_place 가 받는 모양 */

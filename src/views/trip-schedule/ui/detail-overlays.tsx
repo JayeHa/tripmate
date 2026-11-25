@@ -1,7 +1,11 @@
 "use client";
 
 import { ExpenseDialog } from "@/features/expense/form";
-import { DayMemoDialog, MemoComposerDialog, NoteDialog } from "@/features/schedule/memo-composer";
+import {
+  EditMemoDialog,
+  MemoComposerDialog,
+  NewMemoDialog,
+} from "@/features/schedule/memo-composer";
 import { PlaceFormDialog } from "@/features/schedule/place-form";
 import { dayLabel } from "@/shared/lib/days";
 import { Toast } from "@/shared/ui/toast";
@@ -78,7 +82,7 @@ export function DetailOverlays({
       )}
 
       {o.dayMemo !== null && (
-        <DayMemoDialog
+        <NewMemoDialog
           tripId={tripId}
           startDate={startDate}
           totalDays={totalDays}
@@ -87,7 +91,15 @@ export function DetailOverlays({
         />
       )}
 
-      {o.note && <NoteDialog key={o.note.id} tripId={tripId} item={o.note} onClose={o.closeNote} />}
+      {o.note && (
+        <EditMemoDialog
+          key={o.note.id}
+          tripId={tripId}
+          startDate={startDate}
+          item={o.note}
+          onClose={o.closeNote}
+        />
+      )}
 
       <Toast message={o.toast} onDone={o.clearToast} />
       <ExpenseDialog

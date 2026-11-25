@@ -11,7 +11,7 @@ import { type NoteDraft, noteDraftOf, toNotePatch } from "../lib/day-memo";
 import { pinnedByOf } from "../lib/memo-draft";
 
 /**
- * 날짜 메모 고치기 — 시간(선택) · 글 · 홈에 고정. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.
+ * 날짜 메모 고치기 — 시간(선택) · 글 · 중요 · 홈에 고정 · 링크. 연 때와 달라진 칸만 저장하고, 바뀐 게 없으면 그냥 닫는다. 지우기도 여기서.
  * 시간을 새로 정하면 노선도에서 그 시각 자리로 옮겨 간다(시간을 지우면 자리는 그대로).
  * 열릴 때마다 새로 마운트돼 그때 값에서 시작한다
  */
@@ -56,7 +56,7 @@ export function useNoteEdit(tripId: string, item: ScheduleItem, onDone: () => vo
     pending,
     /** 「홈에 고정」 을 누를 수 있다 — 고정한 사람(나)을 알아야 적는다 */
     pinReady: !!user,
-    canSave: draft.text.trim().length > 0,
+    canSave: draft.body.trim().length > 0,
     /** 요청이 서버에 가 있는 동안(오프라인으로 멈춘 동안은 빼고) — 창을 닫지 못하게 */
     locked: [update, remove].some((m) => m.isPending && !m.isPaused),
     error: error ?? saveFailedText(update.error ?? remove.error),
