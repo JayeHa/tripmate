@@ -1,8 +1,9 @@
 import { memoParts } from "../../lib/memo-text";
 import type { RouteLine } from "../../lib/route-line-style";
 import type { TimelineRow } from "../../lib/timeline";
-import { itemName, planLinksOf } from "../../model/place";
+import { itemName, memoPhotosOf, planLinksOf } from "../../model/place";
 import { MemoLinkPreview } from "./memo-link-preview";
+import { MemoPhotoRow } from "./memo-photo-row";
 import { RouteLineBar } from "./route-line";
 
 type RouteMemoCardProps = {
@@ -17,13 +18,14 @@ type RouteMemoCardProps = {
 /**
  * 노선도의 일반 메모 한 줄 — 장소처럼 「시각 48 | 선 28 | 카드」 한 줄을 차지하는 노란 메모지 카드.
  * 시각은 장소보다 흐리게, 선 칸은 그 자리의 구간 선을 끊지 않고 이어 가며 표식은 노란 네모(장소의 동그라미와 구분).
- * 카드는 「📝 메모」(★ 중요 · 「📌 홈 고정」) · 제목(첫 줄) · 본문(나머지, 3줄 말줄임) · 링크(최대 5)이고 오른쪽 위 모서리가 접혀 있다.
+ * 카드는 「📝 메모」(★ 중요 · 「📌 홈 고정」) · 제목(첫 줄) · 본문(나머지, 3줄 말줄임) · 링크(최대 5) · 사진(3장 + n)이고 오른쪽 위 모서리가 접혀 있다.
  * 링크는 따로 새 탭으로 열려서 카드 전체가 버튼이 아니다 — 버튼이 카드를 덮고(before) 링크가 그 위에 올라온다
  */
 export function RouteMemoCard({ row, line, onClick }: RouteMemoCardProps) {
   const { starred, title, body } = memoParts(itemName(row.item));
   const pinned = row.item.pinned_by !== null;
   const links = planLinksOf(row.item);
+  const photos = memoPhotosOf(row.item);
   return (
     <div className="grid grid-cols-[48px_28px_minmax(0,1fr)]">
       <span className="pt-3.5 pr-1 text-right text-[13px]/4 font-extrabold text-route-card-meta tabular-nums">
@@ -74,6 +76,7 @@ export function RouteMemoCard({ row, line, onClick }: RouteMemoCardProps) {
               ))}
             </ul>
           )}
+          <MemoPhotoRow tripId={row.item.trip_id} photos={photos} />
         </div>
       </div>
     </div>

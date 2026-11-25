@@ -7,18 +7,25 @@ import { cn } from "@/shared/lib/utils";
 
 import type { NoteDraft } from "../lib/day-memo";
 import type { useMemoEditor } from "../model/use-memo-editor";
+import { MemoPhotoStrip, PhotoButton } from "./memo-photo-strip";
 
 type MemoEditorProps = {
+  tripId: string;
   draft: NoteDraft;
   editor: ReturnType<typeof useMemoEditor>;
 };
 
 /**
- * 메모 글 상자 — 글(15 · 1.5) 아래로 붙인 것이 있을 때만 첨부 영역(링크 카드로 바꿨다는 안내 · 링크 줄 · 주소 입력 줄),
- * 맨 아래 첨부 바 「🔗 링크」 · 글자 수. 사진은 아직 붙일 수 없다
+ * 메모 글 상자 — 글(15 · 1.5) 아래로 붙인 것이 있을 때만 첨부 영역(링크 카드로 바꿨다는 안내 · 링크 줄 · 주소 입력 줄 · 사진 줄),
+ * 맨 아래 첨부 바 「📷 사진 n/10」 · 「🔗 링크」 · 글자 수
  */
-export function MemoEditor({ draft, editor }: MemoEditorProps) {
-  const attached = editor.notice || draft.links.length > 0 || editor.linkInput !== null;
+export function MemoEditor({ tripId, draft, editor }: MemoEditorProps) {
+  const attached =
+    editor.notice ||
+    draft.links.length > 0 ||
+    editor.linkInput !== null ||
+    draft.photos.length > 0 ||
+    !!editor.photoNotice;
   return (
     <div className="flex flex-col overflow-hidden rounded-card border border-line focus-within:border-primary">
       <textarea
@@ -46,9 +53,18 @@ export function MemoEditor({ draft, editor }: MemoEditorProps) {
             />
           ))}
           {editor.linkInput !== null && <LinkInput editor={editor} />}
+          {draft.photos.length > 0 && (
+            <MemoPhotoStrip tripId={tripId} photos={draft.photos} onRemove={editor.removePhoto} />
+          )}
+          {editor.photoNotice && (
+            <p role="status" className="text-xs font-bold text-important-text">
+              {editor.photoNotice}
+            </p>
+          )}
         </div>
       )}
       <div className="flex h-11 items-center border-t border-attach-bar-line bg-surface-faint px-1.5">
+        <PhotoButton count={draft.photos.length} editor={editor} />
         <button
           type="button"
           onClick={editor.openLinkInput}

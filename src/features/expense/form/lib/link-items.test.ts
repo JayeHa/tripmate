@@ -28,6 +28,7 @@ function item({ category = null, lat = 1, ...patch }: Patch): ScheduleItem {
     flight_id: null,
     pinned_by: null,
     links: [],
+    photos: [],
     created_by: null,
     created_at: "",
     updated_at: "",

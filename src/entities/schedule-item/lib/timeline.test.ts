@@ -44,6 +44,7 @@ function item(patch: ItemPatch): ScheduleItem {
     flight_id: null,
     pinned_by: null,
     links: [],
+    photos: [],
     created_by: null,
     created_at: "",
     updated_at: "",

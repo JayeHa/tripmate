@@ -2453,6 +2453,73 @@ describe("place_note_by_time (0092)", () => {
   });
 });
 
+describe("메모 사진 (0093)", () => {
+  /** 사진 칸 jsonb — 키 n 개(그 여행 폴더) */
+  function photos(trip: string, n: number) {
+    return JSON.stringify(
+      Array.from({ length: n }, (_, i) => ({
+        photo_key: `${trip}/m${i}.jpg`,
+        thumb_key: `${trip}/mt${i}.jpg`,
+      })),
+    );
+  }
+
+  /** 그 여행에 사진 칸을 가진 메모를 넣는다 */
+  async function noteWith(trip: string, value: string) {
+    const { rows } = await db.query<{ id: string }>(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name, photos)
+       values ('${trip}', 0, 0, 'note', '메모', '${value}') returning id`,
+    );
+    return rows[0].id;
+  }
+
+  it("메모에 10장까지, 두 키가 있고 그 여행 폴더 안이어야 한다. 장소 일정에는 붙지 않는다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-05-10", "2027-05-10");
+    const other = await newTrip("2027-05-11", "2027-05-11");
+    await noteWith(trip, photos(trip, 10));
+    expect(await noteRejects(trip, photos(trip, 11))).toMatch(/schedule_items_photos_chk/);
+    expect(await noteRejects(trip, photos(other, 1))).toMatch(/schedule_items_photos_chk/);
+    expect(await noteRejects(trip, JSON.stringify([{ photo_key: `${trip}/a.jpg` }]))).toMatch(
+      /schedule_items_photos_chk/,
+    );
+    expect(await noteRejects(trip, JSON.stringify(["x"]))).toMatch(/schedule_items_photos_chk/);
+    expect(await noteRejects(trip, "{}")).toMatch(/schedule_items_photos_chk/);
+    const place = await addPlace(trip, 0, { name: "A" });
+    expect(
+      await rejects(
+        `update public.schedule_items set photos = '${photos(trip, 1)}' where id = '${place}'`,
+      ),
+    ).toMatch(/schedule_items_photos_note_chk/);
+  });
+
+  it("메모 칸이 가리키는 파일은 지워지지 않고, 칸에서 뺀 뒤에는 지워진다", async () => {
+    await as(A);
+    const trip = await newTrip("2027-05-12", "2027-05-12");
+    const note = await noteWith(trip, photos(trip, 1));
+    await db.query(
+      `insert into storage.objects (bucket_id, name) values ('visit-photos', '${trip}/m0.jpg'), ('visit-photos', '${trip}/mt0.jpg')`,
+    );
+    await db.query(`delete from storage.objects where name like '${trip}/%'`);
+    expect(
+      (await db.query(`select 1 from storage.objects where name like '${trip}/%'`)).rows,
+    ).toHaveLength(2);
+    await db.query(`update public.schedule_items set photos = '[]' where id = '${note}'`);
+    await db.query(`delete from storage.objects where name like '${trip}/%'`);
+    expect(
+      (await db.query(`select 1 from storage.objects where name like '${trip}/%'`)).rows,
+    ).toHaveLength(0);
+  });
+
+  /** 사진 칸이 틀린 메모를 넣어 본다 — 거부 문구(넣어지면 null) */
+  function noteRejects(trip: string, value: string) {
+    return rejects(
+      `insert into public.schedule_items (trip_id, day_index, position, kind, name, photos)
+       values ('${trip}', 0, 0, 'note', '메모', '${value}')`,
+    );
+  }
+});
+
 describe("moves (0011)", () => {
   /** 여행 하나와 그 안의 장소 두 곳을 만든다 */
   async function tripWithTwoPlaces(day: string) {

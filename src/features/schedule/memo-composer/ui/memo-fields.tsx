@@ -13,21 +13,24 @@ import { MemoEditor } from "./memo-editor";
 type SetDraft = <K extends keyof NoteDraft>(key: K, value: NoteDraft[K]) => void;
 
 type MemoFieldsProps = {
+  tripId: string;
   draft: NoteDraft;
   set: SetDraft;
   /** 「홈에 고정」 을 누를 수 있다(나를 안다) */
   pinReady: boolean;
+  /** 사진을 올리는 중 — 칸을 모두 막는다(올리는 동안 사진 · 글이 바뀌면 저장값과 어긋난다) */
+  disabled: boolean;
   error: string | null;
 };
 
 /**
- * 메모 창의 칸 — 첫 줄 시간(선택) · ☆ 중요 · 홈에 고정, 그 아래 글 상자(링크 포함) · 오류.
+ * 메모 창의 칸 — 첫 줄 시간(선택) · ☆ 중요 · 홈에 고정, 그 아래 글 상자(링크 · 사진 포함) · 오류.
  * 새 메모 · 고치기가 함께 쓴다
  */
-export function MemoFields({ draft, set, pinReady, error }: MemoFieldsProps) {
+export function MemoFields({ tripId, draft, set, pinReady, disabled, error }: MemoFieldsProps) {
   const editor = useMemoEditor(draft, set);
   return (
-    <div className="flex flex-col gap-3">
+    <fieldset disabled={disabled} className="flex min-w-0 flex-col gap-3">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <TimeField
@@ -56,8 +59,8 @@ export function MemoFields({ draft, set, pinReady, error }: MemoFieldsProps) {
           disabled={!pinReady}
         />
       </div>
-      <MemoEditor draft={draft} editor={editor} />
+      <MemoEditor tripId={tripId} draft={draft} editor={editor} />
       {error && <p className="text-[13px] text-destructive">{error}</p>}
-    </div>
+    </fieldset>
   );
 }

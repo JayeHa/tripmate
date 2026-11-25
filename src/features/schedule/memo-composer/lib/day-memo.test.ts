@@ -35,15 +35,24 @@ describe("날짜 메모 고치기", () => {
     start_time: "15:00:00",
     pinned_by: null,
     links: [LINK, { title: "x", url: "javascript:alert(1)" }],
+    photos: [{ photo_key: "t/p.jpg", thumb_key: "t/t.jpg" }, { photo_key: 1 }],
   } as unknown as ScheduleItem;
 
-  it("처음 값은 시간(HH:mm) · ★ 뗀 글 · 중요 · 고정 · 올바른 링크만", () => {
+  it("처음 값은 시간(HH:mm) · ★ 뗀 글 · 중요 · 고정 · 올바른 링크 · 사진만", () => {
     expect(noteDraftOf(item)).toEqual({
       time: "15:00",
       body: "체크인 15시",
       starred: true,
       pinned: false,
       links: [LINK],
+      photos: [
+        {
+          id: "t/p.jpg",
+          saved: { photo_key: "t/p.jpg", thumb_key: "t/t.jpg" },
+          file: null,
+          preview: null,
+        },
+      ],
     });
   });
 

@@ -1,6 +1,9 @@
 /** 날짜 메모 하나에 붙일 수 있는 링크 수 */
 export const MEMO_LINK_MAX = 5;
 
+/** 메모 하나에 붙이는 사진 최대 장수 — DB check `memo_photos_ok` 와 같다(0093) */
+export const MEMO_PHOTO_MAX = 10;
+
 /** 아는 사이트 — 주소의 호스트 · 경로로 알아보고 카드 제목을 정한다. 위에서부터 먼저 맞는 것 */
 const SITES: { match: (host: string, path: string) => boolean; title: string }[] = [
   {
