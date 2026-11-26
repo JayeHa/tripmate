@@ -89,6 +89,8 @@ export type NewDayMemo = {
   /** 「HH:mm」, 없으면 null */
   time: string | null;
   links: { title: string; url: string }[];
+  /** 이미 올린 사진 키(0번 = 대표) */
+  photos: { photo_key: string; thumb_key: string }[];
   /** 홈에 고정한 사람(나), 고정하지 않으면 null */
   pinnedBy: string | null;
 };
@@ -111,6 +113,7 @@ export async function addDayMemo(tripId: string, memo: NewDayMemo): Promise<void
       name: memo.text,
       start_time: memo.time,
       links: memo.links,
+      photos: memo.photos,
       pinned_by: memo.pinnedBy,
     })
     .select("id")

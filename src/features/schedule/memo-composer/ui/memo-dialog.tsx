@@ -90,10 +90,18 @@ function NewMemoBody({ tripId, day, onClose, onLockChange }: NewMemoBodyProps) {
   useReportLock(form.locked, onLockChange);
   return (
     <div className="flex flex-col gap-4">
-      <MemoFields draft={form.draft} set={form.set} pinReady={form.pinReady} error={form.error} />
+      <MemoFields
+        tripId={tripId}
+        draft={form.draft}
+        set={form.set}
+        pinReady={form.pinReady}
+        disabled={form.uploading}
+        error={form.error}
+      />
       <MemoFooter
         locked={form.locked}
         canSave={form.canSave && !form.pending}
+        uploading={form.uploading}
         onCancel={onClose}
         onSave={form.save}
       />
@@ -133,10 +141,18 @@ function EditMemoBody({ tripId, item, onClose, onLockChange }: EditMemoBodyProps
   useReportLock(form.locked, onLockChange);
   return (
     <div className="flex flex-col gap-4">
-      <MemoFields draft={form.draft} set={form.set} pinReady={form.pinReady} error={form.error} />
+      <MemoFields
+        tripId={tripId}
+        draft={form.draft}
+        set={form.set}
+        pinReady={form.pinReady}
+        disabled={form.uploading}
+        error={form.error}
+      />
       <MemoFooter
         locked={form.locked}
         canSave={form.canSave && !form.pending}
+        uploading={form.uploading}
         onCancel={onClose}
         onSave={form.save}
       >
@@ -149,6 +165,8 @@ function EditMemoBody({ tripId, item, onClose, onLockChange }: EditMemoBodyProps
 type MemoFooterProps = {
   locked: boolean;
   canSave: boolean;
+  /** 사진을 올리는 중 — 저장 버튼에 「올리는 중…」 */
+  uploading: boolean;
   onCancel: () => void;
   onSave: () => void;
   /** 왼쪽 끝(고치기의 「삭제」) */
@@ -156,7 +174,7 @@ type MemoFooterProps = {
 };
 
 /** 아래 버튼 줄 — (삭제) · 취소(90, PC 120) | 저장(130, PC 180, 빈 글이면 막힘) */
-function MemoFooter({ locked, canSave, onCancel, onSave, children }: MemoFooterProps) {
+function MemoFooter({ locked, canSave, uploading, onCancel, onSave, children }: MemoFooterProps) {
   return (
     <div className="flex items-center gap-2">
       {children}
@@ -170,7 +188,7 @@ function MemoFooter({ locked, canSave, onCancel, onSave, children }: MemoFooterP
         취소
       </Button>
       <Button size="form" className="w-32.5 lg:w-45" disabled={!canSave} onClick={onSave}>
-        저장
+        {uploading ? "올리는 중…" : "저장"}
       </Button>
     </div>
   );

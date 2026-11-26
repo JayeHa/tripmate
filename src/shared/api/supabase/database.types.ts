@@ -878,6 +878,7 @@ export type Database = {
           flight_id: string | null;
           links: Json;
           created_by: string | null;
+          photos: Json;
           pinned_by: string | null;
           created_at: string;
           updated_at: string;
@@ -899,6 +900,7 @@ export type Database = {
           flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
+          photos?: Json;
           pinned_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -920,6 +922,7 @@ export type Database = {
           flight_id?: string | null;
           links?: Json;
           created_by?: string | null;
+          photos?: Json;
           pinned_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1518,6 +1521,10 @@ export type Database = {
       rate_place: {
         Args: { p_item: string; p_stars: number; p_at: string };
         Returns: undefined;
+      };
+      memo_photos_ok: {
+        Args: { p_photos: Json; p_trip: string };
+        Returns: boolean;
       };
       place_note_by_time: {
         Args: { p_item: string };

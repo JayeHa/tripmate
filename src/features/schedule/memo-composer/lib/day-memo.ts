@@ -1,5 +1,6 @@
 import {
   MEMO_MAX,
+  memoPhotosOf,
   type PlaceLink,
   planLinksOf,
   type ScheduleItem,
@@ -8,18 +9,21 @@ import {
 } from "@/entities/schedule-item";
 import { isTimeValue } from "@/shared/lib/time-input";
 
-/** 날짜 메모 창의 칸 — 시간(「HH:mm」 · "") · 글(★ 앞머리 뺀 것) · 중요 · 홈에 고정 · 링크 */
+import { type DraftMemoPhoto, draftPhotosOf } from "./memo-photos";
+
+/** 날짜 메모 창의 칸 — 시간(「HH:mm」 · "") · 글(★ 앞머리 뺀 것) · 중요 · 홈에 고정 · 링크 · 사진(0번 = 대표) */
 export type NoteDraft = {
   time: string;
   body: string;
   starred: boolean;
   pinned: boolean;
   links: PlaceLink[];
+  photos: DraftMemoPhoto[];
 };
 
 /** 새 메모면 빈 칸, 고치는 메모면 그 note 일정의 값 */
 export function noteDraftOf(item: ScheduleItem | null): NoteDraft {
-  if (!item) return { time: "", body: "", starred: false, pinned: false, links: [] };
+  if (!item) return { time: "", body: "", starred: false, pinned: false, links: [], photos: [] };
   const { starred, rest } = splitStar(item.name ?? "");
   return {
     time: item.start_time?.slice(0, 5) ?? "",
@@ -27,6 +31,7 @@ export function noteDraftOf(item: ScheduleItem | null): NoteDraft {
     starred,
     pinned: item.pinned_by !== null,
     links: planLinksOf(item),
+    photos: draftPhotosOf(memoPhotosOf(item)),
   };
 }
 
@@ -67,7 +72,7 @@ type NotePatch = {
 export type NotePatchResult = { ok: true; patch: NotePatch } | { ok: false; error: string };
 
 /**
- * 고친 칸 중 연 때(initial)와 **달라진 칸만** — 그사이 일행이 바꾼 다른 칸을 덮지 않게.
+ * 고친 칸 중 연 때(initial)와 **달라진 칸만** — 그사이 일행이 바꾼 다른 칸을 덮지 않게. 사진은 올린 뒤에 키가 정해져 여기서 다루지 않는다.
  * 고정을 바꿨으면 pinnedBy(저장할 고정한 사람, 끄면 null)를 적는다. 바뀐 칸이 없으면 빈 patch
  */
 export function toNotePatch(

@@ -108,6 +108,16 @@ export function planLinksOf(item: Pick<ScheduleItem, "links">): PlaceLink[] {
   return arrayOf(linkSchema, item.links);
 }
 
+const memoPhotoSchema = z.object({ photo_key: z.string(), thumb_key: z.string() });
+
+/** 날짜 메모 사진 하나 — 줄인 사진 · 썸네일 키(기록 사진과 같은 버킷 `visit-photos`) */
+export type MemoPhoto = z.infer<typeof memoPhotoSchema>;
+
+/** 날짜 메모(note)의 사진(schedule_items.photos) — 0번이 대표. 모양이 틀린 원소는 버린다 */
+export function memoPhotosOf(item: Pick<ScheduleItem, "photos">): MemoPhoto[] {
+  return arrayOf(memoPhotoSchema, item.photos);
+}
+
 /** jsonb 링크 배열을 제목 · URL 목록으로. 모양이 틀리거나 http(s) 가 아닌 원소는 버린다 */
 export function linkListOf(value: unknown): PlaceLink[] {
   return arrayOf(linkSchema, value);
